@@ -84,7 +84,7 @@
                     name v
                   (string? v)
                     escape-html v
-                  :else $ str v
+                  true $ str v
         |escape-html $ quote
           defn escape-html (text)
             if (nil? text) "\"" $ -> text
@@ -126,7 +126,7 @@
           defn main! () (; handle-ssr! mount-target)
             let
                 raw $ .getItem js/window.localStorage |respo
-              if (some? raw)
+              ; if (some? raw)
                 swap! *store assoc :tasks $ do (; read-string raw) nil
               render-app! mount-target
               add-watch *store :rerender $ \ render-app! mount-target
@@ -147,9 +147,9 @@
         |prop->attr $ quote
           defn prop->attr (x)
             when (string/includes? x "\"?") (println "\"[Respo] warning: property contains `?` in" x)
-            case x (|class-name |class) (|tab-index |tabindex) (|read-only |readonly) (, x)
+            case x (|class-name |class) (|tab-index |tabindex) (|read-only |readonly) (x x)
         |event->prop $ quote
-          defn event->prop (x) (str |on $ name x)
+          defn event->prop (x) (str |on $ turn-string x)
         |ensure-string $ quote
           defn ensure-string (x)
             cond
@@ -157,7 +157,7 @@
                 , x
               (keyword? x)
                 name x
-              :else $ str x
+              true $ str x
         |event->string $ quote
           defn event->string (x)
             subs (name x) 3
@@ -171,7 +171,7 @@
                     k $ first pair
                     v $ first pair
                   some? v
-              , keys
+              map first
         |hsl $ quote
           defn hsl (h s l & args)
             let
@@ -188,7 +188,7 @@
                 "\"keyup" $ merge (map-keyboard-event event) ({} $ :type :keyup)
                 "\"input" $ {} (:type :input)
                   :value $ aget (.-target event) "\"value"
-                  :checked $ .. event -target -checked
+                  :checked $ -> event .-target .-checked
                 "\"change" $ {} (:type :change)
                   :value $ aget (.-target event) |value
                 "\"focus" $ {} (:type :focus)
@@ -235,7 +235,9 @@
                 nil? markup
                 , nil
               (component? markup)
-                purify-element $ :tree markup
+                purify-element $ &let (t $ :tree markup)
+                  when (nil? t) (raise "\"tree is empty")
+                  , t
               (element? markup)
                 -> markup (update :event purify-events)
                   update :children $ fn (children)
@@ -259,15 +261,14 @@
         ns respo.app.updater $ :require ([] respo.cursor :refer $ [] update-states)
       :defs $ {}
         |updater $ quote
-          defn updater (store op-type op-data op-id)
-            ; println (pr-str store) (pr-str op-type) (pr-str op-data)
+          defn updater (store op-type op-data op-id) (println store op-type op-data)
             case op-type (:states $ update-states store op-data)
               :add $ update store :tasks
                 fn (tasks)
                   conj tasks $ {} (:text op-data) (:id op-id) (:done? false)
               :remove $ update store :tasks
                 fn (tasks)
-                  ->> tasks $ filterv
+                  ->> tasks $ filter
                     fn (task)
                       not $ = (:id task) op-data
               :clear $ assoc store :tasks ([])
@@ -276,7 +277,7 @@
                   let
                       task-id $ :id op-data
                       text $ :text op-data
-                    ->> tasks $ mapv
+                    ->> tasks $ map
                       fn (task)
                         if
                           = (:id task) task-id
@@ -289,7 +290,7 @@
                 fn (tasks)
                   let
                       task-id op-data
-                    ->> tasks $ mapv
+                    ->> tasks $ map
                       fn (task)
                         if
                           = (:id task) task-id
@@ -356,12 +357,13 @@
           defn dispatch! (op op-data) (; println op op-data)
             let
                 store $ updater @*store op op-data (get-id!)
+              echo "\"alter store" store
               reset! *store store
         |handle-ssr! $ quote
           defn handle-ssr! (mount-target)
             realize-ssr! mount-target (comp-container @*store) dispatch!
         |render-app! $ quote
-          defn render-app! (mount-target)
+          defn render-app! (mount-target) (echo "\"render-app")
             render! mount-target (comp-container @*store) dispatch!
       :proc $ quote ()
     |respo.test.comp.todolist $ {}
@@ -478,8 +480,7 @@
                 let
                     effects $ :effects tree
                   when (not $ empty? effects)
-                    doseq
-                        effect effects
+                    &doseq (effect effects)
                       let
                           method $ :method effect
                         collect! $ [] op/effect-mount n-coord
@@ -493,7 +494,7 @@
                   when (not $ empty? children)
                     collect-mounting collect! (conj n-coord idx) (val-of-first children) (, false)
                     recur (rest children) (inc idx)
-              :else $ js/console.warn "\"Unknown entry for mounting:" tree
+              true $ js/console.warn "\"Unknown entry for mounting:" tree
         |collect-unmounting $ quote
           defn collect-unmounting (collect! n-coord tree at-place?)
             cond
@@ -501,9 +502,8 @@
                 let
                     effects $ :effects tree
                   collect-unmounting collect! n-coord (:tree tree) false
-                  when-not (empty? effects)
-                    doseq
-                        effect effects
+                  when (not $ empty? effects)
+                    &doseq (effect effects)
                       let
                           method $ :method effect
                         collect! $ [] op/effect-unmount n-coord
@@ -513,24 +513,24 @@
                 loop
                     children $ :children tree
                     idx 0
-                  when-not (empty? children)
+                  when (not $ empty? children)
                     collect-unmounting collect! (conj n-coord idx) (val-of-first children) (, false)
                     recur (rest children) (inc idx)
-              :else $ js/console.warn "\"Unknown entry for unmounting:" tree
+              true $ js/console.warn "\"Unknown entry for unmounting:" tree
         |collect-updating $ quote
           defn collect-updating (collect! action n-coord old-tree new-tree)
             let
                 effects $ :effects new-tree
-              when-not (empty? effects) (; js/console.log "\"collect update" n-coord $ :effects new-tree)
-                doseq
-                    idx $ range (count effects)
+              when (not $ empty? effects) (; js/console.log "\"collect update" n-coord $ :effects new-tree)
+                &doseq
+                  idx $ range (count effects)
                   let
                       old-effect $ get-in old-tree ([] :effects idx)
                       new-effect $ get effects idx
                       method $ :method new-effect
                     ; println old-effect new-effect
-                    when-not
-                      =seq (:args new-effect) (:args old-effect)
+                    when
+                      not $ =seq (:args new-effect) (:args old-effect)
                       collect! $ []
                         if (= :update action) op/effect-update op/effect-before-update
                         , n-coord
@@ -557,6 +557,7 @@
           defn patch-instance! (changes mount-point deliver-event)
             let
                 listener-builder $ fn (event-name) (build-listener event-name deliver-event)
+              ; echo "\"changes" changes
               apply-dom-changes changes mount-point listener-builder
       :proc $ quote ()
     |respo.util.id $ {}
@@ -589,15 +590,15 @@
                     collect-unmounting collect! (conj n-coord index) (val-of-first old-children) (, true)
                     collect! $ [] op/rm-element (conj n-coord index) nil
                     recur collect! n-coord index (rest old-children) ([])
-                :else $ let
+                true $ let
                     old-keys $ map first (take 16 old-children)
                     new-keys $ map first (take 16 new-children)
                     x1 $ first old-keys
                     y1 $ first new-keys
                     match-x1 $ fn (x) (= x x1)
                     match-y1 $ fn (x) (= x y1)
-                    x1-remains? $ some match-x1 new-keys
-                    y1-existed? $ some match-y1 old-keys
+                    x1-remains? $ any? match-x1 new-keys
+                    y1-existed? $ any? match-y1 old-keys
                     old-follows $ rest old-children
                     new-follows $ rest new-children
                   ; println "\"compare:" x1 new-keys x1-remains? y1 y1-existed? old-keys
@@ -620,7 +621,7 @@
                         collect-unmounting collect! (conj n-coord index) (val-of-first old-children) (, true)
                         collect! $ [] op/rm-element (conj n-coord index) nil
                         recur collect! n-coord index old-follows new-children
-                    :else $ let
+                    true $ let
                         xi $ .indexOf new-keys x1
                         yi $ .indexOf old-keys y1
                         first-old-entry $ first old-children
@@ -661,9 +662,9 @@
                     new-children $ :children new-tree
                   if
                     or
-                      not= (:coord old-tree) (:coord new-tree)
-                      not= (:name old-tree) (:name new-tree)
-                      not= (:c-name old-tree) (:c-name new-tree)
+                      /= (:coord old-tree) (:coord new-tree)
+                      /= (:name old-tree) (:name new-tree)
+                      /= (:c-name old-tree) (:c-name new-tree)
                     do
                       collect! $ [] op/replace-element n-coord (purify-element new-tree)
                       , nil
@@ -672,20 +673,19 @@
                       let
                           old-style $ :style old-tree
                           new-style $ :style new-tree
-                        if (not= old-style new-style) (find-style-diffs collect! n-coord old-style new-style)
+                        if (/= old-style new-style) (find-style-diffs collect! n-coord old-style new-style)
                       let
-                          old-events $ into (#{}) (keys $ :event old-tree)
-                          new-events $ into (#{}) (keys $ :event new-tree)
+                          old-events $ keys
+                            either (:event old-tree) ({})
+                          new-events $ keys
+                            either (:event new-tree) ({})
                           added-events $ difference new-events old-events
                           removed-events $ difference old-events new-events
-                        doseq
-                            event-name added-events
+                        &doseq (event-name added-events)
                           collect! $ [] op/set-event n-coord ([] event-name $ :coord new-tree)
-                        doseq
-                            event-name removed-events
-                          collect! $ [] op/rm-event n-coord event-name
+                        &doseq (event-name removed-events) (collect! $ [] op/rm-event n-coord event-name)
                       find-children-diffs collect! n-coord 0 old-children new-children
-              :else $ js/console.warn "\"Diffing unknown params" old-tree new-tree
+              true $ js/console.warn "\"Diffing unknown params" old-tree new-tree
         |find-props-diffs $ quote
           defn find-props-diffs (collect! coord old-props new-props)
             ; .log js/console "|find props:" coord old-props new-props (count old-props) (count new-props)
@@ -703,7 +703,7 @@
                   do
                     collect! $ [] op/rm-prop coord (key $ first old-props)
                     recur collect! coord (rest old-props) new-props
-                :else $ let
+                true $ let
                     old-entry $ first old-props
                     new-entry $ first new-props
                     old-pair $ first old-props
@@ -719,7 +719,7 @@
                     -1 $ do (collect! $ [] op/rm-prop coord old-k) (recur collect! coord old-follows new-props)
                     1 $ do (collect! $ [] op/add-prop coord new-entry) (recur collect! coord old-props new-follows)
                     0 $ do
-                      if (not= old-v new-v) (collect! $ [] op/replace-prop coord new-entry)
+                      if (/= old-v new-v) (collect! $ [] op/replace-prop coord new-entry)
                       recur collect! coord old-follows new-follows
         |find-style-diffs $ quote
           defn find-style-diffs (collect! coord old-style new-style)
@@ -741,7 +741,7 @@
                       follows $ rest old-style
                     collect! $ [] op/rm-style coord (key entry)
                     recur collect! coord follows new-style
-                :else $ let
+                true $ let
                     old-entry $ first old-style
                     new-entry $ first new-style
                     old-follows $ rest old-style
@@ -892,14 +892,14 @@
                 prop-value $ val op
               case prop-name
                 |style $ aset target prop-name (style->string prop-value)
-                prop-name $ aset target prop-name prop-value
+                prop-name $ prop-name (aset target prop-name prop-value)
         |replace-prop $ quote
           defn replace-prop (target op)
             let
-                prop-name $ dashed->camel (name $ key op)
-                prop-value $ val op
+                prop-name $ dashed->camel (turn-string $ first op)
+                prop-value $ last op
               if (= prop-name |value)
-                if (not= prop-value $ .-value target) (aset target prop-name prop-value)
+                if (/= prop-value $ .-value target) (aset target prop-name prop-value)
                 aset target prop-name prop-value
         |apply-dom-changes $ quote
           defn apply-dom-changes (changes mount-point listener-builder)
@@ -911,7 +911,6 @@
                     coord $ get op 1
                     op-data $ get op 2
                     target $ find-target root coord
-                  ; println op-type target op-data
                   cond
                       = op-type op/replace-prop
                       replace-prop target op-data
@@ -968,7 +967,7 @@
             cond
                 empty? coord
                 , root
-              :else $ let
+              true $ let
                   index $ first coord
                   child $ aget (.-children root) index
                 if (some? child) (recur child $ rest coord) (, nil)
@@ -1028,8 +1027,8 @@
         |comp-todolist $ quote
           defcomp comp-todolist (states tasks)
             let
-                cursor $ or (:cursor states) ([])
-                state $ or (:data states) initial-state
+                cursor $ either (:cursor states) ([])
+                state $ either (:data states) initial-state
               [] (effect-focus)
                 div ({} $ :style style-root)
                   comp-inspect |States state $ {} (:left |80px)
@@ -1111,7 +1110,7 @@
                 , 1
               (string? x)
                 , 2
-              :else $ raise "|use number, keyword or string in coord!"
+              true $ raise "|use number, keyword or string in coord!"
         |compare $ quote
           defn compare (x y)
             cond
@@ -1145,12 +1144,13 @@
                   , false
                 (= (first xs) (first ys))
                   recur (rest xs) (rest ys)
-                :else false
+                true false
         |component? $ quote
           defn component? (x)
             and (map? x) (= :component $ :respo-node x)
         |effect? $ quote
-          defn effect? (x) (= :effect $ :respo-node x)
+          defn effect? (x)
+            and (map? x) (= :effect $ :respo-node x)
         |element? $ quote
           defn element? (x)
             and (map? x) (= :element $ :respo-node x)
@@ -1163,7 +1163,7 @@
           defcomp comp-task (states task)
             let
                 cursor $ :cursor states
-                state $ or (:data states) |
+                state $ either (:data states) |
               [] (effect-log task)
                 div ({} $ :style style-task)
                   comp-inspect |Task task $ {} (:left 200)
@@ -1317,7 +1317,7 @@
                 str data
               (fn? data)
                 , |Fn
-              :else $ pr-str data
+              true $ pr-str data
         |on-click $ quote
           defn on-click (data)
             fn (e dispatch!)
@@ -1336,32 +1336,35 @@
       :defs $ {}
         |build-deliver-event $ quote
           defn build-deliver-event (*global-element dispatch!)
-            fn (coord event-name simple-event)
+            fn (coord event-name simple-event) (; echo "\"event coord" coord)
               let
                   target-element $ find-event-target @*global-element coord event-name
-                  target-listener $ get (:event target-element) event-name
+                  target-listener $ if (some? target-element)
+                    get (:event target-element) event-name
+                    do (js/console.warn "\"found no element" coord event-name) nil
                   dispatch-wrap $ fn (op data)
                     cond
-                        vector? op
+                        list? op
                         dispatch! :states $ [] op data
-                      :else $ dispatch! op data
+                      true $ dispatch! op data
                 if (some? target-listener)
                   do (; println "|listener found:" coord event-name) (target-listener simple-event dispatch-wrap)
                   ; println "|found no listener:" coord event-name
         |find-event-target $ quote
-          defn find-event-target (element coord event-name)
+          defn find-event-target (element coord event-name) (; echo "\"looking for" coord event-name)
             let
                 target-element $ get-markup-at element coord
                 element-exists? $ some? target-element
               ; println "|target element:" $ pr-str event-name
               if
-                and element-exists? $ some?
-                  get (:event target-element) event-name
+                and element-exists?
+                  some? $ with-log (:event target-element)
+                  some? $ get (:event target-element) event-name
                 , target-element
                 if (= coord $ []) (, nil)
                   if element-exists?
                     recur element
-                      subvec coord 0 $ - (count coord) 1
+                      slice coord 0 $ - (count coord) 1
                       , event-name
                     , nil
         |get-markup-at $ quote
@@ -1382,8 +1385,6 @@
       :ns $ quote
         ns respo.render.expand $ :require ([] clojure.string :as string) ([] respo.util.detect :refer $ [] component? element? effect? =seq) ([] respo.util.list :refer $ [] filter-first pick-attrs filter-first) ([] respo.schema :as schema) ([] respo.caches :refer $ [] *memof-caches) ([] memof.core :as memof)
       :defs $ {}
-        |render-app $ quote
-          defn render-app (markup) (render-markup markup $ [])
         |render-children $ quote
           defn render-children (children coord) (; println "|render children:" children)
             ->> children $ map
@@ -1408,37 +1409,40 @@
                   let
                       node-tree $ filter-first
                         fn (x)
-                          or (component? x) (element? x)
+                          and (map? x)
+                            or (component? x) (element? x)
                         , markup-tree
                       effects-list $ ->> markup-tree (filter effect?)
                     merge markup $ {} (:coord coord) (:tree $ render-markup node-tree new-coord) (:effects effects-list)
-                :else $ do (js/console.warn "\"Unknown markup:" markup) nil
+                true $ do (js/console.warn "\"Unknown markup:" markup) nil
         |render-element $ quote
           defn render-element (markup coord)
             let
                 children $ :children markup
                 child-elements $ render-children children coord
               ; js/console.log "|children should have order:" children child-elements markup
-              assoc markup :coord coord :children child-elements
+              merge markup $ {} (:coord coord) (:children child-elements)
         |render-markup $ quote
-          defn render-markup (markup coord)
-            cond
-                component? markup
-                let
-                    v $ memof/access-record *memof-caches (:render markup) (:args markup)
-                  if (some? v) v $ let
-                      result $ render-component markup coord
-                    ; println "\"[Respo] reusing component from memof" $ :name markup
-                    memof/write-record! *memof-caches (:render markup) (:args markup) (, result)
-                    , result
-              (element? markup)
-                render-element markup coord
-              :else $ do (js/console.log "\"Markup:" markup) (raise $ str "\"expects component or element!")
+          defn render-markup (markup & args)
+            let
+                coord $ either (first args) ([])
+              cond
+                  component? markup
+                  let
+                      v $ memof/access-record *memof-caches (:render markup) (:args markup)
+                    either v $ let
+                        result $ render-component markup coord
+                      ; println "\"[Respo] reusing component from memof" $ :name markup
+                      memof/write-record! *memof-caches (:render markup) (:args markup) (, result)
+                      , result
+                (element? markup)
+                  render-element markup coord
+                true $ do (js/console.log "\"Markup:" markup) (raise $ str "\"expects component or element!")
       :proc $ quote ()
     |respo.core $ {}
       :ns $ quote
         ns respo.core
-          :require ([] respo.render.expand :refer $ [] render-app) ([] respo.controller.resolve :refer $ [] build-deliver-event) ([] respo.render.diff :refer $ [] find-element-diffs) ([] respo.render.effect :refer $ [] collect-mounting) ([] respo.util.format :refer $ [] purify-element) ([] respo.controller.client :refer $ [] activate-instance! patch-instance!) ([] respo.util.list :refer $ [] pick-attrs pick-event val-exists? detect-func-in-map?) ([] respo.util.detect :refer $ [] component? element?) ([] respo.schema :as schema) ([] respo.util.comparator :refer $ [] compare-xy) ([] memof.core :as memof) ([] respo.caches :refer $ [] *memof-caches)
+          :require ([] respo.render.expand :refer $ [] render-markup) ([] respo.controller.resolve :refer $ [] build-deliver-event) ([] respo.render.diff :refer $ [] find-element-diffs) ([] respo.render.effect :refer $ [] collect-mounting) ([] respo.util.format :refer $ [] purify-element) ([] respo.controller.client :refer $ [] activate-instance! patch-instance!) ([] respo.util.list :refer $ [] pick-attrs pick-event val-exists? detect-func-in-map?) ([] respo.util.detect :refer $ [] component? element?) ([] respo.schema :as schema) ([] respo.util.comparator :refer $ [] compare-xy) ([] memof.core :as memof) ([] respo.caches :refer $ [] *memof-caches)
           :require-macros $ [] respo.core
       :defs $ {}
         |>> $ quote
@@ -1456,12 +1460,11 @@
             str "|For rendering lists, please use list-> , got: " $ pr-str children
             let
                 attrs $ pick-attrs props
-                styles $ with-log
-                  sort
-                    fn (x y)
-                      compare-xy (first x) (first y)
-                    set->list $ to-pairs
-                      either (:style props) ({})
+                styles $ sort
+                  fn (x y)
+                    compare-xy (first x) (first y)
+                  set->list $ to-pairs
+                    either (:style props) ({})
                 event $ pick-event props
                 children-nodes $ ->>
                   map-indexed
@@ -1472,8 +1475,6 @@
         |render! $ quote
           defn render! (target markup dispatch!)
             if (some? @*global-element) (rerender-app! target markup dispatch!) (mount-app! target markup dispatch!)
-        |render-element $ quote
-          defn render-element (markup) (render-app markup)
         |mount-app! $ quote
           defn mount-app! (target markup dispatch!)
             ; assert
@@ -1481,7 +1482,7 @@
               , "|1st argument should be an element"
             ; assert (component? markup) "|2nd argument should be a component"
             let
-                element $ render-element markup
+                element $ render-markup markup
                 deliver-event $ build-deliver-event *global-element dispatch!
                 *changes *dom-changes
                 collect! $ fn (x)
@@ -1509,7 +1510,7 @@
             assert (instance? element-type target) "|1st argument should be an element"
             assert (component? markup) "|2nd argument should be a component"
             let
-                element $ render-element markup
+                element $ render-markup markup
                 app-element $ .-firstElementChild target
                 *changes $ atom ([])
                 collect! $ fn (x)
@@ -1542,9 +1543,9 @@
         |rerender-app! $ quote
           defn rerender-app! (target markup dispatch!) (memof/new-loop! *memof-caches)
             let
-                element $ render-element markup
+                element $ render-markup markup
                 deliver-event $ build-deliver-event *global-element dispatch!
-                *changes $ atom ([])
+                *changes $ do (reset! *rereder-changes $ []) (, *rereder-changes)
                 collect! $ fn (x)
                   assert (= 3 $ count x) (, "|change op should has length 3")
                   swap! *changes conj x
@@ -1595,6 +1596,7 @@
               not $ or (nil? x) (element? x) (component? x)
               raise $ str "\"Invalid data in elements tree: " (pr-str x)
             , x
+        |*rereder-changes $ quote (defatom *rereder-changes $ [])
         |defcomp $ quote
           defmacro defcomp (comp-name params & body) (assert "\"expected symbol of comp-name" $ symbol? comp-name) (assert "\"expected list for params" $ list? params)
             assert "\"some component retured" $ &> (count body) 0
@@ -1618,10 +1620,10 @@
             let
                 virtual-name $ name (:name vdom)
                 real-name $ string/lower-case (.-tagName element)
-              when (not= virtual-name real-name)
+              when (/= virtual-name real-name)
                 .warn js/console "\"SSR checking: tag names do not match:" (pr-str $ dissoc vdom :children) (, element)
             if
-              not= (count $ :children vdom) (.-length $ .-children element)
+              /= (count $ :children vdom) (.-length $ .-children element)
               let
                   maybe-html $ :innerHTML
                     into ({}) (:attrs vdom)
