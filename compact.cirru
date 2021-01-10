@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:modules $ [] |memof/compact.cirru |lilac/compact.cirru) (:version nil)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru) (:version nil)
   :files $ {}
     |respo.app.style.widget $ {}
       :ns $ quote
@@ -39,18 +39,18 @@
       :proc $ quote ()
     |respo.render.html $ {}
       :ns $ quote
-        ns respo.render.html $ :require ([] clojure.string :as string) ([] respo.util.format :refer $ [] prop->attr purify-element mute-element ensure-string text->html) ([] respo.util.detect :refer $ [] component? element?) ([] respo.render.expand :refer $ [] render-app)
+        ns respo.render.html $ :require ([] respo.util.format :refer $ [] prop->attr purify-element mute-element ensure-string text->html) ([] respo.util.detect :refer $ [] component? element?) ([] respo.render.expand :refer $ [] render-markup)
       :defs $ {}
         |element->string $ quote
           defn element->string (element)
             let
-                tag-name $ name (:name element)
-                attrs $ into ({}) (:attrs element)
-                styles $ or (:style element) ({})
+                tag-name $ turn-string (:name element)
+                attrs $ pairs-map (:attrs element)
+                styles $ either (:style element) ({})
                 text-inside $ if
                   = (:name element) :textarea
                   escape-html $ :value attrs
-                  or (:innerHTML attrs) (text->html $ :inner-text attrs)
+                  either (:innerHTML attrs) (text->html $ :inner-text attrs)
                 tailored-props $ -> attrs (dissoc :innerHTML) (dissoc :inner-text)
                     fn (props)
                       if (empty? styles) props $ assoc props :style styles
@@ -65,47 +65,45 @@
                   > (count props-in-string) 0
                   , "| " |
                 , props-in-string |>
-                or text-inside $ string/join | children
+                either text-inside $ join-str | children
                 , |</ tag-name |>
         |entry->string $ quote
           defn entry->string (entry)
             let
                 k $ first entry
                 v $ last entry
-              str (prop->attr $ name k) (, |=)
+              str (prop->attr $ turn-string k) (, |=)
                 pr-str $ cond
                     = k :style
                     style->string v
-                  (boolean? v)
+                  (bool? v)
                     str v
                   (number? v)
                     str v
                   (keyword? v)
-                    name v
+                    turn-string v
                   (string? v)
                     escape-html v
                   true $ str v
         |escape-html $ quote
           defn escape-html (text)
-            if (nil? text) "\"" $ -> text
-              string/replace (re-pattern "|\"") |&quot;
-              string/replace (re-pattern |<) |&lt;
-              string/replace (re-pattern |>) |&gt;
-              string/replace (re-pattern "\"\\n") "\"&#13;&#10;"
+            if (nil? text) "\"" $ -> text (replace "|\"" |&quot;) (replace |< |&lt;) (replace |> |&gt;) (replace &newline "\"&#13;&#10;")
         |make-string $ quote
           defn make-string (tree)
             let
-                element $ render-app tree
+                element $ render-markup tree
               element->string $ purify-element (mute-element element)
         |props->string $ quote
           defn props->string (props)
-            ->> props
-              filter $ fn
-                  [] k v
-                and (some? v)
-                  not $ re-matches (re-pattern |^:on-.+) (str k)
+            ->> props (to-pairs)
+              filter $ fn (pair)
+                let
+                    k $ first pair
+                    v $ last pair
+                  and (some? v)
+                    not $ re-matches |^:on-.+ (str k)
               map entry->string
-              string/join "| "
+              join-str "| "
         |style->string $ quote
           defn style->string (styles)
             ->> styles
@@ -113,27 +111,30 @@
                 let
                     k $ first entry
                     v $ last entry
-                  str (name k) |:
+                  str (turn-string k) |:
                     if (string? v) (escape-html v) (ensure-string v)
                     , |;
-              string/join |
+              join-str |
       :proc $ quote ()
     |respo.main $ {}
       :ns $ quote
-        ns respo.main $ :require ([] respo.core :refer $ [] *changes-logger) ([] respo.app.core :refer $ [] render-app! *store)
+        ns respo.main $ :require ([] respo.core :refer $ [] *changes-logger) ([] respo.app.core :refer $ [] render-app! *store) ([] respo.test.main :as respo-test)
       :defs $ {}
         |main! $ quote
           defn main! () (; handle-ssr! mount-target)
-            let
-                raw $ .getItem js/window.localStorage |respo
-              ; if (some? raw)
-                swap! *store assoc :tasks $ do (; read-string raw) nil
-              render-app! mount-target
-              add-watch *store :rerender $ \ render-app! mount-target
-              ; reset! *changes-logger $ fn (old-tree new-tree changes) (.log js/console $ clj->js changes)
-              println |Loaded. $ .now js/performance
-            aset js/window |onbeforeunload save-store!
-        |mount-target $ quote (def mount-target $ .querySelector js/document |.app)
+            if (= "\"ci" $ get-env "\"env") (respo-test/main!)
+              do
+                let
+                    raw $ .getItem js/window.localStorage |respo
+                  ; if (some? raw)
+                    swap! *store assoc :tasks $ do (; read-string raw) nil
+                  render-app! mount-target
+                  add-watch *store :rerender $ \ render-app! mount-target
+                  ; reset! *changes-logger $ fn (old-tree new-tree changes) (.log js/console $ clj->js changes)
+                  println |Loaded. $ .now js/performance
+                aset js/window |onbeforeunload save-store!
+        |mount-target $ quote
+          def mount-target $ if (exists? js/document) (.querySelector js/document |.app) (, nil)
         |reload! $ quote
           defn ^:dev/after-load reload! () (clear-cache!) (render-app! mount-target) (.log js/console "|code updated.")
         |save-store! $ quote
@@ -146,7 +147,7 @@
       :defs $ {}
         |prop->attr $ quote
           defn prop->attr (x)
-            when (string/includes? x "\"?") (println "\"[Respo] warning: property contains `?` in" x)
+            when (contains? x "\"?") (println "\"[Respo] warning: property contains `?` in" x)
             case x (|class-name |class) (|tab-index |tabindex) (|read-only |readonly) (x x)
         |event->prop $ quote
           defn event->prop (x) (str |on $ turn-string x)
@@ -221,7 +222,7 @@
           defn mute-element (element)
             if (component? element) (update element :tree mute-element)
               -> element
-                update :event $ fn (events) (list)
+                update :event $ fn (events) ([])
                 update :children $ fn (children)
                   ->> children $ map
                     fn (entry)
@@ -251,9 +252,7 @@
         |text->html $ quote
           defn text->html (x)
             if (some? x)
-              -> (str x)
-                string/replace (re-pattern |>) |&gt;
-                string/replace (re-pattern |<) |&lt;
+              -> (str x) (replace |> |&gt;) (replace |< |&lt;)
               , nil
       :proc $ quote ()
     |respo.app.updater $ {}
@@ -261,7 +260,7 @@
         ns respo.app.updater $ :require ([] respo.cursor :refer $ [] update-states)
       :defs $ {}
         |updater $ quote
-          defn updater (store op-type op-data op-id) (println store op-type op-data)
+          defn updater (store op-type op-data op-id) (; println store op-type op-data)
             case op-type (:states $ update-states store op-data)
               :add $ update store :tasks
                 fn (tasks)
@@ -357,13 +356,12 @@
           defn dispatch! (op op-data) (; println op op-data)
             let
                 store $ updater @*store op op-data (get-id!)
-              echo "\"alter store" store
               reset! *store store
         |handle-ssr! $ quote
           defn handle-ssr! (mount-target)
             realize-ssr! mount-target (comp-container @*store) dispatch!
         |render-app! $ quote
-          defn render-app! (mount-target) (echo "\"render-app")
+          defn render-app! (mount-target)
             render! mount-target (comp-container @*store) dispatch!
       :proc $ quote ()
     |respo.test.comp.todolist $ {}
@@ -416,7 +414,7 @@
               , xs
         |pick-attrs $ quote
           defn pick-attrs (props)
-            if (nil? props) (list)
+            if (nil? props) ([])
               ->>
                 -> props (dissoc :on) (dissoc :event) (dissoc :style)
                 to-pairs
@@ -424,8 +422,7 @@
                   let
                       k $ get pair 0
                       v $ get pair 1
-                    not $ re-matches "\"on-\\w+"
-                      substr (turn-string k) 1
+                    not $ starts-with? (turn-string k) "\"on-"
                 sort $ fn (x y)
                   compare-xy (first x) (first y)
         |pick-event $ quote
@@ -569,7 +566,7 @@
       :proc $ quote ()
     |respo.render.diff $ {}
       :ns $ quote
-        ns respo.render.diff $ :require ([] clojure.string :as string) ([] respo.util.format :refer $ [] purify-element) ([] respo.util.detect :refer $ [] component? element?) ([] respo.schema.op :as op) ([] respo.util.comparator :refer $ [] compare-xy) ([] respo.render.effect :refer $ [] collect-mounting collect-updating collect-unmounting) ([] respo.util.list :refer $ [] val-of-first)
+        ns respo.render.diff $ :require ([] respo.util.format :refer $ [] purify-element) ([] respo.util.detect :refer $ [] component? element?) ([] respo.schema.op :as op) ([] respo.util.comparator :refer $ [] compare-xy) ([] respo.render.effect :refer $ [] collect-mounting collect-updating collect-unmounting) ([] respo.util.list :refer $ [] val-of-first)
       :defs $ {}
         |find-children-diffs $ quote
           defn find-children-diffs (collect! n-coord index old-children new-children) (; .log js/console "|diff children:" n-coord index old-children new-children)
@@ -769,7 +766,7 @@
       :configs $ {}
     |respo.test.html $ {}
       :ns $ quote
-        ns respo.test.html $ :require ([] cljs.test :refer $ [] deftest is testing run-tests) ([] respo.core :refer $ [] html head title script style meta' div link body textarea) ([] respo.test.comp.todolist :refer $ [] comp-todolist) ([] respo.render.html :refer $ [] make-string) ([] |fs :as fs)
+        ns respo.test.html $ :require ([] calcit-test.core :refer $ [] deftest is testing) ([] respo.core :refer $ [] html head title script div link textarea body) ([] respo.render.html :refer $ [] make-string)
       :defs $ {}
         |html-quote-test $ quote
           deftest html-quote-test $ let
@@ -795,7 +792,7 @@
             testing "|test generated HTML from tree" $ is
               = (slurp |test/examples/simple.html) (make-string tree-demo)
         |slurp $ quote
-          defn slurp (file-path) (.readFileSync fs file-path |utf8)
+          defmacro slurp (file-path) (read-file file-path)
         |textarea-test $ quote
           deftest textarea-test $ let
               piece $ textarea ({} $ :value "|a\nb\nc\n\"\nd")
@@ -809,6 +806,8 @@
               piece $ script
                 {} (:src "\"a.js") (:defer nil)
             testing "|test generate script with nil" $ is (= "|<script src=\"a.js\"></script>" $ make-string piece)
+        |run-tests $ quote
+          defn run-tests () (html-quote-test) (nil-prop-test) (simple-html-test) (textarea-test)
       :proc $ quote
           defn main! () (run-tests)
     |respo.schema.op $ {}
@@ -845,7 +844,7 @@
       :proc $ quote ()
     |respo.render.patch $ {}
       :ns $ quote
-        ns respo.render.patch $ :require ([] clojure.string :as string) ([] respo.util.format :refer $ [] dashed->camel event->prop ensure-string) ([] respo.render.dom :refer $ [] make-element style->string) ([] respo.schema.op :as op)
+        ns respo.render.patch $ :require ([] respo.util.format :refer $ [] dashed->camel event->prop ensure-string) ([] respo.render.dom :refer $ [] make-element style->string) ([] respo.schema.op :as op)
       :defs $ {}
         |rm-event $ quote
           defn rm-event (target event-name)
@@ -1067,7 +1066,7 @@
                       {} (:spell-check true) (:style style-toolbar)
                       div
                         {} (:style widget/button)
-                          :on-click $ if (:locked? state)
+                          :on-click $ if (not $ :locked? state)
                             fn (e d!) (d! :clear nil)
                         <> |Clear2
                       =< 8 nil
@@ -1251,22 +1250,22 @@
       :proc $ quote ()
     |respo.test.main $ {}
       :ns $ quote
-        ns respo.test.main $ :require ([] respo.test.html :as html) ([] cljs.test :refer $ [] deftest testing is run-tests) ([] respo.util.list :refer $ [] pick-attrs pick-event)
+        ns respo.test.main $ :require ([] respo.test.html :as html) ([] calcit-test.core :refer $ [] deftest testing is) ([] respo.util.list :refer $ [] pick-attrs pick-event)
       :defs $ {}
         |main! $ quote
-          defn main! () (html/main!) (run-tests)
+          defn main! () (html/run-tests) (test-pick-attrs) (test-pick-event)
         |reload! $ quote
           defn ^:dev/after-load reload! () (main!)
         |test-pick-attrs $ quote
           deftest test-pick-attrs $ is
             =
               pick-attrs $ {} (:value |string)
-                :on-click $ fn ()
-              list $ [] :value |string
+                :on-click $ fn () nil
+              [] $ [] :value |string
         |test-pick-event $ quote
           deftest test-pick-event $ testing "|test event"
             let
-                f $ fn ()
+                f $ fn () nil
               is $ =
                 pick-event $ {} (:value |a) (:on-click f)
                 {} $ :click f
@@ -1332,7 +1331,7 @@
       :proc $ quote ()
     |respo.controller.resolve $ {}
       :ns $ quote
-        ns respo.controller.resolve $ :require ([] clojure.string :as string) ([] respo.util.detect :refer $ [] component? element?) ([] respo.util.list :refer $ [] filter-first)
+        ns respo.controller.resolve $ :require ([] respo.util.detect :refer $ [] component? element?) ([] respo.util.list :refer $ [] filter-first)
       :defs $ {}
         |build-deliver-event $ quote
           defn build-deliver-event (*global-element dispatch!)
@@ -1357,8 +1356,7 @@
                 element-exists? $ some? target-element
               ; println "|target element:" $ pr-str event-name
               if
-                and element-exists?
-                  some? $ with-log (:event target-element)
+                and element-exists? (some? $ :event target-element)
                   some? $ get (:event target-element) event-name
                 , target-element
                 if (= coord $ []) (, nil)
@@ -1383,7 +1381,7 @@
       :proc $ quote ()
     |respo.render.expand $ {}
       :ns $ quote
-        ns respo.render.expand $ :require ([] clojure.string :as string) ([] respo.util.detect :refer $ [] component? element? effect? =seq) ([] respo.util.list :refer $ [] filter-first pick-attrs filter-first) ([] respo.schema :as schema) ([] respo.caches :refer $ [] *memof-caches) ([] memof.core :as memof)
+        ns respo.render.expand $ :require ([] respo.util.detect :refer $ [] component? element? effect? =seq) ([] respo.util.list :refer $ [] filter-first pick-attrs filter-first) ([] respo.schema :as schema) ([] respo.caches :refer $ [] *memof-caches) ([] memof.core :as memof)
       :defs $ {}
         |render-children $ quote
           defn render-children (children coord) (; println "|render children:" children)
@@ -1472,6 +1470,8 @@
                     , children
                   filter val-exists?
               merge schema/element $ {} (:name tag-name) (:coord nil) (:attrs attrs) (:style styles) (:event event) (:children children-nodes)
+        |body $ quote
+          defn body (props & children) (create-element :body props & $ map confirm-child children)
         |render! $ quote
           defn render! (target markup dispatch!)
             if (some? @*global-element) (rerender-app! target markup dispatch!) (mount-app! target markup dispatch!)
@@ -1522,8 +1522,12 @@
               collect-mounting collect! ([]) element true
               patch-instance! @*changes target deliver-event
               reset! *global-element $ mute-element element
+        |style $ quote
+          defn style (props & children) (create-element :style props & $ map confirm-child children)
         |span $ quote
           defn span (props & children) (create-element :span props & $ map confirm-child children)
+        |script $ quote
+          defn script (props & children) (create-element :script props & $ map confirm-child children)
         |defeffect $ quote
           defmacro defeffect (effect-name args params & body)
             assert "\"args in symbol" $ and (list? args) (every? symbol? args)
@@ -1558,8 +1562,14 @@
                 if (some? logger) (logger @*global-element element @*changes)
               patch-instance! @*changes target deliver-event
               reset! *global-element element
+        |head $ quote
+          defn head (props & children) (create-element :head props & $ map confirm-child children)
+        |title $ quote
+          defn title (props & children) (create-element :title props & $ map confirm-child children)
         |textarea $ quote
           defn textarea (props & children) (create-element :textarea props & $ map confirm-child children)
+        |link $ quote
+          defn link (props & children) (create-element :link props & $ map confirm-child children)
         |div $ quote
           defn div (props & children) (create-element :div props & $ map confirm-child children)
         |pre $ quote
@@ -1583,6 +1593,8 @@
                     result $ apply f params
                   memof/write-record! *memof-caches f params result
                   , result
+        |html $ quote
+          defn html (props & children) (create-element :html props & $ map confirm-child children)
         |clear-cache! $ quote
           defn clear-cache! () (memof/reset-entries! *memof-caches)
         |defplugin $ quote
@@ -1648,9 +1660,7 @@
         |text-width $ quote
           defn text-width (content font-size font-family)
             if (some? shared-canvas-context)
-              do
-                set! (.-font shared-canvas-context) (str font-size "|px " font-family)
-                .-width $ .measureText shared-canvas-context content
+              do (aset shared-canvas-context |font $ str font-size "|px " font-family) (.-width $ .measureText shared-canvas-context content)
               , nil
         |time! $ quote
           defn time! () (.now js/Date)
