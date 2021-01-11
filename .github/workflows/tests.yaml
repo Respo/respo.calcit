@@ -17,7 +17,15 @@ jobs:
       run: chmod +x ci-bin/cr_once
 
     - name: "prepare modules"
-      run: mkdir -p ~/.config/calcit/modules/ && cd ~/.config/calcit/modules/ && echo 'no deps'
+      run: >
+        mkdir -p ~/.config/calcit/modules/ && cd ~/.config/calcit/modules/
+        && git clone https://github.com/calcit-lang/memof.git
+        && git clone https://github.com/calcit-lang/lilac.git
+        && git clone https://github.com/calcit-lang/calcit-test.git
 
-    - name: "test"
-      run: env=ci ./ci-bin/cr_once
+    - name: "test js"
+      run: >
+        ci-bin/cr_once --emit-js
+        && cp -v js/main.mjs js-out/main.mjs
+        && wget -O js-out/calcit.procs.mjs http://js.calcit-lang.org/calcit.procs.mjs
+        && env=ci node js-out/main.mjs
