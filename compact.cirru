@@ -118,7 +118,7 @@
       :proc $ quote ()
     |respo.main $ {}
       :ns $ quote
-        ns respo.main $ :require ([] respo.core :refer $ [] *changes-logger) ([] respo.app.core :refer $ [] render-app! *store) ([] respo.test.main :as respo-test)
+        ns respo.main $ :require ([] respo.core :refer $ [] *changes-logger clear-cache!) ([] respo.app.core :refer $ [] render-app! *store) ([] respo.test.main :as respo-test)
       :defs $ {}
         |main! $ quote
           defn main! () (; handle-ssr! mount-target)
@@ -1020,7 +1020,7 @@
                   js/setTimeout
                     fn () (run-test! dispatch! $ conj acc cost)
                     , 0
-                  println |result: $ vec (sort acc)
+                  println |result: $ sort identity acc
         |initial-state $ quote
           def initial-state $ {} (:draft |) (:locked? false)
         |comp-todolist $ quote
