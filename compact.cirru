@@ -21,7 +21,7 @@
       :proc $ quote ()
     |respo.app.comp.container $ {}
       :ns $ quote
-        ns respo.app.comp.container $ :require ([] respo.core :refer $ [] defcomp div span <> >>) ([] respo.app.comp.todolist :refer $ [] comp-todolist) ([] respo.app.comp.caches :refer $ [] comp-caches) ([] respo.comp.space :refer $ [] =<)
+        ns respo.app.comp.container $ :require ([] respo.core :refer $ [] defcomp div span <> >> a) ([] respo.app.comp.todolist :refer $ [] comp-todolist) ([] respo.app.comp.caches :refer $ [] comp-caches) ([] respo.comp.space :refer $ [] =<)
       :defs $ {}
         |comp-container $ quote
           defcomp comp-container (store)
@@ -125,9 +125,9 @@
             if (= "\"ci" $ get-env "\"env") (respo-test/main!)
               do
                 let
-                    raw $ .getItem js/window.localStorage |respo
-                  ; if (some? raw)
-                    swap! *store assoc :tasks $ do (; read-string raw) nil
+                    raw $ .getItem js/window.localStorage |respo.calcit
+                  if (some? raw)
+                    swap! *store assoc :tasks $ extract-cirru-edn (js/JSON.parse raw)
                   render-app! mount-target
                   add-watch *store :rerender $ \ render-app! mount-target
                   ; reset! *changes-logger $ fn (old-tree new-tree changes) (.log js/console $ clj->js changes)
@@ -136,10 +136,10 @@
         |mount-target $ quote
           def mount-target $ if (exists? js/document) (.querySelector js/document |.app) (, nil)
         |reload! $ quote
-          defn ^:dev/after-load reload! () (clear-cache!) (render-app! mount-target) (.log js/console "|code updated.")
+          defn reload! () (clear-cache!) (render-app! mount-target) (.log js/console "|code updated.")
         |save-store! $ quote
           defn save-store! ()
-            .setItem js/window.localStorage |respo $ pr-str (:tasks @*store)
+            .setItem js/window.localStorage |respo.calcit $ js/JSON.stringify (to-cirru-edn $ :tasks @*store)
       :proc $ quote ()
     |respo.util.format $ {}
       :ns $ quote
@@ -1542,6 +1542,8 @@
                   ~@ $ if (empty? body) (quote-replace $ echo "\"WARNING:" ~effect-name "\"lack code for handling effects!" ) (, body)
         |list-> $ quote
           defn list-> (props children) (create-list-element :div props children)
+        |a $ quote
+          defn a (props & children) (create-element :a props & $ map confirm-child children)
         |input $ quote
           defn input (props & children) (create-element :input props & $ map confirm-child children)
         |rerender-app! $ quote
