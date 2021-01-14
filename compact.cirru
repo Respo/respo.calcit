@@ -157,7 +157,7 @@
                 string? x
                 , x
               (keyword? x)
-                name x
+                turn-string x
               true $ str x
         |event->string $ quote
           defn event->string (x)
@@ -736,7 +736,7 @@
                   let
                       entry $ first old-style
                       follows $ rest old-style
-                    collect! $ [] op/rm-style coord (key entry)
+                    collect! $ [] op/rm-style coord (first entry)
                     recur collect! coord follows new-style
                 true $ let
                     old-entry $ first old-style
@@ -744,14 +744,14 @@
                     old-follows $ rest old-style
                     new-follows $ rest new-style
                   case
-                    compare-xy (key old-entry) (key new-entry)
+                    compare-xy (first old-entry) (first new-entry)
                     -1 $ do
-                      collect! $ [] op/rm-style coord (key old-entry)
+                      collect! $ [] op/rm-style coord (first old-entry)
                       recur collect! coord old-follows new-style
                     1 $ do (collect! $ [] op/add-style coord new-entry) (recur collect! coord old-style new-follows)
                     0 $ do
                       if
-                        not $ identical? (val old-entry) (val new-entry)
+                        not $ identical? (last old-entry) (last new-entry)
                         collect! $ [] op/replace-style coord new-entry
                       recur collect! coord old-follows new-follows
       :proc $ quote ()
@@ -853,9 +853,9 @@
               aset target event-prop nil
         |replace-style $ quote
           defn replace-style (target op)
-            let
-                style-name $ dashed->camel (name $ key op)
-                style-value $ ensure-string (val op)
+            let[] (p v) op $ let
+                style-name $ dashed->camel (turn-string p)
+                style-value $ ensure-string v
               aset (.-style target) style-name style-value
         |replace-element $ quote
           defn replace-element (target op listener-builder)
@@ -871,9 +871,7 @@
               .appendChild target new-element
         |add-event $ quote
           defn add-event (target op-data listener-builder)
-            let
-                event-name $ get op-data 0
-                coord $ get op-data 1
+            let[] (event-name coord) op-data $ let
                 event-prop $ event->prop event-name
               aset target event-prop $ fn (event)
                   listener-builder event-name
@@ -882,21 +880,19 @@
         |rm-prop $ quote
           defn rm-prop (target op)
             let
-                k $ dashed->camel (name op)
+                k $ dashed->camel (turn-string op)
               aset target k nil
         |add-prop $ quote
           defn add-prop (target op)
-            let
-                prop-name $ dashed->camel (name $ key op)
-                prop-value $ val op
+            let[] (p prop-value) op $ let
+                prop-name $ dashed->camel (turn-string p)
               case prop-name
                 |style $ aset target prop-name (style->string prop-value)
                 prop-name $ prop-name (aset target prop-name prop-value)
         |replace-prop $ quote
           defn replace-prop (target op)
-            let
-                prop-name $ dashed->camel (turn-string $ first op)
-                prop-value $ last op
+            let[] (p prop-value) op $ let
+                prop-name $ dashed->camel (turn-string p)
               if (= prop-name |value)
                 if (/= prop-value $ .-value target) (aset target prop-name prop-value)
                 aset target prop-name prop-value
@@ -946,14 +942,14 @@
                     true $ println "|not implemented:" op-type coord op-data
         |add-style $ quote
           defn add-style (target op)
-            let
-                style-name $ dashed->camel (name $ key op)
-                style-value $ ensure-string (val op)
+            let[] (p v) op $ let
+                style-name $ dashed->camel (turn-string p)
+                style-value $ ensure-string v
               aset (.-style target) style-name style-value
         |rm-style $ quote
           defn rm-style (target op)
             let
-                style-name $ dashed->camel (name op)
+                style-name $ dashed->camel (turn-string op)
               aset (.-style target) style-name nil
         |run-effect $ quote
           defn run-effect (target op-data coord)
@@ -1470,8 +1466,6 @@
                     , children
                   filter val-exists?
               merge schema/element $ {} (:name tag-name) (:coord nil) (:attrs attrs) (:style styles) (:event event) (:children children-nodes)
-        |img $ quote
-          defn img (props & children) (create-element :img props & $ map confirm-child children)
         |body $ quote
           defn body (props & children) (create-element :body props & $ map confirm-child children)
         |render! $ quote
@@ -1497,8 +1491,6 @@
               patch-instance! @*changes target deliver-event
               reset! *global-element element
         |*dom-changes $ quote (defatom *dom-changes $ [])
-        |option $ quote
-          defn option (props & children) (create-element :option props & $ map confirm-child children)
         |create-list-element $ quote
           defn create-list-element (tag-name props child-map)
             let
@@ -1506,7 +1498,8 @@
                 styles $ sort
                   fn (x y)
                     compare-xy (first x) (first y)
-                  set->list $ to-pairs (:style props)
+                  set->list $ to-pairs
+                    either (:style props) ({})
                 event $ pick-event props
               merge schema/element $ {} (:name tag-name) (:coord nil) (:attrs attrs) (:style styles) (:event event) (:children child-map)
         |realize-ssr! $ quote
@@ -1532,8 +1525,6 @@
           defn span (props & children) (create-element :span props & $ map confirm-child children)
         |script $ quote
           defn script (props & children) (create-element :script props & $ map confirm-child children)
-        |select $ quote
-          defn select (props & children) (create-element :select props & $ map confirm-child children)
         |defeffect $ quote
           defmacro defeffect (effect-name args params & body)
             assert "\"args in symbol" $ and (list? args) (every? symbol? args)
