@@ -1470,6 +1470,8 @@
                     , children
                   filter val-exists?
               merge schema/element $ {} (:name tag-name) (:coord nil) (:attrs attrs) (:style styles) (:event event) (:children children-nodes)
+        |img $ quote
+          defn img (props & children) (create-element :img props & $ map confirm-child children)
         |body $ quote
           defn body (props & children) (create-element :body props & $ map confirm-child children)
         |render! $ quote
@@ -1495,6 +1497,8 @@
               patch-instance! @*changes target deliver-event
               reset! *global-element element
         |*dom-changes $ quote (defatom *dom-changes $ [])
+        |option $ quote
+          defn option (props & children) (create-element :option props & $ map confirm-child children)
         |create-list-element $ quote
           defn create-list-element (tag-name props child-map)
             let
@@ -1517,7 +1521,7 @@
                   assert (= 3 $ count x) (, "|change op should has length 3")
                   swap! *changes conj x
                 deliver-event $ build-deliver-event *global-element dispatch!
-              if (nil? app-element) (throw $ js/Error. "\"Detected no element from SSR!")
+              if (nil? app-element) (raise "\"Detected no element from SSR!")
               compare-to-dom! (purify-element element) app-element
               collect-mounting collect! ([]) element true
               patch-instance! @*changes target deliver-event
@@ -1528,6 +1532,8 @@
           defn span (props & children) (create-element :span props & $ map confirm-child children)
         |script $ quote
           defn script (props & children) (create-element :script props & $ map confirm-child children)
+        |select $ quote
+          defn select (props & children) (create-element :select props & $ map confirm-child children)
         |defeffect $ quote
           defmacro defeffect (effect-name args params & body)
             assert "\"args in symbol" $ and (list? args) (every? symbol? args)
