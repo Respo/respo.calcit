@@ -222,7 +222,7 @@
           defn mute-element (element)
             if (component? element) (update element :tree mute-element)
               -> element
-                update :event $ fn (events) ([])
+                update :event $ fn (events) ({})
                 update :children $ fn (children)
                   ->> children $ map
                     fn (entry)
