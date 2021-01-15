@@ -222,7 +222,7 @@
           defn mute-element (element)
             if (component? element) (update element :tree mute-element)
               -> element
-                update :event $ fn (events) ([])
+                update :event $ fn (events) ({})
                 update :children $ fn (children)
                   ->> children $ map
                     fn (entry)
@@ -1466,6 +1466,8 @@
                     , children
                   filter val-exists?
               merge schema/element $ {} (:name tag-name) (:coord nil) (:attrs attrs) (:style styles) (:event event) (:children children-nodes)
+        |img $ quote
+          defn img (props & children) (create-element :img props & $ map confirm-child children)
         |body $ quote
           defn body (props & children) (create-element :body props & $ map confirm-child children)
         |render! $ quote
@@ -1491,6 +1493,8 @@
               patch-instance! @*changes target deliver-event
               reset! *global-element element
         |*dom-changes $ quote (defatom *dom-changes $ [])
+        |option $ quote
+          defn option (props & children) (create-element :option props & $ map confirm-child children)
         |create-list-element $ quote
           defn create-list-element (tag-name props child-map)
             let
@@ -1525,6 +1529,8 @@
           defn span (props & children) (create-element :span props & $ map confirm-child children)
         |script $ quote
           defn script (props & children) (create-element :script props & $ map confirm-child children)
+        |select $ quote
+          defn select (props & children) (create-element :select props & $ map confirm-child children)
         |defeffect $ quote
           defmacro defeffect (effect-name args params & body)
             assert "\"args in symbol" $ and (list? args) (every? symbol? args)
