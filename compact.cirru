@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru) (:version |0.14.0)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru) (:version |0.14.1)
   :files $ {}
     |respo.app.style.widget $ {}
       :ns $ quote
@@ -408,7 +408,7 @@
         |map-with-idx $ quote
           defn map-with-idx (f xs)
             assert (fn? f) "|expects function"
-            assert (sequential? xs) "|expects sequence"
+            assert (list? xs) "|expects list"
             map-indexed
               fn (idx x) ([] idx $ f x)
               , xs
@@ -1473,6 +1473,8 @@
         |render! $ quote
           defn render! (target markup dispatch!)
             if (some? @*global-element) (rerender-app! target markup dispatch!) (mount-app! target markup dispatch!)
+        |h3 $ quote
+          defn h3 (props & children) (create-element :h3 props & $ map confirm-child children)
         |mount-app! $ quote
           defn mount-app! (target markup dispatch!)
             ; assert
@@ -1506,6 +1508,8 @@
                     either (:style props) ({})
                 event $ pick-event props
               merge schema/element $ {} (:name tag-name) (:coord nil) (:attrs attrs) (:style styles) (:event event) (:children child-map)
+        |h2 $ quote
+          defn h2 (props & children) (create-element :h2 props & $ map confirm-child children)
         |realize-ssr! $ quote
           defn realize-ssr! (target markup dispatch!)
             assert (instance? element-type target) "|1st argument should be an element"
@@ -1523,6 +1527,8 @@
               collect-mounting collect! ([]) element true
               patch-instance! @*changes target deliver-event
               reset! *global-element $ mute-element element
+        |h4 $ quote
+          defn h4 (props & children) (create-element :h4 props & $ map confirm-child children)
         |style $ quote
           defn style (props & children) (create-element :style props & $ map confirm-child children)
         |span $ quote
@@ -1579,6 +1585,8 @@
           defn div (props & children) (create-element :div props & $ map confirm-child children)
         |pre $ quote
           defn pre (props & children) (create-element :pre props & $ map confirm-child children)
+        |blockquote $ quote
+          defn blockquote (props & children) (create-element :blockquote props & $ map confirm-child children)
         |<> $ quote
           defn <> (content & args)
             let
@@ -1607,6 +1615,8 @@
             assert "\"expected some result" $ > (count body) 0
             quote-replace $ defn ~x ~params
               call-plugin-func (defn ~x ~params ~@body) ([] ~@params)
+        |h1 $ quote
+          defn h1 (props & children) (create-element :h1 props & $ map confirm-child children)
         |confirm-child $ quote
           defn confirm-child (x)
             when
@@ -1622,6 +1632,10 @@
                 :args $ [] (~@ params)
                 :name $ ~ (turn-keyword comp-name)
                 :render $ defn ~comp-name (~ params) (~@ body)
+        |code $ quote
+          defn code (props & children) (create-element :code props & $ map confirm-child children)
+        |li $ quote
+          defn li (props & children) (create-element :li props & $ map confirm-child children)
         |button $ quote
           defn button (props & children) (create-element :button props & $ map confirm-child children)
       :proc $ quote ()
