@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "@calcit/ternary-tree": "^0.0.3-a2"
+    "@calcit/ternary-tree": "^0.0.3-a4"
   },
   "devDependencies": {
     "vite": "^2.0.0-beta.23",
