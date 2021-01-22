@@ -619,8 +619,8 @@
                         collect! $ [] op/rm-element (conj n-coord index) nil
                         recur collect! n-coord index old-follows new-children
                     true $ let
-                        xi $ .indexOf new-keys x1
-                        yi $ .indexOf old-keys y1
+                        xi $ index-of new-keys x1
+                        yi $ index-of old-keys y1
                         first-old-entry $ first old-children
                         first-new-entry $ first new-children
                       ; println |index: xi yi
@@ -1012,7 +1012,7 @@
               let
                   cost $ - (time!) started
                 if
-                  < (count acc) 40
+                  < (count acc) 4
                   js/setTimeout
                     fn () (run-test! dispatch! $ conj acc cost)
                     , 0
@@ -1422,13 +1422,15 @@
                 coord $ either (first args) ([])
               cond
                   component? markup
-                  let
-                      v $ memof/access-record *memof-caches (:render markup) (:args markup)
-                    either v $ let
-                        result $ render-component markup coord
-                      ; println "\"[Respo] reusing component from memof" $ :name markup
-                      memof/write-record! *memof-caches (:render markup) (:args markup) (, result)
-                      , result
+                  do
+                    ; let
+                        v $ memof/access-record *memof-caches (:render markup) (:args markup)
+                      either v $ let
+                          result $ render-component markup coord
+                        ; println "\"[Respo] reusing component from memof" $ :name markup
+                        memof/write-record! *memof-caches (:render markup) (:args markup) (, result)
+                        , result
+                    render-component markup coord
                 (element? markup)
                   render-element markup coord
                 true $ do (js/console.log "\"Markup:" markup) (raise $ str "\"expects component or element!")
@@ -1597,7 +1599,7 @@
         |*global-element $ quote (defatom *global-element nil)
         |call-plugin-func $ quote
           defn call-plugin-func (f params)
-            if
+            ; if
               or (any? fn? params) (any? detect-func-in-map? params)
               apply f params
               let
@@ -1606,6 +1608,7 @@
                     result $ apply f params
                   memof/write-record! *memof-caches f params result
                   , result
+            apply f params
         |html $ quote
           defn html (props & children) (create-element :html props & $ map confirm-child children)
         |clear-cache! $ quote
