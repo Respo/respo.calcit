@@ -23,15 +23,18 @@ jobs:
         && git clone https://github.com/calcit-lang/lilac.git
         && git clone https://github.com/calcit-lang/calcit-test.git
 
-    - name: "test js"
+    - name: "load deps"
       run: >
         ci-bin/cr_once --emit-js
         && wget -O js-out/calcit.procs.mjs http://js.calcit-lang.org/calcit.procs.mjs
-        && env=ci node main.mjs
+        && yarn
+
+    - name: "test js"
+      run: target=node yarn webpack && env=ci node js-out/bundle.js
 
     - name: "build js"
       run: >
-        yarn && yarn vite build --base=./
+        yarn vite build --base=./
 
     - name: Deploy to server
       id: deploy
