@@ -1450,10 +1450,10 @@
         |*changes-logger $ quote (defatom *changes-logger nil)
         |create-element $ quote
           defn create-element (tag-name props & children)
-            and
-              > (count children) 0
-              not $ any? list? children
-            str "|For rendering lists, please use list-> , got: " $ pr-str children
+            ; assert (str "|For rendering lists, please use list-> , got: " $ pr-str children)
+              and
+                > (count children) 0
+                not $ any? list? children
             let
                 attrs $ pick-attrs props
                 styles $ sort
