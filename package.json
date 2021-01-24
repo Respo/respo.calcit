@@ -3,7 +3,7 @@
     "@calcit/ternary-tree": "^0.0.4-a2"
   },
   "devDependencies": {
-    "vite": "^2.0.0-beta.43",
+    "vite": "^2.0.0-beta.46",
     "webpack": "^5.17.0",
     "webpack-cli": "^4.4.0"
   },
