@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru) (:version |0.14.3)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru) (:version |0.14.4)
   :files $ {}
     |respo.app.style.widget $ {}
       :ns $ quote
@@ -1322,7 +1322,7 @@
       :proc $ quote ()
     |respo.render.expand $ {}
       :ns $ quote
-        ns respo.render.expand $ :require ([] respo.util.detect :refer $ [] component? element? effect? =seq) ([] respo.util.list :refer $ [] filter-first pick-attrs filter-first) ([] respo.schema :as schema)
+        ns respo.render.expand $ :require ([] respo.util.detect :refer $ [] component? element? effect? =seq) ([] respo.util.list :refer $ [] filter-first pick-attrs filter-first) ([] respo.schema :as schema) ([] memof.alias :refer $ [] memof-call)
       :defs $ {}
         |render-children $ quote
           defn render-children (children coord) (; println "|render children:" children)
@@ -1335,10 +1335,8 @@
         |render-component $ quote
           defn render-component (markup coord)
             let
-                args $ :args markup
                 new-coord $ conj coord (:name markup)
-                render $ :render markup
-                markup-tree $ apply render args
+                markup-tree $ :tree markup
               ; println "\"render component" $ :name markup
               ; println "|no cache:" coord
               cond
@@ -1556,9 +1554,8 @@
             assert "\"some component retured" $ &> (count body) 0
             quote-replace $ defn ~comp-name (~ params)
               {} (:respo-node :component) (:effects $ [])
-                :args $ [] (~@ params)
                 :name $ ~ (turn-keyword comp-name)
-                :render $ defn ~comp-name (~ params) (~@ body)
+                :tree $ do (~@ body)
         |code $ quote
           defn code (props & children) (create-element :code props & $ map confirm-child children)
         |li $ quote
