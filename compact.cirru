@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru) (:version |0.14.2)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru) (:version |0.14.3)
   :files $ {}
     |respo.app.style.widget $ {}
       :ns $ quote
@@ -21,7 +21,7 @@
       :proc $ quote ()
     |respo.app.comp.container $ {}
       :ns $ quote
-        ns respo.app.comp.container $ :require ([] respo.core :refer $ [] defcomp div span <> >> a) ([] respo.app.comp.todolist :refer $ [] comp-todolist) ([] respo.app.comp.caches :refer $ [] comp-caches) ([] respo.comp.space :refer $ [] =<)
+        ns respo.app.comp.container $ :require ([] respo.core :refer $ [] defcomp div span <> >> a) ([] respo.app.comp.todolist :refer $ [] comp-todolist) ([] respo.comp.space :refer $ [] =<)
       :defs $ {}
         |comp-container $ quote
           defcomp comp-container (store)
@@ -30,8 +30,6 @@
               div ({} $ :style style-global) (comp-todolist states $ :tasks store)
                 div ({} $ :style style-states)
                   <> $ str "|states: " (pr-str $ :states store)
-                =< nil 40
-                comp-caches $ >> states :caches
         |style-global $ quote
           def style-global $ {} (:font-family |Avenir,Verdana)
         |style-states $ quote
@@ -755,15 +753,6 @@
                         collect! $ [] op/replace-style coord new-entry
                       recur collect! coord old-follows new-follows
       :proc $ quote ()
-    |respo.caches $ {}
-      :ns $ quote
-        ns respo.caches $ :require ([] memof.core :as memof)
-      :defs $ {}
-        |*memof-caches $ quote
-          defatom *memof-caches $ memof/new-states
-            {} (:trigger-loop 100) (:elapse-loop 600)
-      :proc $ quote ()
-      :configs $ {}
     |respo.test.html $ {}
       :ns $ quote
         ns respo.test.html $ :require ([] calcit-test.core :refer $ [] deftest is testing) ([] respo.core :refer $ [] html head title script div link textarea body) ([] respo.render.html :refer $ [] make-string)
@@ -975,7 +964,7 @@
       :proc $ quote ()
     |respo.app.comp.todolist $ {}
       :ns $ quote
-        ns respo.app.comp.todolist $ :require ([] respo.core :refer $ [] defcomp div span input <> list-> defeffect >>) ([] respo.util.format :refer $ [] hsl) ([] respo.app.comp.task :refer $ [] comp-task) ([] respo.comp.space :refer $ [] =<) ([] respo.comp.inspect :refer $ [] comp-inspect) ([] respo.app.comp.zero :refer $ [] comp-zero) ([] respo.app.comp.wrap :refer $ [] comp-wrap) ([] respo.util.dom :refer $ [] text-width time!) ([] respo.app.style.widget :as widget)
+        ns respo.app.comp.todolist $ :require ([] respo.core :refer $ [] defcomp div span input <> list-> defeffect >>) ([] respo.util.format :refer $ [] hsl) ([] respo.app.comp.task :refer $ [] comp-task) ([] respo.comp.space :refer $ [] =<) ([] respo.comp.inspect :refer $ [] comp-inspect) ([] respo.app.comp.zero :refer $ [] comp-zero) ([] respo.app.comp.wrap :refer $ [] comp-wrap) ([] respo.util.dom :refer $ [] text-width time!) ([] respo.app.style.widget :as widget) ([] memof.alias :refer $ [] memof-call)
       :defs $ {}
         |style-root $ quote
           def style-root $ {} (:color :black) (:background-color $ hsl 120 20 98) (:line-height |24px) ("\"font-size" 16) (:padding 10) (:font-family "|\"微软雅黑\", Verdana")
@@ -1055,7 +1044,7 @@
                       map $ fn (task)
                         let
                             task-id $ :id task
-                          [] task-id $ comp-task (>> states task-id) task
+                          [] task-id $ memof-call comp-task (>> states task-id) task
                   if
                     > (count tasks) 0
                     div
@@ -1200,50 +1189,6 @@
         |style-task $ quote
           def style-task $ {} (:display :flex) (:padding "|4px 0px")
       :proc $ quote ()
-    |respo.app.comp.caches $ {}
-      :ns $ quote
-        ns respo.app.comp.caches $ :require ([] respo.core :refer $ [] defcomp defplugin div button span >>) ([] respo.caches :refer $ [] *memof-caches) ([] respo.comp.space :refer $ [] =<) ([] respo.app.style.widget :as widget) ([] memof.core :as memof)
-      :defs $ {}
-        |comp-caches $ quote
-          defcomp comp-caches (states)
-            let
-                value-plugin $ use-demo (>> states :count)
-              div
-                {} $ :style ({} $ :padding 8)
-                div ({})
-                  div $ {} (:inner-text "\"Loop") (:style widget/button)
-                    :on-click $ fn (e d!) (memof/new-loop! *memof-caches) (println @*memof-caches)
-                  =< 8 nil
-                  div $ {} (:inner-text "\"Add cache") (:style widget/button)
-                    :on-click $ fn (e d!)
-                      memof/write-record! *memof-caches identity ([] 1 2 3) 6
-                  =< 8 nil
-                  div $ {} (:inner-text "\"Access") (:style widget/button)
-                    :on-click $ fn (e d!)
-                      println $ memof/access-record *memof-caches identity ([] 1 2 3)
-                  =< 8 nil
-                  div $ {} (:inner-text "\"Reset") (:style widget/button)
-                    :on-click $ fn (e d!) (memof/reset-entries! *memof-caches)
-                  =< 8 nil
-                  div $ {} (:inner-text "\"GC") (:style widget/button)
-                    :on-click $ fn (e d!) (memof/perform-gc! *memof-caches)
-                =< nil 8
-                div ({})
-                  div $ {} (:inner-text "\"Trigger") (:style widget/button)
-                    :on-click $ fn (e d!)
-                        :toggle value-plugin
-                        , d!
-                :ui value-plugin
-        |use-demo $ quote
-          defplugin use-demo (states)
-            let
-                cursor $ :cursor states
-                state $ either (:data states) ({} $ :status true)
-              {}
-                :ui $ span
-                  {} $ :inner-text (str "\"status: " $ :status state)
-                :toggle $ fn (d!) (d! cursor $ update state :status not)
-      :proc $ quote ()
     |respo.test.main $ {}
       :ns $ quote
         ns respo.test.main $ :require ([] respo.test.html :as html) ([] calcit-test.core :refer $ [] deftest testing is) ([] respo.util.list :refer $ [] pick-attrs pick-event)
@@ -1377,7 +1322,7 @@
       :proc $ quote ()
     |respo.render.expand $ {}
       :ns $ quote
-        ns respo.render.expand $ :require ([] respo.util.detect :refer $ [] component? element? effect? =seq) ([] respo.util.list :refer $ [] filter-first pick-attrs filter-first) ([] respo.schema :as schema) ([] respo.caches :refer $ [] *memof-caches) ([] memof.core :as memof)
+        ns respo.render.expand $ :require ([] respo.util.detect :refer $ [] component? element? effect? =seq) ([] respo.util.list :refer $ [] filter-first pick-attrs filter-first) ([] respo.schema :as schema)
       :defs $ {}
         |render-children $ quote
           defn render-children (children coord) (; println "|render children:" children)
@@ -1422,15 +1367,7 @@
                 coord $ either (first args) ([])
               cond
                   component? markup
-                  do
-                    ; let
-                        v $ memof/access-record *memof-caches (:render markup) (:args markup)
-                      either v $ let
-                          result $ render-component markup coord
-                        ; println "\"[Respo] reusing component from memof" $ :name markup
-                        memof/write-record! *memof-caches (:render markup) (:args markup) (, result)
-                        , result
-                    render-component markup coord
+                  render-component markup coord
                 (element? markup)
                   render-element markup coord
                 true $ do (js/console.log "\"Markup:" markup) (raise $ str "\"expects component or element!")
@@ -1438,7 +1375,7 @@
     |respo.core $ {}
       :ns $ quote
         ns respo.core
-          :require ([] respo.render.expand :refer $ [] render-markup) ([] respo.controller.resolve :refer $ [] build-deliver-event) ([] respo.render.diff :refer $ [] find-element-diffs) ([] respo.render.effect :refer $ [] collect-mounting) ([] respo.util.format :refer $ [] purify-element) ([] respo.controller.client :refer $ [] activate-instance! patch-instance!) ([] respo.util.list :refer $ [] pick-attrs pick-event val-exists? detect-func-in-map?) ([] respo.util.detect :refer $ [] component? element?) ([] respo.schema :as schema) ([] respo.util.comparator :refer $ [] compare-xy) ([] memof.core :as memof) ([] respo.caches :refer $ [] *memof-caches)
+          :require ([] respo.render.expand :refer $ [] render-markup) ([] respo.controller.resolve :refer $ [] build-deliver-event) ([] respo.render.diff :refer $ [] find-element-diffs) ([] respo.render.effect :refer $ [] collect-mounting) ([] respo.util.format :refer $ [] purify-element) ([] respo.controller.client :refer $ [] activate-instance! patch-instance!) ([] respo.util.list :refer $ [] pick-attrs pick-event val-exists? detect-func-in-map?) ([] respo.util.detect :refer $ [] component? element?) ([] respo.schema :as schema) ([] respo.util.comparator :refer $ [] compare-xy) ([] memof.alias :refer $ [] tick-calling-loop! reset-calling-caches!)
           :require-macros $ [] respo.core
       :defs $ {}
         |>> $ quote
@@ -1558,7 +1495,7 @@
         |input $ quote
           defn input (props & children) (create-element :input props & $ map confirm-child children)
         |rerender-app! $ quote
-          defn rerender-app! (target markup dispatch!) (memof/new-loop! *memof-caches)
+          defn rerender-app! (target markup dispatch!) (tick-calling-loop!)
             let
                 element $ render-markup markup
                 deliver-event $ build-deliver-event *global-element dispatch!
@@ -1597,27 +1534,14 @@
         |element-type $ quote
           def element-type $ if (exists? js/Element) js/Element js/Error
         |*global-element $ quote (defatom *global-element nil)
-        |call-plugin-func $ quote
-          defn call-plugin-func (f params)
-            ; if
-              or (any? fn? params) (any? detect-func-in-map? params)
-              apply f params
-              let
-                  v $ memof/access-record *memof-caches f params
-                if (some? v) v $ let
-                    result $ apply f params
-                  memof/write-record! *memof-caches f params result
-                  , result
-            apply f params
         |html $ quote
           defn html (props & children) (create-element :html props & $ map confirm-child children)
         |clear-cache! $ quote
-          defn clear-cache! () (memof/reset-entries! *memof-caches)
+          defn clear-cache! () (reset-calling-caches!)
         |defplugin $ quote
           defmacro defplugin (x params & body) (assert "\"expected symbol" $ symbol? x) (assert "\"expected params" $ list? params)
             assert "\"expected some result" $ > (count body) 0
-            quote-replace $ defn ~x ~params
-              call-plugin-func (defn ~x ~params ~@body) ([] ~@params)
+            quote-replace $ defn ~x ~params ~@body
         |h1 $ quote
           defn h1 (props & children) (create-element :h1 props & $ map confirm-child children)
         |confirm-child $ quote
