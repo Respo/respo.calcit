@@ -2,17 +2,17 @@
 # yarn lockfile v1
 
 
-"@calcit/procs@^0.2.35":
-  version "0.2.35"
-  resolved "https://registry.npm.taobao.org/@calcit/procs/download/@calcit/procs-0.2.35.tgz#dc234731d1ad4c93519a31639eb99974a07cbbfa"
-  integrity sha1-3CNHMdGtTJNRmjFjnrmZdKB8u/o=
+"@calcit/procs@^0.2.39":
+  version "0.2.39"
+  resolved "https://registry.yarnpkg.com/@calcit/procs/-/procs-0.2.39.tgz#c57dc4d6e6e1e489cce38e3b329ae886ff52153c"
+  integrity sha512-SiY8LybkO4gjPK3YLcVAdlWdZYaaTbDb5VpDbjpIbkaGoKWxjz4lPV3Bs8C7ZgmWK0pzgjCFetd5ENU8upCP7g==
   dependencies:
-    "@calcit/ternary-tree" "0.0.5"
+    "@calcit/ternary-tree" "0.0.7"
 
-"@calcit/ternary-tree@0.0.5":
-  version "0.0.5"
-  resolved "https://registry.npm.taobao.org/@calcit/ternary-tree/download/@calcit/ternary-tree-0.0.5.tgz#206f636c95d22a3de4482ce5710c5a4dda0b4f60"
-  integrity sha1-IG9jbJXSKj3kSCzlcQxaTdoLT2A=
+"@calcit/ternary-tree@0.0.7":
+  version "0.0.7"
+  resolved "https://registry.yarnpkg.com/@calcit/ternary-tree/-/ternary-tree-0.0.7.tgz#ae41e3b02cc51f6ff08aa11c7db4cbd4c55440d5"
+  integrity sha512-7MCgpJ36yVvObQYE+budozGLtvHzZU50bh3PyCa2j/B9fcpdRaDESyrZu7DEPaaE+FDAS/ivAzNIXKLBPImqug==
 
 "@discoveryjs/json-ext@^0.5.0":
   version "0.5.2"
@@ -199,9 +199,9 @@
   integrity sha1-0pHGpOl5ibXGHZrPOWrk/hM6cY0=
 
 acorn@^8.0.4:
-  version "8.0.4"
-  resolved "https://registry.npm.taobao.org/acorn/download/acorn-8.0.4.tgz?cache=0&sync_timestamp=1602534380346&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Facorn%2Fdownload%2Facorn-8.0.4.tgz#7a3ae4191466a6984eee0fe3407a4f3aa9db8354"
-  integrity sha1-ejrkGRRmpphO7g/jQHpPOqnbg1Q=
+  version "8.0.5"
+  resolved "https://registry.npm.taobao.org/acorn/download/acorn-8.0.5.tgz?cache=0&sync_timestamp=1611561275462&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Facorn%2Fdownload%2Facorn-8.0.5.tgz#a3bfb872a74a6a7f661bc81b9849d9cac12601b7"
+  integrity sha1-o7+4cqdKan9mG8gbmEnZysEmAbc=
 
 ajv-keywords@^3.5.2:
   version "3.5.2"
@@ -240,9 +240,9 @@ buffer-from@^1.0.0:
   integrity sha1-MnE7wCj3XAL9txDXx7zsHyxgcO8=
 
 caniuse-lite@^1.0.30001173:
-  version "1.0.30001179"
-  resolved "https://registry.npm.taobao.org/caniuse-lite/download/caniuse-lite-1.0.30001179.tgz#b0803883b4471a6c62066fb1752756f8afc699c8"
-  integrity sha1-sIA4g7RHGmxiBm+xdSdW+K/Gmcg=
+  version "1.0.30001180"
+  resolved "https://registry.npm.taobao.org/caniuse-lite/download/caniuse-lite-1.0.30001180.tgz?cache=0&sync_timestamp=1611733021487&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fcaniuse-lite%2Fdownload%2Fcaniuse-lite-1.0.30001180.tgz#67abcd6d1edf48fa5e7d1e84091d1d65ab76e33b"
+  integrity sha1-Z6vNbR7fSPpefR6ECR0dZat24zs=
 
 chrome-trace-event@^1.0.2:
   version "1.0.2"
@@ -285,9 +285,9 @@ cross-spawn@^7.0.3:
     which "^2.0.1"
 
 electron-to-chromium@^1.3.634:
-  version "1.3.644"
-  resolved "https://registry.npm.taobao.org/electron-to-chromium/download/electron-to-chromium-1.3.644.tgz?cache=0&sync_timestamp=1611385458992&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Felectron-to-chromium%2Fdownload%2Felectron-to-chromium-1.3.644.tgz#c89721733ec26b8d117275fb6b2acbeb3d45a6b6"
-  integrity sha1-yJchcz7Ca40RcnX7ayrL6z1FprY=
+  version "1.3.647"
+  resolved "https://registry.npm.taobao.org/electron-to-chromium/download/electron-to-chromium-1.3.647.tgz#8f1750ab7a5137f1a9a27f8f4ebdf550e08ae10b"
+  integrity sha1-jxdQq3pRN/Gpon+PTr31UOCK4Qs=
 
 enhanced-resolve@^5.7.0:
   version "5.7.0"
@@ -315,9 +315,9 @@ es-module-lexer@^0.3.26:
   integrity sha1-e1BwROl9WwOwHUOSx0/+ucF3qDs=
 
 esbuild@^0.8.34:
-  version "0.8.34"
-  resolved "https://registry.npm.taobao.org/esbuild/download/esbuild-0.8.34.tgz#16b4ac58f74c821d2c5a8c2f0585ca96a38ab4e6"
-  integrity sha1-FrSsWPdMgh0sWowvBYXKlqOKtOY=
+  version "0.8.36"
+  resolved "https://registry.npm.taobao.org/esbuild/download/esbuild-0.8.36.tgz#f5b7c61473721c7d53ffe7c88708e25f3b6182f3"
+  integrity sha1-9bfGFHNyHH1T/+fIhwjiXzthgvM=
 
 escalade@^3.1.1:
   version "3.1.1"
@@ -381,7 +381,7 @@ fast-json-stable-stringify@^2.0.0:
 
 fastest-levenshtein@^1.0.12:
   version "1.0.12"
-  resolved "https://registry.npm.taobao.org/fastest-levenshtein/download/fastest-levenshtein-1.0.12.tgz?cache=0&sync_timestamp=1598877489440&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Ffastest-levenshtein%2Fdownload%2Ffastest-levenshtein-1.0.12.tgz#9990f7d3a88cc5a9ffd1f1745745251700d497e2"
+  resolved "https://registry.npm.taobao.org/fastest-levenshtein/download/fastest-levenshtein-1.0.12.tgz#9990f7d3a88cc5a9ffd1f1745745251700d497e2"
   integrity sha1-mZD306iMxan/0fF0V0UlFwDUl+I=
 
 find-up@^4.0.0:
@@ -818,10 +818,10 @@ v8-compile-cache@^2.2.0:
   resolved "https://registry.npm.taobao.org/v8-compile-cache/download/v8-compile-cache-2.2.0.tgz?cache=0&sync_timestamp=1603909396193&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fv8-compile-cache%2Fdownload%2Fv8-compile-cache-2.2.0.tgz#9471efa3ef9128d2f7c6a7ca39c4dd6b5055b132"
   integrity sha1-lHHvo++RKNL3xqfKOcTda1BVsTI=
 
-vite@^2.0.0-beta.46:
-  version "2.0.0-beta.46"
-  resolved "https://registry.npm.taobao.org/vite/download/vite-2.0.0-beta.46.tgz#9c0d35019c350fbebd17f84c4e7243fffccd1819"
-  integrity sha1-nA01AZw1D769F/hMTnJD//zNGBk=
+vite@^2.0.0-beta.52:
+  version "2.0.0-beta.52"
+  resolved "https://registry.npm.taobao.org/vite/download/vite-2.0.0-beta.52.tgz#a06275d8b7c789358586dca51b8c01caf8599b08"
+  integrity sha1-oGJ12LfHiTWFhtylG4wByvhZmwg=
   dependencies:
     esbuild "^0.8.34"
     postcss "^8.2.1"
@@ -874,10 +874,10 @@ webpack-sources@^2.1.1:
     source-list-map "^2.0.1"
     source-map "^0.6.1"
 
-webpack@^5.17.0:
-  version "5.17.0"
-  resolved "https://registry.npm.taobao.org/webpack/download/webpack-5.17.0.tgz#e92aebad45be25f86f788dc72fc11daacdcfd55d"
-  integrity sha1-6SrrrUW+JfhveI3HL8Edqs3P1V0=
+webpack@^5.18.0:
+  version "5.18.0"
+  resolved "https://registry.npm.taobao.org/webpack/download/webpack-5.18.0.tgz#bbcf13094aa0da0534d513f27d7ee72d74e499c6"
+  integrity sha1-u88TCUqg2gU01RPyfX7nLXTkmcY=
   dependencies:
     "@types/eslint-scope" "^3.7.0"
     "@types/estree" "^0.0.46"
