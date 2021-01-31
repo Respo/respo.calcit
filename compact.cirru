@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru) (:version |0.14.4)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru) (:version |0.14.5)
   :files $ {}
     |respo.app.style.widget $ {}
       :ns $ quote
@@ -37,7 +37,7 @@
       :proc $ quote ()
     |respo.render.html $ {}
       :ns $ quote
-        ns respo.render.html $ :require ([] respo.util.format :refer $ [] prop->attr purify-element mute-element ensure-string text->html) ([] respo.util.detect :refer $ [] component? element?) ([] respo.render.expand :refer $ [] render-markup)
+        ns respo.render.html $ :require ([] respo.util.format :refer $ [] prop->attr purify-element mute-element ensure-string text->html) ([] respo.util.detect :refer $ [] component? element?)
       :defs $ {}
         |element->string $ quote
           defn element->string (element)
@@ -87,10 +87,8 @@
           defn escape-html (text)
             if (nil? text) "\"" $ -> text (replace "|\"" |&quot;) (replace |< |&lt;) (replace |> |&gt;) (replace &newline "\"&#13;&#10;")
         |make-string $ quote
-          defn make-string (tree)
-            let
-                element $ render-markup tree
-              element->string $ purify-element (mute-element element)
+          defn make-string (element)
+            element->string $ purify-element (mute-element element)
         |props->string $ quote
           defn props->string (props)
             ->> props (to-pairs)
@@ -297,44 +295,43 @@
       :proc $ quote ()
     |respo.render.dom $ {}
       :ns $ quote
-        ns respo.render.dom $ :require ([] respo.util.format :refer $ [] dashed->camel event->prop ensure-string)
+        ns respo.render.dom $ :require ([] respo.util.format :refer $ [] dashed->camel event->prop ensure-string) ([] respo.util.detect :refer $ [] component?)
       :defs $ {}
         |make-element $ quote
-          defn make-element (virtual-element listener-builder)
-            let
-                tag-name $ turn-string (:name virtual-element)
-                attrs $ :attrs virtual-element
-                style $ :style virtual-element
-                children $ :children virtual-element
-                element $ .createElement js/document tag-name
-                child-elements $ ->> children
-                  map $ fn (pair)
-                    let
-                        k $ get pair 0
-                        child $ get pair 1
-                      when (some? child) (make-element child listener-builder)
-              &doseq (entry attrs)
-                let
-                    k $ dashed->camel (turn-string $ first entry)
-                    v $ last entry
-                  if (some? v) (aset element k v)
-              &doseq (entry style)
-                let
-                    k $ dashed->camel (turn-string $ first entry)
-                    v $ last entry
-                  aset (aget element |style) k $ if (keyword? v) (turn-string v) (, v)
-              &doseq (event-name $ :event virtual-element)
-                let
-                    name-in-string $ event->prop event-name
-                  ; println |listener: event-name name-in-string
-                  aset element name-in-string $ fn (event)
-                      listener-builder event-name
-                      , event
-                      :coord virtual-element
-                    .stopPropagation event
-              &doseq (child-element child-elements)
-                if (some? child-element) (.appendChild element child-element)
-              , element
+          defn make-element (virtual-element listener-builder coord) (assert "\"coord is required" $ some? coord)
+            if (component? virtual-element)
+              make-element (:tree virtual-element) listener-builder $ conj coord (:name virtual-element)
+              let
+                  tag-name $ turn-string (:name virtual-element)
+                  attrs $ :attrs virtual-element
+                  style $ :style virtual-element
+                  children $ :children virtual-element
+                  element $ .createElement js/document tag-name
+                  child-elements $ ->> children
+                    map $ fn (pair)
+                      let[] (k child) pair $ when (some? child) (make-element child listener-builder $ conj coord k)
+                &doseq (entry attrs)
+                  let
+                      k $ dashed->camel (turn-string $ first entry)
+                      v $ last entry
+                    if (some? v) (aset element k v)
+                &doseq (entry style)
+                  let
+                      k $ dashed->camel (turn-string $ first entry)
+                      v $ last entry
+                    aset (aget element |style) k $ if (keyword? v) (turn-string v) (, v)
+                &doseq
+                  event-name $ keys (:event virtual-element)
+                  let
+                      name-in-string $ event->prop event-name
+                    ; println |listener: event-name name-in-string
+                    aset element name-in-string $ fn (event)
+                        listener-builder event-name
+                        , event coord
+                      .stopPropagation event
+                &doseq (child-element child-elements)
+                  if (some? child-element) (.appendChild element child-element)
+                , element
         |style->string $ quote
           defn style->string (styles)
             ->> styles
@@ -469,7 +466,7 @@
         ns respo.render.effect $ :require ([] respo.schema.op :as op) ([] respo.util.detect :refer $ [] component? element? =seq) ([] respo.util.list :refer $ [] val-of-first)
       :defs $ {}
         |collect-mounting $ quote
-          defn collect-mounting (collect! n-coord tree at-place?)
+          defn collect-mounting (collect! coord n-coord tree at-place?)
             cond
                 component? tree
                 let
@@ -478,30 +475,31 @@
                     &doseq (effect effects)
                       let
                           method $ :method effect
-                        collect! $ [] op/effect-mount n-coord
+                        collect! $ [] op/effect-mount coord n-coord
                           fn (target)
                             method (:args effect) ([] :mount target at-place?)
-                  recur collect! n-coord (:tree tree) false
+                  recur collect! coord n-coord (:tree tree) false
               (element? tree)
                 loop
                     children $ :children tree
                     idx 0
                   when (not $ empty? children)
-                    collect-mounting collect! (conj n-coord idx) (val-of-first children) (, false)
+                    collect-mounting collect! (conj coord idx) (conj n-coord idx) (val-of-first children) (, false)
                     recur (rest children) (inc idx)
               true $ js/console.warn "\"Unknown entry for mounting:" tree
         |collect-unmounting $ quote
-          defn collect-unmounting (collect! n-coord tree at-place?)
+          defn collect-unmounting (collect! coord n-coord tree at-place?)
             cond
                 component? tree
                 let
                     effects $ :effects tree
-                  collect-unmounting collect! n-coord (:tree tree) false
+                    new-coord $ conj coord (:name tree)
+                  collect-unmounting collect! new-coord n-coord (:tree tree) false
                   when (not $ empty? effects)
                     &doseq (effect effects)
                       let
                           method $ :method effect
-                        collect! $ [] op/effect-unmount n-coord
+                        collect! $ [] op/effect-unmount new-coord n-coord
                           fn (target)
                             method (:args effect) ([] :unmount target at-place?)
               (element? tree)
@@ -509,11 +507,11 @@
                     children $ :children tree
                     idx 0
                   when (not $ empty? children)
-                    collect-unmounting collect! (conj n-coord idx) (val-of-first children) (, false)
+                    collect-unmounting collect! (conj coord idx) (conj n-coord idx) (val-of-first children) (, false)
                     recur (rest children) (inc idx)
               true $ js/console.warn "\"Unknown entry for unmounting:" tree
         |collect-updating $ quote
-          defn collect-updating (collect! action n-coord old-tree new-tree)
+          defn collect-updating (collect! action coord n-coord old-tree new-tree)
             let
                 effects $ :effects new-tree
               when (not $ empty? effects) (; js/console.log "\"collect update" n-coord $ :effects new-tree)
@@ -528,7 +526,7 @@
                       not $ =seq (:args new-effect) (:args old-effect)
                       collect! $ []
                         if (= :update action) op/effect-update op/effect-before-update
-                        , n-coord
+                        , coord n-coord
                         fn (target)
                           method (:args new-effect) ([] action target)
       :proc $ quote ()
@@ -541,7 +539,7 @@
             let
                 listener-builder $ fn (event-name) (build-listener event-name deliver-event)
               aset mount-point |innerHTML |
-              .appendChild mount-point $ make-element entire-dom listener-builder
+              .appendChild mount-point $ make-element entire-dom listener-builder ([])
         |build-listener $ quote
           defn build-listener (event-name deliver-event)
             fn (event coord)
@@ -552,7 +550,6 @@
           defn patch-instance! (changes mount-point deliver-event)
             let
                 listener-builder $ fn (event-name) (build-listener event-name deliver-event)
-              ; echo "\"changes" changes
               apply-dom-changes changes mount-point listener-builder
       :proc $ quote ()
     |respo.util.id $ {}
@@ -560,14 +557,14 @@
       :defs $ {}
         |*cached-id $ quote (defatom *cached-id 0)
         |get-id! $ quote
-          defn get-id! () (swap! *cached-id inc) @*cached-id
+          defn get-id! () (swap! *cached-id inc) (str "\"id-" @*cached-id)
       :proc $ quote ()
     |respo.render.diff $ {}
       :ns $ quote
         ns respo.render.diff $ :require ([] respo.util.format :refer $ [] purify-element) ([] respo.util.detect :refer $ [] component? element?) ([] respo.schema.op :as op) ([] respo.util.comparator :refer $ [] compare-xy) ([] respo.render.effect :refer $ [] collect-mounting collect-updating collect-unmounting) ([] respo.util.list :refer $ [] val-of-first)
       :defs $ {}
         |find-children-diffs $ quote
-          defn find-children-diffs (collect! n-coord index old-children new-children) (; .log js/console "|diff children:" n-coord index old-children new-children)
+          defn find-children-diffs (collect! coord n-coord index old-children new-children) (; .log js/console "|diff children:" n-coord index old-children new-children)
             let
                 was-empty? $ empty? old-children
                 now-empty? $ empty? new-children
@@ -576,15 +573,22 @@
                   , nil
                 (and was-empty? $ not now-empty?)
                   let
-                      element $ val-of-first new-children
-                    collect! $ [] op/append-element n-coord (purify-element element)
-                    collect-mounting collect! (conj n-coord index) element true
-                    recur collect! n-coord (inc index) ([]) (rest new-children)
+                      pair $ first new-children
+                      k $ first pair
+                      element $ last pair
+                      new-coord $ conj coord k
+                    collect! $ [] op/append-element new-coord n-coord element
+                    collect-mounting collect! new-coord (conj n-coord index) element true
+                    recur collect! new-coord n-coord (inc index) ([]) (rest new-children)
                 (and (not was-empty?) now-empty?)
-                  do
-                    collect-unmounting collect! (conj n-coord index) (val-of-first old-children) (, true)
-                    collect! $ [] op/rm-element (conj n-coord index) nil
-                    recur collect! n-coord index (rest old-children) ([])
+                  let
+                      pair $ first old-children
+                      k $ first pair
+                      new-coord $ conj coord k
+                      new-n-coord $ conj n-coord index
+                    collect-unmounting collect! new-coord new-n-coord (last pair) true
+                    collect! $ [] op/rm-element new-coord new-n-coord nil
+                    recur collect! coord n-coord index (rest old-children) ([])
                 true $ let
                     old-keys $ map first (take 16 old-children)
                     new-keys $ map first (take 16 new-children)
@@ -602,20 +606,23 @@
                       let
                           old-element $ val-of-first old-children
                           new-element $ val-of-first new-children
-                        find-element-diffs collect! (conj n-coord index) old-element new-element
-                        recur collect! n-coord (inc index) old-follows new-follows
+                        find-element-diffs collect! (conj coord x1) (conj n-coord index) (, old-element new-element)
+                        recur collect! coord n-coord (inc index) old-follows new-follows
                     (and x1-remains? $ not y1-existed?)
-                      do
-                        collect! $ let
-                            element $ val-of-first new-children
-                          [] op/add-element (conj n-coord index) (purify-element element)
-                        collect-mounting collect! (conj n-coord index) (val-of-first new-children) (, true)
-                        recur collect! n-coord (inc index) old-children new-follows
+                      let
+                          pair $ first new-children
+                          k $ first pair
+                          element $ last pair
+                        collect! $ [] op/add-element (conj coord k) (conj n-coord index) (, element)
+                        collect-mounting collect! (conj coord k) (conj n-coord index) (val-of-first new-children) (, true)
+                        recur collect! coord n-coord (inc index) old-children new-follows
                     (and (not x1-remains?) y1-existed?)
-                      do
-                        collect-unmounting collect! (conj n-coord index) (val-of-first old-children) (, true)
-                        collect! $ [] op/rm-element (conj n-coord index) nil
-                        recur collect! n-coord index old-follows new-children
+                      let
+                          pair $ first old-children
+                          k $ first pair
+                        collect-unmounting collect! (conj coord k) (conj n-coord index) (last pair) (, true)
+                        collect! $ [] op/rm-element (conj coord k) (conj n-coord index) (, nil)
+                        recur collect! coord n-coord index old-follows new-children
                     true $ let
                         xi $ index-of new-keys x1
                         yi $ index-of old-keys y1
@@ -625,32 +632,37 @@
                       if (<= xi yi)
                         let
                             new-element $ val-of-first new-children
-                          collect! $ [] op/add-element (conj n-coord index) (purify-element new-element)
-                          collect-mounting collect! (conj n-coord index) (val-of-first new-children) (, true)
-                          recur collect! n-coord (inc index) old-children new-follows
+                          collect! $ [] op/add-element (conj coord y1) (conj n-coord index) (, new-element)
+                          collect-mounting collect! (conj coord y1) (conj n-coord index) (val-of-first new-children) (, true)
+                          recur collect! coord n-coord (inc index) old-children new-follows
                         do
-                          collect-unmounting collect! (conj n-coord index) (val-of-first old-children) (, true)
-                          collect! $ [] op/rm-element (conj n-coord index) nil
-                          recur collect! n-coord index old-follows new-children
+                          collect-unmounting collect! (conj coord x1) (conj n-coord index) (val-of-first old-children) (, true)
+                          collect! $ [] op/rm-element (conj coord x1) (conj n-coord index) (, nil)
+                          recur collect! coord n-coord index old-follows new-children
         |find-element-diffs $ quote
-          defn find-element-diffs (collect! n-coord old-tree new-tree) (; .log js/console "|element diffing:" n-coord old-tree new-tree)
+          defn find-element-diffs (collect! coord n-coord old-tree new-tree) (; .log js/console "|element diffing:" n-coord old-tree new-tree) (; echo "\"element coord" coord)
             cond
                 identical? old-tree new-tree
                 , nil
               (and (component? old-tree) (component? new-tree))
-                if
-                  = (:name old-tree) (:name new-tree)
-                  do (collect-updating collect! :before-update n-coord old-tree new-tree)
-                    find-element-diffs collect! n-coord (:tree old-tree) (:tree new-tree)
-                    collect-updating collect! :update n-coord old-tree new-tree
-                  do (collect-unmounting collect! n-coord old-tree true)
-                    find-element-diffs collect! n-coord (:tree old-tree) (:tree new-tree)
-                    collect-mounting collect! n-coord new-tree true
+                let
+                    new-coord $ conj coord (:name new-tree)
+                  if
+                    = (:name old-tree) (:name new-tree)
+                    do (collect-updating collect! :before-update new-coord n-coord old-tree new-tree)
+                      find-element-diffs collect! new-coord n-coord (:tree old-tree) (:tree new-tree)
+                      collect-updating collect! :update new-coord n-coord old-tree new-tree
+                    do (collect-unmounting collect! new-coord n-coord old-tree true)
+                      find-element-diffs collect! new-coord n-coord (:tree old-tree) (:tree new-tree)
+                      collect-mounting collect! new-coord n-coord new-tree true
               (and (component? old-tree) (element? new-tree))
-                do (collect-unmounting collect! n-coord old-tree true)
-                  recur collect! n-coord (:tree old-tree) new-tree
+                do
+                  collect-unmounting collect! (conj coord $ :name old-tree) (, n-coord old-tree true)
+                  recur collect! coord n-coord (:tree old-tree) new-tree
               (and (element? old-tree) (component? new-tree))
-                do (find-element-diffs collect! n-coord old-tree $ :tree new-tree) (collect-mounting collect! n-coord new-tree true)
+                let
+                    new-coord $ conj coord (:name new-tree)
+                  do (find-element-diffs collect! new-coord n-coord old-tree $ :tree new-tree) (collect-mounting collect! coord n-coord new-tree true)
               (and (element? old-tree) (element? new-tree))
                 let
                     old-children $ :children old-tree
@@ -660,30 +672,27 @@
                       /= (:coord old-tree) (:coord new-tree)
                       /= (:name old-tree) (:name new-tree)
                       /= (:c-name old-tree) (:c-name new-tree)
+                    do (collect! $ [] op/replace-element coord n-coord new-tree) (, nil)
                     do
-                      collect! $ [] op/replace-element n-coord (purify-element new-tree)
-                      , nil
-                    do
-                      find-props-diffs collect! n-coord (:attrs old-tree) (:attrs new-tree)
+                      find-props-diffs collect! coord n-coord (:attrs old-tree) (:attrs new-tree)
                       let
                           old-style $ :style old-tree
                           new-style $ :style new-tree
-                        if (/= old-style new-style) (find-style-diffs collect! n-coord old-style new-style)
+                        if (/= old-style new-style) (find-style-diffs collect! coord n-coord old-style new-style)
                       let
-                          old-events $ keys
+                          old-events $ keys-non-nil
                             either (:event old-tree) ({})
-                          new-events $ keys
+                          new-events $ keys-non-nil
                             either (:event new-tree) ({})
                           added-events $ difference new-events old-events
                           removed-events $ difference old-events new-events
-                        &doseq (event-name added-events)
-                          collect! $ [] op/set-event n-coord ([] event-name $ :coord new-tree)
-                        &doseq (event-name removed-events) (collect! $ [] op/rm-event n-coord event-name)
-                      find-children-diffs collect! n-coord 0 old-children new-children
+                        &doseq (event-name added-events) (collect! $ [] op/set-event coord n-coord event-name)
+                        &doseq (event-name removed-events) (collect! $ [] op/rm-event coord n-coord event-name)
+                      find-children-diffs collect! coord n-coord 0 old-children new-children
               true $ js/console.warn "\"Diffing unknown params" old-tree new-tree
         |find-props-diffs $ quote
-          defn find-props-diffs (collect! coord old-props new-props)
-            ; .log js/console "|find props:" coord old-props new-props (count old-props) (count new-props)
+          defn find-props-diffs (collect! coord n-coord old-props new-props)
+            ; .log js/console "|find props:" n-coord old-props new-props (count old-props) (count new-props)
             let
                 was-empty? $ empty? old-props
                 now-empty? $ empty? new-props
@@ -692,15 +701,13 @@
                   , nil
                 (and was-empty? $ not now-empty?)
                   do
-                    collect! $ [] op/add-prop coord (first new-props)
-                    recur collect! coord old-props $ rest new-props
+                    collect! $ [] op/add-prop coord n-coord (first new-props)
+                    recur collect! coord n-coord old-props $ rest new-props
                 (and (not was-empty?) now-empty?)
                   do
-                    collect! $ [] op/rm-prop coord (key $ first old-props)
-                    recur collect! coord (rest old-props) new-props
+                    collect! $ [] op/rm-prop coord n-coord (key $ first old-props)
+                    recur collect! coord n-coord (rest old-props) new-props
                 true $ let
-                    old-entry $ first old-props
-                    new-entry $ first new-props
                     old-pair $ first old-props
                     new-pair $ first new-props
                     old-k $ first old-pair
@@ -711,13 +718,13 @@
                     new-follows $ rest new-props
                   ; .log js/console old-k new-k old-v new-v
                   case (compare-xy old-k new-k)
-                    -1 $ do (collect! $ [] op/rm-prop coord old-k) (recur collect! coord old-follows new-props)
-                    1 $ do (collect! $ [] op/add-prop coord new-entry) (recur collect! coord old-props new-follows)
+                    -1 $ do (collect! $ [] op/rm-prop coord n-coord old-k) (recur collect! coord n-coord old-follows new-props)
+                    1 $ do (collect! $ [] op/add-prop coord n-coord new-pair) (recur collect! coord n-coord old-props new-follows)
                     0 $ do
-                      if (/= old-v new-v) (collect! $ [] op/replace-prop coord new-entry)
-                      recur collect! coord old-follows new-follows
+                      if (/= old-v new-v) (collect! $ [] op/replace-prop coord n-coord new-pair)
+                      recur collect! coord n-coord old-follows new-follows
         |find-style-diffs $ quote
-          defn find-style-diffs (collect! coord old-style new-style)
+          defn find-style-diffs (collect! c-coord coord old-style new-style)
             let
                 was-empty? $ empty? old-style
                 now-empty? $ empty? new-style
@@ -728,14 +735,14 @@
                   let
                       entry $ first new-style
                       follows $ rest new-style
-                    collect! $ [] op/add-style coord entry
-                    recur collect! coord old-style follows
+                    collect! $ [] op/add-style c-coord coord entry
+                    recur collect! c-coord coord old-style follows
                 (and (not was-empty?) now-empty?)
                   let
                       entry $ first old-style
                       follows $ rest old-style
-                    collect! $ [] op/rm-style coord (first entry)
-                    recur collect! coord follows new-style
+                    collect! $ [] op/rm-style c-coord coord (first entry)
+                    recur collect! c-coord coord follows new-style
                 true $ let
                     old-entry $ first old-style
                     new-entry $ first new-style
@@ -744,14 +751,19 @@
                   case
                     compare-xy (first old-entry) (first new-entry)
                     -1 $ do
-                      collect! $ [] op/rm-style coord (first old-entry)
-                      recur collect! coord old-follows new-style
-                    1 $ do (collect! $ [] op/add-style coord new-entry) (recur collect! coord old-style new-follows)
+                      collect! $ [] op/rm-style c-coord coord (first old-entry)
+                      recur collect! c-coord coord old-follows new-style
+                    1 $ do (collect! $ [] op/add-style c-coord coord new-entry) (recur collect! c-coord coord old-style new-follows)
                     0 $ do
                       if
                         not $ identical? (last old-entry) (last new-entry)
-                        collect! $ [] op/replace-style coord new-entry
-                      recur collect! coord old-follows new-follows
+                        collect! $ [] op/replace-style c-coord coord new-entry
+                      recur collect! c-coord coord old-follows new-follows
+        |keys-non-nil $ quote
+          defn keys-non-nil (m)
+            #{} & $ ->> m (to-pairs)
+              filter $ fn (pair) (some? $ last pair)
+              map first
       :proc $ quote ()
     |respo.test.html $ {}
       :ns $ quote
@@ -847,20 +859,20 @@
                 style-value $ ensure-string v
               aset (.-style target) style-name style-value
         |replace-element $ quote
-          defn replace-element (target op listener-builder)
+          defn replace-element (target op listener-builder coord)
             let
-                new-element $ make-element op listener-builder
+                new-element $ make-element op listener-builder coord
                 parent-element $ .-parentElement target
               .insertBefore parent-element new-element target
               .remove target
         |append-element $ quote
-          defn append-element (target op listener-builder)
+          defn append-element (target op listener-builder coord)
             let
-                new-element $ make-element op listener-builder
+                new-element $ make-element op listener-builder coord
               .appendChild target new-element
         |add-event $ quote
-          defn add-event (target op-data listener-builder)
-            let[] (event-name coord) op-data $ let
+          defn add-event (target event-name listener-builder coord)
+            let
                 event-prop $ event->prop event-name
               aset target event-prop $ fn (event)
                   listener-builder event-name
@@ -890,11 +902,13 @@
             let
                 root $ .-firstElementChild mount-point
               &doseq (op changes)
+                assert "\"4 items" $ = 4 (count op)
                 let
                     op-type $ get op 0
                     coord $ get op 1
-                    op-data $ get op 2
-                    target $ find-target root coord
+                    n-coord $ get op 2
+                    op-data $ get op 3
+                    target $ find-target root n-coord
                   cond
                       = op-type op/replace-prop
                       replace-prop target op-data
@@ -909,26 +923,26 @@
                     (= op-type op/rm-style)
                       rm-style target op-data
                     (= op-type op/set-event)
-                      add-event target op-data listener-builder
+                      add-event target op-data listener-builder coord
                     (= op-type op/rm-event)
                       rm-event target op-data
                     (= op-type op/add-element)
-                      add-element target op-data listener-builder
+                      add-element target op-data listener-builder coord
                     (= op-type op/rm-element)
                       rm-element target op-data
                     (= op-type op/replace-element)
-                      replace-element target op-data listener-builder
+                      replace-element target op-data listener-builder coord
                     (= op-type op/append-element)
-                      append-element target op-data listener-builder
+                      append-element target op-data listener-builder coord
                     (= op-type op/effect-mount)
-                      run-effect target op-data coord
+                      run-effect target op-data n-coord
                     (= op-type op/effect-unmount)
-                      run-effect target op-data coord
+                      run-effect target op-data n-coord
                     (= op-type op/effect-update)
-                      run-effect target op-data coord
+                      run-effect target op-data n-coord
                     (= op-type op/effect-before-update)
-                      run-effect target op-data coord
-                    true $ println "|not implemented:" op-type coord op-data
+                      run-effect target op-data n-coord
+                    true $ println "|not implemented:" op-type n-coord op-data
         |add-style $ quote
           defn add-style (target op)
             let[] (p v) op $ let
@@ -956,9 +970,9 @@
                   child $ aget (.-children root) index
                 if (some? child) (recur child $ rest coord) (, nil)
         |add-element $ quote
-          defn add-element (target op listener-builder)
+          defn add-element (target op listener-builder coord)
             let
-                new-element $ make-element op listener-builder
+                new-element $ make-element op listener-builder coord
                 parent-element $ .-parentElement target
               .insertBefore parent-element new-element target
       :proc $ quote ()
@@ -1292,6 +1306,7 @@
                   ; println "|found no listener:" coord event-name
         |find-event-target $ quote
           defn find-event-target (element coord event-name) (; echo "\"looking for" coord event-name)
+            if (nil? coord) (raise "\"No coord")
             let
                 target-element $ get-markup-at element coord
                 element-exists? $ some? target-element
@@ -1300,12 +1315,11 @@
                 and element-exists? (some? $ :event target-element)
                   some? $ get (:event target-element) event-name
                 , target-element
-                if (= coord $ []) (, nil)
-                  if element-exists?
-                    recur element
-                      slice coord 0 $ - (count coord) 1
-                      , event-name
-                    , nil
+                if (empty? coord) nil $ if element-exists?
+                  recur element
+                    slice coord 0 $ - (count coord) 1
+                    , event-name
+                  , nil
         |get-markup-at $ quote
           defn get-markup-at (markup coord) (; println |markup: $ pr-str coord)
             if (empty? coord) markup $ if (component? markup)
@@ -1373,7 +1387,7 @@
     |respo.core $ {}
       :ns $ quote
         ns respo.core
-          :require ([] respo.render.expand :refer $ [] render-markup) ([] respo.controller.resolve :refer $ [] build-deliver-event) ([] respo.render.diff :refer $ [] find-element-diffs) ([] respo.render.effect :refer $ [] collect-mounting) ([] respo.util.format :refer $ [] purify-element) ([] respo.controller.client :refer $ [] activate-instance! patch-instance!) ([] respo.util.list :refer $ [] pick-attrs pick-event val-exists? detect-func-in-map?) ([] respo.util.detect :refer $ [] component? element?) ([] respo.schema :as schema) ([] respo.util.comparator :refer $ [] compare-xy) ([] memof.alias :refer $ [] tick-calling-loop! reset-calling-caches!)
+          :require ([] respo.controller.resolve :refer $ [] build-deliver-event) ([] respo.render.diff :refer $ [] find-element-diffs) ([] respo.render.effect :refer $ [] collect-mounting) ([] respo.util.format :refer $ [] purify-element) ([] respo.controller.client :refer $ [] activate-instance! patch-instance!) ([] respo.util.list :refer $ [] pick-attrs pick-event val-exists? detect-func-in-map? filter-first) ([] respo.util.detect :refer $ [] component? element? effect?) ([] respo.schema :as schema) ([] respo.util.comparator :refer $ [] compare-xy) ([] memof.alias :refer $ [] tick-calling-loop! reset-calling-caches!)
           :require-macros $ [] respo.core
       :defs $ {}
         |>> $ quote
@@ -1413,24 +1427,34 @@
         |h3 $ quote
           defn h3 (props & children) (create-element :h3 props & $ map confirm-child children)
         |mount-app! $ quote
-          defn mount-app! (target markup dispatch!)
-            ; assert
-              or (nil? target) (= element-type $ .-__proto__ target)
-              , "|1st argument should be an element"
-            ; assert (component? markup) "|2nd argument should be a component"
+          defn mount-app! (target element dispatch!)
+            ; assert "|1st argument should be an element" $ or (nil? target) (= element-type $ .-__proto__ target)
+            ; assert "|2nd argument should be a component" $ component? element
             let
-                element $ render-markup markup
                 deliver-event $ build-deliver-event *global-element dispatch!
                 *changes *dom-changes
                 collect! $ fn (x)
-                  assert (= 3 $ count x) (, "|change op should has length 3")
+                  assert "|change op should has length 3" $ = 4 (count x)
                   swap! *changes conj x
               reset! *changes $ []
               ; println "|mount app"
-              activate-instance! (purify-element element) target deliver-event
-              collect-mounting collect! ([]) element true
+              activate-instance! element target deliver-event
+              collect-mounting collect! ([]) ([]) (, element true)
               patch-instance! @*changes target deliver-event
               reset! *global-element element
+        |extract-effects-list $ quote
+          defn extract-effects-list (markup)
+            &let (markup-tree $ :tree markup)
+              if (list? markup-tree)
+                let
+                    node-tree $ filter-first
+                      fn (x)
+                        and (map? x)
+                          or (component? x) (element? x)
+                      , markup-tree
+                    effects-list $ ->> markup-tree (filter effect?)
+                  merge markup $ {} (:tree node-tree) (:effects effects-list)
+                , markup-tree
         |*dom-changes $ quote (defatom *dom-changes $ [])
         |option $ quote
           defn option (props & children) (create-element :option props & $ map confirm-child children)
@@ -1448,11 +1472,10 @@
         |h2 $ quote
           defn h2 (props & children) (create-element :h2 props & $ map confirm-child children)
         |realize-ssr! $ quote
-          defn realize-ssr! (target markup dispatch!)
+          defn realize-ssr! (target element dispatch!)
             assert (instance? element-type target) "|1st argument should be an element"
-            assert (component? markup) "|2nd argument should be a component"
+            assert (component? element) "|2nd argument should be a component"
             let
-                element $ render-markup markup
                 app-element $ .-firstElementChild target
                 *changes $ atom ([])
                 collect! $ fn (x)
@@ -1493,18 +1516,17 @@
         |input $ quote
           defn input (props & children) (create-element :input props & $ map confirm-child children)
         |rerender-app! $ quote
-          defn rerender-app! (target markup dispatch!) (tick-calling-loop!)
+          defn rerender-app! (target element dispatch!) (tick-calling-loop!)
             let
-                element $ render-markup markup
                 deliver-event $ build-deliver-event *global-element dispatch!
                 *changes $ do (reset! *rereder-changes $ []) (, *rereder-changes)
                 collect! $ fn (x)
-                  assert (= 3 $ count x) (, "|change op should has length 3")
+                  assert "|change op should has length 4" $ = 4 (count x)
                   swap! *changes conj x
               ; println @*global-element
               ; println |Changes: $ pr-str
                 mapv (partial take 2) @*changes
-              find-element-diffs collect! ([]) @*global-element element
+              find-element-diffs collect! ([]) ([]) (, @*global-element element)
               let
                   logger @*changes-logger
                 if (some? logger) (logger @*global-element element @*changes)
@@ -1553,7 +1575,7 @@
           defmacro defcomp (comp-name params & body) (assert "\"expected symbol of comp-name" $ symbol? comp-name) (assert "\"expected list for params" $ list? params)
             assert "\"some component retured" $ &> (count body) 0
             quote-replace $ defn ~comp-name (~ params)
-              {} (:respo-node :component) (:effects $ [])
+              extract-effects-list $ {} (:respo-node :component) (:effects $ [])
                 :name $ ~ (turn-keyword comp-name)
                 :tree $ do (~@ body)
         |code $ quote
