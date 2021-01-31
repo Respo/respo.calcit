@@ -26,7 +26,6 @@ jobs:
     - name: "load deps"
       run: >
         ci-bin/cr_once --emit-js
-        && wget -O js-out/calcit.procs.js http://js.calcit-lang.org/calcit.procs.js
         && yarn
 
     - name: "test js"
