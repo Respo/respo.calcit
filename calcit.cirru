@@ -6701,18 +6701,15 @@
                                     :data $ {}
                                       |T $ {} (:type :leaf) (:by |root) (:at 1541076694462) (:text |style->string)
                                       |j $ {} (:type :leaf) (:by |root) (:at 1541076694462) (:text |prop-value)
-                          |x $ {} (:type :expr) (:by |rJoDgvdeG) (:at 1610203228826)
+                          |x $ {} (:type :expr) (:by |rJoDgvdeG) (:at 1612277942442)
                             :data $ {}
-                              |T $ {} (:type :expr) (:by |rJoDgvdeG) (:at 1610029905693)
+                              |T $ {} (:type :leaf) (:by |rJoDgvdeG) (:at 1612277942442) (:text |prop-name)
+                              |j $ {} (:type :expr) (:by |rJoDgvdeG) (:at 1612277942442)
                                 :data $ {}
-                                  |T $ {} (:type :expr) (:by |root) (:at 1541076698436)
-                                    :data $ {}
-                                      |T $ {} (:type :leaf) (:by |root) (:at 1541076698436) (:text |aset)
-                                      |j $ {} (:type :leaf) (:by |root) (:at 1541076698436) (:text |target)
-                                      |r $ {} (:type :leaf) (:by |root) (:at 1541076698436) (:text |prop-name)
-                                      |v $ {} (:type :leaf) (:by |root) (:at 1541076698436) (:text |prop-value)
-                                  |D $ {} (:type :leaf) (:by |rJoDgvdeG) (:at 1610029907662) (:text |prop-name)
-                              |D $ {} (:type :leaf) (:by |rJoDgvdeG) (:at 1610203231349) (:text |prop-name)
+                                  |T $ {} (:type :leaf) (:by |rJoDgvdeG) (:at 1612277942442) (:text |aset)
+                                  |j $ {} (:type :leaf) (:by |rJoDgvdeG) (:at 1612277942442) (:text |target)
+                                  |r $ {} (:type :leaf) (:by |rJoDgvdeG) (:at 1612277942442) (:text |prop-name)
+                                  |v $ {} (:type :leaf) (:by |rJoDgvdeG) (:at 1612277942442) (:text |prop-value)
                   |D $ {} (:type :leaf) (:by |rJoDgvdeG) (:at 1610612147209) (:text |let[])
                   |L $ {} (:type :expr) (:by |rJoDgvdeG) (:at 1610612147611)
                     :data $ {}
@@ -12189,4 +12186,4 @@
                   |T $ {} (:type :leaf) (:by |rJoDgvdeG) (:at 1571935650828) (:text |.now)
                   |j $ {} (:type :leaf) (:by |rJoDgvdeG) (:at 1571935653049) (:text |js/Date)
         :proc $ {} (:type :expr) (:by |rJoDgvdeG) (:at 1511712852131) (:data $ {})
-  :configs $ {} (:reload-fn |respo.main/reload!) (:modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru) (:output |src) (:port 6001) (:extension |.cljs) (:init-fn |respo.main/main!) (:compact-output? true) (:storage-key |calcit.cirru) (:version |0.14.6)
+  :configs $ {} (:reload-fn |respo.main/reload!) (:modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru) (:output |src) (:port 6001) (:extension |.cljs) (:init-fn |respo.main/main!) (:compact-output? true) (:storage-key |calcit.cirru) (:version |0.14.7)
