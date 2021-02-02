@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru) (:version |0.14.6)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru) (:version |0.14.7)
   :files $ {}
     |respo.app.style.widget $ {}
       :ns $ quote
@@ -902,7 +902,7 @@
                 prop-name $ dashed->camel (turn-string p)
               case prop-name
                 |style $ aset target prop-name (style->string prop-value)
-                prop-name $ prop-name (aset target prop-name prop-value)
+                prop-name $ aset target prop-name prop-value
         |replace-prop $ quote
           defn replace-prop (target op)
             let[] (p prop-value) op $ let
