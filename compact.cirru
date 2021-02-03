@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru) (:version |0.14.7)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru) (:version |0.14.8)
   :files $ {}
     |respo.app.style.widget $ {}
       :ns $ quote
@@ -587,7 +587,7 @@
                       new-coord $ conj coord k
                     collect! $ [] op/append-element new-coord n-coord element
                     collect-mounting collect! coord (conj n-coord index) element true
-                    recur collect! new-coord n-coord (inc index) ([]) (rest new-children)
+                    recur collect! coord n-coord (inc index) ([]) (rest new-children)
                 (and (not was-empty?) now-empty?)
                   let
                       pair $ first old-children
