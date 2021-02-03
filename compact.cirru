@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru) (:version |0.14.8)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru) (:version |0.14.9)
   :files $ {}
     |respo.app.style.widget $ {}
       :ns $ quote
@@ -718,7 +718,7 @@
                     recur collect! coord n-coord old-props $ rest new-props
                 (and (not was-empty?) now-empty?)
                   do
-                    collect! $ [] op/rm-prop coord n-coord (key $ first old-props)
+                    collect! $ [] op/rm-prop coord n-coord (first $ first old-props)
                     recur collect! coord n-coord (rest old-props) new-props
                 true $ let
                     old-pair $ first old-props
