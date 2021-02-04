@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru) (:version |0.14.7)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru) (:version |0.14.10)
   :files $ {}
     |respo.app.style.widget $ {}
       :ns $ quote
@@ -125,10 +125,10 @@
                   if (some? raw)
                     swap! *store assoc :tasks $ extract-cirru-edn (js/JSON.parse raw)
                   render-app! mount-target
-                  add-watch *store :rerender $ \ render-app! mount-target
+                  add-watch *store :rerender $ fn (store prev) (render-app! mount-target)
                   ; reset! *changes-logger $ fn (old-tree new-tree changes) (.log js/console $ clj->js changes)
                   println |Loaded. $ .now js/performance
-                aset js/window |onbeforeunload save-store!
+                aset js/window |onbeforeunload $ fn (event) (save-store!)
         |mount-target $ quote
           def mount-target $ if (exists? js/document) (.querySelector js/document |.app) (, nil)
         |reload! $ quote
@@ -587,7 +587,7 @@
                       new-coord $ conj coord k
                     collect! $ [] op/append-element new-coord n-coord element
                     collect-mounting collect! coord (conj n-coord index) element true
-                    recur collect! new-coord n-coord (inc index) ([]) (rest new-children)
+                    recur collect! coord n-coord (inc index) ([]) (rest new-children)
                 (and (not was-empty?) now-empty?)
                   let
                       pair $ first old-children
@@ -718,7 +718,7 @@
                     recur collect! coord n-coord old-props $ rest new-props
                 (and (not was-empty?) now-empty?)
                   do
-                    collect! $ [] op/rm-prop coord n-coord (key $ first old-props)
+                    collect! $ [] op/rm-prop coord n-coord (first $ first old-props)
                     recur collect! coord n-coord (rest old-props) new-props
                 true $ let
                     old-pair $ first old-props
@@ -993,6 +993,9 @@
       :ns $ quote
         ns respo.app.comp.todolist $ :require ([] respo.core :refer $ [] defcomp div span input <> list-> defeffect >>) ([] respo.util.format :refer $ [] hsl) ([] respo.app.comp.task :refer $ [] comp-task) ([] respo.comp.space :refer $ [] =<) ([] respo.comp.inspect :refer $ [] comp-inspect) ([] respo.app.comp.zero :refer $ [] comp-zero) ([] respo.app.comp.wrap :refer $ [] comp-wrap) ([] respo.util.dom :refer $ [] text-width time!) ([] respo.app.style.widget :as widget) ([] memof.alias :refer $ [] memof-call)
       :defs $ {}
+        |number-order $ quote
+          defn number-order (a b)
+            if (&< a b) -1 $ if (&> a b) 1 0
         |style-root $ quote
           def style-root $ {} (:color :black) (:background-color $ hsl 120 20 98) (:line-height |24px) ("\"font-size" 16) (:padding 10) (:font-family "|\"微软雅黑\", Verdana")
         |style-list $ quote
@@ -1006,7 +1009,7 @@
         |on-focus $ quote
           defn on-focus (e dispatch!) (println "|Just focused~")
         |effect-focus $ quote
-          defeffect effect-focus () ([] action parent at-place?) (js/console.log "\"todolist effect:" action)
+          defeffect effect-focus () (action parent at-place?) (js/console.log "\"todolist effect:" action)
         |run-test! $ quote
           defn run-test! (dispatch! acc)
             let
@@ -1032,7 +1035,7 @@
                   js/setTimeout
                     fn () (run-test! dispatch! $ conj acc cost)
                     , 0
-                  println |result: $ sort identity acc
+                  println |result: $ sort number-order acc
         |initial-state $ quote
           def initial-state $ {} (:draft |) (:locked? false)
         |comp-todolist $ quote
@@ -1318,8 +1321,7 @@
                   do (; println "|listener found:" coord event-name) (target-listener simple-event dispatch-wrap)
                   ; println "|found no listener:" coord event-name
         |find-event-target $ quote
-          defn find-event-target (element coord event-name) (; echo "\"looking for" coord event-name)
-            if (nil? coord) (raise "\"No coord")
+          defn find-event-target (element coord event-name) (; echo "\"looking for" coord event-name) (assert "\"element cannot be nil" $ some? element) (assert "\"coord cannot be nil" $ some? coord)
             let
                 target-element $ get-markup-at element coord
                 element-exists? $ some? target-element
@@ -1469,8 +1471,9 @@
                 :respo-node :effect
                 :coord $ []
                 :args $ [] ~@args
-                :method $ fn (~ $ concat args params)
-                  ~@ $ if (empty? body) (quote-replace $ echo "\"WARNING:" ~effect-name "\"lack code for handling effects!" ) (, body)
+                :method $ fn (args params)
+                  let[] (~ args) args $ let[] (~ params) params
+                    ~@ $ if (empty? body) (quote-replace $ echo "\"WARNING:" ~effect-name "\"lack code for handling effects!" ) (, body)
         |list-> $ quote
           defn list-> (props children) (create-list-element :div props children)
         |a $ quote
