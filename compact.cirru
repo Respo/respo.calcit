@@ -1465,15 +1465,18 @@
           defmacro defeffect (effect-name args params & body)
             assert "\"args in symbol" $ and (list? args) (every? symbol? args)
             assert "\"params like [action el at-place?]" $ and (list? params) (every? symbol? params)
-            quote-replace $ defn ~effect-name ~args
-              {}
-                :name $ ~ (turn-keyword effect-name)
-                :respo-node :effect
-                :coord $ []
-                :args $ [] ~@args
-                :method $ fn (args params)
-                  let[] (~ args) args $ let[] (~ params) params
-                    ~@ $ if (empty? body) (quote-replace $ echo "\"WARNING:" ~effect-name "\"lack code for handling effects!" ) (, body)
+            let
+                args-var $ gensym "\"args"
+                params-var $ gensym "\"params"
+              quote-replace $ defn ~effect-name ~args
+                {}
+                  :name $ ~ (turn-keyword effect-name)
+                  :respo-node :effect
+                  :coord $ []
+                  :args $ [] ~@args
+                  :method $ fn (~args-var ~params-var)
+                    let[] ~args ~args-var $ let[] ~params ~params-var
+                      ~@ $ if (empty? body) (quote-replace $ echo "\"WARNING:" ~effect-name "\"lack code for handling effects!" ) (, body)
         |list-> $ quote
           defn list-> (props children) (create-list-element :div props children)
         |a $ quote
