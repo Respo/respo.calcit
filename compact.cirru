@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru) (:version |0.14.10)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru) (:version |0.14.11)
   :files $ {}
     |respo.app.style.widget $ {}
       :ns $ quote
@@ -114,7 +114,7 @@
       :proc $ quote ()
     |respo.main $ {}
       :ns $ quote
-        ns respo.main $ :require ([] respo.core :refer $ [] *changes-logger clear-cache!) ([] respo.app.core :refer $ [] render-app! *store) ([] respo.test.main :as respo-test)
+        ns respo.main $ :require ([] respo.core :refer $ [] *changes-logger clear-cache!) ([] respo.app.core :refer $ [] render-app! *store) ([] respo.test.main :as respo-test) ([] respo.app.core :refer $ [] handle-ssr!)
       :defs $ {}
         |main! $ quote
           defn main! () (; handle-ssr! mount-target)
@@ -126,7 +126,7 @@
                     swap! *store assoc :tasks $ extract-cirru-edn (js/JSON.parse raw)
                   render-app! mount-target
                   add-watch *store :rerender $ fn (store prev) (render-app! mount-target)
-                  ; reset! *changes-logger $ fn (old-tree new-tree changes) (.log js/console $ clj->js changes)
+                  ; reset! *changes-logger $ fn (old-tree new-tree changes) (js/console.log $ to-js-data changes)
                   println |Loaded. $ .now js/performance
                 aset js/window |onbeforeunload $ fn (event) (save-store!)
         |mount-target $ quote
@@ -157,7 +157,7 @@
               true $ str x
         |event->string $ quote
           defn event->string (x)
-            subs (name x) 3
+            substr (turn-string x) 3
         |dashed->camel $ quote
           defn dashed->camel (x) (dashed->camel-iter | x false)
         |purify-events $ quote
@@ -339,12 +339,12 @@
                 let
                     k $ first entry
                     v $ ensure-string (last entry)
-                  str (name k) |: v |;
+                  str (turn-string k) |: v |;
               join-str |
       :proc $ quote ()
     |respo.app.core $ {}
       :ns $ quote
-        ns respo.app.core $ :require ([] respo.app.comp.container :refer $ [] comp-container) ([] respo.core :refer $ [] render!) ([] respo.app.schema :as schema) ([] respo.app.updater :refer $ [] updater) ([] respo.util.id :refer $ [] get-id!)
+        ns respo.app.core $ :require ([] respo.app.comp.container :refer $ [] comp-container) ([] respo.core :refer $ [] render! realize-ssr!) ([] respo.app.schema :as schema) ([] respo.app.updater :refer $ [] updater) ([] respo.util.id :refer $ [] get-id!)
       :defs $ {}
         |*store $ quote (defatom *store schema/store)
         |dispatch! $ quote
@@ -640,12 +640,12 @@
                         yi $ index-of old-keys y1
                         first-old-entry $ first old-children
                         first-new-entry $ first new-children
+                        new-n-coord $ conj n-coord index
                       ; println |index: xi yi
                       if (<= xi yi)
                         let
                             new-element $ val-of-first new-children
                             new-coord $ conj coord y1
-                            new-n-coord $ conj n-coord index
                           collect! $ [] op/add-element new-coord new-n-coord new-element
                           collect-mounting collect! coord new-n-coord new-element true
                           recur collect! coord n-coord (inc index) old-children new-follows
@@ -1283,7 +1283,7 @@
                 str data
               (keyword? data)
                 str data
-              (boolean? data)
+              (bool? data)
                 str data
               (fn? data)
                 , |Fn
@@ -1295,7 +1295,7 @@
                   raw $ pr-str data
                 if
                   > (count raw) 60
-                  .log js/console $ clj->js data
+                  .log js/console $ to-js-data data
                   .log js/console raw
         |style-data $ quote
           def style-data $ {} (:position :absolute) (:background-color "\"hsl(240,100%,0%)") (:color :white) (:opacity 0.2) (:font-size |12px) (:font-family |Avenir,Verdana) (:line-height 1.4) (:padding "|2px 6px") (:border-radius |4px) (:max-width 160) (:max-height 32) (:white-space :normal) (:overflow :ellipsis) (:cursor :default)
@@ -1352,7 +1352,7 @@
     |respo.core $ {}
       :ns $ quote
         ns respo.core
-          :require ([] respo.controller.resolve :refer $ [] build-deliver-event) ([] respo.render.diff :refer $ [] find-element-diffs) ([] respo.render.effect :refer $ [] collect-mounting) ([] respo.util.format :refer $ [] purify-element) ([] respo.controller.client :refer $ [] activate-instance! patch-instance!) ([] respo.util.list :refer $ [] pick-attrs pick-event val-exists? detect-func-in-map? filter-first) ([] respo.util.detect :refer $ [] component? element? effect?) ([] respo.schema :as schema) ([] respo.util.comparator :refer $ [] compare-xy) ([] memof.alias :refer $ [] tick-calling-loop! reset-calling-caches!)
+          :require ([] respo.controller.resolve :refer $ [] build-deliver-event) ([] respo.render.diff :refer $ [] find-element-diffs) ([] respo.render.effect :refer $ [] collect-mounting) ([] respo.util.format :refer $ [] purify-element mute-element) ([] respo.controller.client :refer $ [] activate-instance! patch-instance!) ([] respo.util.list :refer $ [] pick-attrs pick-event val-exists? detect-func-in-map? filter-first) ([] respo.util.detect :refer $ [] component? element? effect?) ([] respo.schema :as schema) ([] respo.util.comparator :refer $ [] compare-xy) ([] respo.util.dom :refer $ [] compare-to-dom!) ([] memof.alias :refer $ [] tick-calling-loop! reset-calling-caches!)
           :require-macros $ [] respo.core
       :defs $ {}
         |>> $ quote
@@ -1441,7 +1441,7 @@
             assert (component? element) "|2nd argument should be a component"
             let
                 app-element $ .-firstElementChild target
-                *changes $ atom ([])
+                *changes $ do (reset! *rereder-changes $ []) (, *rereder-changes)
                 collect! $ fn (x)
                   assert (= 3 $ count x) (, "|change op should has length 3")
                   swap! *changes conj x
@@ -1465,15 +1465,18 @@
           defmacro defeffect (effect-name args params & body)
             assert "\"args in symbol" $ and (list? args) (every? symbol? args)
             assert "\"params like [action el at-place?]" $ and (list? params) (every? symbol? params)
-            quote-replace $ defn ~effect-name ~args
-              {}
-                :name $ ~ (turn-keyword effect-name)
-                :respo-node :effect
-                :coord $ []
-                :args $ [] ~@args
-                :method $ fn (args params)
-                  let[] (~ args) args $ let[] (~ params) params
-                    ~@ $ if (empty? body) (quote-replace $ echo "\"WARNING:" ~effect-name "\"lack code for handling effects!" ) (, body)
+            let
+                args-var $ gensym "\"args"
+                params-var $ gensym "\"params"
+              quote-replace $ defn ~effect-name ~args
+                {}
+                  :name $ ~ (turn-keyword effect-name)
+                  :respo-node :effect
+                  :coord $ []
+                  :args $ [] ~@args
+                  :method $ fn (~args-var ~params-var)
+                    let[] ~args ~args-var $ let[] ~params ~params-var
+                      ~@ $ if (empty? body) (quote-replace $ echo "\"WARNING:" ~effect-name "\"lack code for handling effects!" ) (, body)
         |list-> $ quote
           defn list-> (props children) (create-list-element :div props children)
         |a $ quote
@@ -1560,15 +1563,14 @@
               map :name $ vals (:children vdom)
             ; .log js/console element
             let
-                virtual-name $ name (:name vdom)
-                real-name $ string/lower-case (.-tagName element)
+                virtual-name $ turn-string (:name vdom)
+                real-name $ .toLowerCase (.-tagName element)
               when (/= virtual-name real-name)
                 .warn js/console "\"SSR checking: tag names do not match:" (pr-str $ dissoc vdom :children) (, element)
             if
               /= (count $ :children vdom) (.-length $ .-children element)
               let
-                  maybe-html $ :innerHTML
-                    into ({}) (:attrs vdom)
+                  maybe-html $ :innerHTML (pairs-map $ :attrs vdom)
                 if (some? maybe-html)
                   when (= maybe-html $ .-innerHTML element) (.warn js/console "\"SSR checking: noticed dom containing innerHTML:" element)
                   do (.error js/console "\"SSR checking: children sizes do not match!")
