@@ -114,7 +114,7 @@
       :proc $ quote ()
     |respo.main $ {}
       :ns $ quote
-        ns respo.main $ :require ([] respo.core :refer $ [] *changes-logger clear-cache!) ([] respo.app.core :refer $ [] render-app! *store) ([] respo.test.main :as respo-test)
+        ns respo.main $ :require ([] respo.core :refer $ [] *changes-logger clear-cache!) ([] respo.app.core :refer $ [] render-app! *store) ([] respo.test.main :as respo-test) ([] respo.app.core :refer $ [] handle-ssr!)
       :defs $ {}
         |main! $ quote
           defn main! () (; handle-ssr! mount-target)
@@ -344,7 +344,7 @@
       :proc $ quote ()
     |respo.app.core $ {}
       :ns $ quote
-        ns respo.app.core $ :require ([] respo.app.comp.container :refer $ [] comp-container) ([] respo.core :refer $ [] render!) ([] respo.app.schema :as schema) ([] respo.app.updater :refer $ [] updater) ([] respo.util.id :refer $ [] get-id!)
+        ns respo.app.core $ :require ([] respo.app.comp.container :refer $ [] comp-container) ([] respo.core :refer $ [] render! realize-ssr!) ([] respo.app.schema :as schema) ([] respo.app.updater :refer $ [] updater) ([] respo.util.id :refer $ [] get-id!)
       :defs $ {}
         |*store $ quote (defatom *store schema/store)
         |dispatch! $ quote
@@ -1352,7 +1352,7 @@
     |respo.core $ {}
       :ns $ quote
         ns respo.core
-          :require ([] respo.controller.resolve :refer $ [] build-deliver-event) ([] respo.render.diff :refer $ [] find-element-diffs) ([] respo.render.effect :refer $ [] collect-mounting) ([] respo.util.format :refer $ [] purify-element) ([] respo.controller.client :refer $ [] activate-instance! patch-instance!) ([] respo.util.list :refer $ [] pick-attrs pick-event val-exists? detect-func-in-map? filter-first) ([] respo.util.detect :refer $ [] component? element? effect?) ([] respo.schema :as schema) ([] respo.util.comparator :refer $ [] compare-xy) ([] memof.alias :refer $ [] tick-calling-loop! reset-calling-caches!)
+          :require ([] respo.controller.resolve :refer $ [] build-deliver-event) ([] respo.render.diff :refer $ [] find-element-diffs) ([] respo.render.effect :refer $ [] collect-mounting) ([] respo.util.format :refer $ [] purify-element mute-element) ([] respo.controller.client :refer $ [] activate-instance! patch-instance!) ([] respo.util.list :refer $ [] pick-attrs pick-event val-exists? detect-func-in-map? filter-first) ([] respo.util.detect :refer $ [] component? element? effect?) ([] respo.schema :as schema) ([] respo.util.comparator :refer $ [] compare-xy) ([] respo.util.dom :refer $ [] compare-to-dom!) ([] memof.alias :refer $ [] tick-calling-loop! reset-calling-caches!)
           :require-macros $ [] respo.core
       :defs $ {}
         |>> $ quote
@@ -1441,7 +1441,7 @@
             assert (component? element) "|2nd argument should be a component"
             let
                 app-element $ .-firstElementChild target
-                *changes $ atom ([])
+                *changes $ do (reset! *rereder-changes $ []) (, *rereder-changes)
                 collect! $ fn (x)
                   assert (= 3 $ count x) (, "|change op should has length 3")
                   swap! *changes conj x
@@ -1563,15 +1563,14 @@
               map :name $ vals (:children vdom)
             ; .log js/console element
             let
-                virtual-name $ name (:name vdom)
-                real-name $ string/lower-case (.-tagName element)
+                virtual-name $ turn-string (:name vdom)
+                real-name $ .toLowerCase (.-tagName element)
               when (/= virtual-name real-name)
                 .warn js/console "\"SSR checking: tag names do not match:" (pr-str $ dissoc vdom :children) (, element)
             if
               /= (count $ :children vdom) (.-length $ .-children element)
               let
-                  maybe-html $ :innerHTML
-                    into ({}) (:attrs vdom)
+                  maybe-html $ :innerHTML (pairs-map $ :attrs vdom)
                 if (some? maybe-html)
                   when (= maybe-html $ .-innerHTML element) (.warn js/console "\"SSR checking: noticed dom containing innerHTML:" element)
                   do (.error js/console "\"SSR checking: children sizes do not match!")
