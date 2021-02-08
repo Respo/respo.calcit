@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru) (:version |0.14.10)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru) (:version |0.14.11)
   :files $ {}
     |respo.app.style.widget $ {}
       :ns $ quote
@@ -126,7 +126,7 @@
                     swap! *store assoc :tasks $ extract-cirru-edn (js/JSON.parse raw)
                   render-app! mount-target
                   add-watch *store :rerender $ fn (store prev) (render-app! mount-target)
-                  ; reset! *changes-logger $ fn (old-tree new-tree changes) (.log js/console $ clj->js changes)
+                  ; reset! *changes-logger $ fn (old-tree new-tree changes) (js/console.log $ to-js-data changes)
                   println |Loaded. $ .now js/performance
                 aset js/window |onbeforeunload $ fn (event) (save-store!)
         |mount-target $ quote
@@ -157,7 +157,7 @@
               true $ str x
         |event->string $ quote
           defn event->string (x)
-            subs (name x) 3
+            substr (turn-string x) 3
         |dashed->camel $ quote
           defn dashed->camel (x) (dashed->camel-iter | x false)
         |purify-events $ quote
@@ -339,7 +339,7 @@
                 let
                     k $ first entry
                     v $ ensure-string (last entry)
-                  str (name k) |: v |;
+                  str (turn-string k) |: v |;
               join-str |
       :proc $ quote ()
     |respo.app.core $ {}
@@ -640,12 +640,12 @@
                         yi $ index-of old-keys y1
                         first-old-entry $ first old-children
                         first-new-entry $ first new-children
+                        new-n-coord $ conj n-coord index
                       ; println |index: xi yi
                       if (<= xi yi)
                         let
                             new-element $ val-of-first new-children
                             new-coord $ conj coord y1
-                            new-n-coord $ conj n-coord index
                           collect! $ [] op/add-element new-coord new-n-coord new-element
                           collect-mounting collect! coord new-n-coord new-element true
                           recur collect! coord n-coord (inc index) old-children new-follows
@@ -1283,7 +1283,7 @@
                 str data
               (keyword? data)
                 str data
-              (boolean? data)
+              (bool? data)
                 str data
               (fn? data)
                 , |Fn
@@ -1295,7 +1295,7 @@
                   raw $ pr-str data
                 if
                   > (count raw) 60
-                  .log js/console $ clj->js data
+                  .log js/console $ to-js-data data
                   .log js/console raw
         |style-data $ quote
           def style-data $ {} (:position :absolute) (:background-color "\"hsl(240,100%,0%)") (:color :white) (:opacity 0.2) (:font-size |12px) (:font-family |Avenir,Verdana) (:line-height 1.4) (:padding "|2px 6px") (:border-radius |4px) (:max-width 160) (:max-height 32) (:white-space :normal) (:overflow :ellipsis) (:cursor :default)
