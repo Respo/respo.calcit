@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru) (:version |0.14.11)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru) (:version |0.14.12)
   :files $ {}
     |respo.app.style.widget $ {}
       :ns $ quote
@@ -37,7 +37,7 @@
       :proc $ quote ()
     |respo.render.html $ {}
       :ns $ quote
-        ns respo.render.html $ :require ([] respo.util.format :refer $ [] prop->attr purify-element mute-element ensure-string text->html) ([] respo.util.detect :refer $ [] component? element?)
+        ns respo.render.html $ :require ([] respo.util.format :refer $ [] prop->attr purify-element mute-element ensure-string text->html get-style-value) ([] respo.util.detect :refer $ [] component? element?)
       :defs $ {}
         |element->string $ quote
           defn element->string (element)
@@ -106,10 +106,9 @@
               map $ fn (entry)
                 let
                     k $ first entry
-                    v $ last entry
-                  str (turn-string k) |:
-                    if (string? v) (escape-html v) (ensure-string v)
-                    , |;
+                    style-name $ turn-string k
+                    v $ get-style-value (last entry) style-name
+                  str style-name |: (escape-html v) |;
               join-str |
       :proc $ quote ()
     |respo.main $ {}
@@ -143,7 +142,7 @@
       :defs $ {}
         |prop->attr $ quote
           defn prop->attr (x)
-            when (contains? x "\"?") (println "\"[Respo] warning: property contains `?` in" x)
+            when (includes? x "\"?") (println "\"[Respo] warning: property includes `?` in" x)
             case x (|class-name |class) (|tab-index |tabindex) (|read-only |readonly) (x x)
         |event->prop $ quote
           defn event->prop (x) (str |on $ turn-string x)
@@ -214,6 +213,16 @@
                   js/String.fromCharCode $ - code 32
                   , x
               , x
+        |get-style-value $ quote
+          defn get-style-value (x prop)
+            cond
+                string? x
+                , x
+              (keyword? x)
+                turn-string x
+              (number? x)
+                if (.test pattern-non-dimension-props prop) (str x) (str x "\"px")
+              true $ str x
         |mute-element $ quote
           defn mute-element (element)
             if (component? element) (update element :tree mute-element)
@@ -245,6 +254,7 @@
                             child $ last pair
                           [] k $ purify-element child
               true $ do (js/console.warn "\"Unknown markup during purify:" markup) nil
+        |pattern-non-dimension-props $ quote (def pattern-non-dimension-props $ new js/RegExp "\"acit|ex(?:s|g|n|p|$)|rph|grid|ows|mnc|ntw|ine[ch]|zoo|^ord|itera" "\"i")
         |text->html $ quote
           defn text->html (x)
             if (some? x)
@@ -295,7 +305,7 @@
       :proc $ quote ()
     |respo.render.dom $ {}
       :ns $ quote
-        ns respo.render.dom $ :require ([] respo.util.format :refer $ [] dashed->camel event->prop ensure-string) ([] respo.util.detect :refer $ [] component?)
+        ns respo.render.dom $ :require ([] respo.util.format :refer $ [] dashed->camel event->prop ensure-string get-style-value) ([] respo.util.detect :refer $ [] component?)
       :defs $ {}
         |make-element $ quote
           defn make-element (virtual-element listener-builder coord) (assert "\"coord is required" $ some? coord)
@@ -317,9 +327,10 @@
                     if (some? v) (aset element k v)
                 &doseq (entry style)
                   let
-                      k $ dashed->camel (turn-string $ first entry)
+                      style-name $ turn-string (first entry)
+                      k $ dashed->camel style-name
                       v $ last entry
-                    aset (aget element |style) k $ if (keyword? v) (turn-string v) (, v)
+                    aset (aget element |style) k $ get-style-value v style-name
                 &doseq
                   event-name $ keys (:event virtual-element)
                   let
@@ -338,8 +349,9 @@
               map $ fn (entry)
                 let
                     k $ first entry
-                    v $ ensure-string (last entry)
-                  str (turn-string k) |: v |;
+                    style-name $ turn-string k
+                    v $ get-style-value (last entry)
+                  str style-name |: v |;
               join-str |
       :proc $ quote ()
     |respo.app.core $ {}
@@ -858,7 +870,7 @@
       :proc $ quote ()
     |respo.render.patch $ {}
       :ns $ quote
-        ns respo.render.patch $ :require ([] respo.util.format :refer $ [] dashed->camel event->prop ensure-string) ([] respo.render.dom :refer $ [] make-element style->string) ([] respo.schema.op :as op)
+        ns respo.render.patch $ :require ([] respo.util.format :refer $ [] dashed->camel event->prop ensure-string get-style-value) ([] respo.render.dom :refer $ [] make-element style->string) ([] respo.schema.op :as op)
       :defs $ {}
         |rm-event $ quote
           defn rm-event (target event-name)
@@ -960,7 +972,7 @@
           defn add-style (target op)
             let[] (p v) op $ let
                 style-name $ dashed->camel (turn-string p)
-                style-value $ ensure-string v
+                style-value $ get-style-value v style-name
               aset (.-style target) style-name style-value
         |rm-style $ quote
           defn rm-style (target op)
@@ -1298,7 +1310,7 @@
                   .log js/console $ to-js-data data
                   .log js/console raw
         |style-data $ quote
-          def style-data $ {} (:position :absolute) (:background-color "\"hsl(240,100%,0%)") (:color :white) (:opacity 0.2) (:font-size |12px) (:font-family |Avenir,Verdana) (:line-height 1.4) (:padding "|2px 6px") (:border-radius |4px) (:max-width 160) (:max-height 32) (:white-space :normal) (:overflow :ellipsis) (:cursor :default)
+          def style-data $ {} (:position :absolute) (:background-color "\"hsl(240,100%,0%)") (:color :white) (:opacity 0.2) (:font-size |12px) (:font-family |Avenir,Verdana) (:line-height "\"1.4em") (:padding "|2px 6px") (:border-radius |4px) (:max-width 160) (:max-height 32) (:white-space :normal) (:overflow :ellipsis) (:cursor :default)
       :proc $ quote ()
     |respo.controller.resolve $ {}
       :ns $ quote
