@@ -10819,7 +10819,7 @@
                                     :data $ {}
                                       |T $ {} (:type :leaf) (:by |rJoDgvdeG) (:at 1612012346347) (:text |:effects)
                                       |j $ {} (:type :leaf) (:by |rJoDgvdeG) (:at 1612012346347) (:text |effects-list)
-                      |r $ {} (:type :leaf) (:by |rJoDgvdeG) (:at 1612012349858) (:text |markup-tree)
+                      |r $ {} (:type :leaf) (:by |rJoDgvdeG) (:at 1613375529256) (:text |markup)
                   |D $ {} (:type :leaf) (:by |rJoDgvdeG) (:at 1612012634157) (:text |&let)
                   |L $ {} (:type :expr) (:by |rJoDgvdeG) (:at 1612012634755)
                     :data $ {}
@@ -11089,6 +11089,9 @@
                           |T $ {} (:type :leaf) (:by |root) (:at 1572231952932) (:text |[])
                       |v $ {} (:type :leaf) (:by |root) (:at 1572231952932) (:text |element)
                       |x $ {} (:type :leaf) (:by |rJoDgvdeG) (:at 1572885203913) (:text |true)
+                      |n $ {} (:type :expr) (:by |rJoDgvdeG) (:at 1613375538140)
+                        :data $ {}
+                          |T $ {} (:type :leaf) (:by |rJoDgvdeG) (:at 1613375538457) (:text |[])
                   |xj $ {} (:type :expr) (:by |root) (:at 1572231958599)
                     :data $ {}
                       |T $ {} (:type :leaf) (:by |root) (:at 1572231958599) (:text |patch-instance!)
@@ -12347,4 +12350,4 @@
                   |T $ {} (:type :leaf) (:by |rJoDgvdeG) (:at 1571935650828) (:text |.now)
                   |j $ {} (:type :leaf) (:by |rJoDgvdeG) (:at 1571935653049) (:text |js/Date)
         :proc $ {} (:type :expr) (:by |rJoDgvdeG) (:at 1511712852131) (:data $ {})
-  :configs $ {} (:reload-fn |respo.main/reload!) (:modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru) (:output |src) (:port 6001) (:extension |.cljs) (:init-fn |respo.main/main!) (:compact-output? true) (:storage-key |calcit.cirru) (:version |0.14.12)
+  :configs $ {} (:reload-fn |respo.main/reload!) (:modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru) (:output |src) (:port 6001) (:extension |.cljs) (:init-fn |respo.main/main!) (:compact-output? true) (:storage-key |calcit.cirru) (:version |0.14.13)

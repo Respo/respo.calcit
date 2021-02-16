@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru) (:version |0.14.12)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru) (:version |0.14.13)
   :files $ {}
     |respo.app.style.widget $ {}
       :ns $ quote
@@ -1430,7 +1430,7 @@
                       , markup-tree
                     effects-list $ ->> markup-tree (filter effect?)
                   merge markup $ {} (:tree node-tree) (:effects effects-list)
-                , markup-tree
+                , markup
         |*dom-changes $ quote (defatom *dom-changes $ [])
         |option $ quote
           defn option (props & children) (create-element :option props & $ map confirm-child children)
@@ -1460,7 +1460,7 @@
                 deliver-event $ build-deliver-event *global-element dispatch!
               if (nil? app-element) (raise "\"Detected no element from SSR!")
               compare-to-dom! (purify-element element) app-element
-              collect-mounting collect! ([]) element true
+              collect-mounting collect! ([]) ([]) (, element true)
               patch-instance! @*changes target deliver-event
               reset! *global-element $ mute-element element
         |h4 $ quote
