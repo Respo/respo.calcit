@@ -1,19 +1,29 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru) (:version |0.14.13)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!)
+    :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
+    :version |0.14.14
   :files $ {}
     |respo.app.style.widget $ {}
       :ns $ quote
-        ns respo.app.style.widget $ :require ([] respo.util.format :refer $ [] hsl)
+        ns respo.app.style.widget $ :require
+          [] respo.util.format :refer $ [] hsl
       :defs $ {}
         |button $ quote
-          def button $ {} (:display :inline-block) (:padding "\"0 6px 0 6px") (:font-family |Avenir,Verdana) (:cursor :pointer) (:background-color $ hsl 0 80 70) (:color $ hsl 0 0 100) (:height 28) (:line-height "\"28px")
+          def button $ {} (:display :inline-block) (:padding "\"0 6px 0 6px") (:font-family |Avenir,Verdana) (:cursor :pointer)
+            :background-color $ hsl 0 80 70
+            :color $ hsl 0 0 100
+            :height 28
+            :line-height "\"28px"
         |input $ quote
-          def input $ {} (:font-size |16px) (:line-height |24px) (:padding "|0px 8px") (:outline :none) (:min-width |300px) (:background-color $ hsl 0 0 94) (:border :none)
+          def input $ {} (:font-size |16px) (:line-height |24px) (:padding "|0px 8px") (:outline :none) (:min-width |300px)
+            :background-color $ hsl 0 0 94
+            :border :none
       :proc $ quote ()
     |respo.app.comp.wrap $ {}
       :ns $ quote
-        ns respo.app.comp.wrap $ :require ([] respo.core :refer $ [] defcomp div)
+        ns respo.app.comp.wrap $ :require
+          [] respo.core :refer $ [] defcomp div
       :defs $ {}
         |comp-wrap $ quote
           defcomp comp-wrap (x)
@@ -21,15 +31,22 @@
       :proc $ quote ()
     |respo.app.comp.container $ {}
       :ns $ quote
-        ns respo.app.comp.container $ :require ([] respo.core :refer $ [] defcomp div span <> >> a) ([] respo.app.comp.todolist :refer $ [] comp-todolist) ([] respo.comp.space :refer $ [] =<)
+        ns respo.app.comp.container $ :require
+          [] respo.core :refer $ [] defcomp div span <> >> a
+          [] respo.app.comp.todolist :refer $ [] comp-todolist
+          [] respo.comp.space :refer $ [] =<
       :defs $ {}
         |comp-container $ quote
           defcomp comp-container (store)
             let
                 states $ :states store
-              div ({} $ :style style-global) (comp-todolist states $ :tasks store)
-                div ({} $ :style style-states)
-                  <> $ str "|states: " (pr-str $ :states store)
+              div
+                {} $ :style style-global
+                comp-todolist states $ :tasks store
+                div
+                  {} $ :style style-states
+                  <> $ str "|states: "
+                    pr-str $ :states store
         |style-global $ quote
           def style-global $ {} (:font-family |Avenir,Verdana)
         |style-states $ quote
@@ -37,7 +54,9 @@
       :proc $ quote ()
     |respo.render.html $ {}
       :ns $ quote
-        ns respo.render.html $ :require ([] respo.util.format :refer $ [] prop->attr purify-element mute-element ensure-string text->html get-style-value) ([] respo.util.detect :refer $ [] component? element?)
+        ns respo.render.html $ :require
+          [] respo.util.format :refer $ [] prop->attr purify-element mute-element ensure-string text->html get-style-value
+          [] respo.util.detect :refer $ [] component? element?
       :defs $ {}
         |element->string $ quote
           defn element->string (element)
@@ -48,7 +67,8 @@
                 text-inside $ if
                   = (:name element) :textarea
                   escape-html $ :value attrs
-                  either (:innerHTML attrs) (text->html $ :inner-text attrs)
+                  either (:innerHTML attrs)
+                    text->html $ :inner-text attrs
                 tailored-props $ -> attrs (dissoc :innerHTML) (dissoc :inner-text)
                     fn (props)
                       if (empty? styles) props $ assoc props :style styles
@@ -70,19 +90,17 @@
             let
                 k $ first entry
                 v $ last entry
-              str (prop->attr $ turn-string k) (, |=)
-                pr-str $ cond
-                    = k :style
-                    style->string v
-                  (bool? v)
-                    str v
-                  (number? v)
-                    str v
-                  (keyword? v)
-                    turn-string v
-                  (string? v)
-                    escape-html v
-                  true $ str v
+              str
+                prop->attr $ turn-string k
+                , |= $ pr-str
+                  cond
+                      = k :style
+                      style->string v
+                    (bool? v) (str v)
+                    (number? v) (str v)
+                    (keyword? v) (turn-string v)
+                    (string? v) (escape-html v)
+                    true $ str v
         |escape-html $ quote
           defn escape-html (text)
             if (nil? text) "\"" $ -> text (replace "|\"" |&quot;) (replace |< |&lt;) (replace |> |&gt;) (replace &newline "\"&#13;&#10;")
@@ -113,11 +131,17 @@
       :proc $ quote ()
     |respo.main $ {}
       :ns $ quote
-        ns respo.main $ :require ([] respo.core :refer $ [] *changes-logger clear-cache!) ([] respo.app.core :refer $ [] render-app! *store) ([] respo.test.main :as respo-test) ([] respo.app.core :refer $ [] handle-ssr!)
+        ns respo.main $ :require
+          [] respo.core :refer $ [] *changes-logger clear-cache!
+          [] respo.app.core :refer $ [] render-app! *store
+          [] respo.test.main :as respo-test
+          [] respo.app.core :refer $ [] handle-ssr!
       :defs $ {}
         |main! $ quote
           defn main! () (; handle-ssr! mount-target)
-            if (= "\"ci" $ get-env "\"env") (respo-test/main!)
+            if
+              = "\"ci" $ get-env "\"env"
+              respo-test/main!
               do
                 let
                     raw $ .getItem js/window.localStorage |respo.calcit
@@ -125,34 +149,37 @@
                     swap! *store assoc :tasks $ extract-cirru-edn (js/JSON.parse raw)
                   render-app! mount-target
                   add-watch *store :rerender $ fn (store prev) (render-app! mount-target)
-                  ; reset! *changes-logger $ fn (old-tree new-tree changes) (js/console.log $ to-js-data changes)
+                  ; reset! *changes-logger $ fn (old-tree new-tree changes)
+                    js/console.log $ to-js-data changes
                   println |Loaded. $ .now js/performance
                 aset js/window |onbeforeunload $ fn (event) (save-store!)
         |mount-target $ quote
-          def mount-target $ if (exists? js/document) (.querySelector js/document |.app) (, nil)
+          def mount-target $ if (exists? js/document) (.querySelector js/document |.app) nil
         |reload! $ quote
           defn reload! () (clear-cache!) (render-app! mount-target) (.log js/console "|code updated.")
         |save-store! $ quote
-          defn save-store! ()
-            .setItem js/window.localStorage |respo.calcit $ js/JSON.stringify (to-cirru-edn $ :tasks @*store)
+          defn save-store! () $ .setItem js/window.localStorage |respo.calcit
+            js/JSON.stringify $ to-cirru-edn (:tasks @*store)
       :proc $ quote ()
     |respo.util.format $ {}
       :ns $ quote
-        ns respo.util.format $ :require ([] respo.util.detect :refer $ [] component? element?)
+        ns respo.util.format $ :require
+          [] respo.util.detect :refer $ [] component? element?
       :defs $ {}
         |prop->attr $ quote
           defn prop->attr (x)
             when (includes? x "\"?") (println "\"[Respo] warning: property includes `?` in" x)
             case x (|class-name |class) (|tab-index |tabindex) (|read-only |readonly) (x x)
         |event->prop $ quote
-          defn event->prop (x) (str |on $ turn-string x)
+          defn event->prop (x)
+            str |on $ turn-string x
         |ensure-string $ quote
           defn ensure-string (x)
             cond
+              
                 string? x
                 , x
-              (keyword? x)
-                turn-string x
+              (keyword? x) (turn-string x)
               true $ str x
         |event->string $ quote
           defn event->string (x)
@@ -169,9 +196,9 @@
                   some? v
               map first
         |hsl $ quote
-          defn hsl (h s l & args)
+          defn hsl (h s l ? arg)
             let
-                a $ if (empty? args) 1 (first args)
+                a $ either arg 1
               str "\"hsl(" h "\"," s "\"%," l "\"%," a "\")"
         |event->edn $ quote
           defn event->edn (event) (; .log js/console "\"simplify event:" event)
@@ -179,9 +206,13 @@
               case (.-type event)
                 "\"click" $ {} (:type :click)
                 "\"keydown" $ merge (map-keyboard-event event)
-                  {} (:type :keydown) (:key-code $ .-keyCode event) (:keycode $ .-keyCode event)
-                "\"keypress" $ merge (map-keyboard-event event) ({} $ :type :keypress)
-                "\"keyup" $ merge (map-keyboard-event event) ({} $ :type :keyup)
+                  {} (:type :keydown)
+                    :key-code $ .-keyCode event
+                    :keycode $ .-keyCode event
+                "\"keypress" $ merge (map-keyboard-event event)
+                  {} $ :type :keypress
+                "\"keyup" $ merge (map-keyboard-event event)
+                  {} $ :type :keyup
                 "\"input" $ {} (:type :input)
                   :value $ aget (.-target event) "\"value"
                   :checked $ -> event .-target .-checked
@@ -189,7 +220,8 @@
                   :value $ aget (.-target event) |value
                 "\"focus" $ {} (:type :focus)
                 (.-type event)
-                  {} (:type $ .-type event)
+                  {}
+                    :type $ .-type event
                     :msg $ str "|Unhandled event: " (.-type event)
               assoc :original-event event
               assoc :event event
@@ -216,10 +248,10 @@
         |get-style-value $ quote
           defn get-style-value (x prop)
             cond
+              
                 string? x
                 , x
-              (keyword? x)
-                turn-string x
+              (keyword? x) (turn-string x)
               (number? x)
                 if (.test pattern-non-dimension-props prop) (str x) (str x "\"px")
               true $ str x
@@ -231,17 +263,26 @@
                 update :children $ fn (children)
                   ->> children $ map
                     fn (entry)
-                      [] (first entry) (mute-element $ last entry)
+                      [] (first entry)
+                        mute-element $ last entry
         |map-keyboard-event $ quote
           defn map-keyboard-event (event)
-            {} (:key $ .-key event) (:code $ .-code event) (:ctrl? $ .-ctrlKey event) (:meta? $ .-metaKey event) (:alt? $ .-altKey event) (:shift? $ .-shiftKey event)
+            {}
+              :key $ .-key event
+              :code $ .-code event
+              :ctrl? $ .-ctrlKey event
+              :meta? $ .-metaKey event
+              :alt? $ .-altKey event
+              :shift? $ .-shiftKey event
         |purify-element $ quote
           defn purify-element (markup)
             cond
+              
                 nil? markup
                 , nil
               (component? markup)
-                purify-element $ &let (t $ :tree markup)
+                purify-element $ &let
+                  t $ :tree markup
                   when (nil? t) (raise "\"tree is empty")
                   , t
               (element? markup)
@@ -254,7 +295,8 @@
                             child $ last pair
                           [] k $ purify-element child
               true $ do (js/console.warn "\"Unknown markup during purify:" markup) nil
-        |pattern-non-dimension-props $ quote (def pattern-non-dimension-props $ new js/RegExp "\"acit|ex(?:s|g|n|p|$)|rph|grid|ows|mnc|ntw|ine[ch]|zoo|^ord|itera" "\"i")
+        |pattern-non-dimension-props $ quote
+          def pattern-non-dimension-props $ new js/RegExp "\"acit|ex(?:s|g|n|p|$)|rph|grid|ows|mnc|ntw|ine[ch]|zoo|^ord|itera" "\"i"
         |text->html $ quote
           defn text->html (x)
             if (some? x)
@@ -263,11 +305,13 @@
       :proc $ quote ()
     |respo.app.updater $ {}
       :ns $ quote
-        ns respo.app.updater $ :require ([] respo.cursor :refer $ [] update-states)
+        ns respo.app.updater $ :require
+          [] respo.cursor :refer $ [] update-states
       :defs $ {}
         |updater $ quote
           defn updater (store op-type op-data op-id) (; println store op-type op-data)
-            case op-type (:states $ update-states store op-data)
+            case op-type
+              :states $ update-states store op-data
               :add $ update store :tasks
                 fn (tasks)
                   conj tasks $ {} (:text op-data) (:id op-id) (:done? false)
@@ -305,10 +349,13 @@
       :proc $ quote ()
     |respo.render.dom $ {}
       :ns $ quote
-        ns respo.render.dom $ :require ([] respo.util.format :refer $ [] dashed->camel event->prop ensure-string get-style-value) ([] respo.util.detect :refer $ [] component?)
+        ns respo.render.dom $ :require
+          [] respo.util.format :refer $ [] dashed->camel event->prop ensure-string get-style-value
+          [] respo.util.detect :refer $ [] component?
       :defs $ {}
         |make-element $ quote
-          defn make-element (virtual-element listener-builder coord) (assert "\"coord is required" $ some? coord)
+          defn make-element (virtual-element listener-builder coord)
+            assert "\"coord is required" $ some? coord
             if (component? virtual-element)
               make-element (:tree virtual-element) listener-builder $ conj coord (:name virtual-element)
               let
@@ -319,10 +366,12 @@
                   element $ .createElement js/document tag-name
                   child-elements $ ->> children
                     map $ fn (pair)
-                      let[] (k child) pair $ when (some? child) (make-element child listener-builder $ conj coord k)
+                      let[] (k child) pair $ when (some? child)
+                        make-element child listener-builder $ conj coord k
                 &doseq (entry attrs)
                   let
-                      k $ dashed->camel (turn-string $ first entry)
+                      k $ dashed->camel
+                        turn-string $ first entry
                       v $ last entry
                     if (some? v) (aset element k v)
                 &doseq (entry style)
@@ -337,6 +386,7 @@
                       name-in-string $ event->prop event-name
                     ; println |listener: event-name name-in-string
                     aset element name-in-string $ fn (event)
+                      
                         listener-builder event-name
                         , event coord
                       .stopPropagation event
@@ -356,7 +406,12 @@
       :proc $ quote ()
     |respo.app.core $ {}
       :ns $ quote
-        ns respo.app.core $ :require ([] respo.app.comp.container :refer $ [] comp-container) ([] respo.core :refer $ [] render! realize-ssr!) ([] respo.app.schema :as schema) ([] respo.app.updater :refer $ [] updater) ([] respo.util.id :refer $ [] get-id!)
+        ns respo.app.core $ :require
+          [] respo.app.comp.container :refer $ [] comp-container
+          [] respo.core :refer $ [] render! realize-ssr!
+          [] respo.app.schema :as schema
+          [] respo.app.updater :refer $ [] updater
+          [] respo.util.id :refer $ [] get-id!
       :defs $ {}
         |*store $ quote (defatom *store schema/store)
         |dispatch! $ quote
@@ -373,12 +428,16 @@
       :proc $ quote ()
     |respo.test.comp.todolist $ {}
       :ns $ quote
-        ns respo.test.comp.todolist $ :require ([] respo.test.comp.task :refer $ [] comp-task) ([] respo.core :refer $ [] defcomp div list->)
+        ns respo.test.comp.todolist $ :require
+          [] respo.test.comp.task :refer $ [] comp-task
+          [] respo.core :refer $ [] defcomp div list->
       :defs $ {}
         |comp-todolist $ quote
           defcomp comp-todolist (tasks)
-            list-> ({} $ :style style-todolist)
-              ->> (either tasks $ [])
+            list->
+              {} $ :style style-todolist
+              ->>
+                either tasks $ []
                 map $ fn (task)
                   [] (:id task) (comp-task task)
         |style-todolist $ quote
@@ -386,15 +445,18 @@
       :proc $ quote ()
     |respo.app.comp.zero $ {}
       :ns $ quote
-        ns respo.app.comp.zero $ :require ([] respo.core :refer $ [] defcomp div)
+        ns respo.app.comp.zero $ :require
+          [] respo.core :refer $ [] defcomp div
       :defs $ {}
         |comp-zero $ quote
-          defcomp comp-zero ()
-            div $ {} (:inner-text 0)
+          defcomp comp-zero () $ div
+            {} $ :inner-text 0
       :proc $ quote ()
     |respo.util.list $ {}
       :ns $ quote
-        ns respo.util.list $ :require ([] respo.util.detect :refer $ [] component? element?) ([] respo.util.comparator :refer $ [] compare-xy)
+        ns respo.util.list $ :require
+          [] respo.util.detect :refer $ [] component? element?
+          [] respo.util.comparator :refer $ [] compare-xy
       :defs $ {}
         |filter-first $ quote
           defn filter-first (f xs)
@@ -417,7 +479,8 @@
             assert (fn? f) "|expects function"
             assert (list? xs) "|expects list"
             map-indexed
-              fn (idx x) ([] idx $ f x)
+              fn (idx x)
+                [] idx $ f x
               , xs
         |pick-attrs $ quote
           defn pick-attrs (props)
@@ -451,31 +514,41 @@
                       , v
                 pairs-map
         |val-exists? $ quote
-          defn val-exists? (pair) (some? $ last pair)
+          defn val-exists? (pair)
+            some? $ last pair
         |val-of-first $ quote
-          defn val-of-first (x) (last $ first x)
+          defn val-of-first (x)
+            last $ first x
         |detect-func-in-map? $ quote
           defn detect-func-in-map? (params)
             if
-              or (not $ map? params) (empty? params)
-              , false
-              let
+              or
+                not $ map? params
+                empty? params
+              , false $ let
                   ps $ to-pairs params
                   p0 $ first ps
-                if (fn? $ last p0) (, true)
-                  recur $ pairs-map (rest ps)
+                if
+                  fn? $ last p0
+                  , true $ recur
+                    pairs-map $ rest ps
       :proc $ quote ()
     |respo.app.schema $ {}
       :ns $ quote (ns respo.app.schema)
       :defs $ {}
         |store $ quote
-          def store $ {} (:tasks $ []) (:states $ {}) (:cursor $ [])
+          def store $ {}
+            :tasks $ []
+            :states $ {}
+            :cursor $ []
         |task $ quote
           def task $ {} (:id nil) (:text |) (:done? false)
       :proc $ quote ()
     |respo.render.effect $ {}
       :ns $ quote
-        ns respo.render.effect $ :require ([] respo.schema.op :as op) ([] respo.util.detect :refer $ [] component? element? =seq) ([] respo.util.list :refer $ [] val-of-first)
+        ns respo.render.effect $ :require ([] respo.schema.op :as op)
+          [] respo.util.detect :refer $ [] component? element? =seq
+          [] respo.util.list :refer $ [] val-of-first
       :defs $ {}
         |collect-mounting $ quote
           defn collect-mounting (collect! coord n-coord tree at-place?)
@@ -484,7 +557,8 @@
                 let
                     effects $ :effects tree
                     next-coord $ conj coord (:name tree)
-                  when (not $ empty? effects)
+                  when
+                    not $ empty? effects
                     &doseq (effect effects)
                       let
                           method $ :method effect
@@ -496,11 +570,12 @@
                 loop
                     children $ :children tree
                     idx 0
-                  when (not $ empty? children)
+                  when
+                    not $ empty? children
                     let
                         pair $ first children
                         k $ first pair
-                      collect-mounting collect! (conj coord k) (conj n-coord idx) (last pair) (, false)
+                      collect-mounting collect! (conj coord k) (conj n-coord idx) (last pair) false
                     recur (rest children) (inc idx)
               true $ js/console.warn "\"Unknown entry for mounting:" tree
         |collect-unmounting $ quote
@@ -511,7 +586,8 @@
                     effects $ :effects tree
                     new-coord $ conj coord (:name tree)
                   collect-unmounting collect! new-coord n-coord (:tree tree) false
-                  when (not $ empty? effects)
+                  when
+                    not $ empty? effects
                     &doseq (effect effects)
                       let
                           method $ :method effect
@@ -522,19 +598,23 @@
                 loop
                     children $ :children tree
                     idx 0
-                  when (not $ empty? children)
+                  when
+                    not $ empty? children
                     let
                         pair $ first children
                         k $ first pair
-                      collect-unmounting collect! (conj coord k) (conj n-coord idx) (last pair) (, false)
+                      collect-unmounting collect! (conj coord k) (conj n-coord idx) (last pair) false
                     recur (rest children) (inc idx)
               true $ js/console.warn "\"Unknown entry for unmounting:" tree
         |collect-updating $ quote
-          defn collect-updating (collect! action coord n-coord old-tree new-tree) (assert "\"expects component" $ component? new-tree)
+          defn collect-updating (collect! action coord n-coord old-tree new-tree)
+            assert "\"expects component" $ component? new-tree
             let
                 effects $ :effects new-tree
                 next-coord $ conj coord (:name new-tree)
-              when (not $ empty? effects) (; js/console.log "\"collect update" n-coord $ :effects new-tree)
+              when
+                not $ empty? effects
+                ; js/console.log "\"collect update" n-coord $ :effects new-tree
                 &doseq
                   idx $ range (count effects)
                   let
@@ -552,7 +632,10 @@
       :proc $ quote ()
     |respo.controller.client $ {}
       :ns $ quote
-        ns respo.controller.client $ :require ([] respo.render.patch :refer $ [] apply-dom-changes) ([] respo.util.format :refer $ [] event->edn) ([] respo.render.dom :refer $ [] make-element)
+        ns respo.controller.client $ :require
+          [] respo.render.patch :refer $ [] apply-dom-changes
+          [] respo.util.format :refer $ [] event->edn
+          [] respo.render.dom :refer $ [] make-element
       :defs $ {}
         |activate-instance! $ quote
           defn activate-instance! (entire-dom mount-point deliver-event)
@@ -581,7 +664,13 @@
       :proc $ quote ()
     |respo.render.diff $ {}
       :ns $ quote
-        ns respo.render.diff $ :require ([] respo.util.format :refer $ [] purify-element) ([] respo.util.detect :refer $ [] component? element?) ([] respo.schema.op :as op) ([] respo.util.comparator :refer $ [] compare-xy) ([] respo.render.effect :refer $ [] collect-mounting collect-updating collect-unmounting) ([] respo.util.list :refer $ [] val-of-first)
+        ns respo.render.diff $ :require
+          [] respo.util.format :refer $ [] purify-element
+          [] respo.util.detect :refer $ [] component? element?
+          [] respo.schema.op :as op
+          [] respo.util.comparator :refer $ [] compare-xy
+          [] respo.render.effect :refer $ [] collect-mounting collect-updating collect-unmounting
+          [] respo.util.list :refer $ [] val-of-first
       :defs $ {}
         |find-children-diffs $ quote
           defn find-children-diffs (collect! coord n-coord index old-children new-children) (; .log js/console "|diff children:" n-coord index old-children new-children)
@@ -589,9 +678,10 @@
                 was-empty? $ empty? old-children
                 now-empty? $ empty? new-children
               cond
+                
                   and was-empty? now-empty?
                   , nil
-                (and was-empty? $ not now-empty?)
+                (and was-empty? (not now-empty?))
                   let
                       pair $ first new-children
                       k $ first pair
@@ -626,9 +716,9 @@
                       let
                           old-element $ val-of-first old-children
                           new-element $ val-of-first new-children
-                        find-element-diffs collect! (conj coord x1) (conj n-coord index) (, old-element new-element)
+                        find-element-diffs collect! (conj coord x1) (conj n-coord index) old-element new-element
                         recur collect! coord n-coord (inc index) old-follows new-follows
-                    (and x1-remains? $ not y1-existed?)
+                    (and x1-remains? (not y1-existed?))
                       let
                           pair $ first new-children
                           k $ first pair
@@ -668,6 +758,7 @@
         |find-element-diffs $ quote
           defn find-element-diffs (collect! coord n-coord old-tree new-tree) (; .log js/console "|element diffing:" n-coord old-tree new-tree) (; echo "\"element coord" coord)
             cond
+              
                 identical? old-tree new-tree
                 , nil
               (and (component? old-tree) (component? new-tree))
@@ -683,16 +774,22 @@
                       collect-mounting collect! coord n-coord new-tree true
               (and (component? old-tree) (element? new-tree))
                 do
-                  collect-unmounting collect! (conj coord $ :name old-tree) (, n-coord old-tree true)
+                  collect-unmounting collect!
+                    conj coord $ :name old-tree
+                    , n-coord old-tree true
                   recur collect! coord n-coord (:tree old-tree) new-tree
               (and (element? old-tree) (component? new-tree))
                 let
                     new-coord $ conj coord (:name new-tree)
-                  do (find-element-diffs collect! new-coord n-coord old-tree $ :tree new-tree) (collect-mounting collect! coord n-coord new-tree true)
+                  do
+                    find-element-diffs collect! new-coord n-coord old-tree $ :tree new-tree
+                    collect-mounting collect! coord n-coord new-tree true
               (and (element? old-tree) (element? new-tree))
                 if
                   /= (:name old-tree) (:name new-tree)
-                  do (collect! $ [] op/replace-element coord n-coord new-tree) (, nil)
+                  do
+                    collect! $ [] op/replace-element coord n-coord new-tree
+                    , nil
                   do
                     find-props-diffs collect! coord n-coord (:attrs old-tree) (:attrs new-tree)
                     let
@@ -708,8 +805,10 @@
                         let
                             added-events $ difference new-events old-events
                             removed-events $ difference old-events new-events
-                          &doseq (event-name added-events) (collect! $ [] op/set-event coord n-coord event-name)
-                          &doseq (event-name removed-events) (collect! $ [] op/rm-event coord n-coord event-name)
+                          &doseq (event-name added-events)
+                            collect! $ [] op/set-event coord n-coord event-name
+                          &doseq (event-name removed-events)
+                            collect! $ [] op/rm-event coord n-coord event-name
                     let
                         old-children $ :children old-tree
                         new-children $ :children new-tree
@@ -722,15 +821,17 @@
                 was-empty? $ empty? old-props
                 now-empty? $ empty? new-props
               cond
+                
                   and was-empty? now-empty?
                   , nil
-                (and was-empty? $ not now-empty?)
+                (and was-empty? (not now-empty?))
                   do
                     collect! $ [] op/add-prop coord n-coord (first new-props)
                     recur collect! coord n-coord old-props $ rest new-props
                 (and (not was-empty?) now-empty?)
                   do
-                    collect! $ [] op/rm-prop coord n-coord (first $ first old-props)
+                    collect! $ [] op/rm-prop coord n-coord
+                      first $ first old-props
                     recur collect! coord n-coord (rest old-props) new-props
                 true $ let
                     old-pair $ first old-props
@@ -743,10 +844,15 @@
                     new-follows $ rest new-props
                   ; .log js/console old-k new-k old-v new-v
                   case (compare-xy old-k new-k)
-                    -1 $ do (collect! $ [] op/rm-prop coord n-coord old-k) (recur collect! coord n-coord old-follows new-props)
-                    1 $ do (collect! $ [] op/add-prop coord n-coord new-pair) (recur collect! coord n-coord old-props new-follows)
+                    -1 $ do
+                      collect! $ [] op/rm-prop coord n-coord old-k
+                      recur collect! coord n-coord old-follows new-props
+                    1 $ do
+                      collect! $ [] op/add-prop coord n-coord new-pair
+                      recur collect! coord n-coord old-props new-follows
                     0 $ do
-                      if (/= old-v new-v) (collect! $ [] op/replace-prop coord n-coord new-pair)
+                      if (/= old-v new-v)
+                        collect! $ [] op/replace-prop coord n-coord new-pair
                       recur collect! coord n-coord old-follows new-follows
         |find-style-diffs $ quote
           defn find-style-diffs (collect! c-coord coord old-style new-style)
@@ -754,9 +860,10 @@
                 was-empty? $ empty? old-style
                 now-empty? $ empty? new-style
               if (identical? old-style new-style) nil $ cond
+                
                   and was-empty? now-empty?
                   , nil
-                (and was-empty? $ not now-empty?)
+                (and was-empty? (not now-empty?))
                   let
                       entry $ first new-style
                       follows $ rest new-style
@@ -778,7 +885,9 @@
                     -1 $ do
                       collect! $ [] op/rm-style c-coord coord (first old-entry)
                       recur collect! c-coord coord old-follows new-style
-                    1 $ do (collect! $ [] op/add-style c-coord coord new-entry) (recur collect! c-coord coord old-style new-follows)
+                    1 $ do
+                      collect! $ [] op/add-style c-coord coord new-entry
+                      recur collect! c-coord coord old-style new-follows
                     0 $ do
                       if
                         not $ identical? (last old-entry) (last new-entry)
@@ -787,12 +896,16 @@
         |keys-non-nil $ quote
           defn keys-non-nil (m)
             #{} & $ ->> m (to-pairs)
-              filter $ fn (pair) (some? $ last pair)
+              filter $ fn (pair)
+                some? $ last pair
               map first
       :proc $ quote ()
     |respo.test.html $ {}
       :ns $ quote
-        ns respo.test.html $ :require ([] calcit-test.core :refer $ [] deftest is testing) ([] respo.core :refer $ [] html head title script div link textarea body) ([] respo.render.html :refer $ [] make-string)
+        ns respo.test.html $ :require
+          [] calcit-test.core :refer $ [] deftest is testing
+          [] respo.core :refer $ [] html head title script div link textarea body
+          [] respo.render.html :refer $ [] make-string
       :defs $ {}
         |html-quote-test $ quote
           deftest html-quote-test $ let
@@ -814,15 +927,19 @@
                   link $ {} (:rel |icon) (:type |image/png)
                   script $ {} (:innerHTML |{})
                 body ({})
-                  div ({} $ :id |app) (div $ {})
+                  div
+                    {} $ :id |app
+                    div $ {}
             testing "|test generated HTML from tree" $ is
               = (slurp |test/examples/simple.html) (make-string tree-demo)
         |slurp $ quote
           defmacro slurp (file-path) (read-file file-path)
         |textarea-test $ quote
           deftest textarea-test $ let
-              piece $ textarea ({} $ :value "|a\nb\nc\n\"\nd")
-            testing "|test generated HTML from component" $ is (= "|<textarea value=\"a&#13;&#10;b&#13;&#10;c&#13;&#10;&quot;&#13;&#10;d\">a&#13;&#10;b&#13;&#10;c&#13;&#10;&quot;&#13;&#10;d</textarea>" $ make-string piece)
+              piece $ textarea
+                {} $ :value "|a\nb\nc\n\"\nd"
+            testing "|test generated HTML from component" $ is
+              = "|<textarea value=\"a&#13;&#10;b&#13;&#10;c&#13;&#10;&quot;&#13;&#10;d\">a&#13;&#10;b&#13;&#10;c&#13;&#10;&quot;&#13;&#10;d</textarea>" $ make-string piece
         |todolist-store $ quote
           def todolist-store $ []
             {} (:id 101) (:text |101)
@@ -831,11 +948,12 @@
           deftest nil-prop-test $ let
               piece $ script
                 {} (:src "\"a.js") (:defer nil)
-            testing "|test generate script with nil" $ is (= "|<script src=\"a.js\"></script>" $ make-string piece)
+            testing "|test generate script with nil" $ is
+              = "|<script src=\"a.js\"></script>" $ make-string piece
         |run-tests $ quote
           defn run-tests () (html-quote-test) (nil-prop-test) (simple-html-test) (textarea-test)
       :proc $ quote
-          defn main! () (run-tests)
+          defn main! () $ run-tests
     |respo.schema.op $ {}
       :ns $ quote (ns respo.schema.op)
       :defs $ {}
@@ -870,7 +988,10 @@
       :proc $ quote ()
     |respo.render.patch $ {}
       :ns $ quote
-        ns respo.render.patch $ :require ([] respo.util.format :refer $ [] dashed->camel event->prop ensure-string get-style-value) ([] respo.render.dom :refer $ [] make-element style->string) ([] respo.schema.op :as op)
+        ns respo.render.patch $ :require
+          [] respo.util.format :refer $ [] dashed->camel event->prop ensure-string get-style-value
+          [] respo.render.dom :refer $ [] make-element style->string
+          [] respo.schema.op :as op
       :defs $ {}
         |rm-event $ quote
           defn rm-event (target event-name)
@@ -900,6 +1021,7 @@
             let
                 event-prop $ event->prop event-name
               aset target event-prop $ fn (event)
+                
                   listener-builder event-name
                   , event coord
                 .stopPropagation event
@@ -920,7 +1042,9 @@
             let[] (p prop-value) op $ let
                 prop-name $ dashed->camel (turn-string p)
               if (= prop-name |value)
-                if (/= prop-value $ .-value target) (aset target prop-name prop-value)
+                if
+                  /= prop-value $ .-value target
+                  aset target prop-name prop-value
                 aset target prop-name prop-value
         |apply-dom-changes $ quote
           defn apply-dom-changes (changes mount-point listener-builder)
@@ -937,36 +1061,21 @@
                   cond
                       = op-type op/replace-prop
                       replace-prop target op-data
-                    (= op-type op/add-prop)
-                      add-prop target op-data
-                    (= op-type op/rm-prop)
-                      rm-prop target op-data
-                    (= op-type op/add-style)
-                      add-style target op-data
-                    (= op-type op/replace-style)
-                      replace-style target op-data
-                    (= op-type op/rm-style)
-                      rm-style target op-data
-                    (= op-type op/set-event)
-                      add-event target op-data listener-builder coord
-                    (= op-type op/rm-event)
-                      rm-event target op-data
-                    (= op-type op/add-element)
-                      add-element target op-data listener-builder coord
-                    (= op-type op/rm-element)
-                      rm-element target op-data
-                    (= op-type op/replace-element)
-                      replace-element target op-data listener-builder coord
-                    (= op-type op/append-element)
-                      append-element target op-data listener-builder coord
-                    (= op-type op/effect-mount)
-                      run-effect target op-data n-coord
-                    (= op-type op/effect-unmount)
-                      run-effect target op-data n-coord
-                    (= op-type op/effect-update)
-                      run-effect target op-data n-coord
-                    (= op-type op/effect-before-update)
-                      run-effect target op-data n-coord
+                    (= op-type op/add-prop) (add-prop target op-data)
+                    (= op-type op/rm-prop) (rm-prop target op-data)
+                    (= op-type op/add-style) (add-style target op-data)
+                    (= op-type op/replace-style) (replace-style target op-data)
+                    (= op-type op/rm-style) (rm-style target op-data)
+                    (= op-type op/set-event) (add-event target op-data listener-builder coord)
+                    (= op-type op/rm-event) (rm-event target op-data)
+                    (= op-type op/add-element) (add-element target op-data listener-builder coord)
+                    (= op-type op/rm-element) (rm-element target op-data)
+                    (= op-type op/replace-element) (replace-element target op-data listener-builder coord)
+                    (= op-type op/append-element) (append-element target op-data listener-builder coord)
+                    (= op-type op/effect-mount) (run-effect target op-data n-coord)
+                    (= op-type op/effect-unmount) (run-effect target op-data n-coord)
+                    (= op-type op/effect-update) (run-effect target op-data n-coord)
+                    (= op-type op/effect-before-update) (run-effect target op-data n-coord)
                     true $ println "|not implemented:" op-type n-coord op-data
         |add-style $ quote
           defn add-style (target op)
@@ -981,19 +1090,23 @@
               aset (.-style target) style-name nil
         |run-effect $ quote
           defn run-effect (target op-data coord)
-            if (some? target) (op-data target) (js/console.warn "\"Unknown effects target:" $ pr-str coord)
+            if (some? target) (op-data target)
+              js/console.warn "\"Unknown effects target:" $ pr-str coord
         |rm-element $ quote
           defn rm-element (target op)
             if (some? target) (.remove target) (.warn js/console "|Respo: Element already removed! Probably by :inner-text.")
         |find-target $ quote
           defn find-target (root coord)
             cond
+              
                 empty? coord
                 , root
               true $ let
                   index $ first coord
                   child $ aget (.-children root) index
-                if (some? child) (recur child $ rest coord) (, nil)
+                if (some? child)
+                  recur child $ rest coord
+                  , nil
         |add-element $ quote
           defn add-element (target op listener-builder coord)
             let
@@ -1003,21 +1116,38 @@
       :proc $ quote ()
     |respo.app.comp.todolist $ {}
       :ns $ quote
-        ns respo.app.comp.todolist $ :require ([] respo.core :refer $ [] defcomp div span input <> list-> defeffect >>) ([] respo.util.format :refer $ [] hsl) ([] respo.app.comp.task :refer $ [] comp-task) ([] respo.comp.space :refer $ [] =<) ([] respo.comp.inspect :refer $ [] comp-inspect) ([] respo.app.comp.zero :refer $ [] comp-zero) ([] respo.app.comp.wrap :refer $ [] comp-wrap) ([] respo.util.dom :refer $ [] text-width time!) ([] respo.app.style.widget :as widget) ([] memof.alias :refer $ [] memof-call)
+        ns respo.app.comp.todolist $ :require
+          [] respo.core :refer $ [] defcomp div span input <> list-> defeffect >>
+          [] respo.util.format :refer $ [] hsl
+          [] respo.app.comp.task :refer $ [] comp-task
+          [] respo.comp.space :refer $ [] =<
+          [] respo.comp.inspect :refer $ [] comp-inspect
+          [] respo.app.comp.zero :refer $ [] comp-zero
+          [] respo.app.comp.wrap :refer $ [] comp-wrap
+          [] respo.util.dom :refer $ [] text-width time!
+          [] respo.app.style.widget :as widget
+          [] memof.alias :refer $ [] memof-call
       :defs $ {}
         |number-order $ quote
           defn number-order (a b)
             if (&< a b) -1 $ if (&> a b) 1 0
         |style-root $ quote
-          def style-root $ {} (:color :black) (:background-color $ hsl 120 20 98) (:line-height |24px) ("\"font-size" 16) (:padding 10) (:font-family "|\"微软雅黑\", Verdana")
+          def style-root $ {} (:color :black)
+            :background-color $ hsl 120 20 98
+            :line-height |24px
+            "\"font-size" 16
+            :padding 10
+            :font-family "|\"微软雅黑\", Verdana"
         |style-list $ quote
-          def style-list $ {} (:color :black) (:background-color $ hsl 120 20 98)
+          def style-list $ {} (:color :black)
+            :background-color $ hsl 120 20 98
         |style-toolbar $ quote
           def style-toolbar $ {} (:display :flex) (:flex-direction :row) (:justify-content :start) (:padding "\"4px 0") (:white-space :nowrap)
         |style-panel $ quote
           def style-panel $ {} (:display :flex) (:margin-bottom 4)
         |on-test $ quote
-          defn on-test (e dispatch!) (println "|trigger test!") (run-test! dispatch! $ [])
+          defn on-test (e dispatch!) (println "|trigger test!")
+            run-test! dispatch! $ []
         |on-focus $ quote
           defn on-focus (e dispatch!) (println "|Just focused~")
         |effect-focus $ quote
@@ -1030,22 +1160,25 @@
               loop
                   x 20
                 dispatch! :add |empty
-                if (> x 0) (recur $ dec x)
+                if (> x 0)
+                  recur $ dec x
               loop
                   x 20
                 dispatch! :hit-first $ rand
-                if (> x 0) (recur $ dec x)
+                if (> x 0)
+                  recur $ dec x
               dispatch! :clear nil
               loop
                   x 10
                 dispatch! :add "|only 10 items"
-                if (> x 0) (recur $ dec x)
+                if (> x 0)
+                  recur $ dec x
               let
                   cost $ - (time!) started
                 if
                   < (count acc) 40
                   js/setTimeout
-                    fn () (run-test! dispatch! $ conj acc cost)
+                    fn () $ run-test! dispatch! (conj acc cost)
                     , 0
                   println |result: $ sort number-order acc
         |initial-state $ quote
@@ -1056,10 +1189,13 @@
                 cursor $ either (:cursor states) ([])
                 state $ either (:data states) initial-state
               [] (effect-focus)
-                div ({} $ :style style-root)
+                div
+                  {} $ :style style-root
                   comp-inspect |States state $ {} (:left |80px)
-                  div ({} $ :style style-panel)
-                    input $ {} (:placeholder "\"Text") (:value $ :draft state)
+                  div
+                    {} $ :style style-panel
+                    input $ {} (:placeholder "\"Text")
+                      :value $ :draft state
                       :style $ merge widget/input
                         {} $ :width
                           &max 200 $ + 24
@@ -1070,7 +1206,9 @@
                     =< 8 nil
                     span
                       {} (:style widget/button)
-                        :on-click $ fn (e d!) (d! :add $ :draft state) (d! cursor $ assoc state :draft |)
+                        :on-click $ fn (e d!)
+                          d! :add $ :draft state
+                          d! cursor $ assoc state :draft |
                       span $ {} (:on-click nil) (:inner-text "\"Add")
                     =< 8 nil
                     span $ {} (:inner-text |Clear) (:style widget/button)
@@ -1082,7 +1220,9 @@
                         <> "|heavy tasks"
                   list->
                     {} (:class-name |task-list) (:style style-list)
-                    ->> (either tasks $ []) (reverse)
+                    ->>
+                      either tasks $ []
+                      reverse
                       map $ fn (task)
                         let
                             task-id $ :id task
@@ -1093,13 +1233,15 @@
                       {} (:spell-check true) (:style style-toolbar)
                       div
                         {} (:style widget/button)
-                          :on-click $ if (not $ :locked? state)
+                          :on-click $ if
+                            not $ :locked? state
                             fn (e d!) (d! :clear nil)
                         <> |Clear2
                       =< 8 nil
                       div
                         {} (:style widget/button)
-                          :on-click $ fn (e d!) (d! cursor $ update state :locked? not)
+                          :on-click $ fn (e d!)
+                            d! cursor $ update state :locked? not
                         <> $ str |Lock? (:locked? state)
                       =< 8 nil
                       comp-wrap $ comp-zero
@@ -1107,7 +1249,8 @@
       :proc $ quote ()
     |respo.comp.space $ {}
       :ns $ quote
-        ns respo.comp.space $ :require ([] respo.core :refer $ [] div defcomp)
+        ns respo.comp.space $ :require
+          [] respo.core :refer $ [] div defcomp
       :defs $ {}
         |=< $ quote
           defn =< (w x) (comp-space w x)
@@ -1130,30 +1273,32 @@
         |type-as-int $ quote
           defn type-as-int (x)
             cond
+              
                 number? x
                 , 0
-              (keyword? x)
-                , 1
-              (string? x)
-                , 2
+              (keyword? x) 1
+              (string? x) 2
               true $ raise "|use number, keyword or string in coord!"
         |compare $ quote
           defn compare (x y)
             cond
+              
                 < x y
                 , -1
-              (> x y)
-                , 1
+              (> x y) 1
               true 0
       :proc $ quote ()
     |respo.test.comp.task $ {}
       :ns $ quote
-        ns respo.test.comp.task $ :require ([] respo.util.format :refer $ [] hsl) ([] respo.core :refer $ defcomp div span)
+        ns respo.test.comp.task $ :require
+          [] respo.util.format :refer $ [] hsl
+          [] respo.core :refer $ defcomp div span
       :defs $ {}
         |comp-task $ quote
           defcomp comp-task (task)
             div ({})
-              span $ {} (:inner-text $ :text task)
+              span $ {}
+                :inner-text $ :text task
       :proc $ quote ()
     |respo.util.detect $ {}
       :ns $ quote (ns respo.util.detect)
@@ -1164,26 +1309,34 @@
                 a-empty? $ empty? xs
                 b-empty? $ empty? ys
               cond
+                
                   and a-empty? b-empty?
                   , true
-                (or a-empty? b-empty?)
-                  , false
+                (or a-empty? b-empty?) false
                 (= (first xs) (first ys))
                   recur (rest xs) (rest ys)
                 true false
         |component? $ quote
           defn component? (x)
-            and (map? x) (= :component $ :respo-node x)
+            and (map? x)
+              = :component $ :respo-node x
         |effect? $ quote
           defn effect? (x)
-            and (map? x) (= :effect $ :respo-node x)
+            and (map? x)
+              = :effect $ :respo-node x
         |element? $ quote
           defn element? (x)
-            and (map? x) (= :element $ :respo-node x)
+            and (map? x)
+              = :element $ :respo-node x
       :proc $ quote ()
     |respo.app.comp.task $ {}
       :ns $ quote
-        ns respo.app.comp.task $ :require ([] respo.core :refer $ [] defcomp div input span button <> defeffect) ([] respo.util.format :refer $ [] hsl) ([] respo.comp.space :refer $ [] =<) ([] respo.comp.inspect :refer $ [] comp-inspect) ([] respo.app.style.widget :as widget)
+        ns respo.app.comp.task $ :require
+          [] respo.core :refer $ [] defcomp div input span button <> defeffect
+          [] respo.util.format :refer $ [] hsl
+          [] respo.comp.space :refer $ [] =<
+          [] respo.comp.inspect :refer $ [] comp-inspect
+          [] respo.app.style.widget :as widget
       :defs $ {}
         |comp-task $ quote
           defcomp comp-task (states task)
@@ -1191,15 +1344,19 @@
                 cursor $ :cursor states
                 state $ either (:data states) |
               [] (effect-log task)
-                div ({} $ :style style-task)
+                div
+                  {} $ :style style-task
                   comp-inspect |Task task $ {} (:left 200)
                   button $ {}
                     :style $ merge style-done
                       {} $ "\"background-color"
                         if (:done? task) (hsl 200 20 80) (hsl 200 80 70)
-                    :on-click $ fn (e d!) (d! :toggle $ :id task)
+                    :on-click $ fn (e d!)
+                      d! :toggle $ :id task
                   =< 8 nil
-                  input $ {} (:value $ :text task) (:style widget/input)
+                  input $ {}
+                    :value $ :text task
+                    :style widget/input
                     :on-input $ fn (e d!)
                       let
                           task-id $ :id task
@@ -1207,11 +1364,13 @@
                         d! :update $ {} (:id task-id) (:text text)
                   =< 8 nil
                   input $ {} (:value state) (:style widget/input)
-                    :on-input $ fn (e d!) (d! cursor $ :value e)
+                    :on-input $ fn (e d!)
+                      d! cursor $ :value e
                   =< 8 nil
                   div
                     {} (:style widget/button)
-                      :on-click $ fn (e d!) (d! :remove $ :id task)
+                      :on-click $ fn (e d!)
+                        d! :remove $ :id task
                     <> |Remove
                   =< 8 nil
                   div ({}) (<> state)
@@ -1233,12 +1392,14 @@
       :proc $ quote ()
     |respo.test.main $ {}
       :ns $ quote
-        ns respo.test.main $ :require ([] respo.test.html :as html) ([] calcit-test.core :refer $ [] deftest testing is) ([] respo.util.list :refer $ [] pick-attrs pick-event)
+        ns respo.test.main $ :require ([] respo.test.html :as html)
+          [] calcit-test.core :refer $ [] deftest testing is
+          [] respo.util.list :refer $ [] pick-attrs pick-event
       :defs $ {}
         |main! $ quote
           defn main! () (html/run-tests) (test-pick-attrs) (test-pick-event)
         |reload! $ quote
-          defn ^:dev/after-load reload! () (main!)
+          defn ^:dev/after-load reload! () $ main!
         |test-pick-attrs $ quote
           deftest test-pick-attrs $ is
             =
@@ -1261,18 +1422,27 @@
       :ns $ quote (ns respo.schema)
       :defs $ {}
         |component $ quote
-          def component $ {} (:name nil) (:respo-node :component) (:coord nil) (:args $ []) (:render nil) (:effects $ []) (:tree nil)
+          def component $ {} (:name nil) (:respo-node :component) (:coord nil)
+            :args $ []
+            :render nil
+            :effects $ []
+            :tree nil
         |effect $ quote
-          def effect $ {} (:name nil) (:respo-node :effect) (:coord $ []) (:args $ [])
-            :method $ fn (args $ [] action parent at-place?)
+          def effect $ {} (:name nil) (:respo-node :effect)
+            :coord $ []
+            :args $ []
+            :method $ fn
+              args $ [] action parent at-place?
         |element $ quote
-          def element $ {} (:name :div) (:respo-node :element) (:coord nil) (:attrs nil) (:style nil) (:event nil) (:children $ {})
+          def element $ {} (:name :div) (:respo-node :element) (:coord nil) (:attrs nil) (:style nil) (:event nil)
+            :children $ {}
         |cache-info $ quote
           def cache-info $ {} (:value nil) (:initial-loop nil) (:last-hit nil) (:hit-times 0)
       :proc $ quote ()
     |respo.comp.inspect $ {}
       :ns $ quote
-        ns respo.comp.inspect $ :require ([] respo.core :refer $ [] defcomp pre <>)
+        ns respo.comp.inspect $ :require
+          [] respo.core :refer $ [] defcomp pre <>
       :defs $ {}
         |comp-inspect $ quote
           defcomp comp-inspect (tip data style)
@@ -1289,16 +1459,11 @@
                 str |List/ $ count data
               (set? data)
                 str |Set/ $ count data
-              (nil? data)
-                , |nil
-              (number? data)
-                str data
-              (keyword? data)
-                str data
-              (bool? data)
-                str data
-              (fn? data)
-                , |Fn
+              (nil? data) |nil
+              (number? data) (str data)
+              (keyword? data) (str data)
+              (bool? data) (str data)
+              (fn? data) |Fn
               true $ pr-str data
         |on-click $ quote
           defn on-click (data)
@@ -1314,7 +1479,9 @@
       :proc $ quote ()
     |respo.controller.resolve $ {}
       :ns $ quote
-        ns respo.controller.resolve $ :require ([] respo.util.detect :refer $ [] component? element?) ([] respo.util.list :refer $ [] filter-first)
+        ns respo.controller.resolve $ :require
+          [] respo.util.detect :refer $ [] component? element?
+          [] respo.util.list :refer $ [] filter-first
       :defs $ {}
         |build-deliver-event $ quote
           defn build-deliver-event (*global-element dispatch!)
@@ -1333,22 +1500,26 @@
                   do (; println "|listener found:" coord event-name) (target-listener simple-event dispatch-wrap)
                   ; println "|found no listener:" coord event-name
         |find-event-target $ quote
-          defn find-event-target (element coord event-name) (; echo "\"looking for" coord event-name) (assert "\"element cannot be nil" $ some? element) (assert "\"coord cannot be nil" $ some? coord)
+          defn find-event-target (element coord event-name) (; echo "\"looking for" coord event-name)
+            assert "\"element cannot be nil" $ some? element
+            assert "\"coord cannot be nil" $ some? coord
             let
                 target-element $ get-markup-at element coord
                 element-exists? $ some? target-element
               ; println "|target element:" $ pr-str event-name
               if
-                and element-exists? (some? $ :event target-element)
+                and element-exists?
+                  some? $ :event target-element
                   some? $ get (:event target-element) event-name
-                , target-element
-                if (empty? coord) nil $ if element-exists?
-                  recur element
-                    slice coord 0 $ - (count coord) 1
-                    , event-name
-                  , nil
+                , target-element $ if (empty? coord) nil
+                  if element-exists?
+                    recur element
+                      slice coord 0 $ - (count coord) 1
+                      , event-name
+                    , nil
         |get-markup-at $ quote
-          defn get-markup-at (markup coord) (; println |markup: $ pr-str coord)
+          defn get-markup-at (markup coord)
+            ; println |markup: $ pr-str coord
             if (empty? coord) markup $ if (component? markup)
               recur (:tree markup) (rest coord)
               let
@@ -1359,12 +1530,24 @@
                     :children markup
                 if (some? child-pair)
                   get-markup-at (get child-pair 1) (rest coord)
-                  raise $ str "|child not found:" coord (map first $ :children markup)
+                  raise $ str "|child not found:" coord
+                    map first $ :children markup
       :proc $ quote ()
     |respo.core $ {}
       :ns $ quote
         ns respo.core
-          :require ([] respo.controller.resolve :refer $ [] build-deliver-event) ([] respo.render.diff :refer $ [] find-element-diffs) ([] respo.render.effect :refer $ [] collect-mounting) ([] respo.util.format :refer $ [] purify-element mute-element) ([] respo.controller.client :refer $ [] activate-instance! patch-instance!) ([] respo.util.list :refer $ [] pick-attrs pick-event val-exists? detect-func-in-map? filter-first) ([] respo.util.detect :refer $ [] component? element? effect?) ([] respo.schema :as schema) ([] respo.util.comparator :refer $ [] compare-xy) ([] respo.util.dom :refer $ [] compare-to-dom!) ([] memof.alias :refer $ [] tick-calling-loop! reset-calling-caches!)
+          :require
+            [] respo.controller.resolve :refer $ [] build-deliver-event
+            [] respo.render.diff :refer $ [] find-element-diffs
+            [] respo.render.effect :refer $ [] collect-mounting
+            [] respo.util.format :refer $ [] purify-element mute-element
+            [] respo.controller.client :refer $ [] activate-instance! patch-instance!
+            [] respo.util.list :refer $ [] pick-attrs pick-event val-exists? detect-func-in-map? filter-first
+            [] respo.util.detect :refer $ [] component? element? effect?
+            [] respo.schema :as schema
+            [] respo.util.comparator :refer $ [] compare-xy
+            [] respo.util.dom :refer $ [] compare-to-dom!
+            [] memof.alias :refer $ [] tick-calling-loop! reset-calling-caches!
           :require-macros $ [] respo.core
       :defs $ {}
         |>> $ quote
@@ -1376,7 +1559,8 @@
         |*changes-logger $ quote (defatom *changes-logger nil)
         |create-element $ quote
           defn create-element (tag-name props & children)
-            ; assert (str "|For rendering lists, please use list-> , got: " $ pr-str children)
+            ; assert
+              str "|For rendering lists, please use list-> , got: " $ pr-str children
               and
                 > (count children) 0
                 not $ any? list? children
@@ -1395,32 +1579,39 @@
                   filter val-exists?
               merge schema/element $ {} (:name tag-name) (:coord nil) (:attrs attrs) (:style styles) (:event event) (:children children-nodes)
         |img $ quote
-          defn img (props & children) (create-element :img props & $ map confirm-child children)
+          defn img (props & children)
+            create-element :img props & $ map confirm-child children
         |body $ quote
-          defn body (props & children) (create-element :body props & $ map confirm-child children)
+          defn body (props & children)
+            create-element :body props & $ map confirm-child children
         |render! $ quote
           defn render! (target markup dispatch!)
             if (some? @*global-element) (rerender-app! target markup dispatch!) (mount-app! target markup dispatch!)
         |h3 $ quote
-          defn h3 (props & children) (create-element :h3 props & $ map confirm-child children)
+          defn h3 (props & children)
+            create-element :h3 props & $ map confirm-child children
         |mount-app! $ quote
           defn mount-app! (target element dispatch!)
-            ; assert "|1st argument should be an element" $ or (nil? target) (= element-type $ .-__proto__ target)
+            ; assert "|1st argument should be an element" $ or (nil? target)
+              = element-type $ .-__proto__ target
             ; assert "|2nd argument should be a component" $ component? element
             let
                 deliver-event $ build-deliver-event *global-element dispatch!
-                *changes $ do (reset! *dom-changes $ []) (, *dom-changes)
+                *changes $ do
+                  reset! *dom-changes $ []
+                  , *dom-changes
                 collect! $ fn (x)
                   assert "|change op should has length 3" $ = 4 (count x)
                   swap! *changes conj x
               ; println "|mount app"
               activate-instance! element target deliver-event
-              collect-mounting collect! ([]) ([]) (, element true)
+              collect-mounting collect! ([]) ([]) element true
               patch-instance! @*changes target deliver-event
               reset! *global-element element
         |extract-effects-list $ quote
           defn extract-effects-list (markup)
-            &let (markup-tree $ :tree markup)
+            &let
+              markup-tree $ :tree markup
               if (list? markup-tree)
                 let
                     node-tree $ filter-first
@@ -1431,9 +1622,11 @@
                     effects-list $ ->> markup-tree (filter effect?)
                   merge markup $ {} (:tree node-tree) (:effects effects-list)
                 , markup
-        |*dom-changes $ quote (defatom *dom-changes $ [])
+        |*dom-changes $ quote
+          defatom *dom-changes $ []
         |option $ quote
-          defn option (props & children) (create-element :option props & $ map confirm-child children)
+          defn option (props & children)
+            create-element :option props & $ map confirm-child children
         |create-list-element $ quote
           defn create-list-element (tag-name props child-map)
             let
@@ -1446,33 +1639,43 @@
                 event $ pick-event props
               merge schema/element $ {} (:name tag-name) (:coord nil) (:attrs attrs) (:style styles) (:event event) (:children child-map)
         |h2 $ quote
-          defn h2 (props & children) (create-element :h2 props & $ map confirm-child children)
+          defn h2 (props & children)
+            create-element :h2 props & $ map confirm-child children
         |realize-ssr! $ quote
           defn realize-ssr! (target element dispatch!)
             assert (instance? element-type target) "|1st argument should be an element"
             assert (component? element) "|2nd argument should be a component"
             let
                 app-element $ .-firstElementChild target
-                *changes $ do (reset! *rereder-changes $ []) (, *rereder-changes)
+                *changes $ do
+                  reset! *rereder-changes $ []
+                  , *rereder-changes
                 collect! $ fn (x)
-                  assert (= 3 $ count x) (, "|change op should has length 3")
+                  assert
+                    = 3 $ count x
+                    , "|change op should has length 3"
                   swap! *changes conj x
                 deliver-event $ build-deliver-event *global-element dispatch!
               if (nil? app-element) (raise "\"Detected no element from SSR!")
               compare-to-dom! (purify-element element) app-element
-              collect-mounting collect! ([]) ([]) (, element true)
+              collect-mounting collect! ([]) ([]) element true
               patch-instance! @*changes target deliver-event
               reset! *global-element $ mute-element element
         |h4 $ quote
-          defn h4 (props & children) (create-element :h4 props & $ map confirm-child children)
+          defn h4 (props & children)
+            create-element :h4 props & $ map confirm-child children
         |style $ quote
-          defn style (props & children) (create-element :style props & $ map confirm-child children)
+          defn style (props & children)
+            create-element :style props & $ map confirm-child children
         |span $ quote
-          defn span (props & children) (create-element :span props & $ map confirm-child children)
+          defn span (props & children)
+            create-element :span props & $ map confirm-child children
         |script $ quote
-          defn script (props & children) (create-element :script props & $ map confirm-child children)
+          defn script (props & children)
+            create-element :script props & $ map confirm-child children
         |select $ quote
-          defn select (props & children) (create-element :select props & $ map confirm-child children)
+          defn select (props & children)
+            create-element :select props & $ map confirm-child children
         |defeffect $ quote
           defmacro defeffect (effect-name args params & body)
             assert "\"args in symbol" $ and (list? args) (every? symbol? args)
@@ -1488,86 +1691,111 @@
                   :args $ [] ~@args
                   :method $ fn (~args-var ~params-var)
                     let[] ~args ~args-var $ let[] ~params ~params-var
-                      ~@ $ if (empty? body) (quote-replace $ echo "\"WARNING:" ~effect-name "\"lack code for handling effects!" ) (, body)
+                      ~@ $ if (empty? body)
+                        quote-replace $ echo "\"WARNING:" ~effect-name "\"lack code for handling effects!" 
+                        , body
         |list-> $ quote
           defn list-> (props children) (create-list-element :div props children)
         |a $ quote
-          defn a (props & children) (create-element :a props & $ map confirm-child children)
+          defn a (props & children)
+            create-element :a props & $ map confirm-child children
         |input $ quote
-          defn input (props & children) (create-element :input props & $ map confirm-child children)
+          defn input (props & children)
+            create-element :input props & $ map confirm-child children
         |rerender-app! $ quote
           defn rerender-app! (target element dispatch!) (tick-calling-loop!)
             let
                 deliver-event $ build-deliver-event *global-element dispatch!
-                *changes $ do (reset! *rereder-changes $ []) (, *rereder-changes)
+                *changes $ do
+                  reset! *rereder-changes $ []
+                  , *rereder-changes
                 collect! $ fn (x)
                   assert "|change op should has length 4" $ = 4 (count x)
                   swap! *changes conj x
               ; println @*global-element
               ; println |Changes: $ pr-str
                 mapv (partial take 2) @*changes
-              find-element-diffs collect! ([]) ([]) (, @*global-element element)
+              find-element-diffs collect! ([]) ([]) @*global-element element
               let
                   logger @*changes-logger
                 if (some? logger) (logger @*global-element element @*changes)
               patch-instance! @*changes target deliver-event
               reset! *global-element element
         |head $ quote
-          defn head (props & children) (create-element :head props & $ map confirm-child children)
+          defn head (props & children)
+            create-element :head props & $ map confirm-child children
         |title $ quote
-          defn title (props & children) (create-element :title props & $ map confirm-child children)
+          defn title (props & children)
+            create-element :title props & $ map confirm-child children
         |textarea $ quote
-          defn textarea (props & children) (create-element :textarea props & $ map confirm-child children)
+          defn textarea (props & children)
+            create-element :textarea props & $ map confirm-child children
         |link $ quote
-          defn link (props & children) (create-element :link props & $ map confirm-child children)
+          defn link (props & children)
+            create-element :link props & $ map confirm-child children
         |div $ quote
-          defn div (props & children) (create-element :div props & $ map confirm-child children)
+          defn div (props & children)
+            create-element :div props & $ map confirm-child children
         |pre $ quote
-          defn pre (props & children) (create-element :pre props & $ map confirm-child children)
+          defn pre (props & children)
+            create-element :pre props & $ map confirm-child children
         |blockquote $ quote
-          defn blockquote (props & children) (create-element :blockquote props & $ map confirm-child children)
+          defn blockquote (props & children)
+            create-element :blockquote props & $ map confirm-child children
         |<> $ quote
-          defn <> (content & args)
+          defn <> (content ? arg)
             let
-                style $ first args
+                style arg
               span $ {} (:inner-text content) (:style style)
         |element-type $ quote
           def element-type $ if (exists? js/Element) js/Element js/Error
         |*global-element $ quote (defatom *global-element nil)
         |html $ quote
-          defn html (props & children) (create-element :html props & $ map confirm-child children)
+          defn html (props & children)
+            create-element :html props & $ map confirm-child children
         |clear-cache! $ quote
-          defn clear-cache! () (reset-calling-caches!)
+          defn clear-cache! () $ reset-calling-caches!
         |defplugin $ quote
-          defmacro defplugin (x params & body) (assert "\"expected symbol" $ symbol? x) (assert "\"expected params" $ list? params)
+          defmacro defplugin (x params & body)
+            assert "\"expected symbol" $ symbol? x
+            assert "\"expected params" $ list? params
             assert "\"expected some result" $ > (count body) 0
             quote-replace $ defn ~x ~params ~@body
         |h1 $ quote
-          defn h1 (props & children) (create-element :h1 props & $ map confirm-child children)
+          defn h1 (props & children)
+            create-element :h1 props & $ map confirm-child children
         |confirm-child $ quote
           defn confirm-child (x)
             when
               not $ or (nil? x) (element? x) (component? x)
               raise $ str "\"Invalid data in elements tree: " (pr-str x)
             , x
-        |*rereder-changes $ quote (defatom *rereder-changes $ [])
+        |*rereder-changes $ quote
+          defatom *rereder-changes $ []
         |defcomp $ quote
-          defmacro defcomp (comp-name params & body) (assert "\"expected symbol of comp-name" $ symbol? comp-name) (assert "\"expected list for params" $ list? params)
+          defmacro defcomp (comp-name params & body)
+            assert "\"expected symbol of comp-name" $ symbol? comp-name
+            assert "\"expected list for params" $ list? params
             assert "\"some component retured" $ &> (count body) 0
             quote-replace $ defn ~comp-name (~ params)
-              extract-effects-list $ {} (:respo-node :component) (:effects $ [])
+              extract-effects-list $ {} (:respo-node :component)
+                :effects $ []
                 :name $ ~ (turn-keyword comp-name)
                 :tree $ do (~@ body)
         |code $ quote
-          defn code (props & children) (create-element :code props & $ map confirm-child children)
+          defn code (props & children)
+            create-element :code props & $ map confirm-child children
         |li $ quote
-          defn li (props & children) (create-element :li props & $ map confirm-child children)
+          defn li (props & children)
+            create-element :li props & $ map confirm-child children
         |button $ quote
-          defn button (props & children) (create-element :button props & $ map confirm-child children)
+          defn button (props & children)
+            create-element :button props & $ map confirm-child children
       :proc $ quote ()
     |respo.util.dom $ {}
       :ns $ quote
-        ns respo.util.dom $ :require ([] respo.util.list :refer $ [] val-of-first)
+        ns respo.util.dom $ :require
+          [] respo.util.list :refer $ [] val-of-first
       :defs $ {}
         |compare-to-dom! $ quote
           defn compare-to-dom! (vdom element)
@@ -1578,22 +1806,30 @@
                 virtual-name $ turn-string (:name vdom)
                 real-name $ .toLowerCase (.-tagName element)
               when (/= virtual-name real-name)
-                .warn js/console "\"SSR checking: tag names do not match:" (pr-str $ dissoc vdom :children) (, element)
+                .warn js/console "\"SSR checking: tag names do not match:"
+                  pr-str $ dissoc vdom :children
+                  , element
             if
-              /= (count $ :children vdom) (.-length $ .-children element)
+              /=
+                count $ :children vdom
+                .-length $ .-children element
               let
-                  maybe-html $ :innerHTML (pairs-map $ :attrs vdom)
+                  maybe-html $ :innerHTML
+                    pairs-map $ :attrs vdom
                 if (some? maybe-html)
-                  when (= maybe-html $ .-innerHTML element) (.warn js/console "\"SSR checking: noticed dom containing innerHTML:" element)
+                  when
+                    = maybe-html $ .-innerHTML element
+                    .warn js/console "\"SSR checking: noticed dom containing innerHTML:" element
                   do (.error js/console "\"SSR checking: children sizes do not match!")
-                    .log js/console "\"virtual:" $ ->> vdom :children (map last) (map :name) (, pr-str)
+                    .log js/console "\"virtual:" $ ->> vdom :children (map last) (map :name) pr-str
                     .log js/console "\"real:" $ .-children element
               let
                   real-children $ .-children element
                 loop
                     acc 0
                     other-children $ :children vdom
-                  when (not $ empty? other-children)
+                  when
+                    not $ empty? other-children
                     compare-to-dom! (val-of-first other-children) (aget real-children acc)
                     recur (inc acc) (rest other-children)
         |shared-canvas-context $ quote
@@ -1604,8 +1840,10 @@
         |text-width $ quote
           defn text-width (content font-size font-family)
             if (some? shared-canvas-context)
-              do (aset shared-canvas-context |font $ str font-size "|px " font-family) (.-width $ .measureText shared-canvas-context content)
+              do
+                aset shared-canvas-context |font $ str font-size "|px " font-family
+                .-width $ .measureText shared-canvas-context content
               , nil
         |time! $ quote
-          defn time! () (.now js/Date)
+          defn time! () $ .now js/Date
       :proc $ quote ()
