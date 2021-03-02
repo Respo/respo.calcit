@@ -2,7 +2,7 @@
 {} (:package |respo)
   :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
-    :version |0.14.14
+    :version |0.14.15
   :files $ {}
     |respo.app.style.widget $ {}
       :ns $ quote
@@ -55,7 +55,7 @@
     |respo.render.html $ {}
       :ns $ quote
         ns respo.render.html $ :require
-          [] respo.util.format :refer $ [] prop->attr purify-element mute-element ensure-string text->html get-style-value
+          [] respo.util.format :refer $ [] prop->attr purify-element mute-element ensure-string text->html get-style-value dashed->camel
           [] respo.util.detect :refer $ [] component? element?
       :defs $ {}
         |element->string $ quote
@@ -125,7 +125,7 @@
                 let
                     k $ first entry
                     style-name $ turn-string k
-                    v $ get-style-value (last entry) style-name
+                    v $ get-style-value (last entry) (dashed->camel style-name)
                   str style-name |: (escape-html v) |;
               join-str |
       :proc $ quote ()
@@ -156,7 +156,9 @@
         |mount-target $ quote
           def mount-target $ if (exists? js/document) (.querySelector js/document |.app) nil
         |reload! $ quote
-          defn reload! () (clear-cache!) (render-app! mount-target) (.log js/console "|code updated.")
+          defn reload! () (remove-watch *store :rerender) (clear-cache!) (render-app! mount-target)
+            add-watch *store :rerender $ fn (store prev) (render-app! mount-target)
+            .log js/console "|code updated."
         |save-store! $ quote
           defn save-store! () $ .setItem js/window.localStorage |respo.calcit
             js/JSON.stringify $ to-cirru-edn (:tasks @*store)
@@ -176,7 +178,6 @@
         |ensure-string $ quote
           defn ensure-string (x)
             cond
-              
                 string? x
                 , x
               (keyword? x) (turn-string x)
@@ -248,7 +249,6 @@
         |get-style-value $ quote
           defn get-style-value (x prop)
             cond
-              
                 string? x
                 , x
               (keyword? x) (turn-string x)
@@ -277,7 +277,6 @@
         |purify-element $ quote
           defn purify-element (markup)
             cond
-              
                 nil? markup
                 , nil
               (component? markup)
@@ -379,14 +378,13 @@
                       style-name $ turn-string (first entry)
                       k $ dashed->camel style-name
                       v $ last entry
-                    aset (aget element |style) k $ get-style-value v style-name
+                    aset (aget element |style) k $ get-style-value v k
                 &doseq
                   event-name $ keys (:event virtual-element)
                   let
                       name-in-string $ event->prop event-name
                     ; println |listener: event-name name-in-string
                     aset element name-in-string $ fn (event)
-                      
                         listener-builder event-name
                         , event coord
                       .stopPropagation event
@@ -678,7 +676,6 @@
                 was-empty? $ empty? old-children
                 now-empty? $ empty? new-children
               cond
-                
                   and was-empty? now-empty?
                   , nil
                 (and was-empty? (not now-empty?))
@@ -758,7 +755,6 @@
         |find-element-diffs $ quote
           defn find-element-diffs (collect! coord n-coord old-tree new-tree) (; .log js/console "|element diffing:" n-coord old-tree new-tree) (; echo "\"element coord" coord)
             cond
-              
                 identical? old-tree new-tree
                 , nil
               (and (component? old-tree) (component? new-tree))
@@ -821,7 +817,6 @@
                 was-empty? $ empty? old-props
                 now-empty? $ empty? new-props
               cond
-                
                   and was-empty? now-empty?
                   , nil
                 (and was-empty? (not now-empty?))
@@ -860,7 +855,6 @@
                 was-empty? $ empty? old-style
                 now-empty? $ empty? new-style
               if (identical? old-style new-style) nil $ cond
-                
                   and was-empty? now-empty?
                   , nil
                 (and was-empty? (not now-empty?))
@@ -1021,7 +1015,6 @@
             let
                 event-prop $ event->prop event-name
               aset target event-prop $ fn (event)
-                
                   listener-builder event-name
                   , event coord
                 .stopPropagation event
@@ -1098,7 +1091,6 @@
         |find-target $ quote
           defn find-target (root coord)
             cond
-              
                 empty? coord
                 , root
               true $ let
@@ -1273,7 +1265,6 @@
         |type-as-int $ quote
           defn type-as-int (x)
             cond
-              
                 number? x
                 , 0
               (keyword? x) 1
@@ -1282,7 +1273,6 @@
         |compare $ quote
           defn compare (x y)
             cond
-              
                 < x y
                 , -1
               (> x y) 1
@@ -1309,7 +1299,6 @@
                 a-empty? $ empty? xs
                 b-empty? $ empty? ys
               cond
-                
                   and a-empty? b-empty?
                   , true
                 (or a-empty? b-empty?) false
