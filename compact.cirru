@@ -2,7 +2,7 @@
 {} (:package |respo)
   :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
-    :version |0.14.16
+    :version |0.14.17
   :files $ {}
     |respo.app.style.widget $ {}
       :ns $ quote
@@ -422,7 +422,6 @@
             realize-ssr! mount-target (comp-container @*store) dispatch!
         |render-app! $ quote
           defn render-app! (mount-target)
-            ; js/console.log $ comp-container @*store
             render! mount-target (comp-container @*store) dispatch!
       :proc $ quote ()
     |respo.test.comp.todolist $ {}
@@ -1312,8 +1311,7 @@
             if (record? x) (relevant-record? x schema/Component) false
         |effect? $ quote
           defn effect? (x)
-            and (map? x)
-              = :effect $ :respo-node x
+            and (record? x) (relevant-record? x schema/Effect)
         |element? $ quote
           defn element? (x)
             if (record? x) (relevant-record? x schema/Element) false
@@ -1410,25 +1408,20 @@
     |respo.schema $ {}
       :ns $ quote (ns respo.schema)
       :defs $ {}
-        |component $ quote
-          def component $ {} (:name nil) (:respo-node :component)
-            :effects $ []
-            :tree nil
         |effect $ quote
           def effect $ {} (:name nil) (:respo-node :effect)
             :coord $ []
             :args $ []
             :method $ fn
               args $ [] action parent at-place?
-        |element $ quote
-          def element $ {} (:name :div) (:respo-node :element) (:coord nil) (:attrs nil) (:style nil) (:event nil)
-            :children $ {}
         |cache-info $ quote
           def cache-info $ {} (:value nil) (:initial-loop nil) (:last-hit nil) (:hit-times 0)
         |Component $ quote
           def Component $ defrecord 'Component :name :effects :tree
         |Element $ quote
           def Element $ defrecord 'Element :name :coord :attrs :style :event :children
+        |Effect $ quote
+          def Effect $ defrecord 'Effect :name :coord :args :method
       :proc $ quote ()
     |respo.comp.inspect $ {}
       :ns $ quote
@@ -1673,9 +1666,8 @@
                 args-var $ gensym "\"args"
                 params-var $ gensym "\"params"
               quote-replace $ defn ~effect-name ~args
-                {}
+                %{} schema/Effect
                   :name $ ~ (turn-keyword effect-name)
-                  :respo-node :effect
                   :coord $ []
                   :args $ [] ~@args
                   :method $ fn (~args-var ~params-var)
