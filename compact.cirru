@@ -1416,12 +1416,9 @@
               args $ [] action parent at-place?
         |cache-info $ quote
           def cache-info $ {} (:value nil) (:initial-loop nil) (:last-hit nil) (:hit-times 0)
-        |Component $ quote
-          def Component $ defrecord 'Component :name :effects :tree
-        |Element $ quote
-          def Element $ defrecord 'Element :name :coord :attrs :style :event :children
-        |Effect $ quote
-          def Effect $ defrecord 'Effect :name :coord :args :method
+        |Component $ quote (defrecord Component :name :effects :tree)
+        |Element $ quote (defrecord Element :name :coord :attrs :style :event :children)
+        |Effect $ quote (defrecord Effect :name :coord :args :method)
       :proc $ quote ()
     |respo.comp.inspect $ {}
       :ns $ quote
