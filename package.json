@@ -1,11 +1,11 @@
 {
+  "version": "0.14.16",
   "dependencies": {
-    "@calcit/procs": "^0.2.89"
+    "@calcit/procs": "^0.2.93"
   },
   "devDependencies": {
     "vite": "^2.0.5",
     "webpack": "^5.24.4",
     "webpack-cli": "^4.5.0"
-  },
-  "version": "0.14.15"
+  }
 }
