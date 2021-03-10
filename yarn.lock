@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@calcit/procs@^0.2.89":
-  version "0.2.89"
-  resolved "https://registry.yarnpkg.com/@calcit/procs/-/procs-0.2.89.tgz#9662c12d8ea1aef32cb7d5bd30c4d36c1c122318"
-  integrity sha512-WXiH0S7w8Jl5RUt3Exa2ZDtj410W0OUss3P19/BI5nJ9S+xGmRMM7B9ewzooII7L5c0ZKhn1AC6ekapJbdzt4A==
+"@calcit/procs@^0.2.94":
+  version "0.2.94"
+  resolved "https://registry.yarnpkg.com/@calcit/procs/-/procs-0.2.94.tgz#297d8c11d8425ff74645eb53c97c7a6cde322a5d"
+  integrity sha512-PmdnLi9xSF6my4IIosC1dXq2g7SeOGC65Ro5axEUnPd6zjWASboKymKRbzBaReflnesC+07qFeaei+2eCg4r7g==
   dependencies:
     "@calcit/ternary-tree" "0.0.12"
     "@cirru/parser.ts" "^0.0.1"
@@ -211,9 +211,9 @@
   integrity sha512-NuHqBY1PB/D8xU6s/thBgOAiAP7HOYDQ32+BFZILJ8ivkUkAHQnWfn6WhL79Owj1qmUnoN/YPhktdIoucipkAQ==
 
 acorn@^8.0.4:
-  version "8.0.5"
-  resolved "https://registry.yarnpkg.com/acorn/-/acorn-8.0.5.tgz#a3bfb872a74a6a7f661bc81b9849d9cac12601b7"
-  integrity sha512-v+DieK/HJkJOpFBETDJioequtc3PfxsWMaxIdIwujtF7FEV/MAyDQLlm6/zPvr7Mix07mLh6ccVwIsloceodlg==
+  version "8.1.0"
+  resolved "https://registry.yarnpkg.com/acorn/-/acorn-8.1.0.tgz#52311fd7037ae119cbb134309e901aa46295b3fe"
+  integrity sha512-LWCF/Wn0nfHOmJ9rzQApGnxnvgfROzGilS8936rqN/lfcYkY9MYZzdMqN+2NJ4SlTc+m5HiSa+kNfDtI64dwUA==
 
 ajv-keywords@^3.5.2:
   version "3.5.2"

@@ -2,7 +2,7 @@
 {} (:package |respo)
   :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
-    :version |0.14.15
+    :version |0.14.17
   :files $ {}
     |respo.app.style.widget $ {}
       :ns $ quote
@@ -92,7 +92,7 @@
                 v $ last entry
               str
                 prop->attr $ turn-string k
-                , |= $ pr-str
+                , |= $ escape
                   cond
                       = k :style
                       style->string v
@@ -138,7 +138,7 @@
           [] respo.app.core :refer $ [] handle-ssr!
       :defs $ {}
         |main! $ quote
-          defn main! () (; handle-ssr! mount-target)
+          defn main! () (; handle-ssr! mount-target) (load-console-formatter!)
             if
               = "\"ci" $ get-env "\"env"
               respo-test/main!
@@ -1291,7 +1291,8 @@
                 :inner-text $ :text task
       :proc $ quote ()
     |respo.util.detect $ {}
-      :ns $ quote (ns respo.util.detect)
+      :ns $ quote
+        ns respo.util.detect $ :require ([] respo.schema :as schema)
       :defs $ {}
         |=seq $ quote
           defn =seq (xs ys)
@@ -1307,16 +1308,13 @@
                 true false
         |component? $ quote
           defn component? (x)
-            and (map? x)
-              = :component $ :respo-node x
+            if (record? x) (relevant-record? x schema/Component) false
         |effect? $ quote
           defn effect? (x)
-            and (map? x)
-              = :effect $ :respo-node x
+            and (record? x) (relevant-record? x schema/Effect)
         |element? $ quote
           defn element? (x)
-            and (map? x)
-              = :element $ :respo-node x
+            if (record? x) (relevant-record? x schema/Element) false
       :proc $ quote ()
     |respo.app.comp.task $ {}
       :ns $ quote
@@ -1410,23 +1408,17 @@
     |respo.schema $ {}
       :ns $ quote (ns respo.schema)
       :defs $ {}
-        |component $ quote
-          def component $ {} (:name nil) (:respo-node :component) (:coord nil)
-            :args $ []
-            :render nil
-            :effects $ []
-            :tree nil
         |effect $ quote
           def effect $ {} (:name nil) (:respo-node :effect)
             :coord $ []
             :args $ []
             :method $ fn
               args $ [] action parent at-place?
-        |element $ quote
-          def element $ {} (:name :div) (:respo-node :element) (:coord nil) (:attrs nil) (:style nil) (:event nil)
-            :children $ {}
         |cache-info $ quote
           def cache-info $ {} (:value nil) (:initial-loop nil) (:last-hit nil) (:hit-times 0)
+        |Component $ quote (defrecord Component :name :effects :tree)
+        |Element $ quote (defrecord Element :name :coord :attrs :style :event :children)
+        |Effect $ quote (defrecord Effect :name :coord :args :method)
       :proc $ quote ()
     |respo.comp.inspect $ {}
       :ns $ quote
@@ -1524,20 +1516,18 @@
       :proc $ quote ()
     |respo.core $ {}
       :ns $ quote
-        ns respo.core
-          :require
-            [] respo.controller.resolve :refer $ [] build-deliver-event
-            [] respo.render.diff :refer $ [] find-element-diffs
-            [] respo.render.effect :refer $ [] collect-mounting
-            [] respo.util.format :refer $ [] purify-element mute-element
-            [] respo.controller.client :refer $ [] activate-instance! patch-instance!
-            [] respo.util.list :refer $ [] pick-attrs pick-event val-exists? detect-func-in-map? filter-first
-            [] respo.util.detect :refer $ [] component? element? effect?
-            [] respo.schema :as schema
-            [] respo.util.comparator :refer $ [] compare-xy
-            [] respo.util.dom :refer $ [] compare-to-dom!
-            [] memof.alias :refer $ [] tick-calling-loop! reset-calling-caches!
-          :require-macros $ [] respo.core
+        ns respo.core $ :require
+          [] respo.controller.resolve :refer $ [] build-deliver-event
+          [] respo.render.diff :refer $ [] find-element-diffs
+          [] respo.render.effect :refer $ [] collect-mounting
+          [] respo.util.format :refer $ [] purify-element mute-element
+          [] respo.controller.client :refer $ [] activate-instance! patch-instance!
+          [] respo.util.list :refer $ [] pick-attrs pick-event val-exists? detect-func-in-map? filter-first
+          [] respo.util.detect :refer $ [] component? element? effect?
+          [] respo.schema :as schema
+          [] respo.util.comparator :refer $ [] compare-xy
+          [] respo.util.dom :refer $ [] compare-to-dom!
+          [] memof.alias :refer $ [] tick-calling-loop! reset-calling-caches!
       :defs $ {}
         |>> $ quote
           defn >> (states k)
@@ -1566,7 +1556,7 @@
                     fn (idx item) ([] idx item)
                     , children
                   filter val-exists?
-              merge schema/element $ {} (:name tag-name) (:coord nil) (:attrs attrs) (:style styles) (:event event) (:children children-nodes)
+              %{} schema/Element (:name tag-name) (:coord nil) (:attrs attrs) (:style styles) (:event event) (:children children-nodes)
         |img $ quote
           defn img (props & children)
             create-element :img props & $ map confirm-child children
@@ -1605,7 +1595,7 @@
                 let
                     node-tree $ filter-first
                       fn (x)
-                        and (map? x)
+                        and (record? x)
                           or (component? x) (element? x)
                       , markup-tree
                     effects-list $ ->> markup-tree (filter effect?)
@@ -1626,7 +1616,7 @@
                   set->list $ to-pairs
                     either (:style props) ({})
                 event $ pick-event props
-              merge schema/element $ {} (:name tag-name) (:coord nil) (:attrs attrs) (:style styles) (:event event) (:children child-map)
+              %{} schema/Element (:name tag-name) (:coord nil) (:attrs attrs) (:style styles) (:event event) (:children child-map)
         |h2 $ quote
           defn h2 (props & children)
             create-element :h2 props & $ map confirm-child children
@@ -1673,9 +1663,8 @@
                 args-var $ gensym "\"args"
                 params-var $ gensym "\"params"
               quote-replace $ defn ~effect-name ~args
-                {}
+                %{} schema/Effect
                   :name $ ~ (turn-keyword effect-name)
-                  :respo-node :effect
                   :coord $ []
                   :args $ [] ~@args
                   :method $ fn (~args-var ~params-var)
@@ -1767,7 +1756,7 @@
             assert "\"expected list for params" $ list? params
             assert "\"some component retured" $ &> (count body) 0
             quote-replace $ defn ~comp-name (~ params)
-              extract-effects-list $ {} (:respo-node :component)
+              extract-effects-list $ %{} schema/Component
                 :effects $ []
                 :name $ ~ (turn-keyword comp-name)
                 :tree $ do (~@ body)
