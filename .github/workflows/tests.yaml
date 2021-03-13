@@ -24,16 +24,17 @@ jobs:
         && git clone https://github.com/calcit-lang/calcit-test.git
 
     - name: "load deps"
-      run: >
-        ci-bin/cr_once --emit-js
-        && yarn
+      run: yarn
 
     - name: "test js"
-      run: target=node yarn webpack && env=ci node js-out/bundle.js
+      run: >
+        ci-bin/cr_once --emit-js --init-fn=respo.test.main/main!
+        && target=node entry=./test.js yarn webpack && node js-out/bundle.js
 
     - name: "build js"
       run: >
-        yarn vite build --base=./
+        ci-bin/cr_once --emit-js
+        && yarn vite build --base=./
 
     - name: Deploy to server
       id: deploy

@@ -134,25 +134,20 @@
         ns respo.main $ :require
           [] respo.core :refer $ [] *changes-logger clear-cache!
           [] respo.app.core :refer $ [] render-app! *store
-          [] respo.test.main :as respo-test
           [] respo.app.core :refer $ [] handle-ssr!
       :defs $ {}
         |main! $ quote
           defn main! () (; handle-ssr! mount-target) (load-console-formatter!)
-            if
-              = "\"ci" $ get-env "\"env"
-              respo-test/main!
-              do
-                let
-                    raw $ .getItem js/window.localStorage |respo.calcit
-                  if (some? raw)
-                    swap! *store assoc :tasks $ extract-cirru-edn (js/JSON.parse raw)
-                  render-app! mount-target
-                  add-watch *store :rerender $ fn (store prev) (render-app! mount-target)
-                  ; reset! *changes-logger $ fn (old-tree new-tree changes)
-                    js/console.log $ to-js-data changes
-                  println |Loaded. $ .now js/performance
-                aset js/window |onbeforeunload $ fn (event) (save-store!)
+            let
+                raw $ .getItem js/window.localStorage |respo.calcit
+              if (some? raw)
+                swap! *store assoc :tasks $ extract-cirru-edn (js/JSON.parse raw)
+              render-app! mount-target
+              add-watch *store :rerender $ fn (store prev) (render-app! mount-target)
+              ; reset! *changes-logger $ fn (old-tree new-tree changes)
+                js/console.log $ to-js-data changes
+              println |Loaded. $ .now js/performance
+            aset js/window |onbeforeunload $ fn (event) (save-store!)
         |mount-target $ quote
           def mount-target $ if (exists? js/document) (.querySelector js/document |.app) nil
         |reload! $ quote
