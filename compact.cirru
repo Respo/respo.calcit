@@ -1483,7 +1483,9 @@
             assert "\"element cannot be nil" $ some? element
             assert "\"coord cannot be nil" $ some? coord
             let
-                target-element $ get-markup-at element coord
+                target-element $ let
+                    m $ get-markup-at element coord
+                  if (component? m) (:tree m) m
                 element-exists? $ some? target-element
               ; println "|target element:" $ pr-str event-name
               if
