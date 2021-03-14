@@ -2,7 +2,7 @@
 {} (:package |respo)
   :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
-    :version |0.14.17
+    :version |0.14.18
   :files $ {}
     |respo.app.style.widget $ {}
       :ns $ quote
@@ -83,8 +83,8 @@
                   > (count props-in-string) 0
                   , "| " |
                 , props-in-string |>
-                either text-inside $ join-str | children
-                , |</ tag-name |>
+                  either text-inside $ join-str | children
+                  , |</ tag-name |>
         |entry->string $ quote
           defn entry->string (entry)
             let
@@ -134,25 +134,20 @@
         ns respo.main $ :require
           [] respo.core :refer $ [] *changes-logger clear-cache!
           [] respo.app.core :refer $ [] render-app! *store
-          [] respo.test.main :as respo-test
           [] respo.app.core :refer $ [] handle-ssr!
       :defs $ {}
         |main! $ quote
           defn main! () (; handle-ssr! mount-target) (load-console-formatter!)
-            if
-              = "\"ci" $ get-env "\"env"
-              respo-test/main!
-              do
-                let
-                    raw $ .getItem js/window.localStorage |respo.calcit
-                  if (some? raw)
-                    swap! *store assoc :tasks $ extract-cirru-edn (js/JSON.parse raw)
-                  render-app! mount-target
-                  add-watch *store :rerender $ fn (store prev) (render-app! mount-target)
-                  ; reset! *changes-logger $ fn (old-tree new-tree changes)
-                    js/console.log $ to-js-data changes
-                  println |Loaded. $ .now js/performance
-                aset js/window |onbeforeunload $ fn (event) (save-store!)
+            let
+                raw $ .getItem js/window.localStorage |respo.calcit
+              if (some? raw)
+                swap! *store assoc :tasks $ extract-cirru-edn (js/JSON.parse raw)
+              render-app! mount-target
+              add-watch *store :rerender $ fn (store prev) (render-app! mount-target)
+              ; reset! *changes-logger $ fn (old-tree new-tree changes)
+                js/console.log $ to-js-data changes
+              println |Loaded. $ .now js/performance
+            aset js/window |onbeforeunload $ fn (event) (save-store!)
         |mount-target $ quote
           def mount-target $ if (exists? js/document) (.querySelector js/document |.app) nil
         |reload! $ quote
@@ -495,22 +490,23 @@
                   compare-xy (first x) (first y)
         |pick-event $ quote
           defn pick-event (props)
-            merge
-              either (:on props) ({})
-              ->> props (to-pairs)
-                filter $ fn (pair)
-                  let
-                      k $ get pair 0
-                      v $ get pair 1
-                    re-matches |on-\w+ $ turn-string k
-                map $ fn (pair)
-                  let
-                      k $ get pair 0
-                      v $ get pair 1
-                    []
-                      turn-keyword $ substr (turn-string k) 3
-                      , v
-                pairs-map
+            if (nil? props) ({})
+              merge
+                either (:on props) ({})
+                ->> props (to-pairs)
+                  filter $ fn (pair)
+                    let
+                        k $ get pair 0
+                        v $ get pair 1
+                      re-matches |on-\w+ $ turn-string k
+                  map $ fn (pair)
+                    let
+                        k $ get pair 0
+                        v $ get pair 1
+                      []
+                        turn-keyword $ substr (turn-string k) 3
+                        , v
+                  pairs-map
         |val-exists? $ quote
           defn val-exists? (pair)
             some? $ last pair
@@ -625,8 +621,8 @@
                       collect! $ []
                         if (= :update action) op/effect-update op/effect-before-update
                         , next-coord n-coord
-                        fn (target)
-                          method (:args new-effect) ([] action target)
+                          fn (target)
+                            method (:args new-effect) ([] action target)
       :proc $ quote ()
     |respo.controller.client $ {}
       :ns $ quote
@@ -1465,7 +1461,7 @@
           [] respo.util.list :refer $ [] filter-first
       :defs $ {}
         |build-deliver-event $ quote
-          defn build-deliver-event (*global-element dispatch!)
+          defn build-deliver-event (*global-element *dispatch-fn)
             fn (coord event-name simple-event) (; echo "\"event coord" coord)
               let
                   target-element $ find-event-target @*global-element coord event-name
@@ -1473,10 +1469,12 @@
                     get (:event target-element) event-name
                     do (js/console.warn "\"found no element" coord event-name) nil
                   dispatch-wrap $ fn (op data)
-                    cond
-                        list? op
-                        dispatch! :states $ [] op data
-                      true $ dispatch! op data
+                    let
+                        dispatch! $ deref *dispatch-fn
+                      cond
+                          list? op
+                          dispatch! :states $ [] op data
+                        true $ dispatch! op data
                 if (some? target-listener)
                   do (; println "|listener found:" coord event-name) (target-listener simple-event dispatch-wrap)
                   ; println "|found no listener:" coord event-name
@@ -1485,7 +1483,9 @@
             assert "\"element cannot be nil" $ some? element
             assert "\"coord cannot be nil" $ some? coord
             let
-                target-element $ get-markup-at element coord
+                target-element $ let
+                    m $ get-markup-at element coord
+                  if (component? m) (:tree m) m
                 element-exists? $ some? target-element
               ; println "|target element:" $ pr-str event-name
               if
@@ -1564,18 +1564,18 @@
           defn body (props & children)
             create-element :body props & $ map confirm-child children
         |render! $ quote
-          defn render! (target markup dispatch!)
-            if (some? @*global-element) (rerender-app! target markup dispatch!) (mount-app! target markup dispatch!)
+          defn render! (target markup dispatch!) (reset! *dispatch-fn dispatch!)
+            if (some? @*global-element) (rerender-app! target markup *dispatch-fn) (mount-app! target markup *dispatch-fn)
         |h3 $ quote
           defn h3 (props & children)
             create-element :h3 props & $ map confirm-child children
         |mount-app! $ quote
-          defn mount-app! (target element dispatch!)
+          defn mount-app! (target element *dispatch-fn)
             ; assert "|1st argument should be an element" $ or (nil? target)
               = element-type $ .-__proto__ target
             ; assert "|2nd argument should be a component" $ component? element
             let
-                deliver-event $ build-deliver-event *global-element dispatch!
+                deliver-event $ build-deliver-event *global-element *dispatch-fn
                 *changes $ do
                   reset! *dom-changes $ []
                   , *dom-changes
@@ -1591,16 +1591,19 @@
           defn extract-effects-list (markup)
             &let
               markup-tree $ :tree markup
-              if (list? markup-tree)
-                let
-                    node-tree $ filter-first
-                      fn (x)
-                        and (record? x)
-                          or (component? x) (element? x)
-                      , markup-tree
-                    effects-list $ ->> markup-tree (filter effect?)
-                  merge markup $ {} (:tree node-tree) (:effects effects-list)
-                , markup
+              cond
+                  nil? markup-tree
+                  assoc markup :tree $ span nil
+                (list? markup-tree)
+                  let
+                      node-tree $ filter-first
+                        fn (x)
+                          and (record? x)
+                            or (component? x) (element? x)
+                        , markup-tree
+                      effects-list $ ->> markup-tree (filter effect?)
+                    merge markup $ {} (:tree node-tree) (:effects effects-list)
+                true markup
         |*dom-changes $ quote
           defatom *dom-changes $ []
         |option $ quote
@@ -1681,9 +1684,9 @@
           defn input (props & children)
             create-element :input props & $ map confirm-child children
         |rerender-app! $ quote
-          defn rerender-app! (target element dispatch!) (tick-calling-loop!)
+          defn rerender-app! (target element *dispatch-fn) (tick-calling-loop!)
             let
-                deliver-event $ build-deliver-event *global-element dispatch!
+                deliver-event $ build-deliver-event *global-element *dispatch-fn
                 *changes $ do
                   reset! *rereder-changes $ []
                   , *rereder-changes
@@ -1750,6 +1753,7 @@
             , x
         |*rereder-changes $ quote
           defatom *rereder-changes $ []
+        |*dispatch-fn $ quote (defatom *dispatch-fn nil)
         |defcomp $ quote
           defmacro defcomp (comp-name params & body)
             assert "\"expected symbol of comp-name" $ symbol? comp-name
