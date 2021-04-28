@@ -2,7 +2,7 @@
 {} (:package |respo)
   :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
-    :version |0.14.18
+    :version |0.14.19
   :files $ {}
     |respo.app.style.widget $ {}
       :ns $ quote
@@ -73,7 +73,7 @@
                     fn (props)
                       if (empty? styles) props $ assoc props :style styles
                 props-in-string $ props->string tailored-props
-                children $ ->> (:children element)
+                children $ -> (:children element)
                   map $ fn (entry)
                     let
                         child $ last entry
@@ -83,7 +83,7 @@
                   > (count props-in-string) 0
                   , "| " |
                 , props-in-string |>
-                  either text-inside $ join-str | children
+                  either text-inside $ join-str children |
                   , |</ tag-name |>
         |entry->string $ quote
           defn entry->string (entry)
@@ -109,18 +109,18 @@
             element->string $ purify-element (mute-element element)
         |props->string $ quote
           defn props->string (props)
-            ->> props (to-pairs)
+            -> props (to-pairs)
               filter $ fn (pair)
                 let
                     k $ first pair
                     v $ last pair
                   and (some? v)
-                    not $ re-matches |^:on-.+ (str k)
+                    not $ starts-with? (turn-string k) |on-
               map entry->string
               join-str "| "
         |style->string $ quote
           defn style->string (styles)
-            ->> styles
+            -> styles
               map $ fn (entry)
                 let
                     k $ first entry
@@ -184,7 +184,7 @@
           defn dashed->camel (x) (dashed->camel-iter | x false)
         |purify-events $ quote
           defn purify-events (events)
-            ->> events (to-pairs)
+            -> events (to-pairs)
               filter $ fn (pair)
                 let
                     k $ first pair
@@ -256,7 +256,7 @@
               -> element
                 update :event $ fn (events) ({})
                 update :children $ fn (children)
-                  ->> children $ map
+                  -> children $ map
                     fn (entry)
                       [] (first entry)
                         mute-element $ last entry
@@ -282,7 +282,7 @@
               (element? markup)
                 -> markup (update :event purify-events)
                   update :children $ fn (children)
-                    ->> children $ map
+                    -> children $ map
                       fn (pair)
                         let
                             k $ first pair
@@ -311,7 +311,7 @@
                   conj tasks $ {} (:text op-data) (:id op-id) (:done? false)
               :remove $ update store :tasks
                 fn (tasks)
-                  ->> tasks $ filter
+                  -> tasks $ filter
                     fn (task)
                       not $ = (:id task) op-data
               :clear $ assoc store :tasks ([])
@@ -320,7 +320,7 @@
                   let
                       task-id $ :id op-data
                       text $ :text op-data
-                    ->> tasks $ map
+                    -> tasks $ map
                       fn (task)
                         if
                           = (:id task) task-id
@@ -333,7 +333,7 @@
                 fn (tasks)
                   let
                       task-id op-data
-                    ->> tasks $ map
+                    -> tasks $ map
                       fn (task)
                         if
                           = (:id task) task-id
@@ -358,7 +358,7 @@
                   style $ :style virtual-element
                   children $ :children virtual-element
                   element $ .createElement js/document tag-name
-                  child-elements $ ->> children
+                  child-elements $ -> children
                     map $ fn (pair)
                       let[] (k child) pair $ when (some? child)
                         make-element child listener-builder $ conj coord k
@@ -378,7 +378,6 @@
                   event-name $ keys (:event virtual-element)
                   let
                       name-in-string $ event->prop event-name
-                    ; println |listener: event-name name-in-string
                     aset element name-in-string $ fn (event)
                         listener-builder event-name
                         , event coord
@@ -388,7 +387,7 @@
                 , element
         |style->string $ quote
           defn style->string (styles)
-            ->> styles
+            -> styles
               map $ fn (entry)
                 let
                     k $ first entry
@@ -429,7 +428,7 @@
           defcomp comp-todolist (tasks)
             list->
               {} $ :style style-todolist
-              ->>
+              ->
                 either tasks $ []
                 map $ fn (task)
                   [] (:id task) (comp-task task)
@@ -453,34 +452,28 @@
       :defs $ {}
         |filter-first $ quote
           defn filter-first (f xs)
-            first $ filter
-              fn (x) (f x)
-              either xs $ []
+            -> xs
+              either $ []
+              filter $ fn (x) (f x)
+              first
         |map-val $ quote
           defn map-val (f xs)
             assert (fn? f) "\"expects f to be a function"
             assert
               or (map? xs) (sequential? xs) (nil? xs)
               , "\"expects xs to be a collection"
-            map
-              fn
-                  [] k v
-                [] k $ f v
-              , xs
+            map xs $ fn (pair)
+              let[] (k v) pair $ [] k (f v)
         |map-with-idx $ quote
           defn map-with-idx (f xs)
             assert (fn? f) "|expects function"
             assert (list? xs) "|expects list"
-            map-indexed
-              fn (idx x)
-                [] idx $ f x
-              , xs
+            map-indexed xs $ fn (idx x)
+              [] idx $ f x
         |pick-attrs $ quote
           defn pick-attrs (props)
             if (nil? props) ([])
-              ->>
-                -> props (dissoc :on) (dissoc :event) (dissoc :style)
-                to-pairs
+              -> props (dissoc :on) (dissoc :event) (dissoc :style) (to-pairs)
                 filter $ fn (pair)
                   let
                       k $ get pair 0
@@ -493,12 +486,12 @@
             if (nil? props) ({})
               merge
                 either (:on props) ({})
-                ->> props (to-pairs)
+                -> props (to-pairs)
                   filter $ fn (pair)
                     let
                         k $ get pair 0
                         v $ get pair 1
-                      re-matches |on-\w+ $ turn-string k
+                      starts-with? (turn-string k) |on-
                   map $ fn (pair)
                     let
                         k $ get pair 0
@@ -693,14 +686,14 @@
                     collect! $ [] op/rm-element new-coord new-n-coord nil
                     recur collect! coord n-coord index (rest old-children) ([])
                 true $ let
-                    old-keys $ map first (take 16 old-children)
-                    new-keys $ map first (take 16 new-children)
+                    old-keys $ -> old-children (take 16) (map first)
+                    new-keys $ -> new-children (take 16) (map first)
                     x1 $ first old-keys
                     y1 $ first new-keys
                     match-x1 $ fn (x) (= x x1)
                     match-y1 $ fn (x) (= x y1)
-                    x1-remains? $ any? match-x1 new-keys
-                    y1-existed? $ any? match-y1 old-keys
+                    x1-remains? $ any? new-keys match-x1
+                    y1-existed? $ any? old-keys match-y1
                     old-follows $ rest old-children
                     new-follows $ rest new-children
                   ; println "\"compare:" x1 new-keys x1-remains? y1 y1-existed? old-keys
@@ -885,7 +878,7 @@
                       recur collect! c-coord coord old-follows new-follows
         |keys-non-nil $ quote
           defn keys-non-nil (m)
-            #{} & $ ->> m (to-pairs)
+            #{} & $ -> m (to-pairs)
               filter $ fn (pair)
                 some? $ last pair
               map first
@@ -1168,7 +1161,7 @@
                   js/setTimeout
                     fn () $ run-test! dispatch! (conj acc cost)
                     , 0
-                  println |result: $ sort number-order acc
+                  println |result: $ sort acc number-order
         |initial-state $ quote
           def initial-state $ {} (:draft |) (:locked? false)
         |comp-todolist $ quote
@@ -1208,8 +1201,8 @@
                         <> "|heavy tasks"
                   list->
                     {} (:class-name |task-list) (:style style-list)
-                    ->>
-                      either tasks $ []
+                    -> tasks
+                      either $ []
                       reverse
                       map $ fn (task)
                         let
@@ -1363,8 +1356,9 @@
               :mount $ let
                   x0 $ js/Math.random
                 ; println "\"Stored" x0
-              :update $ ; println "\"read"
-              :unmount $ ; println "\"read"
+                , nil
+              :update (; println "\"read") nil
+              :unmount (; println "\"read") nil
         |on-click $ quote
           defn on-click (props state)
             fn (event dispatch!) (println |clicked.)
@@ -1512,7 +1506,7 @@
                 if (some? child-pair)
                   get-markup-at (get child-pair 1) (rest coord)
                   raise $ str "|child not found:" coord
-                    map first $ :children markup
+                    map (:children markup) first
       :proc $ quote ()
     |respo.core $ {}
       :ns $ quote
@@ -1545,30 +1539,29 @@
                 not $ any? list? children
             let
                 attrs $ pick-attrs props
-                styles $ sort
-                  fn (x y)
+                styles $ ->
+                  either (:style props) ({})
+                  to-pairs
+                  set->list
+                  sort $ fn (x y)
                     compare-xy (first x) (first y)
-                  set->list $ to-pairs
-                    either (:style props) ({})
                 event $ pick-event props
-                children-nodes $ ->>
-                  map-indexed
-                    fn (idx item) ([] idx item)
-                    , children
+                children-nodes $ -> children
+                  map-indexed $ fn (idx item) ([] idx item)
                   filter val-exists?
               %{} schema/Element (:name tag-name) (:coord nil) (:attrs attrs) (:style styles) (:event event) (:children children-nodes)
         |img $ quote
           defn img (props & children)
-            create-element :img props & $ map confirm-child children
+            create-element :img props & $ map children confirm-child
         |body $ quote
           defn body (props & children)
-            create-element :body props & $ map confirm-child children
+            create-element :body props & $ map children confirm-child
         |render! $ quote
           defn render! (target markup dispatch!) (reset! *dispatch-fn dispatch!)
             if (some? @*global-element) (rerender-app! target markup *dispatch-fn) (mount-app! target markup *dispatch-fn)
         |h3 $ quote
           defn h3 (props & children)
-            create-element :h3 props & $ map confirm-child children
+            create-element :h3 props & $ map children confirm-child
         |mount-app! $ quote
           defn mount-app! (target element *dispatch-fn)
             ; assert "|1st argument should be an element" $ or (nil? target)
@@ -1601,28 +1594,29 @@
                           and (record? x)
                             or (component? x) (element? x)
                         , markup-tree
-                      effects-list $ ->> markup-tree (filter effect?)
+                      effects-list $ -> markup-tree (filter effect?)
                     merge markup $ {} (:tree node-tree) (:effects effects-list)
                 true markup
         |*dom-changes $ quote
           defatom *dom-changes $ []
         |option $ quote
           defn option (props & children)
-            create-element :option props & $ map confirm-child children
+            create-element :option props & $ map children confirm-child
         |create-list-element $ quote
           defn create-list-element (tag-name props child-map)
             let
                 attrs $ pick-attrs props
-                styles $ sort
-                  fn (x y)
+                styles $ -> props (:style)
+                  either $ {}
+                  to-pairs
+                  set->list
+                  sort $ fn (x y)
                     compare-xy (first x) (first y)
-                  set->list $ to-pairs
-                    either (:style props) ({})
                 event $ pick-event props
               %{} schema/Element (:name tag-name) (:coord nil) (:attrs attrs) (:style styles) (:event event) (:children child-map)
         |h2 $ quote
           defn h2 (props & children)
-            create-element :h2 props & $ map confirm-child children
+            create-element :h2 props & $ map children confirm-child
         |realize-ssr! $ quote
           defn realize-ssr! (target element dispatch!)
             assert (instance? element-type target) "|1st argument should be an element"
@@ -1645,23 +1639,23 @@
               reset! *global-element $ mute-element element
         |h4 $ quote
           defn h4 (props & children)
-            create-element :h4 props & $ map confirm-child children
+            create-element :h4 props & $ map children confirm-child
         |style $ quote
           defn style (props & children)
-            create-element :style props & $ map confirm-child children
+            create-element :style props & $ map children confirm-child
         |span $ quote
           defn span (props & children)
-            create-element :span props & $ map confirm-child children
+            create-element :span props & $ map children confirm-child
         |script $ quote
           defn script (props & children)
-            create-element :script props & $ map confirm-child children
+            create-element :script props & $ map children confirm-child
         |select $ quote
           defn select (props & children)
-            create-element :select props & $ map confirm-child children
+            create-element :select props & $ map children confirm-child
         |defeffect $ quote
           defmacro defeffect (effect-name args params & body)
-            assert "\"args in symbol" $ and (list? args) (every? symbol? args)
-            assert "\"params like [action el at-place?]" $ and (list? params) (every? symbol? params)
+            assert "\"args in symbol" $ and (list? args) (every? args symbol?)
+            assert "\"params like [action el at-place?]" $ and (list? params) (every? params symbol?)
             let
                 args-var $ gensym "\"args"
                 params-var $ gensym "\"params"
@@ -1679,10 +1673,10 @@
           defn list-> (props children) (create-list-element :div props children)
         |a $ quote
           defn a (props & children)
-            create-element :a props & $ map confirm-child children
+            create-element :a props & $ map children confirm-child
         |input $ quote
           defn input (props & children)
-            create-element :input props & $ map confirm-child children
+            create-element :input props & $ map children confirm-child
         |rerender-app! $ quote
           defn rerender-app! (target element *dispatch-fn) (tick-calling-loop!)
             let
@@ -1704,25 +1698,25 @@
               reset! *global-element element
         |head $ quote
           defn head (props & children)
-            create-element :head props & $ map confirm-child children
+            create-element :head props & $ map children confirm-child
         |title $ quote
           defn title (props & children)
-            create-element :title props & $ map confirm-child children
+            create-element :title props & $ map children confirm-child
         |textarea $ quote
           defn textarea (props & children)
-            create-element :textarea props & $ map confirm-child children
+            create-element :textarea props & $ map children confirm-child
         |link $ quote
           defn link (props & children)
-            create-element :link props & $ map confirm-child children
+            create-element :link props & $ map children confirm-child
         |div $ quote
           defn div (props & children)
-            create-element :div props & $ map confirm-child children
+            create-element :div props & $ map children confirm-child
         |pre $ quote
           defn pre (props & children)
-            create-element :pre props & $ map confirm-child children
+            create-element :pre props & $ map children confirm-child
         |blockquote $ quote
           defn blockquote (props & children)
-            create-element :blockquote props & $ map confirm-child children
+            create-element :blockquote props & $ map children confirm-child
         |<> $ quote
           defn <> (content ? arg)
             let
@@ -1733,7 +1727,7 @@
         |*global-element $ quote (defatom *global-element nil)
         |html $ quote
           defn html (props & children)
-            create-element :html props & $ map confirm-child children
+            create-element :html props & $ map children confirm-child
         |clear-cache! $ quote
           defn clear-cache! () $ reset-calling-caches!
         |defplugin $ quote
@@ -1744,7 +1738,7 @@
             quote-replace $ defn ~x ~params ~@body
         |h1 $ quote
           defn h1 (props & children)
-            create-element :h1 props & $ map confirm-child children
+            create-element :h1 props & $ map children confirm-child
         |confirm-child $ quote
           defn confirm-child (x)
             when
@@ -1766,13 +1760,13 @@
                 :tree $ do (~@ body)
         |code $ quote
           defn code (props & children)
-            create-element :code props & $ map confirm-child children
+            create-element :code props & $ map children confirm-child
         |li $ quote
           defn li (props & children)
-            create-element :li props & $ map confirm-child children
+            create-element :li props & $ map children confirm-child
         |button $ quote
           defn button (props & children)
-            create-element :button props & $ map confirm-child children
+            create-element :button props & $ map children confirm-child
       :proc $ quote ()
     |respo.util.dom $ {}
       :ns $ quote
@@ -1803,7 +1797,7 @@
                     = maybe-html $ .-innerHTML element
                     .warn js/console "\"SSR checking: noticed dom containing innerHTML:" element
                   do (.error js/console "\"SSR checking: children sizes do not match!")
-                    .log js/console "\"virtual:" $ ->> vdom :children (map last) (map :name) pr-str
+                    .log js/console "\"virtual:" $ -> vdom :children (map last) (map :name) pr-str
                     .log js/console "\"real:" $ .-children element
               let
                   real-children $ .-children element

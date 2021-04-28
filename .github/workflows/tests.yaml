@@ -12,9 +12,9 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: wget
-      run: mkdir ci-bin/ && wget -O ci-bin/cr_once http://repo.calcit-lang.org/binaries/linux/cr_once
+      run: mkdir ci-bin/ && wget -O ci-bin/calcit_runner http://repo.calcit-lang.org/binaries/linux/calcit_runner
     - name: "permission"
-      run: chmod +x ci-bin/cr_once
+      run: chmod +x ci-bin/calcit_runner
 
     - name: "prepare modules"
       run: >
@@ -28,12 +28,12 @@ jobs:
 
     - name: "test js"
       run: >
-        ci-bin/cr_once --emit-js --init-fn=respo.test.main/main!
+        ci-bin/calcit_runner --once --emit-js --init-fn=respo.test.main/main!
         && target=node entry=./test.js yarn webpack && node js-out/bundle.js
 
     - name: "build js"
       run: >
-        ci-bin/cr_once --emit-js
+        ci-bin/calcit_runner --once --emit-js
         && yarn vite build --base=./
 
     - name: Deploy to server
