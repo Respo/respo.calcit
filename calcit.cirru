@@ -3023,6 +3023,9 @@
                   |v $ {} (:type :expr) (:by |root) (:at 1513782866145)
                     :data $ {}
                       |T $ {} (:type :leaf) (:text |->) (:by |root) (:at 1504774121421)
+                      |n $ {} (:type :expr) (:by |rJoDgvdeG) (:at 1620232997811)
+                        :data $ {}
+                          |T $ {} (:type :leaf) (:by |rJoDgvdeG) (:at 1620232997811) (:text |set->list)
                       |j $ {} (:type :expr) (:by |root) (:at 1513782825167)
                         :data $ {}
                           |D $ {} (:type :leaf) (:text |filter) (:by |root) (:at 1513782826536)
@@ -3064,6 +3067,21 @@
                                               |T $ {} (:type :leaf) (:by |rJoDgvdeG) (:at 1610030584079) (:text |get)
                                               |j $ {} (:type :leaf) (:by |rJoDgvdeG) (:at 1610030589668) (:text |pair)
                                               |r $ {} (:type :leaf) (:by |rJoDgvdeG) (:at 1610030584897) (:text |1)
+                      |Z $ {} (:type :expr) (:by nil) (:at 1504774121421)
+                        :data $ {}
+                          |T $ {} (:type :leaf) (:text |dissoc) (:by |root) (:at 1504774121421)
+                          |j $ {} (:type :leaf) (:text |:on) (:by |root) (:at 1504774121421)
+                      |aT $ {} (:type :expr) (:by nil) (:at 1504774121421)
+                        :data $ {}
+                          |T $ {} (:type :leaf) (:text |dissoc) (:by |root) (:at 1504774121421)
+                          |j $ {} (:type :leaf) (:text |:style) (:by |root) (:at 1504774121421)
+                      |a $ {} (:type :expr) (:by nil) (:at 1504774121421)
+                        :data $ {}
+                          |T $ {} (:type :leaf) (:text |dissoc) (:by |root) (:at 1504774121421)
+                          |j $ {} (:type :leaf) (:text |:event) (:by |root) (:at 1504774121421)
+                      |b $ {} (:type :expr) (:by |rJoDgvdeG) (:at 1610187841898)
+                        :data $ {}
+                          |T $ {} (:type :leaf) (:by |rJoDgvdeG) (:at 1610187843424) (:text |to-pairs)
                       |r $ {} (:type :expr) (:by nil) (:at 1504774121421)
                         :data $ {}
                           |T $ {} (:type :leaf) (:text |sort) (:by |rJoDgvdeG) (:at 1551289841027)
@@ -3085,22 +3103,7 @@
                                     :data $ {}
                                       |D $ {} (:type :leaf) (:by |rJoDgvdeG) (:at 1551289859960) (:text |first)
                                       |T $ {} (:type :leaf) (:by |rJoDgvdeG) (:at 1551289855532) (:text |y)
-                      |b $ {} (:type :expr) (:by |rJoDgvdeG) (:at 1610187841898)
-                        :data $ {}
-                          |T $ {} (:type :leaf) (:by |rJoDgvdeG) (:at 1610187843424) (:text |to-pairs)
                       |X $ {} (:type :leaf) (:text |props) (:by |root) (:at 1504774121421)
-                      |Z $ {} (:type :expr) (:by nil) (:at 1504774121421)
-                        :data $ {}
-                          |T $ {} (:type :leaf) (:text |dissoc) (:by |root) (:at 1504774121421)
-                          |j $ {} (:type :leaf) (:text |:on) (:by |root) (:at 1504774121421)
-                      |a $ {} (:type :expr) (:by nil) (:at 1504774121421)
-                        :data $ {}
-                          |T $ {} (:type :leaf) (:text |dissoc) (:by |root) (:at 1504774121421)
-                          |j $ {} (:type :leaf) (:text |:event) (:by |root) (:at 1504774121421)
-                      |aT $ {} (:type :expr) (:by nil) (:at 1504774121421)
-                        :data $ {}
-                          |T $ {} (:type :leaf) (:text |dissoc) (:by |root) (:at 1504774121421)
-                          |j $ {} (:type :leaf) (:text |:style) (:by |root) (:at 1504774121421)
           |pick-event $ {} (:type :expr) (:by |root) (:at 1513782743303)
             :data $ {}
               |T $ {} (:type :leaf) (:text |defn) (:by |root) (:at 1513782743303)
@@ -12416,4 +12419,4 @@
     :init-fn |respo.main/main!
     :compact-output? true
     :storage-key |calcit.cirru
-    :version |0.14.19
+    :version |0.14.20
