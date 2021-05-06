@@ -2,7 +2,7 @@
 {} (:package |respo)
   :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
-    :version |0.14.19
+    :version |0.14.20
   :files $ {}
     |respo.app.style.widget $ {}
       :ns $ quote
@@ -479,6 +479,7 @@
                       k $ get pair 0
                       v $ get pair 1
                     not $ starts-with? (turn-string k) "\"on-"
+                set->list
                 sort $ fn (x y)
                   compare-xy (first x) (first y)
         |pick-event $ quote
