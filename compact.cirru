@@ -2,7 +2,7 @@
 {} (:package |respo)
   :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
-    :version |0.14.20
+    :version |0.14.21
   :files $ {}
     |respo.app.style.widget $ {}
       :ns $ quote
@@ -55,7 +55,7 @@
     |respo.render.html $ {}
       :ns $ quote
         ns respo.render.html $ :require
-          [] respo.util.format :refer $ [] prop->attr purify-element mute-element ensure-string text->html get-style-value dashed->camel
+          [] respo.util.format :refer $ [] prop->attr purify-element mute-element text->html get-style-value dashed->camel
           [] respo.util.detect :refer $ [] component? element?
       :defs $ {}
         |element->string $ quote
@@ -170,13 +170,6 @@
         |event->prop $ quote
           defn event->prop (x)
             str |on $ turn-string x
-        |ensure-string $ quote
-          defn ensure-string (x)
-            cond
-                string? x
-                , x
-              (keyword? x) (turn-string x)
-              true $ str x
         |event->string $ quote
           defn event->string (x)
             substr (turn-string x) 3
@@ -344,7 +337,7 @@
     |respo.render.dom $ {}
       :ns $ quote
         ns respo.render.dom $ :require
-          [] respo.util.format :refer $ [] dashed->camel event->prop ensure-string get-style-value
+          [] respo.util.format :refer $ [] dashed->camel event->prop get-style-value
           [] respo.util.detect :refer $ [] component?
       :defs $ {}
         |make-element $ quote
@@ -973,7 +966,7 @@
     |respo.render.patch $ {}
       :ns $ quote
         ns respo.render.patch $ :require
-          [] respo.util.format :refer $ [] dashed->camel event->prop ensure-string get-style-value
+          [] respo.util.format :refer $ [] dashed->camel event->prop get-style-value
           [] respo.render.dom :refer $ [] make-element style->string
           [] respo.schema.op :as op
       :defs $ {}
@@ -986,8 +979,7 @@
           defn replace-style (target op)
             let[] (p v) op $ let
                 style-name $ dashed->camel (turn-string p)
-                style-value $ ensure-string v
-              aset (.-style target) style-name style-value
+              aset (.-style target) style-name $ get-style-value v (dashed->camel style-name)
         |replace-element $ quote
           defn replace-element (target op listener-builder coord)
             let
@@ -1689,12 +1681,11 @@
                   assert "|change op should has length 4" $ = 4 (count x)
                   swap! *changes conj x
               ; println @*global-element
-              ; println |Changes: $ pr-str
-                mapv (partial take 2) @*changes
               find-element-diffs collect! ([]) ([]) @*global-element element
               let
                   logger @*changes-logger
                 if (some? logger) (logger @*global-element element @*changes)
+              ; js/console.log |Changes: @*changes
               patch-instance! @*changes target deliver-event
               reset! *global-element element
         |head $ quote
