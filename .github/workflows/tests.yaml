@@ -11,10 +11,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
-    - name: wget
-      run: mkdir ci-bin/ && wget -O ci-bin/cr http://repo.calcit-lang.org/binaries/linux/cr
-    - name: "permission"
-      run: chmod +x ci-bin/cr
+
+    - name: ACTIONS_ALLOW_UNSECURE_COMMANDS
+      id: ACTIONS_ALLOW_UNSECURE_COMMANDS
+      run: echo 'ACTIONS_ALLOW_UNSECURE_COMMANDS=true' >> $GITHUB_ENV
+
+    - name: add cr
+      run: |
+        mkdir -p $GITHUB_WORKSPACE/bin
+        wget -O $GITHUB_WORKSPACE/bin/cr http://repo.calcit-lang.org/binaries/linux/cr
+        chmod +x $GITHUB_WORKSPACE/bin/cr
+        echo "::add-path::$GITHUB_WORKSPACE/bin"
 
     - name: "prepare modules"
       run: >
@@ -28,12 +35,12 @@ jobs:
 
     - name: "test js"
       run: >
-        ci-bin/cr --once --emit-js --init-fn=respo.test.main/main!
+        cr --once --emit-js --init-fn=respo.test.main/main!
         && target=node entry=./test.js yarn webpack && node js-out/bundle.js
 
     - name: "build js"
       run: >
-        ci-bin/cr --once --emit-js
+        cr --once --emit-js
         && yarn vite build --base=./
 
     - name: Deploy to server

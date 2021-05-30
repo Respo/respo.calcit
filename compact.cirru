@@ -2,7 +2,7 @@
 {} (:package |respo)
   :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
-    :version |0.14.22
+    :version |0.14.23
   :files $ {}
     |respo.app.style.widget $ {}
       :ns $ quote
@@ -1352,9 +1352,6 @@
                 , nil
               :update (; println "\"read") nil
               :unmount (; println "\"read") nil
-        |on-click $ quote
-          defn on-click (props state)
-            fn (event dispatch!) (println |clicked.)
         |style-done $ quote
           def style-done $ {} (:width 32) (:height 32) (:outline :none) (:border :none) (:vertical-align :middle)
         |style-task $ quote
@@ -1413,7 +1410,9 @@
             pre $ {}
               :inner-text $ str tip "|: " (grab-info data)
               :style $ merge style-data style
-              :on-click $ on-click data
+              :on-click $ fn (e dispatch!)
+                if (some? js/window.devtoolsFormatters) (js/console.log data)
+                  js/console.log $ to-js-data data
         |grab-info $ quote
           defn grab-info (data)
             cond
@@ -1429,15 +1428,6 @@
               (bool? data) (str data)
               (fn? data) |Fn
               true $ pr-str data
-        |on-click $ quote
-          defn on-click (data)
-            fn (e dispatch!)
-              let
-                  raw $ pr-str data
-                if
-                  > (count raw) 60
-                  js/console.log $ to-js-data data
-                  js/console.log raw
         |style-data $ quote
           def style-data $ {} (:position :absolute) (:background-color "\"hsl(240,100%,0%)") (:color :white) (:opacity 0.2) (:font-size |12px) (:font-family |Avenir,Verdana) (:line-height "\"1.4em") (:padding "|2px 6px") (:border-radius |4px) (:max-width 160) (:max-height 32) (:white-space :normal) (:overflow :ellipsis) (:cursor :default)
       :proc $ quote ()

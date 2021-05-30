@@ -1,7 +1,10 @@
 {
-  "version": "0.14.22",
+  "version": "0.14.23",
   "dependencies": {
-    "@calcit/procs": "^0.3.21"
+    "@calcit/procs": "^0.3.23"
+  },
+  "scripts": {
+    "test": "cr --once --emit-js --init-fn=respo.test.main/main! && target=node entry=./test.js yarn webpack && node js-out/bundle.js"
   },
   "devDependencies": {
     "vite": "^2.3.4",
