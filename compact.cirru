@@ -2,7 +2,7 @@
 {} (:package |respo)
   :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
-    :version |0.14.21
+    :version |0.14.23
   :files $ {}
     |respo.app.style.widget $ {}
       :ns $ quote
@@ -139,23 +139,23 @@
         |main! $ quote
           defn main! () (; handle-ssr! mount-target) (load-console-formatter!)
             let
-                raw $ .getItem js/window.localStorage |respo.calcit
+                raw $ .!getItem js/window.localStorage |respo.calcit
               if (some? raw)
                 swap! *store assoc :tasks $ extract-cirru-edn (js/JSON.parse raw)
               render-app! mount-target
               add-watch *store :rerender $ fn (store prev) (render-app! mount-target)
               ; reset! *changes-logger $ fn (old-tree new-tree changes)
                 js/console.log $ to-js-data changes
-              println |Loaded. $ .now js/performance
+              println |Loaded. $ .!now js/performance
             aset js/window |onbeforeunload $ fn (event) (save-store!)
         |mount-target $ quote
           def mount-target $ if (exists? js/document) (.querySelector js/document |.app) nil
         |reload! $ quote
           defn reload! () (remove-watch *store :rerender) (clear-cache!) (render-app! mount-target)
             add-watch *store :rerender $ fn (store prev) (render-app! mount-target)
-            .log js/console "|code updated."
+            js/console.log "|code updated."
         |save-store! $ quote
-          defn save-store! () $ .setItem js/window.localStorage |respo.calcit
+          defn save-store! () $ .!setItem js/window.localStorage |respo.calcit
             js/JSON.stringify $ to-cirru-edn (:tasks @*store)
       :proc $ quote ()
     |respo.util.format $ {}
@@ -190,7 +190,7 @@
                 a $ either arg 1
               str "\"hsl(" h "\"," s "\"%," l "\"%," a "\")"
         |event->edn $ quote
-          defn event->edn (event) (; .log js/console "\"simplify event:" event)
+          defn event->edn (event) (; js/console.log "\"simplify event:" event)
             ->
               case (.-type event)
                 "\"click" $ {} (:type :click)
@@ -228,7 +228,7 @@
             if
               > (count x) 0
               let
-                  code $ .charCodeAt x 0
+                  code $ .!charCodeAt x 0
                 if
                   and (>= code 97) (<= code 122)
                   js/String.fromCharCode $ - code 32
@@ -350,7 +350,7 @@
                   attrs $ :attrs virtual-element
                   style $ :style virtual-element
                   children $ :children virtual-element
-                  element $ .createElement js/document tag-name
+                  element $ .!createElement js/document tag-name
                   child-elements $ -> children
                     map $ fn (pair)
                       let[] (k child) pair $ when (some? child)
@@ -374,9 +374,9 @@
                     aset element name-in-string $ fn (event)
                         listener-builder event-name
                         , event coord
-                      .stopPropagation event
+                      .!stopPropagation event
                 &doseq (child-element child-elements)
-                  if (some? child-element) (.appendChild element child-element)
+                  if (some? child-element) (.!appendChild element child-element)
                 , element
         |style->string $ quote
           defn style->string (styles)
@@ -623,7 +623,7 @@
             let
                 listener-builder $ fn (event-name) (build-listener event-name deliver-event)
               aset mount-point |innerHTML |
-              .appendChild mount-point $ make-element entire-dom listener-builder ([])
+              .!appendChild mount-point $ make-element entire-dom listener-builder ([])
         |build-listener $ quote
           defn build-listener (event-name deliver-event)
             fn (event coord)
@@ -654,7 +654,7 @@
           [] respo.util.list :refer $ [] val-of-first
       :defs $ {}
         |find-children-diffs $ quote
-          defn find-children-diffs (collect! coord n-coord index old-children new-children) (; .log js/console "|diff children:" n-coord index old-children new-children)
+          defn find-children-diffs (collect! coord n-coord index old-children new-children) (; js/console.log "|diff children:" n-coord index old-children new-children)
             let
                 was-empty? $ empty? old-children
                 now-empty? $ empty? new-children
@@ -736,7 +736,7 @@
                           collect! $ [] op/rm-element (conj coord x1) new-n-coord nil
                           recur collect! coord n-coord index old-follows new-children
         |find-element-diffs $ quote
-          defn find-element-diffs (collect! coord n-coord old-tree new-tree) (; .log js/console "|element diffing:" n-coord old-tree new-tree) (; echo "\"element coord" coord)
+          defn find-element-diffs (collect! coord n-coord old-tree new-tree) (; js/console.log "|element diffing:" n-coord old-tree new-tree) (; echo "\"element coord" coord)
             cond
                 identical? old-tree new-tree
                 , nil
@@ -795,7 +795,7 @@
               true $ js/console.warn "\"Diffing unknown params" old-tree new-tree
         |find-props-diffs $ quote
           defn find-props-diffs (collect! coord n-coord old-props new-props)
-            ; .log js/console "|find props:" n-coord old-props new-props (count old-props) (count new-props)
+            ; js/console.log "|find props:" n-coord old-props new-props (count old-props) (count new-props)
             let
                 was-empty? $ empty? old-props
                 now-empty? $ empty? new-props
@@ -820,7 +820,7 @@
                     new-v $ last new-pair
                     old-follows $ rest old-props
                     new-follows $ rest new-props
-                  ; .log js/console old-k new-k old-v new-v
+                  ; js/console.log old-k new-k old-v new-v
                   case (compare-xy old-k new-k)
                     -1 $ do
                       collect! $ [] op/rm-prop coord n-coord old-k
@@ -985,13 +985,13 @@
             let
                 new-element $ make-element op listener-builder coord
                 parent-element $ .-parentElement target
-              .insertBefore parent-element new-element target
-              .remove target
+              .!insertBefore parent-element new-element target
+              .!remove target
         |append-element $ quote
           defn append-element (target op listener-builder coord)
             let
                 new-element $ make-element op listener-builder coord
-              .appendChild target new-element
+              .!appendChild target new-element
         |add-event $ quote
           defn add-event (target event-name listener-builder coord)
             let
@@ -999,7 +999,7 @@
               aset target event-prop $ fn (event)
                   listener-builder event-name
                   , event coord
-                .stopPropagation event
+                .!stopPropagation event
         |rm-prop $ quote
           defn rm-prop (target op)
             let
@@ -1086,7 +1086,7 @@
             let
                 new-element $ make-element op listener-builder coord
                 parent-element $ .-parentElement target
-              .insertBefore parent-element new-element target
+              .!insertBefore parent-element new-element target
       :proc $ quote ()
     |respo.app.comp.todolist $ {}
       :ns $ quote
@@ -1352,9 +1352,6 @@
                 , nil
               :update (; println "\"read") nil
               :unmount (; println "\"read") nil
-        |on-click $ quote
-          defn on-click (props state)
-            fn (event dispatch!) (println |clicked.)
         |style-done $ quote
           def style-done $ {} (:width 32) (:height 32) (:outline :none) (:border :none) (:vertical-align :middle)
         |style-task $ quote
@@ -1413,7 +1410,9 @@
             pre $ {}
               :inner-text $ str tip "|: " (grab-info data)
               :style $ merge style-data style
-              :on-click $ on-click data
+              :on-click $ fn (e dispatch!)
+                if (some? js/window.devtoolsFormatters) (js/console.log data)
+                  js/console.log $ to-js-data data
         |grab-info $ quote
           defn grab-info (data)
             cond
@@ -1429,15 +1428,6 @@
               (bool? data) (str data)
               (fn? data) |Fn
               true $ pr-str data
-        |on-click $ quote
-          defn on-click (data)
-            fn (e dispatch!)
-              let
-                  raw $ pr-str data
-                if
-                  > (count raw) 60
-                  .log js/console $ to-js-data data
-                  .log js/console raw
         |style-data $ quote
           def style-data $ {} (:position :absolute) (:background-color "\"hsl(240,100%,0%)") (:color :white) (:opacity 0.2) (:font-size |12px) (:font-family |Avenir,Verdana) (:line-height "\"1.4em") (:padding "|2px 6px") (:border-radius |4px) (:max-width 160) (:max-height 32) (:white-space :normal) (:overflow :ellipsis) (:cursor :default)
       :proc $ quote ()
@@ -1769,12 +1759,12 @@
           defn compare-to-dom! (vdom element)
             ; println "\"compare" (:name vdom)
               map :name $ vals (:children vdom)
-            ; .log js/console element
+            ; js/console.log element
             let
                 virtual-name $ turn-string (:name vdom)
-                real-name $ .toLowerCase (.-tagName element)
+                real-name $ .!toLowerCase (.-tagName element)
               when (/= virtual-name real-name)
-                .warn js/console "\"SSR checking: tag names do not match:"
+                js/console.warn "\"SSR checking: tag names do not match:"
                   pr-str $ dissoc vdom :children
                   , element
             if
@@ -1787,10 +1777,10 @@
                 if (some? maybe-html)
                   when
                     = maybe-html $ .-innerHTML element
-                    .warn js/console "\"SSR checking: noticed dom containing innerHTML:" element
-                  do (.error js/console "\"SSR checking: children sizes do not match!")
-                    .log js/console "\"virtual:" $ -> vdom :children (map last) (map :name) pr-str
-                    .log js/console "\"real:" $ .-children element
+                    js/console.warn "\"SSR checking: noticed dom containing innerHTML:" element
+                  do (js/console.error "\"SSR checking: children sizes do not match!")
+                    js/console.log "\"virtual:" $ -> vdom :children (map last) (map :name) pr-str
+                    js/console.log "\"real:" $ .-children element
               let
                   real-children $ .-children element
                 loop
@@ -1803,15 +1793,15 @@
         |shared-canvas-context $ quote
           def shared-canvas-context $ if
             and (exists? js/window) (exists? js/document)
-            .getContext (.createElement js/document |canvas) |2d
+            .!getContext (.createElement js/document |canvas) |2d
             , nil
         |text-width $ quote
           defn text-width (content font-size font-family)
             if (some? shared-canvas-context)
               do
                 aset shared-canvas-context |font $ str font-size "|px " font-family
-                .-width $ .measureText shared-canvas-context content
+                .-width $ .!measureText shared-canvas-context content
               , nil
         |time! $ quote
-          defn time! () $ .now js/Date
+          defn time! () $ js/Date.now
       :proc $ quote ()

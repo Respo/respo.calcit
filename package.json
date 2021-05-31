@@ -1,11 +1,14 @@
 {
-  "version": "0.14.21",
+  "version": "0.14.23",
   "dependencies": {
-    "@calcit/procs": "^0.3.19"
+    "@calcit/procs": "^0.3.23"
+  },
+  "scripts": {
+    "test": "cr --once --emit-js --init-fn=respo.test.main/main! && target=node entry=./test.js yarn webpack && node js-out/bundle.js"
   },
   "devDependencies": {
-    "vite": "^2.3.3",
-    "webpack": "^5.37.1",
+    "vite": "^2.3.4",
+    "webpack": "^5.38.1",
     "webpack-cli": "^4.7.0"
   }
 }
