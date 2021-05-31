@@ -2,7 +2,7 @@
 {} (:package |respo)
   :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
-    :version |0.14.23
+    :version |0.14.24
   :files $ {}
     |respo.app.style.widget $ {}
       :ns $ quote
@@ -1462,13 +1462,17 @@
             let
                 target-element $ let
                     m $ get-markup-at element coord
-                  if (component? m) (:tree m) m
+                  apply-args
+                      get-markup-at element coord
+                    fn (m)
+                      if (component? m)
+                        recur $ :tree m
+                        , m
                 element-exists? $ some? target-element
               ; println "|target element:" $ pr-str event-name
               if
-                and element-exists?
-                  some? $ :event target-element
-                  some? $ get (:event target-element) event-name
+                and element-exists? $ some?
+                  get (:event target-element) event-name
                 , target-element $ if (empty? coord) nil
                   if element-exists?
                     recur element
