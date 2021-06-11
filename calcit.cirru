@@ -12325,4 +12325,4 @@
     :init-fn |respo.main/main!
     :compact-output? true
     :storage-key |calcit.cirru
-    :version |0.14.25
+    :version |0.14.26
