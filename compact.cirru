@@ -2,7 +2,7 @@
 {} (:package |respo)
   :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
-    :version |0.14.24
+    :version |0.14.25
   :files $ {}
     |respo.app.style.widget $ {}
       :ns $ quote
@@ -241,7 +241,7 @@
                 , x
               (keyword? x) (turn-string x)
               (number? x)
-                if (.test pattern-non-dimension-props prop) (str x) (str x "\"px")
+                if (.!test pattern-non-dimension-props prop) (str x) (str x "\"px")
               true $ str x
         |mute-element $ quote
           defn mute-element (element)

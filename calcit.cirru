@@ -1577,7 +1577,7 @@
                           |j $ {} (:type :expr) (:by |rJoDgvdeG) (:at 1613290061893)
                             :data $ {}
                               |T $ {} (:type :leaf) (:by |rJoDgvdeG) (:at 1613290043818) (:text |pattern-non-dimension-props)
-                              |D $ {} (:type :leaf) (:by |rJoDgvdeG) (:at 1613290063132) (:text |.test)
+                              |D $ {} (:type :leaf) (:by |rJoDgvdeG) (:at 1622533255104) (:text |.!test)
                               |j $ {} (:type :leaf) (:by |rJoDgvdeG) (:at 1613290069472) (:text |prop)
                           |r $ {} (:type :expr) (:by |rJoDgvdeG) (:at 1613290097704)
                             :data $ {}
@@ -12322,4 +12322,4 @@
     :init-fn |respo.main/main!
     :compact-output? true
     :storage-key |calcit.cirru
-    :version |0.14.24
+    :version |0.14.25
