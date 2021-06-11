@@ -621,22 +621,22 @@
                       |j $ {} (:type :leaf) (:text |text) (:by |root) (:at 1504774121421)
                       |r $ {} (:type :expr) (:by nil) (:at 1504774121421)
                         :data $ {}
-                          |T $ {} (:type :leaf) (:text |replace) (:by |rJoDgvdeG) (:at 1610285856591)
+                          |T $ {} (:type :leaf) (:text |.replace) (:by |rJoDgvdeG) (:at 1623412070977)
                           |j $ {} (:type :leaf) (:text "||\"") (:by |root) (:at 1504774121421)
                           |r $ {} (:type :leaf) (:text ||&quot;) (:by |root) (:at 1504774121421)
                       |v $ {} (:type :expr) (:by nil) (:at 1504774121421)
                         :data $ {}
-                          |T $ {} (:type :leaf) (:text |replace) (:by |rJoDgvdeG) (:at 1610285609754)
+                          |T $ {} (:type :leaf) (:text |.replace) (:by |rJoDgvdeG) (:at 1623412072880)
                           |j $ {} (:type :leaf) (:text ||<) (:by |rJoDgvdeG) (:at 1512356539277)
                           |r $ {} (:type :leaf) (:text ||&lt;) (:by |rJoDgvdeG) (:at 1512356541439)
                       |x $ {} (:type :expr) (:by nil) (:at 1504774121421)
                         :data $ {}
-                          |T $ {} (:type :leaf) (:text |replace) (:by |rJoDgvdeG) (:at 1610285611262)
+                          |T $ {} (:type :leaf) (:text |.replace) (:by |rJoDgvdeG) (:at 1623412074386)
                           |j $ {} (:type :leaf) (:text ||>) (:by |rJoDgvdeG) (:at 1512356543433)
                           |r $ {} (:type :leaf) (:text ||&gt;) (:by |rJoDgvdeG) (:at 1512356546006)
                       |y $ {} (:type :expr) (:by nil) (:at 1504774121421)
                         :data $ {}
-                          |T $ {} (:type :leaf) (:text |replace) (:by |rJoDgvdeG) (:at 1610285613469)
+                          |T $ {} (:type :leaf) (:text |.replace) (:by |rJoDgvdeG) (:at 1623412075612)
                           |j $ {} (:type :leaf) (:text |&newline) (:by |rJoDgvdeG) (:at 1610290907026)
                           |r $ {} (:type :leaf) (:text "|\"&#13;&#10;") (:by |rJoDgvdeG) (:at 1596102589821)
           |make-string $ {} (:type :expr) (:by nil) (:at 1504774121421)
@@ -724,6 +724,9 @@
                   |n $ {} (:type :expr) (:by |rJoDgvdeG) (:at 1610289043528)
                     :data $ {}
                       |T $ {} (:type :leaf) (:by |rJoDgvdeG) (:at 1610289045566) (:text |to-pairs)
+                  |w $ {} (:type :expr) (:by |rJoDgvdeG) (:at 1623412124135)
+                    :data $ {}
+                      |T $ {} (:type :leaf) (:by |rJoDgvdeG) (:at 1623412129305) (:text |.to-list)
           |style->string $ {} (:type :expr) (:by nil) (:at 1504774121421)
             :data $ {}
               |T $ {} (:type :leaf) (:text |defn) (:by |root) (:at 1504774121421)
@@ -1872,12 +1875,12 @@
                           |j $ {} (:type :leaf) (:text |x) (:by |root) (:at 1504774121421)
                       |r $ {} (:type :expr) (:by nil) (:at 1504774121421)
                         :data $ {}
-                          |T $ {} (:type :leaf) (:text |replace) (:by |rJoDgvdeG) (:at 1610285877510)
+                          |T $ {} (:type :leaf) (:text |.replace) (:by |rJoDgvdeG) (:at 1623412057455)
                           |j $ {} (:type :leaf) (:text ||>) (:by |root) (:at 1504774121421)
                           |r $ {} (:type :leaf) (:text ||&gt;) (:by |root) (:at 1504774121421)
                       |v $ {} (:type :expr) (:by nil) (:at 1504774121421)
                         :data $ {}
-                          |T $ {} (:type :leaf) (:text |replace) (:by |rJoDgvdeG) (:at 1610285881043)
+                          |T $ {} (:type :leaf) (:text |.replace) (:by |rJoDgvdeG) (:at 1623412059176)
                           |j $ {} (:type :leaf) (:text ||<) (:by |root) (:at 1504774121421)
                           |r $ {} (:type :leaf) (:text ||&lt;) (:by |root) (:at 1504774121421)
                   |v $ {} (:type :leaf) (:text |nil) (:by |root) (:at 1504774121421)
