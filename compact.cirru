@@ -2,7 +2,7 @@
 {} (:package |respo)
   :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
-    :version |0.14.25
+    :version |0.14.26
   :files $ {}
     |respo.app.style.widget $ {}
       :ns $ quote
@@ -103,7 +103,7 @@
                     true $ str v
         |escape-html $ quote
           defn escape-html (text)
-            if (nil? text) "\"" $ -> text (replace "|\"" |&quot;) (replace |< |&lt;) (replace |> |&gt;) (replace &newline "\"&#13;&#10;")
+            if (nil? text) "\"" $ -> text (.replace "|\"" |&quot;) (.replace |< |&lt;) (.replace |> |&gt;) (.replace &newline "\"&#13;&#10;")
         |make-string $ quote
           defn make-string (element)
             element->string $ purify-element (mute-element element)
@@ -117,6 +117,7 @@
                   and (some? v)
                     not $ starts-with? (turn-string k) |on-
               map entry->string
+              .to-list
               join-str "| "
         |style->string $ quote
           defn style->string (styles)
@@ -287,7 +288,7 @@
         |text->html $ quote
           defn text->html (x)
             if (some? x)
-              -> (str x) (replace |> |&gt;) (replace |< |&lt;)
+              -> (str x) (.replace |> |&gt;) (.replace |< |&lt;)
               , nil
       :proc $ quote ()
     |respo.app.updater $ {}
