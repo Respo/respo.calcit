@@ -1,7 +1,7 @@
 {
-  "version": "0.14.26",
+  "version": "0.14.27",
   "dependencies": {
-    "@calcit/procs": "^0.3.36"
+    "@calcit/procs": "^0.3.37"
   },
   "scripts": {
     "test": "cr --once --emit-js --init-fn=respo.test.main/main! && target=node entry=./test.js yarn webpack && node js-out/bundle.js"
