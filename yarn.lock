@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@calcit/procs@^0.3.37":
-  version "0.3.37"
-  resolved "https://registry.npmjs.org/@calcit/procs/-/procs-0.3.37.tgz#71c746f7ba3f2411624f2c64f6bad9e3099fa336"
-  integrity sha512-BpUCnFibBLbxdAZGrxAOIHCi3w7MkYvufKyDaeHDxw3UlNeEpXjmYJaEZ47p8wdvolOGncSq9xcq6uJTN4KGeg==
+"@calcit/procs@^0.4.0-a3":
+  version "0.4.0-a3"
+  resolved "https://registry.npmjs.org/@calcit/procs/-/procs-0.4.0-a3.tgz#fbc9e85b3dc256bb701b20d502576dcf6d796d5e"
+  integrity sha512-8bbzcba6gCAPimsMTsknz3aDKPRas3DRynmtAXarsFJU7EOxXV0hFgd77FlmX3wawQNaqYVyB+mrNdIzI4Z/WA==
   dependencies:
     "@calcit/ternary-tree" "0.0.13"
     "@cirru/parser.ts" "^0.0.3"
@@ -615,9 +615,9 @@ pkg-dir@^4.2.0:
     find-up "^4.0.0"
 
 postcss@^8.3.0:
-  version "8.3.2"
-  resolved "https://registry.npmjs.org/postcss/-/postcss-8.3.2.tgz#ed3ec489f5428af5740cd6effcc216b4d455ee64"
-  integrity sha512-y1FK/AWdZlBF5lusS5j5l4/vF67+vQZt1SXPVJ32y1kRGDQyrs1zk32hG1cInRTu14P0V+orPz+ifwW/7rR4bg==
+  version "8.3.4"
+  resolved "https://registry.npmjs.org/postcss/-/postcss-8.3.4.tgz#41ece1c43f2f7c74dc7d90144047ce052757b822"
+  integrity sha512-/tZY0PXExXXnNhKv3TOvZAOUYRyuqcCbBm2c17YMDK0PlVII3K7/LKdt3ScHL+hhouddjUWi+1sKDf9xXW+8YA==
   dependencies:
     colorette "^1.2.2"
     nanoid "^3.1.23"

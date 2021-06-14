@@ -2,7 +2,7 @@
 {} (:package |respo)
   :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
-    :version |0.14.27
+    :version |0.14.28
   :files $ {}
     |respo.app.style.widget $ {}
       :ns $ quote
@@ -92,7 +92,7 @@
                 v $ last entry
               str
                 prop->attr $ turn-string k
-                , |= $ escape
+                , |= $ .escape
                   cond
                       = k :style
                       style->string v
@@ -173,7 +173,7 @@
             str |on $ turn-string x
         |event->string $ quote
           defn event->string (x)
-            substr (turn-string x) 3
+            &str:slice (turn-string x) 3
         |dashed->camel $ quote
           defn dashed->camel (x)
             .!replace x dashed-letter-pattern $ fn (cc pos prop)
@@ -469,7 +469,7 @@
                       k $ get pair 0
                       v $ get pair 1
                     not $ starts-with? (turn-string k) "\"on-"
-                set->list
+                .to-list
                 sort $ fn (x y)
                   compare-xy (first x) (first y)
         |pick-event $ quote
@@ -488,7 +488,7 @@
                         k $ get pair 0
                         v $ get pair 1
                       []
-                        turn-keyword $ substr (turn-string k) 3
+                        turn-keyword $ &str:slice (turn-string k) 3
                         , v
                   pairs-map
         |val-exists? $ quote
@@ -1191,7 +1191,7 @@
                     {} (:class-name |task-list) (:style style-list)
                     -> tasks
                       either $ []
-                      reverse
+                      .reverse
                       map $ fn (task)
                         let
                             task-id $ :id task
@@ -1289,13 +1289,13 @@
                 true false
         |component? $ quote
           defn component? (x)
-            if (record? x) (relevant-record? x schema/Component) false
+            if (record? x) (.matches? schema/Component x) false
         |effect? $ quote
           defn effect? (x)
-            and (record? x) (relevant-record? x schema/Effect)
+            and (record? x) (.matches? schema/Effect x)
         |element? $ quote
           defn element? (x)
-            if (record? x) (relevant-record? x schema/Element) false
+            if (record? x) (.matches? schema/Element x) false
       :proc $ quote ()
     |respo.app.comp.task $ {}
       :ns $ quote
@@ -1527,8 +1527,7 @@
                 attrs $ pick-attrs props
                 styles $ ->
                   either (:style props) ({})
-                  to-pairs
-                  set->list
+                  .to-list
                   sort $ fn (x y)
                     compare-xy (first x) (first y)
                 event $ pick-event props
@@ -1594,8 +1593,7 @@
                 attrs $ pick-attrs props
                 styles $ -> props (:style)
                   either $ {}
-                  to-pairs
-                  set->list
+                  .to-list
                   sort $ fn (x y)
                     compare-xy (first x) (first y)
                 event $ pick-event props
@@ -1645,7 +1643,7 @@
             let
                 args-var $ gensym "\"args"
                 params-var $ gensym "\"params"
-              quote-replace $ defn ~effect-name ~args
+              quasiquote $ defn ~effect-name ~args
                 %{} schema/Effect
                   :name $ ~ (turn-keyword effect-name)
                   :coord $ []
@@ -1653,7 +1651,7 @@
                   :method $ fn (~args-var ~params-var)
                     let[] ~args ~args-var $ let[] ~params ~params-var
                       ~@ $ if (empty? body)
-                        quote-replace $ echo "\"WARNING:" ~effect-name "\"lack code for handling effects!" 
+                        quasiquote $ echo "\"WARNING:" ~effect-name "\"lack code for handling effects!" 
                         , body
         |list-> $ quote
           defn list-> (props children) (create-list-element :div props children)
@@ -1720,7 +1718,7 @@
             assert "\"expected symbol" $ symbol? x
             assert "\"expected params" $ list? params
             assert "\"expected some result" $ > (count body) 0
-            quote-replace $ defn ~x ~params ~@body
+            quasiquote $ defn ~x ~params ~@body
         |h1 $ quote
           defn h1 (props & children)
             create-element :h1 props & $ map children confirm-child
@@ -1738,7 +1736,7 @@
             assert "\"expected symbol of comp-name" $ symbol? comp-name
             assert "\"expected list for params" $ list? params
             assert "\"some component retured" $ &> (count body) 0
-            quote-replace $ defn ~comp-name (~ params)
+            quasiquote $ defn ~comp-name (~ params)
               extract-effects-list $ %{} schema/Component
                 :effects $ []
                 :name $ ~ (turn-keyword comp-name)
