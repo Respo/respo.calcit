@@ -2,7 +2,7 @@
 {} (:package |respo)
   :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
-    :version |0.14.26
+    :version |0.14.28
   :files $ {}
     |respo.app.style.widget $ {}
       :ns $ quote
@@ -92,7 +92,7 @@
                 v $ last entry
               str
                 prop->attr $ turn-string k
-                , |= $ escape
+                , |= $ .escape
                   cond
                       = k :style
                       style->string v
@@ -173,9 +173,13 @@
             str |on $ turn-string x
         |event->string $ quote
           defn event->string (x)
-            substr (turn-string x) 3
+            &str:slice (turn-string x) 3
         |dashed->camel $ quote
-          defn dashed->camel (x) (dashed->camel-iter | x false)
+          defn dashed->camel (x)
+            .!replace x dashed-letter-pattern $ fn (cc pos prop)
+              .!toUpperCase $ aget cc 1
+        |dashed-letter-pattern $ quote
+          def dashed-letter-pattern $ new js/RegExp "\"-[a-z]" "\"g"
         |purify-events $ quote
           defn purify-events (events)
             -> events (to-pairs)
@@ -215,15 +219,6 @@
                     :msg $ str "|Unhandled event: " (.-type event)
               assoc :original-event event
               assoc :event event
-        |dashed->camel-iter $ quote
-          defn dashed->camel-iter (acc piece promoted?)
-            if (= piece |) acc $ let
-                cursor $ get piece 0
-                piece-followed $ substr piece 1
-              if (= cursor |-) (recur acc piece-followed true)
-                recur
-                  str acc $ if promoted? (upper-case cursor) cursor
-                  , piece-followed false
         |upper-case $ quote
           defn upper-case (x)
             if
@@ -367,10 +362,11 @@
                       style-name $ turn-string (first entry)
                       k $ dashed->camel style-name
                       v $ last entry
-                    aset (aget element |style) k $ get-style-value v k
+                    aset (.-style element) k $ get-style-value v k
                 &doseq
-                  event-name $ keys (:event virtual-element)
+                  entry $ :event virtual-element
                   let
+                      event-name $ first entry
                       name-in-string $ event->prop event-name
                     aset element name-in-string $ fn (event)
                         listener-builder event-name
@@ -473,7 +469,7 @@
                       k $ get pair 0
                       v $ get pair 1
                     not $ starts-with? (turn-string k) "\"on-"
-                set->list
+                .to-list
                 sort $ fn (x y)
                   compare-xy (first x) (first y)
         |pick-event $ quote
@@ -492,7 +488,7 @@
                         k $ get pair 0
                         v $ get pair 1
                       []
-                        turn-keyword $ substr (turn-string k) 3
+                        turn-keyword $ &str:slice (turn-string k) 3
                         , v
                   pairs-map
         |val-exists? $ quote
@@ -1010,14 +1006,13 @@
           defn add-prop (target op)
             let[] (p prop-value) op $ let
                 prop-name $ dashed->camel (turn-string p)
-              case prop-name
+              case-default prop-name (aset target prop-name prop-value)
                 |style $ aset target prop-name (style->string prop-value)
-                prop-name $ aset target prop-name prop-value
         |replace-prop $ quote
           defn replace-prop (target op)
             let[] (p prop-value) op $ let
                 prop-name $ dashed->camel (turn-string p)
-              if (= prop-name |value)
+              if (identical? prop-name |value)
                 if
                   /= prop-value $ .-value target
                   aset target prop-name prop-value
@@ -1066,11 +1061,10 @@
               aset (.-style target) style-name nil
         |run-effect $ quote
           defn run-effect (target op-data coord)
-            if (some? target) (op-data target)
-              js/console.warn "\"Unknown effects target:" $ pr-str coord
+            if (some? target) (op-data target) (js/console.warn "\"Unknown effects target:" coord)
         |rm-element $ quote
           defn rm-element (target op)
-            if (some? target) (.remove target) (.warn js/console "|Respo: Element already removed! Probably by :inner-text.")
+            if (some? target) (.!remove target) (js/console.warn "|Respo: Element already removed! Probably by :inner-text.")
         |find-target $ quote
           defn find-target (root coord)
             cond
@@ -1197,7 +1191,7 @@
                     {} (:class-name |task-list) (:style style-list)
                     -> tasks
                       either $ []
-                      reverse
+                      .reverse
                       map $ fn (task)
                         let
                             task-id $ :id task
@@ -1244,7 +1238,11 @@
             let
                 type-x $ type-as-int x
                 type-y $ type-as-int y
-              if (= type-x type-y) (compare x y) (compare type-x type-y)
+              if (= type-x type-y)
+                if (keyword? x)
+                  compare (turn-string x) (turn-string y)
+                  compare x y
+                compare type-x type-y
         |type-as-int $ quote
           defn type-as-int (x)
             cond
@@ -1291,13 +1289,13 @@
                 true false
         |component? $ quote
           defn component? (x)
-            if (record? x) (relevant-record? x schema/Component) false
+            if (record? x) (.matches? schema/Component x) false
         |effect? $ quote
           defn effect? (x)
-            and (record? x) (relevant-record? x schema/Effect)
+            and (record? x) (.matches? schema/Effect x)
         |element? $ quote
           defn element? (x)
-            if (record? x) (relevant-record? x schema/Element) false
+            if (record? x) (.matches? schema/Element x) false
       :proc $ quote ()
     |respo.app.comp.task $ {}
       :ns $ quote
@@ -1529,8 +1527,7 @@
                 attrs $ pick-attrs props
                 styles $ ->
                   either (:style props) ({})
-                  to-pairs
-                  set->list
+                  .to-list
                   sort $ fn (x y)
                     compare-xy (first x) (first y)
                 event $ pick-event props
@@ -1596,8 +1593,7 @@
                 attrs $ pick-attrs props
                 styles $ -> props (:style)
                   either $ {}
-                  to-pairs
-                  set->list
+                  .to-list
                   sort $ fn (x y)
                     compare-xy (first x) (first y)
                 event $ pick-event props
@@ -1647,7 +1643,7 @@
             let
                 args-var $ gensym "\"args"
                 params-var $ gensym "\"params"
-              quote-replace $ defn ~effect-name ~args
+              quasiquote $ defn ~effect-name ~args
                 %{} schema/Effect
                   :name $ ~ (turn-keyword effect-name)
                   :coord $ []
@@ -1655,7 +1651,7 @@
                   :method $ fn (~args-var ~params-var)
                     let[] ~args ~args-var $ let[] ~params ~params-var
                       ~@ $ if (empty? body)
-                        quote-replace $ echo "\"WARNING:" ~effect-name "\"lack code for handling effects!" 
+                        quasiquote $ echo "\"WARNING:" ~effect-name "\"lack code for handling effects!" 
                         , body
         |list-> $ quote
           defn list-> (props children) (create-list-element :div props children)
@@ -1722,7 +1718,7 @@
             assert "\"expected symbol" $ symbol? x
             assert "\"expected params" $ list? params
             assert "\"expected some result" $ > (count body) 0
-            quote-replace $ defn ~x ~params ~@body
+            quasiquote $ defn ~x ~params ~@body
         |h1 $ quote
           defn h1 (props & children)
             create-element :h1 props & $ map children confirm-child
@@ -1740,7 +1736,7 @@
             assert "\"expected symbol of comp-name" $ symbol? comp-name
             assert "\"expected list for params" $ list? params
             assert "\"some component retured" $ &> (count body) 0
-            quote-replace $ defn ~comp-name (~ params)
+            quasiquote $ defn ~comp-name (~ params)
               extract-effects-list $ %{} schema/Component
                 :effects $ []
                 :name $ ~ (turn-keyword comp-name)
@@ -1804,7 +1800,7 @@
           defn text-width (content font-size font-family)
             if (some? shared-canvas-context)
               do
-                aset shared-canvas-context |font $ str font-size "|px " font-family
+                set! (.-font shared-canvas-context) (str font-size "|px " font-family)
                 .-width $ .!measureText shared-canvas-context content
               , nil
         |time! $ quote
