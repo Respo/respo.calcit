@@ -2,7 +2,7 @@
 {} (:package |respo)
   :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
-    :version |0.14.28
+    :version |0.14.29
   :files $ {}
     |respo.app.style.widget $ {}
       :ns $ quote
@@ -497,19 +497,6 @@
         |val-of-first $ quote
           defn val-of-first (x)
             last $ first x
-        |detect-func-in-map? $ quote
-          defn detect-func-in-map? (params)
-            if
-              or
-                not $ map? params
-                empty? params
-              , false $ let
-                  ps $ to-pairs params
-                  p0 $ first ps
-                if
-                  fn? $ last p0
-                  , true $ recur
-                    pairs-map $ rest ps
       :proc $ quote ()
     |respo.app.schema $ {}
       :ns $ quote (ns respo.app.schema)
@@ -867,12 +854,6 @@
                         not $ identical? (last old-entry) (last new-entry)
                         collect! $ [] op/replace-style c-coord coord new-entry
                       recur collect! c-coord coord old-follows new-follows
-        |keys-non-nil $ quote
-          defn keys-non-nil (m)
-            #{} & $ -> m (to-pairs)
-              filter $ fn (pair)
-                some? $ last pair
-              map first
       :proc $ quote ()
     |respo.test.html $ {}
       :ns $ quote
@@ -1502,7 +1483,7 @@
           [] respo.render.effect :refer $ [] collect-mounting
           [] respo.util.format :refer $ [] purify-element mute-element
           [] respo.controller.client :refer $ [] activate-instance! patch-instance!
-          [] respo.util.list :refer $ [] pick-attrs pick-event val-exists? detect-func-in-map? filter-first
+          [] respo.util.list :refer $ [] pick-attrs pick-event val-exists? filter-first
           [] respo.util.detect :refer $ [] component? element? effect?
           [] respo.schema :as schema
           [] respo.util.comparator :refer $ [] compare-xy
