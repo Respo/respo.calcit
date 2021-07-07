@@ -10,7 +10,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
 
     - name: ACTIONS_ALLOW_UNSECURE_COMMANDS
       id: ACTIONS_ALLOW_UNSECURE_COMMANDS
@@ -26,9 +26,9 @@ jobs:
     - name: "prepare modules"
       run: >
         mkdir -p ~/.config/calcit/modules/ && cd ~/.config/calcit/modules/
-        && git clone https://github.com/calcit-lang/memof.git --branch=0.0.7
-        && git clone https://github.com/calcit-lang/lilac.git --branch=0.1.5
-        && git clone https://github.com/calcit-lang/calcit-test.git --branch=0.0.3
+        && git clone https://github.com/calcit-lang/memof.git
+        && git clone https://github.com/calcit-lang/lilac.git
+        && git clone https://github.com/calcit-lang/calcit-test.git
 
     - name: "load deps"
       run: yarn

@@ -2,7 +2,7 @@
 {} (:package |respo)
   :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
-    :version |0.14.29
+    :version |0.14.30
   :files $ {}
     |respo.app.style.widget $ {}
       :ns $ quote
@@ -73,18 +73,25 @@
                     fn (props)
                       if (empty? styles) props $ assoc props :style styles
                 props-in-string $ props->string tailored-props
-                children $ -> (:children element)
-                  map $ fn (entry)
-                    let
-                        child $ last entry
-                      element->string child
-              str |< tag-name
-                if
-                  > (count props-in-string) 0
-                  , "| " |
-                , props-in-string |>
-                  either text-inside $ join-str children |
-                  , |</ tag-name |>
+              if (&set:includes? self-closing tag-name)
+                str |< tag-name
+                  if
+                    > (count props-in-string) 0
+                    , "| " |
+                  , props-in-string "| >"
+                &let
+                  children $ -> (:children element)
+                    map $ fn (entry)
+                      let
+                          child $ last entry
+                        element->string child
+                  str |< tag-name
+                    if
+                      > (count props-in-string) 0
+                      , "| " |
+                    , props-in-string |>
+                      either text-inside $ join-str children |
+                      , |</ tag-name |>
         |entry->string $ quote
           defn entry->string (entry)
             let
@@ -129,6 +136,8 @@
                     v $ get-style-value (last entry) (dashed->camel style-name)
                   str style-name |: (escape-html v) |;
               join-str |
+        |self-closing $ quote
+          def self-closing $ #{} "\"area" "\"base" "\"br" "\"col" "\"embed" "\"hr" "\"img" "\"input" "\"link" "\"meta" "\"param" "\"source" "\"track" "\"wbr"
       :proc $ quote ()
     |respo.main $ {}
       :ns $ quote
