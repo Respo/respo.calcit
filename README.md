@@ -2,11 +2,11 @@
 Respo: A virtual DOM library in Calcit-js
 ----
 
-> Inspired by React and Reagent. Previous [Respo/respo.cljs](https://github.com/Respo/respo.cljs).
+> Inspired by React and Reagent. Previously [Respo/respo.cljs](https://github.com/Respo/respo.cljs).
 
 * Home http://respo-mvc.org
 * [Bundled example](http://repo.respo-mvc.org/respo.calcit/)
-* [Docs](https://github.com/Respo/respo/wiki)
+* [Docs(Old)](https://github.com/Respo/respo/wiki)
 
 ### Usage
 
@@ -50,7 +50,12 @@ App initialization:
 defatom *store $ {} (:point 0)
   :states $ {}
 defn dispatch! (op op-data)
-  reset! *store updated-store
+  reset! *store (updater @*store op op-data)
+
+; TODO
+defn updater (store op data)
+  case-default op (do (println "|Unknown op:" op) store)
+    :TODO TODO
 
 ; render to the DOM
 render! mount-point (comp-container @*store) dispatch!
@@ -70,6 +75,9 @@ Reset virtual DOM caching during hot code swapping, and rerender:
 
 ```cirru
 defn reload! ()
+  remove-watch *store :changes
+  add-watch *store :changes $ fn ()
+    render-app!
   clear-cache!
   render-app!
 ```
@@ -90,7 +98,7 @@ defcomp comp-a (text)
     div {}
 ```
 
-Define a hooks plugin, like components it has caching support:
+Define a hooks plugin, it can be cached being a pure function:
 
 ```cirru
 defn plugin-x (a b)
@@ -98,10 +106,6 @@ defn plugin-x (a b)
     :ui $ div ({}) (<> "|Demo")
     :show $ fn () nil
 ```
-
-### Workflow
-
-https://github.com/calcit-lang/calcit-workflow
 
 ### License
 

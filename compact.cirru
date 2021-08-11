@@ -2,7 +2,7 @@
 {} (:package |respo)
   :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
-    :version |0.14.31
+    :version |0.14.32
   :files $ {}
     |respo.schema $ {}
       :ns $ quote (ns respo.schema)
@@ -713,13 +713,12 @@
         |pick-attrs $ quote
           defn pick-attrs (props)
             if (nil? props) ([])
-              -> props (dissoc :on) (dissoc :event) (dissoc :style) (to-pairs)
+              -> props (dissoc :on) (dissoc :event) (dissoc :style) (.to-list)
                 filter $ fn (pair)
                   let
                       k $ get pair 0
                       v $ get pair 1
                     not $ starts-with? (turn-string k) "\"on-"
-                .to-list
                 sort $ fn (x y)
                   compare-xy (first x) (first y)
         |pick-event $ quote
@@ -727,20 +726,14 @@
             if (nil? props) ({})
               merge
                 either (:on props) ({})
-                -> props (to-pairs)
-                  filter $ fn (pair)
-                    let
-                        k $ get pair 0
-                        v $ get pair 1
+                -> props $ map-kv
+                  fn (k v)
+                    if
                       starts-with? (turn-string k) |on-
-                  map $ fn (pair)
-                    let
-                        k $ get pair 0
-                        v $ get pair 1
                       []
                         turn-keyword $ &str:slice (turn-string k) 3
                         , v
-                  pairs-map
+                      , nil
         |map-with-idx $ quote
           defn map-with-idx (f xs)
             assert (fn? f) "|expects function"
@@ -1274,7 +1267,7 @@
                     true $ str v
         |props->string $ quote
           defn props->string (props)
-            -> props (to-pairs)
+            -> props (.to-list)
               filter $ fn (pair)
                 let
                     k $ first pair
@@ -1282,7 +1275,6 @@
                   and (some? v)
                     not $ starts-with? (turn-string k) |on-
               map entry->string
-              .to-list
               join-str "| "
         |make-string $ quote
           defn make-string (element)
