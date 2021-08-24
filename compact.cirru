@@ -735,7 +735,7 @@
                         , v
                       , nil
         |map-with-idx $ quote
-          defn map-with-idx (f xs)
+          defn map-with-idx (xs f)
             assert (fn? f) "|expects function"
             assert (list? xs) "|expects list"
             map-indexed xs $ fn (idx x)

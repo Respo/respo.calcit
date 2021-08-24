@@ -8675,8 +8675,8 @@
               |j $ {} (:text |map-with-idx) (:type :leaf) (:at 1517740647082) (:by |root)
               |r $ {}
                 :data $ {}
+                  |5 $ {} (:text |xs) (:type :leaf) (:at 1629798929325) (:by |rJoDgvdeG)
                   |D $ {} (:text |f) (:type :leaf) (:at 1517740653616) (:by |root)
-                  |T $ {} (:text |xs) (:type :leaf) (:at 1517740651858) (:by |root)
                 :type :expr
                 :at 1517740647082
                 :by |root
