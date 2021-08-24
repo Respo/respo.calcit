@@ -743,14 +743,6 @@
         |val-of-first $ quote
           defn val-of-first (x)
             last $ first x
-        |map-val $ quote
-          defn map-val (f xs)
-            assert (fn? f) "\"expects f to be a function"
-            assert
-              or (map? xs) (sequential? xs) (nil? xs)
-              , "\"expects xs to be a collection"
-            map xs $ fn (pair)
-              let[] (k v) pair $ [] k (f v)
     |respo.controller.resolve $ {}
       :ns $ quote
         ns respo.controller.resolve $ :require
