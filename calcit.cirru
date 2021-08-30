@@ -1,6 +1,6 @@
 
 {}
-  :configs $ {} (:reload-fn |respo.main/reload!) (:port 6001) (:output |src) (:compact-output? true) (:storage-key |calcit.cirru) (:version |0.14.32)
+  :configs $ {} (:reload-fn |respo.main/reload!) (:port 6001) (:output |src) (:compact-output? true) (:storage-key |calcit.cirru) (:version |0.14.33)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
     :init-fn |respo.main/main!
     :extension |.cljs
@@ -2970,6 +2970,7 @@
                                             :type :expr
                                             :at 1504774121421
                                             :by nil
+                                          |r $ {} (:text |style-name) (:type :leaf) (:at 1630294964790) (:by |rJoDgvdeG)
                                         :type :expr
                                         :at 1504774121421
                                         :by nil

@@ -2,7 +2,7 @@
 {} (:package |respo)
   :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
-    :version |0.14.32
+    :version |0.14.33
   :files $ {}
     |respo.schema $ {}
       :ns $ quote (ns respo.schema)
@@ -260,7 +260,7 @@
                 let
                     k $ first entry
                     style-name $ turn-string k
-                    v $ get-style-value (last entry)
+                    v $ get-style-value (last entry) style-name
                   str style-name |: v |;
               join-str |
         |make-element $ quote
