@@ -1,14 +1,14 @@
 {
   "version": "0.14.33",
   "dependencies": {
-    "@calcit/procs": "^0.4.16"
+    "@calcit/procs": "^0.4.31"
   },
   "scripts": {
-    "test": "cr --once --emit-js --init-fn=respo.test.main/main! && target=node entry=./test.js yarn webpack && node js-out/bundle.js"
+    "bundle-test": "esbuild test.js --platform=node --bundle --outfile=js-out/bundle.js",
+    "test": "cr --once --emit-js --init-fn=respo.test.main/main! && yarn bundle-test && node js-out/bundle.js"
   },
   "devDependencies": {
-    "vite": "^2.4.4",
-    "webpack": "^5.50.0",
-    "webpack-cli": "^4.7.2"
+    "esbuild": "^0.12.26",
+    "vite": "^2.5.6"
   }
 }
