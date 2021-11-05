@@ -491,7 +491,7 @@
                   recur $ dec x
               loop
                   x 20
-                dispatch! :hit-first $ rand
+                dispatch! :hit-first $ js/Math.random
                 if (> x 0)
                   recur $ dec x
               dispatch! :clear nil
