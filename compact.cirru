@@ -2,7 +2,7 @@
 {} (:package |respo)
   :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
-    :version |0.14.33
+    :version |0.14.34
   :entries $ {}
   :files $ {}
     |respo.schema $ {}
@@ -73,12 +73,12 @@
             let
                 virtual-name $ turn-string (:name vdom)
                 real-name $ .!toLowerCase (.-tagName element)
-              when (/= virtual-name real-name)
+              when (not= virtual-name real-name)
                 js/console.warn "\"SSR checking: tag names do not match:"
                   pr-str $ dissoc vdom :children
                   , element
             if
-              /=
+              not=
                 count $ :children vdom
                 .-length $ .-children element
               let
@@ -103,7 +103,7 @@
         |shared-canvas-context $ quote
           def shared-canvas-context $ if
             and (exists? js/window) (exists? js/document)
-            .!getContext (.createElement js/document |canvas) |2d
+            .!getContext (js/document.createElement |canvas) |2d
             , nil
     |respo.app.core $ {}
       :ns $ quote
@@ -139,7 +139,7 @@
                 prop-name $ dashed->camel (turn-string p)
               if (identical? prop-name |value)
                 if
-                  /= prop-value $ .-value target
+                  not= prop-value $ .-value target
                   aset target prop-name prop-value
                 aset target prop-name prop-value
         |add-element $ quote
@@ -149,8 +149,8 @@
                 parent-element $ .-parentElement target
               .!insertBefore parent-element new-element target
         |run-effect $ quote
-          defn run-effect (target op-data coord)
-            if (some? target) (op-data target) (js/console.warn "\"Unknown effects target:" coord)
+          defn run-effect (target method coord)
+            if (some? target) (method target) (js/console.warn "\"Unknown effects target:" coord)
         |add-prop $ quote
           defn add-prop (target op)
             let[] (p prop-value) op $ let
@@ -180,15 +180,12 @@
               aset (.-style target) style-name style-value
         |find-target $ quote
           defn find-target (root coord)
-            cond
-                empty? coord
-                , root
-              true $ let
-                  index $ first coord
-                  child $ aget (.-children root) index
-                if (some? child)
-                  recur child $ rest coord
-                  , nil
+            if (empty? coord) root $ let
+                index $ first coord
+                child $ aget (.-children root) index
+              if (some? child)
+                recur child $ rest coord
+                , nil
         |rm-event $ quote
           defn rm-event (target event-name)
             let
@@ -213,31 +210,27 @@
                 root $ .-firstElementChild mount-point
               &doseq (op changes)
                 assert "\"4 items" $ = 4 (count op)
-                let
-                    op-type $ get op 0
-                    coord $ get op 1
-                    n-coord $ get op 2
-                    op-data $ get op 3
+                let-sugar
+                      [] op-type coord n-coord op-data
+                      , op
                     target $ find-target root n-coord
-                  cond
-                      = op-type op/replace-prop
-                      replace-prop target op-data
-                    (= op-type op/add-prop) (add-prop target op-data)
-                    (= op-type op/rm-prop) (rm-prop target op-data)
-                    (= op-type op/add-style) (add-style target op-data)
-                    (= op-type op/replace-style) (replace-style target op-data)
-                    (= op-type op/rm-style) (rm-style target op-data)
-                    (= op-type op/set-event) (add-event target op-data listener-builder coord)
-                    (= op-type op/rm-event) (rm-event target op-data)
-                    (= op-type op/add-element) (add-element target op-data listener-builder coord)
-                    (= op-type op/rm-element) (rm-element target op-data)
-                    (= op-type op/replace-element) (replace-element target op-data listener-builder coord)
-                    (= op-type op/append-element) (append-element target op-data listener-builder coord)
-                    (= op-type op/effect-mount) (run-effect target op-data n-coord)
-                    (= op-type op/effect-unmount) (run-effect target op-data n-coord)
-                    (= op-type op/effect-update) (run-effect target op-data n-coord)
-                    (= op-type op/effect-before-update) (run-effect target op-data n-coord)
-                    true $ println "|not implemented:" op-type n-coord op-data
+                  case-default op-type (println "|not implemented:" op-type n-coord op-data)
+                    op/replace-prop $ replace-prop target op-data
+                    op/add-prop $ add-prop target op-data
+                    op/rm-prop $ rm-prop target op-data
+                    op/add-style $ add-style target op-data
+                    op/replace-style $ replace-style target op-data
+                    op/rm-style $ rm-style target op-data
+                    op/set-event $ add-event target op-data listener-builder coord
+                    op/rm-event $ rm-event target op-data
+                    op/add-element $ add-element target op-data listener-builder coord
+                    op/rm-element $ rm-element target op-data
+                    op/replace-element $ replace-element target op-data listener-builder coord
+                    op/append-element $ append-element target op-data listener-builder coord
+                    op/effect-mount $ run-effect target op-data n-coord
+                    op/effect-unmount $ run-effect target op-data n-coord
+                    op/effect-update $ run-effect target op-data n-coord
+                    op/effect-before-update $ run-effect target op-data n-coord
         |append-element $ quote
           defn append-element (target op listener-builder coord)
             let
@@ -274,7 +267,7 @@
                   attrs $ :attrs virtual-element
                   style $ :style virtual-element
                   children $ :children virtual-element
-                  element $ .!createElement js/document tag-name
+                  element $ js/document.createElement tag-name
                   child-elements $ -> children
                     map $ fn (pair)
                       let[] (k child) pair
@@ -390,7 +383,7 @@
           defn activate-instance! (entire-dom mount-point deliver-event)
             let
                 listener-builder $ fn (event-name) (build-listener event-name deliver-event)
-              aset mount-point |innerHTML |
+              set! (.-innerHTML mount-point) |
               .!appendChild mount-point $ make-element entire-dom listener-builder ([])
     |respo.app.comp.task $ {}
       :ns $ quote
@@ -439,7 +432,7 @@
                   div ({}) (<> state)
         |effect-log $ quote
           defeffect effect-log (task) (action parent at-place?) (; js/console.log "\"Task effect" action at-place?)
-            case-default action (println "\"Unknown action:" action)
+            case-default action nil
               :mount $ let
                   x0 $ js/Math.random
                 ; println "\"Stored" x0
@@ -634,16 +627,17 @@
                             method (:args effect) ([] :mount target at-place?)
                   recur collect! next-coord n-coord (:tree tree) false
               (element? tree)
-                loop
-                    children $ :children tree
-                    idx 0
-                  when
-                    not $ empty? children
-                    let
-                        pair $ first children
-                        k $ first pair
-                      collect-mounting collect! (conj coord k) (conj n-coord idx) (last pair) false
-                    recur (rest children) (inc idx)
+                apply-args
+                    :children tree
+                    , 0
+                  fn (children idx)
+                    when
+                      not $ empty? children
+                      let
+                          pair $ first children
+                          k $ first pair
+                        collect-mounting collect! (conj coord k) (conj n-coord idx) (last pair) false
+                      recur (rest children) (inc idx)
               true $ js/console.warn "\"Unknown entry for mounting:" tree
         |collect-unmounting $ quote
           defn collect-unmounting (collect! coord n-coord tree at-place?)
@@ -1125,7 +1119,7 @@
                     collect-mounting collect! coord n-coord new-tree true
               (and (element? old-tree) (element? new-tree))
                 if
-                  /= (:name old-tree) (:name new-tree)
+                  not= (:name old-tree) (:name new-tree)
                   do
                     collect! $ [] op/replace-element coord n-coord new-tree
                     , nil
@@ -1134,13 +1128,13 @@
                     let
                         old-style $ :style old-tree
                         new-style $ :style new-tree
-                      if (/= old-style new-style) (find-style-diffs collect! coord n-coord old-style new-style)
+                      if (not= old-style new-style) (find-style-diffs collect! coord n-coord old-style new-style)
                     let
                         old-events $ keys-non-nil
                           either (:event old-tree) ({})
                         new-events $ keys-non-nil
                           either (:event new-tree) ({})
-                      when (/= old-events new-events)
+                      when (not= old-events new-events)
                         let
                             added-events $ difference new-events old-events
                             removed-events $ difference old-events new-events
@@ -1189,7 +1183,7 @@
                       collect! $ [] op/add-prop coord n-coord new-pair
                       recur collect! coord n-coord old-props new-follows
                     0 $ do
-                      if (/= old-v new-v)
+                      if (not= old-v new-v)
                         collect! $ [] op/replace-prop coord n-coord new-pair
                       recur collect! coord n-coord old-follows new-follows
     |respo.render.html $ {}
@@ -1209,9 +1203,9 @@
                   escape-html $ :value attrs
                   either (:innerHTML attrs)
                     text->html $ :inner-text attrs
-                tailored-props $ -> attrs (dissoc :innerHTML) (dissoc :inner-text)
-                    fn (props)
-                      if (empty? styles) props $ assoc props :style styles
+                tailored-props $ let
+                    props $ -> attrs (dissoc :innerHTML) (dissoc :inner-text)
+                  if (empty? styles) props $ assoc props :style styles
                 props-in-string $ props->string tailored-props
               if (&set:includes? self-closing tag-name)
                 str |< tag-name
@@ -1370,8 +1364,7 @@
             create-element :textarea props & $ map children confirm-child
         |mount-app! $ quote
           defn mount-app! (target element *dispatch-fn)
-            ; assert "|1st argument should be an element" $ or (nil? target)
-              = element-type $ .-__proto__ target
+            ; assert "|1st argument should be an element" $ or (nil? target) (instance? element-type target)
             ; assert "|2nd argument should be a component" $ component? element
             let
                 deliver-event $ build-deliver-event *global-element *dispatch-fn
@@ -1543,19 +1536,19 @@
         |mount-target $ quote
           def mount-target $ if (exists? js/document) (.querySelector js/document |.app) nil
         |save-store! $ quote
-          defn save-store! () $ .!setItem js/window.localStorage |respo.calcit
-            js/JSON.stringify $ to-cirru-edn (:tasks @*store)
+          defn save-store! () $ js/window.localStorage.setItem |respo.calcit
+            format-cirru-edn $ :tasks @*store
         |main! $ quote
           defn main! () (; handle-ssr! mount-target) (load-console-formatter!)
             let
-                raw $ .!getItem js/window.localStorage |respo.calcit
+                raw $ js/window.localStorage.getItem |respo.calcit
               if (some? raw)
-                swap! *store assoc :tasks $ extract-cirru-edn (js/JSON.parse raw)
+                swap! *store assoc :tasks $ parse-cirru-edn raw
               render-app! mount-target
               add-watch *store :rerender $ fn (store prev) (render-app! mount-target)
               ; reset! *changes-logger $ fn (old-tree new-tree changes)
                 js/console.log $ to-js-data changes
-              println |Loaded. $ .!now js/performance
+              println |Loaded. $ js/performance.now
             aset js/window |onbeforeunload $ fn (event) (save-store!)
         |reload! $ quote
           defn reload! () (remove-watch *store :rerender) (clear-cache!) (render-app! mount-target)
@@ -1586,7 +1579,7 @@
             pre $ {}
               :inner-text $ str tip "|: " (grab-info data)
               :style $ merge style-data style
-              :on-click $ fn (e dispatch!)
+              :on-click $ fn (e d!)
                 if (some? js/window.devtoolsFormatters) (js/console.log data)
                   js/console.log $ to-js-data data
         |grab-info $ quote
