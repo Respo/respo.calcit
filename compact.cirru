@@ -2,7 +2,8 @@
 {} (:package |respo)
   :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
-    :version |0.14.33
+    :version |0.14.34
+  :entries $ {}
   :files $ {}
     |respo.schema $ {}
       :ns $ quote (ns respo.schema)
@@ -21,9 +22,9 @@
     |respo.app.comp.container $ {}
       :ns $ quote
         ns respo.app.comp.container $ :require
-          [] respo.core :refer $ [] defcomp div span <> >> a
-          [] respo.app.comp.todolist :refer $ [] comp-todolist
-          [] respo.comp.space :refer $ [] =<
+          respo.core :refer $ defcomp div span <> >> a
+          respo.app.comp.todolist :refer $ comp-todolist
+          respo.comp.space :refer $ =<
       :defs $ {}
         |comp-container $ quote
           defcomp comp-container (store)
@@ -53,7 +54,7 @@
     |respo.util.dom $ {}
       :ns $ quote
         ns respo.util.dom $ :require
-          [] respo.util.list :refer $ [] val-of-first
+          respo.util.list :refer $ val-of-first
       :defs $ {}
         |text-width $ quote
           defn text-width (content font-size font-family)
@@ -72,12 +73,12 @@
             let
                 virtual-name $ turn-string (:name vdom)
                 real-name $ .!toLowerCase (.-tagName element)
-              when (/= virtual-name real-name)
+              when (not= virtual-name real-name)
                 js/console.warn "\"SSR checking: tag names do not match:"
                   pr-str $ dissoc vdom :children
                   , element
             if
-              /=
+              not=
                 count $ :children vdom
                 .-length $ .-children element
               let
@@ -102,16 +103,16 @@
         |shared-canvas-context $ quote
           def shared-canvas-context $ if
             and (exists? js/window) (exists? js/document)
-            .!getContext (.createElement js/document |canvas) |2d
+            .!getContext (js/document.createElement |canvas) |2d
             , nil
     |respo.app.core $ {}
       :ns $ quote
         ns respo.app.core $ :require
-          [] respo.app.comp.container :refer $ [] comp-container
-          [] respo.core :refer $ [] render! realize-ssr!
-          [] respo.app.schema :as schema
-          [] respo.app.updater :refer $ [] updater
-          [] respo.util.id :refer $ [] get-id!
+          respo.app.comp.container :refer $ comp-container
+          respo.core :refer $ render! realize-ssr!
+          respo.app.schema :as schema
+          respo.app.updater :refer $ updater
+          respo.util.id :refer $ get-id!
       :defs $ {}
         |render-app! $ quote
           defn render-app! (mount-target)
@@ -128,9 +129,9 @@
     |respo.render.patch $ {}
       :ns $ quote
         ns respo.render.patch $ :require
-          [] respo.util.format :refer $ [] dashed->camel event->prop get-style-value
-          [] respo.render.dom :refer $ [] make-element style->string
-          [] respo.schema.op :as op
+          respo.util.format :refer $ dashed->camel event->prop get-style-value
+          respo.render.dom :refer $ make-element style->string
+          respo.schema.op :as op
       :defs $ {}
         |replace-prop $ quote
           defn replace-prop (target op)
@@ -138,7 +139,7 @@
                 prop-name $ dashed->camel (turn-string p)
               if (identical? prop-name |value)
                 if
-                  /= prop-value $ .-value target
+                  not= prop-value $ .-value target
                   aset target prop-name prop-value
                 aset target prop-name prop-value
         |add-element $ quote
@@ -148,8 +149,8 @@
                 parent-element $ .-parentElement target
               .!insertBefore parent-element new-element target
         |run-effect $ quote
-          defn run-effect (target op-data coord)
-            if (some? target) (op-data target) (js/console.warn "\"Unknown effects target:" coord)
+          defn run-effect (target method coord)
+            if (some? target) (method target) (js/console.warn "\"Unknown effects target:" coord)
         |add-prop $ quote
           defn add-prop (target op)
             let[] (p prop-value) op $ let
@@ -179,15 +180,12 @@
               aset (.-style target) style-name style-value
         |find-target $ quote
           defn find-target (root coord)
-            cond
-                empty? coord
-                , root
-              true $ let
-                  index $ first coord
-                  child $ aget (.-children root) index
-                if (some? child)
-                  recur child $ rest coord
-                  , nil
+            if (empty? coord) root $ let
+                index $ first coord
+                child $ aget (.-children root) index
+              if (some? child)
+                recur child $ rest coord
+                , nil
         |rm-event $ quote
           defn rm-event (target event-name)
             let
@@ -212,31 +210,27 @@
                 root $ .-firstElementChild mount-point
               &doseq (op changes)
                 assert "\"4 items" $ = 4 (count op)
-                let
-                    op-type $ get op 0
-                    coord $ get op 1
-                    n-coord $ get op 2
-                    op-data $ get op 3
+                let-sugar
+                      [] op-type coord n-coord op-data
+                      , op
                     target $ find-target root n-coord
-                  cond
-                      = op-type op/replace-prop
-                      replace-prop target op-data
-                    (= op-type op/add-prop) (add-prop target op-data)
-                    (= op-type op/rm-prop) (rm-prop target op-data)
-                    (= op-type op/add-style) (add-style target op-data)
-                    (= op-type op/replace-style) (replace-style target op-data)
-                    (= op-type op/rm-style) (rm-style target op-data)
-                    (= op-type op/set-event) (add-event target op-data listener-builder coord)
-                    (= op-type op/rm-event) (rm-event target op-data)
-                    (= op-type op/add-element) (add-element target op-data listener-builder coord)
-                    (= op-type op/rm-element) (rm-element target op-data)
-                    (= op-type op/replace-element) (replace-element target op-data listener-builder coord)
-                    (= op-type op/append-element) (append-element target op-data listener-builder coord)
-                    (= op-type op/effect-mount) (run-effect target op-data n-coord)
-                    (= op-type op/effect-unmount) (run-effect target op-data n-coord)
-                    (= op-type op/effect-update) (run-effect target op-data n-coord)
-                    (= op-type op/effect-before-update) (run-effect target op-data n-coord)
-                    true $ println "|not implemented:" op-type n-coord op-data
+                  case-default op-type (println "|not implemented:" op-type n-coord op-data)
+                    op/replace-prop $ replace-prop target op-data
+                    op/add-prop $ add-prop target op-data
+                    op/rm-prop $ rm-prop target op-data
+                    op/add-style $ add-style target op-data
+                    op/replace-style $ replace-style target op-data
+                    op/rm-style $ rm-style target op-data
+                    op/set-event $ add-event target op-data listener-builder coord
+                    op/rm-event $ rm-event target op-data
+                    op/add-element $ add-element target op-data listener-builder coord
+                    op/rm-element $ rm-element target op-data
+                    op/replace-element $ replace-element target op-data listener-builder coord
+                    op/append-element $ append-element target op-data listener-builder coord
+                    op/effect-mount $ run-effect target op-data n-coord
+                    op/effect-unmount $ run-effect target op-data n-coord
+                    op/effect-update $ run-effect target op-data n-coord
+                    op/effect-before-update $ run-effect target op-data n-coord
         |append-element $ quote
           defn append-element (target op listener-builder coord)
             let
@@ -250,8 +244,8 @@
     |respo.render.dom $ {}
       :ns $ quote
         ns respo.render.dom $ :require
-          [] respo.util.format :refer $ [] dashed->camel event->prop get-style-value
-          [] respo.util.detect :refer $ [] component?
+          respo.util.format :refer $ dashed->camel event->prop get-style-value
+          respo.util.detect :refer $ component?
       :defs $ {}
         |style->string $ quote
           defn style->string (styles)
@@ -273,7 +267,7 @@
                   attrs $ :attrs virtual-element
                   style $ :style virtual-element
                   children $ :children virtual-element
-                  element $ .!createElement js/document tag-name
+                  element $ js/document.createElement tag-name
                   child-elements $ -> children
                     map $ fn (pair)
                       let[] (k child) pair
@@ -326,8 +320,8 @@
     |respo.test.comp.todolist $ {}
       :ns $ quote
         ns respo.test.comp.todolist $ :require
-          [] respo.test.comp.task :refer $ [] comp-task
-          [] respo.core :refer $ [] defcomp div list->
+          respo.test.comp.task :refer $ comp-task
+          respo.core :refer $ defcomp div list->
       :defs $ {}
         |comp-todolist $ quote
           defcomp comp-todolist (tasks)
@@ -370,9 +364,9 @@
     |respo.controller.client $ {}
       :ns $ quote
         ns respo.controller.client $ :require
-          [] respo.render.patch :refer $ [] apply-dom-changes
-          [] respo.util.format :refer $ [] event->edn
-          [] respo.render.dom :refer $ [] make-element
+          respo.render.patch :refer $ apply-dom-changes
+          respo.util.format :refer $ event->edn
+          respo.render.dom :refer $ make-element
       :defs $ {}
         |build-listener $ quote
           defn build-listener (event-name deliver-event)
@@ -389,16 +383,16 @@
           defn activate-instance! (entire-dom mount-point deliver-event)
             let
                 listener-builder $ fn (event-name) (build-listener event-name deliver-event)
-              aset mount-point |innerHTML |
+              set! (.-innerHTML mount-point) |
               .!appendChild mount-point $ make-element entire-dom listener-builder ([])
     |respo.app.comp.task $ {}
       :ns $ quote
         ns respo.app.comp.task $ :require
-          [] respo.core :refer $ [] defcomp div input span button <> defeffect
-          [] respo.util.format :refer $ [] hsl
-          [] respo.comp.space :refer $ [] =<
-          [] respo.comp.inspect :refer $ [] comp-inspect
-          [] respo.app.style.widget :as widget
+          respo.core :refer $ defcomp div input span button <> defeffect
+          respo.util.format :refer $ hsl
+          respo.comp.space :refer $ =<
+          respo.comp.inspect :refer $ comp-inspect
+          respo.app.style.widget :as widget
       :defs $ {}
         |comp-task $ quote
           defcomp comp-task (states task)
@@ -438,7 +432,7 @@
                   div ({}) (<> state)
         |effect-log $ quote
           defeffect effect-log (task) (action parent at-place?) (; js/console.log "\"Task effect" action at-place?)
-            case action
+            case-default action nil
               :mount $ let
                   x0 $ js/Math.random
                 ; println "\"Stored" x0
@@ -452,7 +446,7 @@
     |respo.app.comp.wrap $ {}
       :ns $ quote
         ns respo.app.comp.wrap $ :require
-          [] respo.core :refer $ [] defcomp div
+          respo.core :refer $ defcomp div
       :defs $ {}
         |comp-wrap $ quote
           defcomp comp-wrap (x)
@@ -460,7 +454,7 @@
     |respo.app.comp.zero $ {}
       :ns $ quote
         ns respo.app.comp.zero $ :require
-          [] respo.core :refer $ [] defcomp div
+          respo.core :refer $ defcomp div
       :defs $ {}
         |comp-zero $ quote
           defcomp comp-zero () $ div
@@ -468,16 +462,16 @@
     |respo.app.comp.todolist $ {}
       :ns $ quote
         ns respo.app.comp.todolist $ :require
-          [] respo.core :refer $ [] defcomp div span input <> list-> defeffect >>
-          [] respo.util.format :refer $ [] hsl
-          [] respo.app.comp.task :refer $ [] comp-task
-          [] respo.comp.space :refer $ [] =<
-          [] respo.comp.inspect :refer $ [] comp-inspect
-          [] respo.app.comp.zero :refer $ [] comp-zero
-          [] respo.app.comp.wrap :refer $ [] comp-wrap
-          [] respo.util.dom :refer $ [] text-width time!
-          [] respo.app.style.widget :as widget
-          [] memof.alias :refer $ [] memof-call
+          respo.core :refer $ defcomp div span input <> list-> defeffect >>
+          respo.util.format :refer $ hsl
+          respo.app.comp.task :refer $ comp-task
+          respo.comp.space :refer $ =<
+          respo.comp.inspect :refer $ comp-inspect
+          respo.app.comp.zero :refer $ comp-zero
+          respo.app.comp.wrap :refer $ comp-wrap
+          respo.util.dom :refer $ text-width time!
+          respo.app.style.widget :as widget
+          memof.alias :refer $ memof-call
       :defs $ {}
         |run-test! $ quote
           defn run-test! (dispatch! acc)
@@ -600,7 +594,7 @@
     |respo.comp.space $ {}
       :ns $ quote
         ns respo.comp.space $ :require
-          [] respo.core :refer $ [] div defcomp
+          respo.core :refer $ div defcomp
       :defs $ {}
         |style-space $ quote
           def style-space $ {} (:height 1) (:width 1) (:display :inline-block)
@@ -612,9 +606,9 @@
           defn =< (w x) (comp-space w x)
     |respo.render.effect $ {}
       :ns $ quote
-        ns respo.render.effect $ :require ([] respo.schema.op :as op)
-          [] respo.util.detect :refer $ [] component? element? =seq
-          [] respo.util.list :refer $ [] val-of-first
+        ns respo.render.effect $ :require (respo.schema.op :as op)
+          respo.util.detect :refer $ component? element? =seq
+          respo.util.list :refer $ val-of-first
       :defs $ {}
         |collect-mounting $ quote
           defn collect-mounting (collect! coord n-coord tree at-place?)
@@ -633,16 +627,17 @@
                             method (:args effect) ([] :mount target at-place?)
                   recur collect! next-coord n-coord (:tree tree) false
               (element? tree)
-                loop
-                    children $ :children tree
-                    idx 0
-                  when
-                    not $ empty? children
-                    let
-                        pair $ first children
-                        k $ first pair
-                      collect-mounting collect! (conj coord k) (conj n-coord idx) (last pair) false
-                    recur (rest children) (inc idx)
+                apply-args
+                    :children tree
+                    , 0
+                  fn (children idx)
+                    when
+                      not $ empty? children
+                      let
+                          pair $ first children
+                          k $ first pair
+                        collect-mounting collect! (conj coord k) (conj n-coord idx) (last pair) false
+                      recur (rest children) (inc idx)
               true $ js/console.warn "\"Unknown entry for mounting:" tree
         |collect-unmounting $ quote
           defn collect-unmounting (collect! coord n-coord tree at-place?)
@@ -698,8 +693,8 @@
     |respo.util.list $ {}
       :ns $ quote
         ns respo.util.list $ :require
-          [] respo.util.detect :refer $ [] component? element?
-          [] respo.util.comparator :refer $ [] compare-xy
+          respo.util.detect :refer $ component? element?
+          respo.util.comparator :refer $ compare-xy
       :defs $ {}
         |val-exists? $ quote
           defn val-exists? (pair)
@@ -746,8 +741,8 @@
     |respo.controller.resolve $ {}
       :ns $ quote
         ns respo.controller.resolve $ :require
-          [] respo.util.detect :refer $ [] component? element?
-          [] respo.util.list :refer $ [] filter-first
+          respo.util.detect :refer $ component? element?
+          respo.util.list :refer $ filter-first
       :defs $ {}
         |build-deliver-event $ quote
           defn build-deliver-event (*global-element *dispatch-fn)
@@ -814,7 +809,7 @@
         |*cached-id $ quote (defatom *cached-id 0)
     |respo.util.detect $ {}
       :ns $ quote
-        ns respo.util.detect $ :require ([] respo.schema :as schema)
+        ns respo.util.detect $ :require (respo.schema :as schema)
       :defs $ {}
         |=seq $ quote
           defn =seq (xs ys)
@@ -840,7 +835,7 @@
     |respo.util.format $ {}
       :ns $ quote
         ns respo.util.format $ :require
-          [] respo.util.detect :refer $ [] component? element?
+          respo.util.detect :refer $ component? element?
       :defs $ {}
         |event->string $ quote
           defn event->string (x)
@@ -858,7 +853,10 @@
         |event->edn $ quote
           defn event->edn (event) (; js/console.log "\"simplify event:" event)
             ->
-              case (.-type event)
+              case-default (.-type event)
+                {}
+                  :type $ .-type event
+                  :msg $ str "|Unhandled event: " (.-type event)
                 "\"click" $ {} (:type :click)
                 "\"keydown" $ merge (map-keyboard-event event)
                   {} (:type :keydown)
@@ -874,10 +872,6 @@
                 "\"change" $ {} (:type :change)
                   :value $ aget (.-target event) |value
                 "\"focus" $ {} (:type :focus)
-                (.-type event)
-                  {}
-                    :type $ .-type event
-                    :msg $ str "|Unhandled event: " (.-type event)
               assoc :original-event event
               assoc :event event
         |purify-events $ quote
@@ -905,7 +899,7 @@
         |prop->attr $ quote
           defn prop->attr (x)
             when (includes? x "\"?") (println "\"[Respo] warning: property includes `?` in" x)
-            case x (|class-name |class) (|tab-index |tabindex) (|read-only |readonly) (x x)
+            case-default x x (|class-name |class) (|tab-index |tabindex) (|read-only |readonly)
         |upper-case $ quote
           defn upper-case (x)
             if
@@ -966,12 +960,12 @@
     |respo.render.diff $ {}
       :ns $ quote
         ns respo.render.diff $ :require
-          [] respo.util.format :refer $ [] purify-element
-          [] respo.util.detect :refer $ [] component? element?
-          [] respo.schema.op :as op
-          [] respo.util.comparator :refer $ [] compare-xy
-          [] respo.render.effect :refer $ [] collect-mounting collect-updating collect-unmounting
-          [] respo.util.list :refer $ [] val-of-first
+          respo.util.format :refer $ purify-element
+          respo.util.detect :refer $ component? element?
+          respo.schema.op :as op
+          respo.util.comparator :refer $ compare-xy
+          respo.render.effect :refer $ collect-mounting collect-updating collect-unmounting
+          respo.util.list :refer $ val-of-first
       :defs $ {}
         |find-children-diffs $ quote
           defn find-children-diffs (collect! coord n-coord index old-children new-children) (; js/console.log "|diff children:" n-coord index old-children new-children)
@@ -1081,8 +1075,9 @@
                     new-entry $ first new-style
                     old-follows $ rest old-style
                     new-follows $ rest new-style
-                  case
+                  case-default
                     compare-xy (first old-entry) (first new-entry)
+                    println "\"[Respo] unknown compare result"
                     -1 $ do
                       collect! $ [] op/rm-style c-coord coord (first old-entry)
                       recur collect! c-coord coord old-follows new-style
@@ -1124,7 +1119,7 @@
                     collect-mounting collect! coord n-coord new-tree true
               (and (element? old-tree) (element? new-tree))
                 if
-                  /= (:name old-tree) (:name new-tree)
+                  not= (:name old-tree) (:name new-tree)
                   do
                     collect! $ [] op/replace-element coord n-coord new-tree
                     , nil
@@ -1133,13 +1128,13 @@
                     let
                         old-style $ :style old-tree
                         new-style $ :style new-tree
-                      if (/= old-style new-style) (find-style-diffs collect! coord n-coord old-style new-style)
+                      if (not= old-style new-style) (find-style-diffs collect! coord n-coord old-style new-style)
                     let
                         old-events $ keys-non-nil
                           either (:event old-tree) ({})
                         new-events $ keys-non-nil
                           either (:event new-tree) ({})
-                      when (/= old-events new-events)
+                      when (not= old-events new-events)
                         let
                             added-events $ difference new-events old-events
                             removed-events $ difference old-events new-events
@@ -1180,7 +1175,7 @@
                     old-follows $ rest old-props
                     new-follows $ rest new-props
                   ; js/console.log old-k new-k old-v new-v
-                  case (compare-xy old-k new-k)
+                  case-default (compare-xy old-k new-k) (println "\"[Respo] unknown result")
                     -1 $ do
                       collect! $ [] op/rm-prop coord n-coord old-k
                       recur collect! coord n-coord old-follows new-props
@@ -1188,14 +1183,14 @@
                       collect! $ [] op/add-prop coord n-coord new-pair
                       recur collect! coord n-coord old-props new-follows
                     0 $ do
-                      if (/= old-v new-v)
+                      if (not= old-v new-v)
                         collect! $ [] op/replace-prop coord n-coord new-pair
                       recur collect! coord n-coord old-follows new-follows
     |respo.render.html $ {}
       :ns $ quote
         ns respo.render.html $ :require
-          [] respo.util.format :refer $ [] prop->attr purify-element mute-element text->html get-style-value dashed->camel
-          [] respo.util.detect :refer $ [] component? element?
+          respo.util.format :refer $ prop->attr purify-element mute-element text->html get-style-value dashed->camel
+          respo.util.detect :refer $ component? element?
       :defs $ {}
         |element->string $ quote
           defn element->string (element)
@@ -1208,9 +1203,9 @@
                   escape-html $ :value attrs
                   either (:innerHTML attrs)
                     text->html $ :inner-text attrs
-                tailored-props $ -> attrs (dissoc :innerHTML) (dissoc :inner-text)
-                    fn (props)
-                      if (empty? styles) props $ assoc props :style styles
+                tailored-props $ let
+                    props $ -> attrs (dissoc :innerHTML) (dissoc :inner-text)
+                  if (empty? styles) props $ assoc props :style styles
                 props-in-string $ props->string tailored-props
               if (&set:includes? self-closing tag-name)
                 str |< tag-name
@@ -1279,17 +1274,17 @@
     |respo.core $ {}
       :ns $ quote
         ns respo.core $ :require
-          [] respo.controller.resolve :refer $ [] build-deliver-event
-          [] respo.render.diff :refer $ [] find-element-diffs
-          [] respo.render.effect :refer $ [] collect-mounting
-          [] respo.util.format :refer $ [] purify-element mute-element
-          [] respo.controller.client :refer $ [] activate-instance! patch-instance!
-          [] respo.util.list :refer $ [] pick-attrs pick-event val-exists? filter-first
-          [] respo.util.detect :refer $ [] component? element? effect?
-          [] respo.schema :as schema
-          [] respo.util.comparator :refer $ [] compare-xy
-          [] respo.util.dom :refer $ [] compare-to-dom!
-          [] memof.alias :refer $ [] tick-calling-loop! reset-calling-caches!
+          respo.controller.resolve :refer $ build-deliver-event
+          respo.render.diff :refer $ find-element-diffs
+          respo.render.effect :refer $ collect-mounting
+          respo.util.format :refer $ purify-element mute-element
+          respo.controller.client :refer $ activate-instance! patch-instance!
+          respo.util.list :refer $ pick-attrs pick-event val-exists? filter-first
+          respo.util.detect :refer $ component? element? effect?
+          respo.schema :as schema
+          respo.util.comparator :refer $ compare-xy
+          respo.util.dom :refer $ compare-to-dom!
+          memof.alias :refer $ tick-calling-loop! reset-calling-caches!
       :defs $ {}
         |defcomp $ quote
           defmacro defcomp (comp-name params & body)
@@ -1369,8 +1364,7 @@
             create-element :textarea props & $ map children confirm-child
         |mount-app! $ quote
           defn mount-app! (target element *dispatch-fn)
-            ; assert "|1st argument should be an element" $ or (nil? target)
-              = element-type $ .-__proto__ target
+            ; assert "|1st argument should be an element" $ or (nil? target) (instance? element-type target)
             ; assert "|2nd argument should be a component" $ component? element
             let
                 deliver-event $ build-deliver-event *global-element *dispatch-fn
@@ -1535,26 +1529,26 @@
     |respo.main $ {}
       :ns $ quote
         ns respo.main $ :require
-          [] respo.core :refer $ [] *changes-logger clear-cache!
-          [] respo.app.core :refer $ [] render-app! *store
-          [] respo.app.core :refer $ [] handle-ssr!
+          respo.core :refer $ *changes-logger clear-cache!
+          respo.app.core :refer $ render-app! *store
+          respo.app.core :refer $ handle-ssr!
       :defs $ {}
         |mount-target $ quote
           def mount-target $ if (exists? js/document) (.querySelector js/document |.app) nil
         |save-store! $ quote
-          defn save-store! () $ .!setItem js/window.localStorage |respo.calcit
-            js/JSON.stringify $ to-cirru-edn (:tasks @*store)
+          defn save-store! () $ js/window.localStorage.setItem |respo.calcit
+            format-cirru-edn $ :tasks @*store
         |main! $ quote
           defn main! () (; handle-ssr! mount-target) (load-console-formatter!)
             let
-                raw $ .!getItem js/window.localStorage |respo.calcit
+                raw $ js/window.localStorage.getItem |respo.calcit
               if (some? raw)
-                swap! *store assoc :tasks $ extract-cirru-edn (js/JSON.parse raw)
+                swap! *store assoc :tasks $ parse-cirru-edn raw
               render-app! mount-target
               add-watch *store :rerender $ fn (store prev) (render-app! mount-target)
               ; reset! *changes-logger $ fn (old-tree new-tree changes)
                 js/console.log $ to-js-data changes
-              println |Loaded. $ .!now js/performance
+              println |Loaded. $ js/performance.now
             aset js/window |onbeforeunload $ fn (event) (save-store!)
         |reload! $ quote
           defn reload! () (remove-watch *store :rerender) (clear-cache!) (render-app! mount-target)
@@ -1563,7 +1557,7 @@
     |respo.app.style.widget $ {}
       :ns $ quote
         ns respo.app.style.widget $ :require
-          [] respo.util.format :refer $ [] hsl
+          respo.util.format :refer $ hsl
       :defs $ {}
         |input $ quote
           def input $ {} (:font-size |16px) (:line-height |24px) (:padding "|0px 8px") (:outline :none) (:min-width |300px)
@@ -1578,14 +1572,14 @@
     |respo.comp.inspect $ {}
       :ns $ quote
         ns respo.comp.inspect $ :require
-          [] respo.core :refer $ [] defcomp pre <>
+          respo.core :refer $ defcomp pre <>
       :defs $ {}
         |comp-inspect $ quote
           defcomp comp-inspect (tip data style)
             pre $ {}
               :inner-text $ str tip "|: " (grab-info data)
               :style $ merge style-data style
-              :on-click $ fn (e dispatch!)
+              :on-click $ fn (e d!)
                 if (some? js/window.devtoolsFormatters) (js/console.log data)
                   js/console.log $ to-js-data data
         |grab-info $ quote
@@ -1608,11 +1602,12 @@
     |respo.app.updater $ {}
       :ns $ quote
         ns respo.app.updater $ :require
-          [] respo.cursor :refer $ [] update-states
+          respo.cursor :refer $ update-states
       :defs $ {}
         |updater $ quote
           defn updater (store op-type op-data op-id) (; println store op-type op-data)
-            case op-type
+            case-default op-type
+              do (println "\"Unknown op" op-type) store
               :states $ update-states store op-data
               :add $ update store :tasks
                 fn (tasks)
@@ -1647,7 +1642,6 @@
                           = (:id task) task-id
                           update task :done? not
                           , task
-              op-type store
     |respo.cursor $ {}
       :ns $ quote (ns respo.cursor)
       :defs $ {}
@@ -1662,8 +1656,8 @@
     |respo.test.comp.task $ {}
       :ns $ quote
         ns respo.test.comp.task $ :require
-          [] respo.util.format :refer $ [] hsl
-          [] respo.core :refer $ defcomp div span
+          respo.util.format :refer $ hsl
+          respo.core :refer $ defcomp div span
       :defs $ {}
         |comp-task $ quote
           defcomp comp-task (task)
@@ -1673,9 +1667,9 @@
     |respo.test.html $ {}
       :ns $ quote
         ns respo.test.html $ :require
-          [] calcit-test.core :refer $ [] deftest is testing
-          [] respo.core :refer $ [] html head title script div link textarea body
-          [] respo.render.html :refer $ [] make-string
+          calcit-test.core :refer $ deftest is testing
+          respo.core :refer $ html head title script div link textarea body
+          respo.render.html :refer $ make-string
       :defs $ {}
         |run-tests $ quote
           defn run-tests () (html-quote-test) (nil-prop-test) (simple-html-test) (textarea-test)
@@ -1724,9 +1718,9 @@
               = "|<script src=\"a.js\"></script>" $ make-string piece
     |respo.test.main $ {}
       :ns $ quote
-        ns respo.test.main $ :require ([] respo.test.html :as html)
-          [] calcit-test.core :refer $ [] deftest testing is
-          [] respo.util.list :refer $ [] pick-attrs pick-event
+        ns respo.test.main $ :require (respo.test.html :as html)
+          calcit-test.core :refer $ deftest testing is
+          respo.util.list :refer $ pick-attrs pick-event
       :defs $ {}
         |test-pick-attrs $ quote
           deftest test-pick-attrs $ is
