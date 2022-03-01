@@ -2,7 +2,7 @@
 {} (:package |respo)
   :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
-    :version |0.14.34
+    :version |0.14.35
   :entries $ {}
   :files $ {}
     |respo.schema $ {}
@@ -153,7 +153,9 @@
             if (some? target) (method target) (js/console.warn "\"Unknown effects target:" coord)
         |add-prop $ quote
           defn add-prop (target op)
-            let[] (p prop-value) op $ let
+            let-sugar
+                  [] p prop-value
+                  , op
                 prop-name $ dashed->camel (turn-string p)
               case-default prop-name (aset target prop-name prop-value)
                 |style $ aset target prop-name (style->string prop-value)
@@ -166,15 +168,17 @@
               .!remove target
         |add-event $ quote
           defn add-event (target event-name listener-builder coord)
-            let
-                event-prop $ event->prop event-name
+            &let
+              event-prop $ event->prop event-name
               aset target event-prop $ fn (event)
                   listener-builder event-name
                   , event coord
                 .!stopPropagation event
         |add-style $ quote
           defn add-style (target op)
-            let[] (p v) op $ let
+            let-sugar
+                  [] p v
+                  , op
                 style-name $ dashed->camel (turn-string p)
                 style-value $ get-style-value v style-name
               aset (.-style target) style-name style-value
@@ -188,17 +192,19 @@
                 , nil
         |rm-event $ quote
           defn rm-event (target event-name)
-            let
-                event-prop $ event->prop event-name
+            &let
+              event-prop $ event->prop event-name
               aset target event-prop nil
         |rm-style $ quote
           defn rm-style (target op)
-            let
-                style-name $ dashed->camel (turn-string op)
+            &let
+              style-name $ dashed->camel (turn-string op)
               aset (.-style target) style-name nil
         |replace-style $ quote
           defn replace-style (target op)
-            let[] (p v) op $ let
+            let-sugar
+                  [] p v
+                  , op
                 style-name $ dashed->camel (turn-string p)
               aset (.-style target) style-name $ get-style-value v (dashed->camel style-name)
         |rm-element $ quote
@@ -233,8 +239,8 @@
                     op/effect-before-update $ run-effect target op-data n-coord
         |append-element $ quote
           defn append-element (target op listener-builder coord)
-            let
-                new-element $ make-element op listener-builder coord
+            &let
+              new-element $ make-element op listener-builder coord
               .!appendChild target new-element
         |rm-prop $ quote
           defn rm-prop (target op)
@@ -261,15 +267,17 @@
           defn make-element (virtual-element listener-builder coord)
             assert "\"coord is required" $ some? coord
             if (component? virtual-element)
-              make-element (:tree virtual-element) listener-builder $ conj coord (:name virtual-element)
+              make-element (&record:get virtual-element :tree) listener-builder $ conj coord (&record:get virtual-element :name)
               let
-                  tag-name $ turn-string (:name virtual-element)
-                  attrs $ :attrs virtual-element
-                  style $ :style virtual-element
-                  children $ :children virtual-element
+                  tag-name $ turn-string (&record:get virtual-element :name)
+                  attrs $ &record:get virtual-element :attrs
+                  style $ &record:get virtual-element :style
+                  children $ &record:get virtual-element :children
                   element $ js/document.createElement tag-name
                   child-elements $ -> children
                     map $ fn (pair)
+                      assert "\"expect pair of key/element" $ and (list? pair)
+                        &= 2 $ count pair
                       let[] (k child) pair
                         when (nil? k) (js/console.warn "\"nil key is bad for Respo")
                         when (some? child)
@@ -287,7 +295,7 @@
                       v $ last entry
                     aset (.-style element) k $ get-style-value v k
                 &doseq
-                  entry $ :event virtual-element
+                  entry $ &record:get virtual-element :event
                   let
                       event-name $ first entry
                       name-in-string $ event->prop event-name
@@ -543,10 +551,8 @@
                         <> "|heavy tasks"
                   list->
                     {} (:class-name |task-list) (:style style-list)
-                    -> tasks
-                      either $ []
-                      .reverse
-                      map $ fn (task)
+                    -> tasks .to-list .reverse $ map
+                      fn (task)
                         let
                             task-id $ :id task
                           [] task-id $ memof-call comp-task (>> states task-id) task
@@ -701,18 +707,17 @@
             some? $ last pair
         |filter-first $ quote
           defn filter-first (f xs)
-            -> xs
-              either $ []
-              filter $ fn (x) (f x)
-              first
+            if (empty? xs) nil $ &let
+              v0 $ nth xs 0
+              if (f v0) v0 $ recur f (rest xs)
         |pick-attrs $ quote
           defn pick-attrs (props)
             if (nil? props) ([])
               -> props (dissoc :on) (dissoc :event) (dissoc :style) (.to-list)
                 filter $ fn (pair)
                   let
-                      k $ get pair 0
-                      v $ get pair 1
+                      k $ nth pair 0
+                      v $ nth pair 1
                     not $ starts-with? (turn-string k) "\"on-"
                 sort $ fn (x y)
                   compare-xy (first x) (first y)
@@ -1096,9 +1101,9 @@
                 , nil
               (and (component? old-tree) (component? new-tree))
                 let
-                    next-coord $ conj coord (:name new-tree)
+                    next-coord $ conj coord (&record:get new-tree :name)
                   if
-                    = (:name old-tree) (:name new-tree)
+                    = (&record:get old-tree :name) (&record:get new-tree :name)
                     do (collect-updating collect! :before-update coord n-coord old-tree new-tree)
                       find-element-diffs collect! next-coord n-coord (:tree old-tree) (:tree new-tree)
                       collect-updating collect! :update coord n-coord old-tree new-tree
@@ -1108,32 +1113,32 @@
               (and (component? old-tree) (element? new-tree))
                 do
                   collect-unmounting collect!
-                    conj coord $ :name old-tree
+                    conj coord $ &record:get old-tree :name
                     , n-coord old-tree true
                   recur collect! coord n-coord (:tree old-tree) new-tree
               (and (element? old-tree) (component? new-tree))
                 let
-                    new-coord $ conj coord (:name new-tree)
+                    new-coord $ conj coord (&record:get new-tree :name)
                   do
                     find-element-diffs collect! new-coord n-coord old-tree $ :tree new-tree
                     collect-mounting collect! coord n-coord new-tree true
               (and (element? old-tree) (element? new-tree))
                 if
-                  not= (:name old-tree) (:name new-tree)
+                  not= (&record:get old-tree :name) (&record:get new-tree :name)
                   do
                     collect! $ [] op/replace-element coord n-coord new-tree
                     , nil
                   do
-                    find-props-diffs collect! coord n-coord (:attrs old-tree) (:attrs new-tree)
+                    find-props-diffs collect! coord n-coord (&record:get old-tree :attrs) (&record:get new-tree :attrs)
                     let
-                        old-style $ :style old-tree
-                        new-style $ :style new-tree
+                        old-style $ &record:get old-tree :style
+                        new-style $ &record:get new-tree :style
                       if (not= old-style new-style) (find-style-diffs collect! coord n-coord old-style new-style)
                     let
                         old-events $ keys-non-nil
-                          either (:event old-tree) ({})
+                          either (&record:get old-tree :event) ({})
                         new-events $ keys-non-nil
-                          either (:event new-tree) ({})
+                          either (&record:get new-tree :event) ({})
                       when (not= old-events new-events)
                         let
                             added-events $ difference new-events old-events
@@ -1143,8 +1148,8 @@
                           &doseq (event-name removed-events)
                             collect! $ [] op/rm-event coord n-coord event-name
                     let
-                        old-children $ :children old-tree
-                        new-children $ :children new-tree
+                        old-children $ &record:get old-tree :children
+                        new-children $ &record:get new-tree :children
                       find-children-diffs collect! coord n-coord 0 old-children new-children
               true $ js/console.warn "\"Diffing unknown params" old-tree new-tree
         |find-props-diffs $ quote
@@ -1297,32 +1302,24 @@
                 :name $ ~ (turn-keyword comp-name)
                 :tree $ do (~@ body)
         |div $ quote
-          defn div (props & children)
-            create-element :div props & $ map children confirm-child
+          defn div (props & children) (create-element :div props & children)
         |img $ quote
-          defn img (props & children)
-            create-element :img props & $ map children confirm-child
+          defn img (props & children) (create-element :img props & children)
         |pre $ quote
-          defn pre (props & children)
-            create-element :pre props & $ map children confirm-child
+          defn pre (props & children) (create-element :pre props & children)
         |body $ quote
-          defn body (props & children)
-            create-element :body props & $ map children confirm-child
+          defn body (props & children) (create-element :body props & children)
         |code $ quote
-          defn code (props & children)
-            create-element :code props & $ map children confirm-child
+          defn code (props & children) (create-element :code props & children)
         |head $ quote
-          defn head (props & children)
-            create-element :head props & $ map children confirm-child
+          defn head (props & children) (create-element :head props & children)
         |html $ quote
           defn html (props & children)
             create-element :html props & $ map children confirm-child
         |link $ quote
-          defn link (props & children)
-            create-element :link props & $ map children confirm-child
+          defn link (props & children) (create-element :link props & children)
         |span $ quote
-          defn span (props & children)
-            create-element :span props & $ map children confirm-child
+          defn span (props & children) (create-element :span props & children)
         |create-element $ quote
           defn create-element (tag-name props & children)
             ; assert
@@ -1339,7 +1336,7 @@
                     compare-xy (first x) (first y)
                 event $ pick-event props
                 children-nodes $ -> children
-                  map-indexed $ fn (idx item) ([] idx item)
+                  map-indexed $ fn (idx item) (confirm-child item) ([] idx item)
                   filter val-exists?
               %{} schema/Element (:name tag-name) (:coord nil) (:attrs attrs) (:style styles) (:event event) (:children children-nodes)
         |defeffect $ quote
@@ -1380,8 +1377,7 @@
               patch-instance! @*changes target deliver-event
               reset! *global-element element
         |blockquote $ quote
-          defn blockquote (props & children)
-            create-element :blockquote props & $ map children confirm-child
+          defn blockquote (props & children) (create-element :blockquote props & children)
         |defplugin $ quote
           defmacro defplugin (x params & body)
             assert "\"expected symbol" $ symbol? x
@@ -1389,19 +1385,14 @@
             assert "\"expected some result" $ > (count body) 0
             quasiquote $ defn ~x ~params ~@body
         |input $ quote
-          defn input (props & children)
-            create-element :input props & $ map children confirm-child
+          defn input (props & children) (create-element :input props & children)
         |style $ quote
-          defn style (props & children)
-            create-element :style props & $ map children confirm-child
+          defn style (props & children) (create-element :style props & children)
         |title $ quote
-          defn title (props & children)
-            create-element :title props & $ map children confirm-child
+          defn title (props & children) (create-element :title props & children)
         |confirm-child $ quote
           defn confirm-child (x)
-            when
-              not $ or (nil? x) (element? x) (component? x)
-              raise $ str "\"Invalid data in elements tree: " (pr-str x)
+            assert "\"Invalid data in elements tree: " $ or (nil? x) (element? x) (component? x)
             , x
         |*dispatch-fn $ quote (defatom *dispatch-fn nil)
         |<> $ quote
@@ -1416,20 +1407,15 @@
                 branch $ either (get states k) ({})
               assoc branch :cursor $ conj parent-cursor k
         |h1 $ quote
-          defn h1 (props & children)
-            create-element :h1 props & $ map children confirm-child
+          defn h1 (props & children) (create-element :h1 props & children)
         |h2 $ quote
-          defn h2 (props & children)
-            create-element :h2 props & $ map children confirm-child
+          defn h2 (props & children) (create-element :h2 props & children)
         |h3 $ quote
-          defn h3 (props & children)
-            create-element :h3 props & $ map children confirm-child
+          defn h3 (props & children) (create-element :h3 props & children)
         |h4 $ quote
-          defn h4 (props & children)
-            create-element :h4 props & $ map children confirm-child
+          defn h4 (props & children) (create-element :h4 props & children)
         |li $ quote
-          defn li (props & children)
-            create-element :li props & $ map children confirm-child
+          defn li (props & children) (create-element :li props & children)
         |create-list-element $ quote
           defn create-list-element (tag-name props child-map)
             let
@@ -1440,7 +1426,8 @@
                   sort $ fn (x y)
                     compare-xy (first x) (first y)
                 event $ pick-event props
-              %{} schema/Element (:name tag-name) (:coord nil) (:attrs attrs) (:style styles) (:event event) (:children child-map)
+              %{} schema/Element (:name tag-name) (:coord nil) (:attrs attrs) (:style styles) (:event event)
+                :children $ map child-map confirm-child-pair
         |rerender-app! $ quote
           defn rerender-app! (target element *dispatch-fn) (tick-calling-loop!)
             let
@@ -1453,9 +1440,7 @@
                   swap! *changes conj x
               ; println @*global-element
               find-element-diffs collect! ([]) ([]) @*global-element element
-              let
-                  logger @*changes-logger
-                if (some? logger) (logger @*global-element element @*changes)
+              if-let (logger @*changes-logger) (logger @*global-element element @*changes)
               ; js/console.log |Changes: @*changes
               patch-instance! @*changes target deliver-event
               reset! *global-element element
@@ -1479,7 +1464,7 @@
                             or (component? x) (element? x)
                         , markup-tree
                       effects-list $ -> markup-tree (filter effect?)
-                    merge markup $ {} (:tree node-tree) (:effects effects-list)
+                    -> markup (assoc :tree node-tree) (assoc :effects effects-list)
                 true markup
         |realize-ssr! $ quote
           defn realize-ssr! (target element dispatch!)
@@ -1507,22 +1492,26 @@
         |button $ quote
           defn button (props & children)
             create-element :button props & $ map children confirm-child
+        |confirm-child-pair $ quote
+          defn confirm-child-pair (pair)
+            assert "\"expected pair" $ and (list? pair)
+              &= 2 $ count pair
+            &let
+              x $ nth pair 1
+              assert "\"Invalid data in elements tree: " $ or (nil? x) (element? x) (component? x)
+            , pair
         |*dom-changes $ quote
           defatom *dom-changes $ []
         |list-> $ quote
           defn list-> (props children) (create-list-element :div props children)
         |option $ quote
-          defn option (props & children)
-            create-element :option props & $ map children confirm-child
+          defn option (props & children) (create-element :option props & children)
         |script $ quote
-          defn script (props & children)
-            create-element :script props & $ map children confirm-child
+          defn script (props & children) (create-element :script props & children)
         |select $ quote
-          defn select (props & children)
-            create-element :select props & $ map children confirm-child
+          defn select (props & children) (create-element :select props & children)
         |a $ quote
-          defn a (props & children)
-            create-element :a props & $ map children confirm-child
+          defn a (props & children) (create-element :a props & children)
         |render! $ quote
           defn render! (target markup dispatch!) (reset! *dispatch-fn dispatch!)
             if (some? @*global-element) (rerender-app! target markup *dispatch-fn) (mount-app! target markup *dispatch-fn)
@@ -1540,15 +1529,14 @@
             format-cirru-edn $ :tasks @*store
         |main! $ quote
           defn main! () (; handle-ssr! mount-target) (load-console-formatter!)
-            let
-                raw $ js/window.localStorage.getItem |respo.calcit
-              if (some? raw)
-                swap! *store assoc :tasks $ parse-cirru-edn raw
-              render-app! mount-target
-              add-watch *store :rerender $ fn (store prev) (render-app! mount-target)
-              ; reset! *changes-logger $ fn (old-tree new-tree changes)
-                js/console.log $ to-js-data changes
-              println |Loaded. $ js/performance.now
+            if-let
+              raw $ js/window.localStorage.getItem |respo.calcit
+              swap! *store assoc :tasks $ parse-cirru-edn raw
+            render-app! mount-target
+            add-watch *store :rerender $ fn (store prev) (render-app! mount-target)
+            ; reset! *changes-logger $ fn (old-tree new-tree changes)
+              js/console.log $ to-js-data changes
+            println |Loaded. $ js/performance.now
             aset js/window |onbeforeunload $ fn (event) (save-store!)
         |reload! $ quote
           defn reload! () (remove-watch *store :rerender) (clear-cache!) (render-app! mount-target)
