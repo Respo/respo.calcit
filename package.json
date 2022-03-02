@@ -1,7 +1,7 @@
 {
   "version": "0.14.35",
   "dependencies": {
-    "@calcit/procs": "^0.5.18"
+    "@calcit/procs": "^0.5.20"
   },
   "scripts": {
     "bundle-test": "esbuild test.js --platform=node --bundle --outfile=js-out/bundle.js",
@@ -9,6 +9,6 @@
   },
   "devDependencies": {
     "esbuild": "^0.14.23",
-    "vite": "^2.8.4"
+    "vite": "^2.8.6"
   }
 }
