@@ -1,14 +1,14 @@
 {
   "version": "0.14.35",
   "dependencies": {
-    "@calcit/procs": "^0.5.20"
+    "@calcit/procs": "^0.5.25"
   },
   "scripts": {
     "bundle-test": "esbuild test.js --platform=node --bundle --outfile=js-out/bundle.js",
     "test": "cr --once --emit-js --init-fn=respo.test.main/main! && yarn bundle-test && node js-out/bundle.js"
   },
   "devDependencies": {
-    "esbuild": "^0.14.23",
+    "esbuild": "^0.14.27",
     "vite": "^2.8.6"
   }
 }
