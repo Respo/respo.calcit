@@ -11484,7 +11484,7 @@
           :data $ {}
   :configs $ {} (:port 6001) (:storage-key |calcit.cirru) (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
-    :version |0.14.35
+    :version |0.14.36
     :output |src
     :compact-output? true
     :extension |.cljs
