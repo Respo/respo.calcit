@@ -2,7 +2,7 @@
 {} (:package |respo)
   :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
-    :version |0.14.35
+    :version |0.14.36
   :entries $ {}
   :files $ {}
     |respo.schema $ {}
@@ -15,8 +15,8 @@
           def effect $ {} (:name nil) (:respo-node :effect)
             :coord $ []
             :args $ []
-            :method $ fn
-              args $ [] action parent at-place?
+            :method $ fn (props args)
+              ; args $ [] action parent at-place?
         |cache-info $ quote
           def cache-info $ {} (:value nil) (:initial-loop nil) (:last-hit nil) (:hit-times 0)
     |respo.app.comp.container $ {}
@@ -63,8 +63,6 @@
                 set! (.-font shared-canvas-context) (str font-size "|px " font-family)
                 .-width $ .!measureText shared-canvas-context content
               , nil
-        |time! $ quote
-          defn time! () $ js/Date.now
         |compare-to-dom! $ quote
           defn compare-to-dom! (vdom element)
             ; println "\"compare" (:name vdom)
@@ -112,7 +110,6 @@
           respo.core :refer $ render! realize-ssr!
           respo.app.schema :as schema
           respo.app.updater :refer $ updater
-          respo.util.id :refer $ get-id!
       :defs $ {}
         |render-app! $ quote
           defn render-app! (mount-target)
@@ -121,7 +118,7 @@
         |dispatch! $ quote
           defn dispatch! (op op-data) (; println op op-data)
             let
-                store $ updater @*store op op-data (get-id!)
+                store $ updater @*store op op-data (generate-id!)
               reset! *store store
         |handle-ssr! $ quote
           defn handle-ssr! (mount-target)
@@ -146,8 +143,7 @@
           defn add-element (target op listener-builder coord)
             let
                 new-element $ make-element op listener-builder coord
-                parent-element $ .-parentElement target
-              .!insertBefore parent-element new-element target
+              -> (.-parentElement target) (.!insertBefore new-element target)
         |run-effect $ quote
           defn run-effect (target method coord)
             if (some? target) (method target) (js/console.warn "\"Unknown effects target:" coord)
@@ -163,8 +159,7 @@
           defn replace-element (target op listener-builder coord)
             let
                 new-element $ make-element op listener-builder coord
-                parent-element $ .-parentElement target
-              .!insertBefore parent-element new-element target
+              -> (.-parentElement target) (.!insertBefore new-element target)
               .!remove target
         |add-event $ quote
           defn add-event (target event-name listener-builder coord)
@@ -181,7 +176,7 @@
                   , op
                 style-name $ dashed->camel (turn-string p)
                 style-value $ get-style-value v style-name
-              aset (.-style target) style-name style-value
+              -> (.-style target) (aset style-name style-value)
         |find-target $ quote
           defn find-target (root coord)
             if (empty? coord) root $ let
@@ -199,14 +194,15 @@
           defn rm-style (target op)
             &let
               style-name $ dashed->camel (turn-string op)
-              aset (.-style target) style-name nil
+              -> (.-style target) (aset style-name nil)
         |replace-style $ quote
           defn replace-style (target op)
             let-sugar
                   [] p v
                   , op
                 style-name $ dashed->camel (turn-string p)
-              aset (.-style target) style-name $ get-style-value v (dashed->camel style-name)
+              -> (.-style target)
+                aset style-name $ get-style-value v (dashed->camel style-name)
         |rm-element $ quote
           defn rm-element (target op)
             if (some? target) (.!remove target) (js/console.warn "|Respo: Element already removed! Probably by :inner-text.")
@@ -255,14 +251,14 @@
       :defs $ {}
         |style->string $ quote
           defn style->string (styles)
-            -> styles
-              map $ fn (entry)
-                let
+            apply-args ("\"" styles)
+              fn (acc xs)
+                if (empty? xs) acc $ let
+                    entry $ first xs
                     k $ first entry
                     style-name $ turn-string k
                     v $ get-style-value (last entry) style-name
-                  str style-name |: v |;
-              join-str |
+                  recur (str acc style-name |: v |;) (rest xs)
         |make-element $ quote
           defn make-element (virtual-element listener-builder coord)
             assert "\"coord is required" $ some? coord
@@ -341,34 +337,6 @@
                   [] (:id task) (comp-task task)
         |style-todolist $ quote
           def style-todolist $ {} (:color :blue) (:font-family "|\"微软雅黑\", Verdana")
-    |respo.util.comparator $ {}
-      :ns $ quote (ns respo.util.comparator)
-      :defs $ {}
-        |type-as-int $ quote
-          defn type-as-int (x)
-            cond
-                number? x
-                , 0
-              (keyword? x) 1
-              (string? x) 2
-              true $ raise "|use number, keyword or string in coord!"
-        |compare-xy $ quote
-          defn compare-xy (x y)
-            let
-                type-x $ type-as-int x
-                type-y $ type-as-int y
-              if (= type-x type-y)
-                if (keyword? x)
-                  compare (turn-string x) (turn-string y)
-                  compare x y
-                compare type-x type-y
-        |compare $ quote
-          defn compare (x y)
-            cond
-                < x y
-                , -1
-              (> x y) 1
-              true 0
     |respo.controller.client $ {}
       :ns $ quote
         ns respo.controller.client $ :require
@@ -477,39 +445,10 @@
           respo.comp.inspect :refer $ comp-inspect
           respo.app.comp.zero :refer $ comp-zero
           respo.app.comp.wrap :refer $ comp-wrap
-          respo.util.dom :refer $ text-width time!
+          respo.util.dom :refer $ text-width
           respo.app.style.widget :as widget
           memof.alias :refer $ memof-call
       :defs $ {}
-        |run-test! $ quote
-          defn run-test! (dispatch! acc)
-            let
-                started $ time!
-              dispatch! :clear nil
-              loop
-                  x 20
-                dispatch! :add |empty
-                if (> x 0)
-                  recur $ dec x
-              loop
-                  x 20
-                dispatch! :hit-first $ js/Math.random
-                if (> x 0)
-                  recur $ dec x
-              dispatch! :clear nil
-              loop
-                  x 10
-                dispatch! :add "|only 10 items"
-                if (> x 0)
-                  recur $ dec x
-              let
-                  cost $ - (time!) started
-                if
-                  < (count acc) 40
-                  js/setTimeout
-                    fn () $ run-test! dispatch! (conj acc cost)
-                    , 0
-                  println |result: $ sort acc number-order
         |style-panel $ quote
           def style-panel $ {} (:display :flex) (:margin-bottom 4)
         |style-toolbar $ quote
@@ -575,11 +514,40 @@
                       =< 8 nil
                       comp-wrap $ comp-zero
                   comp-inspect |Tasks tasks $ {} (:left 500) (:top 20)
+        |try-test! $ quote
+          defn try-test! (dispatch! acc)
+            let
+                started $ js/Date.now
+              dispatch! :clear nil
+              loop
+                  x 20
+                dispatch! :add |empty
+                if (> x 0)
+                  recur $ dec x
+              loop
+                  x 20
+                dispatch! :hit-first $ js/Math.random
+                if (> x 0)
+                  recur $ dec x
+              dispatch! :clear nil
+              loop
+                  x 10
+                dispatch! :add "|only 10 items"
+                if (> x 0)
+                  recur $ dec x
+              let
+                  cost $ - (js/Date.now) started
+                if
+                  < (count acc) 40
+                  js/setTimeout
+                    fn () $ try-test! dispatch! (conj acc cost)
+                    , 0
+                  println |result: $ sort acc number-order
         |initial-state $ quote
           def initial-state $ {} (:draft |) (:locked? false)
         |on-test $ quote
           defn on-test (e dispatch!) (println "|trigger test!")
-            run-test! dispatch! $ []
+            try-test! dispatch! $ []
         |on-focus $ quote
           defn on-focus (e dispatch!) (println "|Just focused~")
         |effect-focus $ quote
@@ -628,9 +596,8 @@
                     &doseq (effect effects)
                       let
                           method $ :method effect
-                        collect! $ [] op/effect-mount next-coord n-coord
-                          fn (target)
-                            method (:args effect) ([] :mount target at-place?)
+                        collect! op/effect-mount next-coord n-coord $ fn (target)
+                          method (:args effect) ([] :mount target at-place?)
                   recur collect! next-coord n-coord (:tree tree) false
               (element? tree)
                 apply-args
@@ -658,9 +625,8 @@
                     &doseq (effect effects)
                       let
                           method $ :method effect
-                        collect! $ [] op/effect-unmount new-coord n-coord
-                          fn (target)
-                            method (:args effect) ([] :unmount target at-place?)
+                        collect! op/effect-unmount new-coord n-coord $ fn (target)
+                          method (:args effect) ([] :unmount target at-place?)
               (element? tree)
                 loop
                     children $ :children tree
@@ -691,25 +657,18 @@
                     ; println old-effect new-effect
                     when
                       not $ =seq (:args new-effect) (:args old-effect)
-                      collect! $ []
+                      collect!
                         if (= :update action) op/effect-update op/effect-before-update
-                        , next-coord n-coord
-                          fn (target)
-                            method (:args new-effect) ([] action target)
+                        , next-coord n-coord $ fn (target)
+                          method (:args new-effect) ([] action target)
     |respo.util.list $ {}
       :ns $ quote
         ns respo.util.list $ :require
           respo.util.detect :refer $ component? element?
-          respo.util.comparator :refer $ compare-xy
       :defs $ {}
         |val-exists? $ quote
           defn val-exists? (pair)
             some? $ last pair
-        |filter-first $ quote
-          defn filter-first (f xs)
-            if (empty? xs) nil $ &let
-              v0 $ nth xs 0
-              if (f v0) v0 $ recur f (rest xs)
         |pick-attrs $ quote
           defn pick-attrs (props)
             if (nil? props) ([])
@@ -720,7 +679,7 @@
                       v $ nth pair 1
                     not $ starts-with? (turn-string k) "\"on-"
                 sort $ fn (x y)
-                  compare-xy (first x) (first y)
+                  &compare (first x) (first y)
         |pick-event $ quote
           defn pick-event (props)
             if (nil? props) ({})
@@ -747,7 +706,6 @@
       :ns $ quote
         ns respo.controller.resolve $ :require
           respo.util.detect :refer $ component? element?
-          respo.util.list :refer $ filter-first
       :defs $ {}
         |build-deliver-event $ quote
           defn build-deliver-event (*global-element *dispatch-fn)
@@ -760,10 +718,9 @@
                   dispatch-wrap $ fn (op data)
                     let
                         dispatch! $ deref *dispatch-fn
-                      cond
-                          list? op
-                          dispatch! :states $ [] op data
-                        true $ dispatch! op data
+                      if (list? op)
+                        dispatch! :states $ [] op data
+                        dispatch! op data
                 if (some? target-listener)
                   do (; println "|listener found:" coord event-name) (target-listener simple-event dispatch-wrap)
                   ; println "|found no listener:" coord event-name
@@ -798,20 +755,13 @@
               recur (:tree markup) (rest coord)
               let
                   coord-head $ first coord
-                  child-pair $ filter-first
+                  child-pair $ find (:children markup)
                     fn (child-entry)
                       = (get child-entry 0) coord-head
-                    :children markup
                 if (some? child-pair)
                   get-markup-at (get child-pair 1) (rest coord)
                   raise $ str "|child not found:" coord
                     map (:children markup) first
-    |respo.util.id $ {}
-      :ns $ quote (ns respo.util.id)
-      :defs $ {}
-        |get-id! $ quote
-          defn get-id! () (swap! *cached-id inc) (str "\"id-" @*cached-id)
-        |*cached-id $ quote (defatom *cached-id 0)
     |respo.util.detect $ {}
       :ns $ quote
         ns respo.util.detect $ :require (respo.schema :as schema)
@@ -830,13 +780,13 @@
                 true false
         |effect? $ quote
           defn effect? (x)
-            and (record? x) (.matches? schema/Effect x)
+            and (record? x) (&record:matches? schema/Effect x)
         |element? $ quote
           defn element? (x)
-            if (record? x) (.matches? schema/Element x) false
+            if (record? x) (&record:matches? schema/Element x) false
         |component? $ quote
           defn component? (x)
-            if (record? x) (.matches? schema/Component x) false
+            if (record? x) (&record:matches? schema/Component x) false
     |respo.util.format $ {}
       :ns $ quote
         ns respo.util.format $ :require
@@ -881,13 +831,12 @@
               assoc :event event
         |purify-events $ quote
           defn purify-events (events)
-            -> events (to-pairs)
-              filter $ fn (pair)
-                let
-                    k $ first pair
-                    v $ first pair
-                  some? v
-              map first
+            reduce events ([])
+              fn (acc pair)
+                if
+                  some? $ last pair
+                  conj acc $ first pair
+                  , acc
         |event->prop $ quote
           defn event->prop (x)
             str |on $ turn-string x
@@ -895,7 +844,7 @@
           defn mute-element (element)
             if (component? element) (update element :tree mute-element)
               -> element
-                update :event $ fn (events) ({})
+                assoc :event $ {}
                 update :children $ fn (children)
                   -> children $ map
                     fn (entry)
@@ -905,17 +854,6 @@
           defn prop->attr (x)
             when (includes? x "\"?") (println "\"[Respo] warning: property includes `?` in" x)
             case-default x x (|class-name |class) (|tab-index |tabindex) (|read-only |readonly)
-        |upper-case $ quote
-          defn upper-case (x)
-            if
-              > (count x) 0
-              let
-                  code $ .!charCodeAt x 0
-                if
-                  and (>= code 97) (<= code 122)
-                  js/String.fromCharCode $ - code 32
-                  , x
-              , x
         |get-style-value $ quote
           defn get-style-value (x prop)
             cond
@@ -968,7 +906,6 @@
           respo.util.format :refer $ purify-element
           respo.util.detect :refer $ component? element?
           respo.schema.op :as op
-          respo.util.comparator :refer $ compare-xy
           respo.render.effect :refer $ collect-mounting collect-updating collect-unmounting
           respo.util.list :refer $ val-of-first
       :defs $ {}
@@ -986,7 +923,7 @@
                       k $ first pair
                       element $ last pair
                       new-coord $ conj coord k
-                    collect! $ [] op/append-element new-coord n-coord element
+                    collect! op/append-element new-coord n-coord element
                     collect-mounting collect! coord (conj n-coord index) element true
                     recur collect! coord n-coord (inc index) ([]) (rest new-children)
                 (and (not was-empty?) now-empty?)
@@ -996,7 +933,7 @@
                       new-coord $ conj coord k
                       new-n-coord $ conj n-coord index
                     collect-unmounting collect! coord new-n-coord (last pair) true
-                    collect! $ [] op/rm-element new-coord new-n-coord nil
+                    collect! op/rm-element new-coord new-n-coord nil
                     recur collect! coord n-coord index (rest old-children) ([])
                 true $ let
                     old-keys $ -> old-children (take 16) (map first)
@@ -1025,7 +962,7 @@
                           element $ last pair
                           new-coord $ conj coord k
                           new-n-coord $ conj n-coord index
-                        collect! $ [] op/add-element new-coord new-n-coord element
+                        collect! op/add-element new-coord new-n-coord element
                         collect-mounting collect! coord new-n-coord (val-of-first new-children) true
                         recur collect! coord n-coord (inc index) old-children new-follows
                     (and (not x1-remains?) y1-existed?)
@@ -1035,7 +972,7 @@
                           new-coord $ conj coord k
                           new-n-coord $ conj n-coord index
                         collect-unmounting collect! coord new-n-coord (last pair) true
-                        collect! $ [] op/rm-element new-coord new-n-coord nil
+                        collect! op/rm-element new-coord new-n-coord nil
                         recur collect! coord n-coord index old-follows new-children
                     true $ let
                         xi $ index-of new-keys x1
@@ -1048,12 +985,12 @@
                         let
                             new-element $ val-of-first new-children
                             new-coord $ conj coord y1
-                          collect! $ [] op/add-element new-coord new-n-coord new-element
+                          collect! op/add-element new-coord new-n-coord new-element
                           collect-mounting collect! coord new-n-coord new-element true
                           recur collect! coord n-coord (inc index) old-children new-follows
                         do
                           collect-unmounting collect! coord new-n-coord (val-of-first old-children) true
-                          collect! $ [] op/rm-element (conj coord x1) new-n-coord nil
+                          collect! op/rm-element (conj coord x1) new-n-coord nil
                           recur collect! coord n-coord index old-follows new-children
         |find-style-diffs $ quote
           defn find-style-diffs (collect! c-coord coord old-style new-style)
@@ -1067,13 +1004,13 @@
                   let
                       entry $ first new-style
                       follows $ rest new-style
-                    collect! $ [] op/add-style c-coord coord entry
+                    collect! op/add-style c-coord coord entry
                     recur collect! c-coord coord old-style follows
                 (and (not was-empty?) now-empty?)
                   let
                       entry $ first old-style
                       follows $ rest old-style
-                    collect! $ [] op/rm-style c-coord coord (first entry)
+                    collect! op/rm-style c-coord coord $ first entry
                     recur collect! c-coord coord follows new-style
                 true $ let
                     old-entry $ first old-style
@@ -1081,18 +1018,16 @@
                     old-follows $ rest old-style
                     new-follows $ rest new-style
                   case-default
-                    compare-xy (first old-entry) (first new-entry)
-                    println "\"[Respo] unknown compare result"
+                    &compare (first old-entry) (first new-entry)
+                    println "\"[Respo] unknown compare result for style keys"
                     -1 $ do
-                      collect! $ [] op/rm-style c-coord coord (first old-entry)
+                      collect! op/rm-style c-coord coord $ first old-entry
                       recur collect! c-coord coord old-follows new-style
-                    1 $ do
-                      collect! $ [] op/add-style c-coord coord new-entry
-                      recur collect! c-coord coord old-style new-follows
+                    1 $ do (collect! op/add-style c-coord coord new-entry) (recur collect! c-coord coord old-style new-follows)
                     0 $ do
                       if
                         not $ identical? (last old-entry) (last new-entry)
-                        collect! $ [] op/replace-style c-coord coord new-entry
+                        collect! op/replace-style c-coord coord new-entry
                       recur collect! c-coord coord old-follows new-follows
         |find-element-diffs $ quote
           defn find-element-diffs (collect! coord n-coord old-tree new-tree) (; js/console.log "|element diffing:" n-coord old-tree new-tree) (; echo "\"element coord" coord)
@@ -1125,9 +1060,7 @@
               (and (element? old-tree) (element? new-tree))
                 if
                   not= (&record:get old-tree :name) (&record:get new-tree :name)
-                  do
-                    collect! $ [] op/replace-element coord n-coord new-tree
-                    , nil
+                  do (collect! op/replace-element coord n-coord new-tree) nil
                   do
                     find-props-diffs collect! coord n-coord (&record:get old-tree :attrs) (&record:get new-tree :attrs)
                     let
@@ -1143,10 +1076,8 @@
                         let
                             added-events $ difference new-events old-events
                             removed-events $ difference old-events new-events
-                          &doseq (event-name added-events)
-                            collect! $ [] op/set-event coord n-coord event-name
-                          &doseq (event-name removed-events)
-                            collect! $ [] op/rm-event coord n-coord event-name
+                          &doseq (event-name added-events) (collect! op/set-event coord n-coord event-name)
+                          &doseq (event-name removed-events) (collect! op/rm-event coord n-coord event-name)
                     let
                         old-children $ &record:get old-tree :children
                         new-children $ &record:get new-tree :children
@@ -1163,12 +1094,11 @@
                   , nil
                 (and was-empty? (not now-empty?))
                   do
-                    collect! $ [] op/add-prop coord n-coord (first new-props)
+                    collect! op/add-prop coord n-coord $ first new-props
                     recur collect! coord n-coord old-props $ rest new-props
                 (and (not was-empty?) now-empty?)
                   do
-                    collect! $ [] op/rm-prop coord n-coord
-                      first $ first old-props
+                    collect! op/rm-prop coord n-coord $ first (first old-props)
                     recur collect! coord n-coord (rest old-props) new-props
                 true $ let
                     old-pair $ first old-props
@@ -1180,16 +1110,11 @@
                     old-follows $ rest old-props
                     new-follows $ rest new-props
                   ; js/console.log old-k new-k old-v new-v
-                  case-default (compare-xy old-k new-k) (println "\"[Respo] unknown result")
-                    -1 $ do
-                      collect! $ [] op/rm-prop coord n-coord old-k
-                      recur collect! coord n-coord old-follows new-props
-                    1 $ do
-                      collect! $ [] op/add-prop coord n-coord new-pair
-                      recur collect! coord n-coord old-props new-follows
+                  case-default (&compare old-k new-k) (println "\"[Respo] unknown result")
+                    -1 $ do (collect! op/rm-prop coord n-coord old-k) (recur collect! coord n-coord old-follows new-props)
+                    1 $ do (collect! op/add-prop coord n-coord new-pair) (recur collect! coord n-coord old-props new-follows)
                     0 $ do
-                      if (not= old-v new-v)
-                        collect! $ [] op/replace-prop coord n-coord new-pair
+                      if (not= old-v new-v) (collect! op/replace-prop coord n-coord new-pair)
                       recur collect! coord n-coord old-follows new-follows
     |respo.render.html $ {}
       :ns $ quote
@@ -1208,15 +1133,13 @@
                   escape-html $ :value attrs
                   either (:innerHTML attrs)
                     text->html $ :inner-text attrs
-                tailored-props $ let
-                    props $ -> attrs (dissoc :innerHTML) (dissoc :inner-text)
+                tailored-props $ &let
+                  props $ -> attrs (dissoc :innerHTML) (dissoc :inner-text)
                   if (empty? styles) props $ assoc props :style styles
                 props-in-string $ props->string tailored-props
               if (&set:includes? self-closing tag-name)
                 str |< tag-name
-                  if
-                    > (count props-in-string) 0
-                    , "| " |
+                  if (blank? props-in-string) | "| "
                   , props-in-string "| >"
                 &let
                   children $ -> (:children element)
@@ -1225,9 +1148,7 @@
                           child $ last entry
                         element->string child
                   str |< tag-name
-                    if
-                      > (count props-in-string) 0
-                      , "| " |
+                    if (blank? props-in-string) "\"" "| " |
                     , props-in-string |>
                       either text-inside $ join-str children |
                       , |</ tag-name |>
@@ -1284,10 +1205,9 @@
           respo.render.effect :refer $ collect-mounting
           respo.util.format :refer $ purify-element mute-element
           respo.controller.client :refer $ activate-instance! patch-instance!
-          respo.util.list :refer $ pick-attrs pick-event val-exists? filter-first
+          respo.util.list :refer $ pick-attrs pick-event val-exists?
           respo.util.detect :refer $ component? element? effect?
           respo.schema :as schema
-          respo.util.comparator :refer $ compare-xy
           respo.util.dom :refer $ compare-to-dom!
           memof.alias :refer $ tick-calling-loop! reset-calling-caches!
       :defs $ {}
@@ -1333,7 +1253,7 @@
                   either (:style props) ({})
                   .to-list
                   sort $ fn (x y)
-                    compare-xy (first x) (first y)
+                    &compare (first x) (first y)
                 event $ pick-event props
                 children-nodes $ -> children
                   map-indexed $ fn (idx item) (confirm-child item) ([] idx item)
@@ -1368,9 +1288,8 @@
                 *changes $ do
                   reset! *dom-changes $ []
                   , *dom-changes
-                collect! $ fn (x)
-                  assert "|change op should has length 3" $ = 4 (count x)
-                  swap! *changes conj x
+                collect! $ fn (op coord n-coord v)
+                  swap! *changes conj $ [] op coord n-coord v
               ; println "|mount app"
               activate-instance! element target deliver-event
               collect-mounting collect! ([]) ([]) element true
@@ -1384,6 +1303,8 @@
             assert "\"expected params" $ list? params
             assert "\"expected some result" $ > (count body) 0
             quasiquote $ defn ~x ~params ~@body
+        |*rerender-changes $ quote
+          defatom *rerender-changes $ []
         |input $ quote
           defn input (props & children) (create-element :input props & children)
         |style $ quote
@@ -1424,7 +1345,7 @@
                   either $ {}
                   .to-list
                   sort $ fn (x y)
-                    compare-xy (first x) (first y)
+                    &compare (first x) (first y)
                 event $ pick-event props
               %{} schema/Element (:name tag-name) (:coord nil) (:attrs attrs) (:style styles) (:event event)
                 :children $ map child-map confirm-child-pair
@@ -1433,11 +1354,10 @@
             let
                 deliver-event $ build-deliver-event *global-element *dispatch-fn
                 *changes $ do
-                  reset! *rereder-changes $ []
-                  , *rereder-changes
-                collect! $ fn (x)
-                  assert "|change op should has length 4" $ = 4 (count x)
-                  swap! *changes conj x
+                  reset! *rerender-changes $ []
+                  , *rerender-changes
+                collect! $ fn (op coord n-coord v)
+                  swap! *changes conj $ [] op coord n-coord v
               ; println @*global-element
               find-element-diffs collect! ([]) ([]) @*global-element element
               if-let (logger @*changes-logger) (logger @*global-element element @*changes)
@@ -1446,8 +1366,6 @@
               reset! *global-element element
         |clear-cache! $ quote
           defn clear-cache! () $ reset-calling-caches!
-        |*rereder-changes $ quote
-          defatom *rereder-changes $ []
         |*changes-logger $ quote (defatom *changes-logger nil)
         |extract-effects-list $ quote
           defn extract-effects-list (markup)
@@ -1458,11 +1376,10 @@
                   assoc markup :tree $ span nil
                 (list? markup-tree)
                   let
-                      node-tree $ filter-first
+                      node-tree $ find markup-tree
                         fn (x)
                           and (record? x)
                             or (component? x) (element? x)
-                        , markup-tree
                       effects-list $ -> markup-tree (filter effect?)
                     -> markup (assoc :tree node-tree) (assoc :effects effects-list)
                 true markup
@@ -1473,13 +1390,10 @@
             let
                 app-element $ .-firstElementChild target
                 *changes $ do
-                  reset! *rereder-changes $ []
-                  , *rereder-changes
-                collect! $ fn (x)
-                  assert
-                    = 3 $ count x
-                    , "|change op should has length 3"
-                  swap! *changes conj x
+                  reset! *rerender-changes $ []
+                  , *rerender-changes
+                collect! $ fn (op coord n-coord v)
+                  swap! *changes conj $ [] op coord n-coord v
                 deliver-event $ build-deliver-event *global-element dispatch!
               if (nil? app-element) (raise "\"Detected no element from SSR!")
               compare-to-dom! (purify-element element) app-element
@@ -1730,4 +1644,4 @@
         |main! $ quote
           defn main! () (html/run-tests) (test-pick-attrs) (test-pick-event)
         |reload! $ quote
-          defn ^:dev/after-load reload! () $ main!
+          defn reload! () $ println "\"reload."

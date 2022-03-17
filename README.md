@@ -6,7 +6,7 @@ Respo: A virtual DOM library in Calcit-js
 
 * Home http://respo-mvc.org
 * [Bundled example](http://repo.respo-mvc.org/respo.calcit/)
-* [Docs(Old)](https://github.com/Respo/respo/wiki)
+* [Guide](https://github.com/Respo/guidebook)
 
 ### Usage
 
@@ -98,13 +98,15 @@ defcomp comp-a (text)
     div {}
 ```
 
-Define a hooks plugin, it can be cached being a pure function:
+Define a hooks plugin based on Calcit Record, better use a pure function:
 
 ```cirru
-defn plugin-x (a b)
-  {}
-    :ui $ div ({}) (<> "|Demo")
-    :show $ fn () nil
+defn plugin-x (states options)
+  ::
+    %{} PluginX
+      :render $ fn (self) (nth self 1)
+      :show $ fn (self d! ? text)
+    div ({}) (<> "|Demo")
 ```
 
 ### License

@@ -3,7 +3,7 @@ name: Tests
 on:
   push:
     branches:
-      - master
+      - main
   pull_request: {}
 
 jobs:
@@ -39,7 +39,7 @@ jobs:
       run: >
         mkdir -p ~/.config/calcit/modules/ && cd ~/.config/calcit/modules/
         && git clone https://github.com/calcit-lang/memof.git
-        && git clone https://github.com/calcit-lang/lilac.git --branch 0.1.6
+        && git clone https://github.com/calcit-lang/lilac.git
         && git clone https://github.com/calcit-lang/calcit-test.git
 
     - name: "load deps"
