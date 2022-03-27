@@ -48,8 +48,7 @@ jobs:
     - name: "test js"
       run: >
         cr --once --emit-js --init-fn=respo.test.main/main!
-        && yarn bundle-test
-        && node js-out/bundle.js
+        && node test.mjs
 
     - name: "build js"
       run: >
