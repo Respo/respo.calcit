@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.14.36)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.14.37)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
   :entries $ {}
   :files $ {}
@@ -475,7 +475,7 @@
           defn button (props & children)
             create-element :button props & $ map children confirm-child
         |clear-cache! $ quote
-          defn clear-cache! () $ reset-calling-caches!
+          defn clear-cache! () (reset-calling-caches!) (reset-memof1-caches!)
         |code $ quote
           defn code (props & children) (create-element :code props & children)
         |confirm-child $ quote
@@ -677,6 +677,7 @@
           respo.schema :as schema
           respo.util.dom :refer $ compare-to-dom!
           memof.alias :refer $ tick-calling-loop! reset-calling-caches!
+          memof.once :refer $ reset-memof1-caches!
     |respo.cursor $ {}
       :defs $ {}
         |update-states $ quote

@@ -1,6 +1,6 @@
 
 {}
-  :configs $ {} (:compact-output? true) (:extension |.cljs) (:init-fn |respo.main/main!) (:output |src) (:port 6001) (:reload-fn |respo.main/reload!) (:storage-key |calcit.cirru) (:version |0.14.36)
+  :configs $ {} (:compact-output? true) (:extension |.cljs) (:init-fn |respo.main/main!) (:output |src) (:port 6001) (:reload-fn |respo.main/reload!) (:storage-key |calcit.cirru) (:version |0.14.37)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
   :entries $ {}
   :ir $ {} (:package |respo)
@@ -3170,6 +3170,9 @@
               |x $ {} (:at 1592132484436) (:by |rJoDgvdeG) (:type :expr)
                 :data $ {}
                   |T $ {} (:at 1611825969046) (:by |rJoDgvdeG) (:text |reset-calling-caches!) (:type :leaf)
+              |y $ {} (:at 1650634141757) (:by |rJoDgvdeG) (:type :expr)
+                :data $ {}
+                  |T $ {} (:at 1650634142422) (:by |rJoDgvdeG) (:text |reset-memof1-caches!) (:type :leaf)
           |code $ {} (:at 1610732316196) (:by |rJoDgvdeG) (:type :expr)
             :data $ {}
               |T $ {} (:at 1610732316196) (:by |rJoDgvdeG) (:text |defn) (:type :leaf)
@@ -4714,6 +4717,13 @@
                       :data $ {}
                         |T $ {} (:at 1611825934103) (:by |rJoDgvdeG) (:text |tick-calling-loop!) (:type :leaf)
                         |j $ {} (:at 1611825972923) (:by |rJoDgvdeG) (:text |reset-calling-caches!) (:type :leaf)
+                |z $ {} (:at 1650634103152) (:by |rJoDgvdeG) (:type :expr)
+                  :data $ {}
+                    |T $ {} (:at 1650634107485) (:by |rJoDgvdeG) (:text |memof.once) (:type :leaf)
+                    |b $ {} (:at 1650634108285) (:by |rJoDgvdeG) (:text |:refer) (:type :leaf)
+                    |h $ {} (:at 1650634108519) (:by |rJoDgvdeG) (:type :expr)
+                      :data $ {}
+                        |T $ {} (:at 1650634136585) (:by |rJoDgvdeG) (:text |reset-memof1-caches!) (:type :leaf)
         :proc $ {} (:at 1504774121421) (:by nil) (:type :expr)
           :data $ {}
       |respo.cursor $ {}
@@ -4795,7 +4805,7 @@
                       |b $ {} (:at 1645976091853) (:by |rJoDgvdeG) (:type :expr)
                         :data $ {}
                           |T $ {} (:at 1645976091853) (:by |rJoDgvdeG) (:text |js/window.localStorage.getItem) (:type :leaf)
-                          |b $ {} (:at 1645976091853) (:by |rJoDgvdeG) (:text ||respo.calcit) (:type :leaf)
+                          |b $ {} (:at 1650634164619) (:by |rJoDgvdeG) (:text ||respo.calcit) (:type :leaf)
                   |h $ {} (:at 1645976093565) (:by |rJoDgvdeG) (:type :expr)
                     :data $ {}
                       |T $ {} (:at 1645976097593) (:by |rJoDgvdeG) (:text |swap!) (:type :leaf)
