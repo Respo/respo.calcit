@@ -4852,10 +4852,7 @@
                       |r $ {} (:at 1511714265521) (:by |rJoDgvdeG) (:type :expr)
                         :data $ {}
                           |j $ {} (:at 1612761921981) (:by |rJoDgvdeG) (:text |js/console.log) (:type :leaf)
-                          |r $ {} (:at 1511714268749) (:by |rJoDgvdeG) (:type :expr)
-                            :data $ {}
-                              |T $ {} (:at 1612761919364) (:by |rJoDgvdeG) (:text |to-js-data) (:type :leaf)
-                              |j $ {} (:at 1511714272165) (:by |rJoDgvdeG) (:text |changes) (:type :leaf)
+                          |r $ {} (:at 1511714272165) (:by |rJoDgvdeG) (:text |changes) (:type :leaf)
               |wj $ {} (:at 1511714274084) (:by |rJoDgvdeG) (:type :expr)
                 :data $ {}
                   |T $ {} (:at 1511714275046) (:by |rJoDgvdeG) (:text |println) (:type :leaf)

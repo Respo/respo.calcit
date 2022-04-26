@@ -698,8 +698,7 @@
               swap! *store assoc :tasks $ parse-cirru-edn raw
             render-app! mount-target
             add-watch *store :rerender $ fn (store prev) (render-app! mount-target)
-            ; reset! *changes-logger $ fn (old-tree new-tree changes)
-              js/console.log $ to-js-data changes
+            ; reset! *changes-logger $ fn (old-tree new-tree changes) (js/console.log changes)
             println |Loaded. $ js/performance.now
             aset js/window |onbeforeunload $ fn (event) (save-store!)
         |mount-target $ quote
