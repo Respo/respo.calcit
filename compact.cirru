@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.14.37)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.14.38)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
   :entries $ {}
   :files $ {}
@@ -37,28 +37,27 @@
                 div
                   {} $ :style style-task
                   comp-inspect |Task task $ {} (:left 200)
-                  button $ {}
-                    :style $ merge style-done
-                      {} $ "\"background-color"
-                        if (:done? task) (hsl 200 20 80) (hsl 200 80 70)
+                  button $ {} (:class-name style-done)
+                    :style $ {}
+                      "\"background-color" $ if (:done? task) (hsl 200 20 80) (hsl 200 80 70)
                     :on-click $ fn (e d!)
                       d! :toggle $ :id task
                   =< 8 nil
                   input $ {}
                     :value $ :text task
-                    :style widget/input
+                    :class-name widget/style-input
                     :on-input $ fn (e d!)
                       let
                           task-id $ :id task
                           text $ :value e
                         d! :update $ {} (:id task-id) (:text text)
                   =< 8 nil
-                  input $ {} (:value state) (:style widget/input)
+                  input $ {} (:value state) (:class-name widget/style-input)
                     :on-input $ fn (e d!)
                       d! cursor $ :value e
                   =< 8 nil
                   div
-                    {} (:style widget/button)
+                    {} (:class-name widget/style-button)
                       :on-click $ fn (e d!)
                         d! :remove $ :id task
                     <> |Remove
@@ -74,7 +73,8 @@
               :update (; println "\"read") nil
               :unmount (; println "\"read") nil
         |style-done $ quote
-          def style-done $ {} (:width 32) (:height 32) (:outline :none) (:border :none) (:vertical-align :middle)
+          defstyle style-done $ {}
+            "\"$0" $ {} (:width 32) (:height 32) (:outline :none) (:border :none) (:vertical-align :middle)
         |style-task $ quote
           def style-task $ {} (:display :flex) (:padding "|4px 0px")
       :ns $ quote
@@ -84,6 +84,7 @@
           respo.comp.space :refer $ =<
           respo.comp.inspect :refer $ comp-inspect
           respo.app.style.widget :as widget
+          respo.css :refer $ defstyle
     |respo.app.comp.todolist $ {}
       :defs $ {}
         |comp-todolist $ quote
@@ -99,27 +100,27 @@
                     {} $ :style style-panel
                     input $ {} (:placeholder "\"Text")
                       :value $ :draft state
-                      :style $ merge widget/input
-                        {} $ :width
-                          &max 200 $ + 24
-                            text-width (:draft state) 16 |BlinkMacSystemFont
+                      :class-name widget/style-input
+                      :style $ {}
+                        :width $ &max 200
+                          + 24 $ text-width (:draft state) 16 |BlinkMacSystemFont
                       :on-input $ fn (e d!)
                         d! cursor $ assoc state :draft (:value e)
                       :on-focus on-focus
                     =< 8 nil
                     span
-                      {} (:style widget/button)
+                      {} (:class-name widget/style-button)
                         :on-click $ fn (e d!)
                           d! :add $ :draft state
                           d! cursor $ assoc state :draft |
                       span $ {} (:on-click nil) (:inner-text "\"Add")
                     =< 8 nil
-                    span $ {} (:inner-text |Clear) (:style widget/button)
+                    span $ {} (:inner-text |Clear) (:class-name widget/style-button)
                       :on-click $ fn (e d!) (d! :clear nil)
                     =< 8 nil
                     div ({})
                       div
-                        {} (:style widget/button) (:on-click on-test)
+                        {} (:class-name widget/style-button) (:on-click on-test)
                         <> "|heavy tasks"
                   list->
                     {} (:class-name |task-list) (:style style-list)
@@ -264,17 +265,23 @@
       :defs $ {}
         |button $ quote
           def button $ {} (:display :inline-block) (:padding "\"0 6px 0 6px") (:font-family |Avenir,Verdana) (:cursor :pointer)
-            :background-color $ hsl 0 80 70
+            :background-color $ hsl 0 80 70.9
             :color $ hsl 0 0 100
             :height 28
             :line-height "\"28px"
-        |input $ quote
-          def input $ {} (:font-size |16px) (:line-height |24px) (:padding "|0px 8px") (:outline :none) (:min-width |300px)
-            :background-color $ hsl 0 0 94
-            :border :none
+            :transition-duration "\"200ms"
+        |style-button $ quote
+          defstyle style-button $ {} ("\"$0" button)
+            "\"$0:hover" $ {} (:transform "\"scale(1.04)")
+        |style-input $ quote
+          defstyle style-input $ {}
+            "\"$0" $ {} (:font-size |16px) (:line-height |24px) (:padding "|0px 8px") (:outline :none) (:min-width |300px)
+              :background-color $ hsl 0 0 94
+              :border :none
       :ns $ quote
         ns respo.app.style.widget $ :require
           respo.util.format :refer $ hsl
+          respo.css :refer $ defstyle
     |respo.app.updater $ {}
       :defs $ {}
         |updater $ quote
@@ -322,9 +329,9 @@
       :defs $ {}
         |comp-inspect $ quote
           defcomp comp-inspect (tip data style)
-            pre $ {}
+            pre $ {} (:class-name style-data)
               :inner-text $ str tip "|: " (grab-info data)
-              :style $ merge style-data style
+              :style style
               :on-click $ fn (e d!)
                 if (some? js/window.devtoolsFormatters) (js/console.log data)
                   js/console.log $ to-js-data data
@@ -344,10 +351,12 @@
               (fn? data) |Fn
               true $ pr-str data
         |style-data $ quote
-          def style-data $ {} (:position :absolute) (:background-color "\"hsl(240,100%,0%)") (:color :white) (:opacity 0.2) (:font-size |12px) (:font-family |Avenir,Verdana) (:line-height "\"1.4em") (:padding "|2px 6px") (:border-radius |4px) (:max-width 160) (:max-height 32) (:white-space :normal) (:overflow :ellipsis) (:cursor :default)
+          defstyle style-data $ {}
+            "\"$0" $ {} (:position :absolute) (:background-color "\"hsl(240,100%,0%)") (:color :white) (:opacity 0.2) (:font-size |12px) (:font-family |Avenir,Verdana) (:line-height "\"1.4em") (:padding "|2px 6px") (:border-radius |4px) (:max-width 160) (:max-height 32) (:white-space :normal) (:overflow :ellipsis) (:cursor :default)
       :ns $ quote
         ns respo.comp.inspect $ :require
           respo.core :refer $ defcomp pre <>
+          respo.css :refer $ defstyle
     |respo.comp.space $ {}
       :defs $ {}
         |=< $ quote
@@ -678,6 +687,57 @@
           respo.util.dom :refer $ compare-to-dom!
           memof.alias :refer $ tick-calling-loop! reset-calling-caches!
           memof.once :refer $ reset-memof1-caches!
+    |respo.css $ {}
+      :defs $ {}
+        |*style-caches $ quote
+          defatom *style-caches $ {}
+        |create-style! $ quote
+          defn create-style! (style-name rules)
+            assert "\"expected rules in map" $ map? rules
+            if (contains? @*style-caches style-name)
+              if
+                = rules $ get-in @*style-caches ([] style-name :rules)
+                , style-name $ let
+                    style-el $ get-in @*style-caches ([] style-name :el)
+                    css-block $ render-css-block style-name rules
+                  set! (.-innerHTML style-el) css-block
+                  swap! *style-caches assoc-in ([] style-name :rules) rules
+                  , style-name
+              let
+                  css-block $ render-css-block style-name rules
+                  style-el $ js/document.createElement "\"style"
+                set! (.-innerHTML style-el) css-block
+                set! (.-id style-el) style-name
+                js/document.head.appendChild style-el
+                swap! *style-caches assoc style-name $ {} (:rules rules) (:el style-el)
+                , style-name
+        |defstyle $ quote
+          defmacro defstyle (style-name rules)
+            assert "\"expected symbol of style-name" $ symbol? style-name
+            let
+                style-name-str $ str (turn-string style-name) "\"__"
+                  .replace
+                    turn-string $ :ns (&extract-code-into-edn style-name)
+                    , "\"." "\"_"
+              quasiquote $ def ~style-name (create-style! ~style-name-str ~rules)
+        |render-css-block $ quote
+          defn render-css-block (style-name rules)
+            -> rules
+              .map-list $ fn (pair)
+                let
+                    k $ nth pair 0
+                    v $ nth pair 1
+                  assert "\"expected rule name in string" $ string? k
+                  assert "\"expected rule styles in map" $ map? v
+                  let
+                      rule-name $ .!replace k "\"$0" style-name
+                      css-line $ style->string (.to-list v)
+                    str "\"." rule-name "\" {" &newline css-line &newline "\"}"
+              .to-list
+              .join-str $ str &newline &newline
+      :ns $ quote
+        ns respo.css $ :require
+          respo.render.html :refer $ style->string
     |respo.cursor $ {}
       :defs $ {}
         |update-states $ quote
