@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.14.38)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.14.39)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
   :entries $ {}
   :files $ {}
@@ -121,7 +121,7 @@
                     div ({})
                       div
                         {} (:class-name widget/style-button) (:on-click on-test)
-                        <> "|heavy tasks"
+                        <> "|heavy tasks" css-bold
                   list->
                     {} (:class-name |task-list) (:style style-list)
                     -> tasks .to-list .reverse $ map
@@ -144,10 +144,15 @@
                         {} (:style widget/button)
                           :on-click $ fn (e d!)
                             d! cursor $ update state :locked? not
-                        <> $ str |Lock? (:locked? state)
+                        <>
+                          str-spaced |Lock? $ :locked? state
+                          {} $ :font-size 13
                       =< 8 nil
                       comp-wrap $ comp-zero
                   comp-inspect |Tasks tasks $ {} (:left 500) (:top 20)
+        |css-bold $ quote
+          defstyle css-bold $ {}
+            "\"$0" $ {} (:font-weight :bold)
         |effect-focus $ quote
           defeffect effect-focus () (action parent at-place?) (js/console.log "\"todolist effect:" action)
         |initial-state $ quote
@@ -215,6 +220,7 @@
           respo.util.dom :refer $ text-width
           respo.app.style.widget :as widget
           memof.alias :refer $ memof-call
+          respo.css :refer $ defstyle
     |respo.app.comp.wrap $ {}
       :defs $ {}
         |comp-wrap $ quote
@@ -464,9 +470,9 @@
         |*rerender-changes $ quote
           defatom *rerender-changes $ []
         |<> $ quote
-          defn <> (content ? arg)
-            let
-                style arg
+          defn <> (content ? style)
+            if (string? style)
+              span $ {} (:inner-text content) (:class-name style)
               span $ {} (:inner-text content) (:style style)
         |>> $ quote
           defn >> (states k)
