@@ -1,6 +1,6 @@
 
 {}
-  :configs $ {} (:compact-output? true) (:extension |.cljs) (:init-fn |respo.main/main!) (:output |src) (:port 6001) (:reload-fn |respo.main/reload!) (:storage-key |calcit.cirru) (:version |0.14.39)
+  :configs $ {} (:compact-output? true) (:extension |.cljs) (:init-fn |respo.main/main!) (:output |src) (:port 6001) (:reload-fn |respo.main/reload!) (:storage-key |calcit.cirru) (:version |0.14.40)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
   :entries $ {}
   :ir $ {} (:package |respo)
@@ -68,6 +68,32 @@
                                         :data $ {}
                                           |T $ {} (:at 1505327099898) (:by |root) (:text |:states) (:type :leaf)
                                           |j $ {} (:at 1504774121421) (:by |root) (:text |store) (:type :leaf)
+                      |t $ {} (:at 1656036581270) (:by |rJoDgvdeG) (:type :expr)
+                        :data $ {}
+                          |T $ {} (:at 1656036584992) (:by |rJoDgvdeG) (:text |comp-global-keydown) (:type :leaf)
+                          |X $ {} (:at 1656036736229) (:by |rJoDgvdeG) (:type :expr)
+                            :data $ {}
+                              |T $ {} (:at 1656036736614) (:by |rJoDgvdeG) (:text |{}) (:type :leaf)
+                              |b $ {} (:at 1656036737351) (:by |rJoDgvdeG) (:type :expr)
+                                :data $ {}
+                                  |T $ {} (:at 1656036756646) (:by |rJoDgvdeG) (:text |:disabled-commands) (:type :leaf)
+                                  |b $ {} (:at 1656036867350) (:by |rJoDgvdeG) (:type :expr)
+                                    :data $ {}
+                                      |T $ {} (:at 1656036894841) (:by |rJoDgvdeG) (:text |#{}) (:type :leaf)
+                                      |b $ {} (:at 1656036980245) (:by |rJoDgvdeG) (:text "|\"s") (:type :leaf)
+                                      |h $ {} (:at 1656036982066) (:by |rJoDgvdeG) (:text "|\"p") (:type :leaf)
+                          |b $ {} (:at 1656036585590) (:by |rJoDgvdeG) (:type :expr)
+                            :data $ {}
+                              |T $ {} (:at 1656036586012) (:by |rJoDgvdeG) (:text |fn) (:type :leaf)
+                              |b $ {} (:at 1656036586746) (:by |rJoDgvdeG) (:type :expr)
+                                :data $ {}
+                                  |T $ {} (:at 1656036588563) (:by |rJoDgvdeG) (:text |e) (:type :leaf)
+                                  |b $ {} (:at 1656036589332) (:by |rJoDgvdeG) (:text |d!) (:type :leaf)
+                              |h $ {} (:at 1656036590111) (:by |rJoDgvdeG) (:type :expr)
+                                :data $ {}
+                                  |T $ {} (:at 1656036593406) (:by |rJoDgvdeG) (:text |js/console.log) (:type :leaf)
+                                  |b $ {} (:at 1656036697578) (:by |rJoDgvdeG) (:text "|\"keydown") (:type :leaf)
+                                  |h $ {} (:at 1656036595798) (:by |rJoDgvdeG) (:text |e) (:type :leaf)
           |style-global $ {} (:at 1504774121421) (:by nil) (:type :expr)
             :data $ {}
               |T $ {} (:at 1504774121421) (:by |root) (:text |def) (:type :leaf)
@@ -123,6 +149,13 @@
                     |v $ {} (:at 1592134718980) (:by |rJoDgvdeG) (:type :expr)
                       :data $ {}
                         |j $ {} (:at 1592134722022) (:by |rJoDgvdeG) (:text |=<) (:type :leaf)
+                |y $ {} (:at 1656036562023) (:by |rJoDgvdeG) (:type :expr)
+                  :data $ {}
+                    |T $ {} (:at 1656036571371) (:by |rJoDgvdeG) (:text |respo.comp.global-keydown) (:type :leaf)
+                    |b $ {} (:at 1656036572678) (:by |rJoDgvdeG) (:text |:refer) (:type :leaf)
+                    |h $ {} (:at 1656036572901) (:by |rJoDgvdeG) (:type :expr)
+                      :data $ {}
+                        |T $ {} (:at 1656036578628) (:by |rJoDgvdeG) (:text |comp-global-keydown) (:type :leaf)
         :proc $ {} (:at 1504774121421) (:by nil) (:type :expr)
           :data $ {}
       |respo.app.comp.task $ {}
@@ -2160,6 +2193,245 @@
                         |j $ {} (:at 1584874768040) (:by |rJoDgvdeG) (:text |update-states) (:type :leaf)
         :proc $ {} (:at 1504774121421) (:by nil) (:type :expr)
           :data $ {}
+      |respo.comp.global-keydown $ {}
+        :configs $ {}
+        :defs $ {}
+          |comp-global-keydown $ {} (:at 1656036144286) (:by |rJoDgvdeG) (:type :expr)
+            :data $ {}
+              |T $ {} (:at 1656036190230) (:by |rJoDgvdeG) (:text |defcomp) (:type :leaf)
+              |b $ {} (:at 1656036144286) (:by |rJoDgvdeG) (:text |comp-global-keydown) (:type :leaf)
+              |h $ {} (:at 1656036187991) (:by |rJoDgvdeG) (:type :expr)
+                :data $ {}
+                  |D $ {} (:at 1656036769137) (:by |rJoDgvdeG) (:text |options) (:type :leaf)
+                  |T $ {} (:at 1656036187991) (:by |rJoDgvdeG) (:text |on-event) (:type :leaf)
+              |j $ {} (:at 1656037173503) (:by |rJoDgvdeG) (:type :expr)
+                :data $ {}
+                  |T $ {} (:at 1656037174246) (:by |rJoDgvdeG) (:text |;) (:type :leaf)
+                  |b $ {} (:at 1656037175011) (:by |rJoDgvdeG) (:text "|\"dirty solution: proxy window keydown event to a `<span/>`, comes with some restrictions. however Respo does not allow effects to modify states.") (:type :leaf)
+              |l $ {} (:at 1656036187991) (:by |rJoDgvdeG) (:type :expr)
+                :data $ {}
+                  |T $ {} (:at 1656036187991) (:by |rJoDgvdeG) (:text |[]) (:type :leaf)
+                  |b $ {} (:at 1656036187991) (:by |rJoDgvdeG) (:type :expr)
+                    :data $ {}
+                      |T $ {} (:at 1656036187991) (:by |rJoDgvdeG) (:text |effect-listen-keyboard) (:type :leaf)
+                      |b $ {} (:at 1656036788322) (:by |rJoDgvdeG) (:text |options) (:type :leaf)
+                  |h $ {} (:at 1656036187991) (:by |rJoDgvdeG) (:type :expr)
+                    :data $ {}
+                      |T $ {} (:at 1656036187991) (:by |rJoDgvdeG) (:text |span) (:type :leaf)
+                      |b $ {} (:at 1656036187991) (:by |rJoDgvdeG) (:type :expr)
+                        :data $ {}
+                          |T $ {} (:at 1656036187991) (:by |rJoDgvdeG) (:text |{}) (:type :leaf)
+                          |b $ {} (:at 1656036187991) (:by |rJoDgvdeG) (:type :expr)
+                            :data $ {}
+                              |T $ {} (:at 1656036187991) (:by |rJoDgvdeG) (:text |:on-keydown) (:type :leaf)
+                              |b $ {} (:at 1656036187991) (:by |rJoDgvdeG) (:type :expr)
+                                :data $ {}
+                                  |T $ {} (:at 1656036187991) (:by |rJoDgvdeG) (:text |fn) (:type :leaf)
+                                  |b $ {} (:at 1656036187991) (:by |rJoDgvdeG) (:type :expr)
+                                    :data $ {}
+                                      |T $ {} (:at 1656036187991) (:by |rJoDgvdeG) (:text |e) (:type :leaf)
+                                      |b $ {} (:at 1656036187991) (:by |rJoDgvdeG) (:text |d!) (:type :leaf)
+                                  |h $ {} (:at 1656036187991) (:by |rJoDgvdeG) (:type :expr)
+                                    :data $ {}
+                                      |T $ {} (:at 1656036187991) (:by |rJoDgvdeG) (:text |on-event) (:type :leaf)
+                                      |b $ {} (:at 1656036187991) (:by |rJoDgvdeG) (:text |e) (:type :leaf)
+                                      |h $ {} (:at 1656036187991) (:by |rJoDgvdeG) (:text |d!) (:type :leaf)
+          |dirty-field $ {} (:at 1656036533964) (:by |rJoDgvdeG) (:type :expr)
+            :data $ {}
+              |T $ {} (:at 1656036533964) (:by |rJoDgvdeG) (:text |def) (:type :leaf)
+              |b $ {} (:at 1656036533964) (:by |rJoDgvdeG) (:text |dirty-field) (:type :leaf)
+              |h $ {} (:at 1656036535385) (:by |rJoDgvdeG) (:text "|\"_global_listener") (:type :leaf)
+          |effect-listen-keyboard $ {} (:at 1656036153685) (:by |rJoDgvdeG) (:type :expr)
+            :data $ {}
+              |T $ {} (:at 1656036169300) (:by |rJoDgvdeG) (:text |defeffect) (:type :leaf)
+              |b $ {} (:at 1656036153685) (:by |rJoDgvdeG) (:text |effect-listen-keyboard) (:type :leaf)
+              |e $ {} (:at 1656036666042) (:by |rJoDgvdeG) (:type :expr)
+                :data $ {}
+                  |T $ {} (:at 1656036793640) (:by |rJoDgvdeG) (:text |options) (:type :leaf)
+              |h $ {} (:at 1656036165980) (:by |rJoDgvdeG) (:type :expr)
+                :data $ {}
+                  |T $ {} (:at 1656036165980) (:by |rJoDgvdeG) (:text |action) (:type :leaf)
+                  |b $ {} (:at 1656036165980) (:by |rJoDgvdeG) (:text |el) (:type :leaf)
+                  |h $ {} (:at 1656036165980) (:by |rJoDgvdeG) (:text |at?) (:type :leaf)
+              |l $ {} (:at 1656036165980) (:by |rJoDgvdeG) (:type :expr)
+                :data $ {}
+                  |T $ {} (:at 1656036429538) (:by |rJoDgvdeG) (:text |cond) (:type :leaf)
+                  |l $ {} (:at 1656036165980) (:by |rJoDgvdeG) (:type :expr)
+                    :data $ {}
+                      |T $ {} (:at 1656036615748) (:by |rJoDgvdeG) (:type :expr)
+                        :data $ {}
+                          |D $ {} (:at 1656036616461) (:by |rJoDgvdeG) (:text |or) (:type :leaf)
+                          |T $ {} (:at 1656036432168) (:by |rJoDgvdeG) (:type :expr)
+                            :data $ {}
+                              |5 $ {} (:at 1656036434323) (:by |rJoDgvdeG) (:text |=) (:type :leaf)
+                              |D $ {} (:at 1656036432799) (:by |rJoDgvdeG) (:text |action) (:type :leaf)
+                              |T $ {} (:at 1656036165980) (:by |rJoDgvdeG) (:text |:mount) (:type :leaf)
+                          |b $ {} (:at 1656036432168) (:by |rJoDgvdeG) (:type :expr)
+                            :data $ {}
+                              |5 $ {} (:at 1656036434323) (:by |rJoDgvdeG) (:text |=) (:type :leaf)
+                              |D $ {} (:at 1656036432799) (:by |rJoDgvdeG) (:text |action) (:type :leaf)
+                              |T $ {} (:at 1656036620963) (:by |rJoDgvdeG) (:text |:update) (:type :leaf)
+                      |b $ {} (:at 1656036342924) (:by |rJoDgvdeG) (:type :expr)
+                        :data $ {}
+                          |D $ {} (:at 1656036343643) (:by |rJoDgvdeG) (:text |let) (:type :leaf)
+                          |T $ {} (:at 1656036344914) (:by |rJoDgvdeG) (:type :expr)
+                            :data $ {}
+                              |D $ {} (:at 1656036795263) (:by |rJoDgvdeG) (:type :expr)
+                                :data $ {}
+                                  |T $ {} (:at 1656036797307) (:by |rJoDgvdeG) (:text |disabled-commands) (:type :leaf)
+                                  |b $ {} (:at 1656036997514) (:by |rJoDgvdeG) (:type :expr)
+                                    :data $ {}
+                                      |D $ {} (:at 1656036999249) (:by |rJoDgvdeG) (:text |noted) (:type :leaf)
+                                      |L $ {} (:at 1656037181165) (:by |rJoDgvdeG) (:text "|\"copied event does not support `event.preventDefault()`, so we need to pass a set of configs") (:type :leaf)
+                                      |T $ {} (:at 1656036813445) (:by |rJoDgvdeG) (:type :expr)
+                                        :data $ {}
+                                          |D $ {} (:at 1656036814442) (:by |rJoDgvdeG) (:text |either) (:type :leaf)
+                                          |T $ {} (:at 1656036798068) (:by |rJoDgvdeG) (:type :expr)
+                                            :data $ {}
+                                              |T $ {} (:at 1656036798478) (:by |rJoDgvdeG) (:text |:disabled-commands) (:type :leaf)
+                                              |b $ {} (:at 1656036800392) (:by |rJoDgvdeG) (:text |options) (:type :leaf)
+                                          |b $ {} (:at 1656036816582) (:by |rJoDgvdeG) (:type :expr)
+                                            :data $ {}
+                                              |T $ {} (:at 1656036819522) (:by |rJoDgvdeG) (:text |#{}) (:type :leaf)
+                                              |b $ {} (:at 1656036820240) (:by |rJoDgvdeG) (:text "|\"p") (:type :leaf)
+                                              |h $ {} (:at 1656036820815) (:by |rJoDgvdeG) (:text "|\"s") (:type :leaf)
+                              |T $ {} (:at 1656036336104) (:by |rJoDgvdeG) (:type :expr)
+                                :data $ {}
+                                  |T $ {} (:at 1656036336104) (:by |rJoDgvdeG) (:text |handler) (:type :leaf)
+                                  |b $ {} (:at 1656036336104) (:by |rJoDgvdeG) (:type :expr)
+                                    :data $ {}
+                                      |T $ {} (:at 1656036336104) (:by |rJoDgvdeG) (:text |fn) (:type :leaf)
+                                      |b $ {} (:at 1656036336104) (:by |rJoDgvdeG) (:type :expr)
+                                        :data $ {}
+                                          |T $ {} (:at 1656036336104) (:by |rJoDgvdeG) (:text |event) (:type :leaf)
+                                      |h $ {} (:at 1656036336104) (:by |rJoDgvdeG) (:type :expr)
+                                        :data $ {}
+                                          |T $ {} (:at 1656036336104) (:by |rJoDgvdeG) (:text |if) (:type :leaf)
+                                          |b $ {} (:at 1656036336104) (:by |rJoDgvdeG) (:type :expr)
+                                            :data $ {}
+                                              |T $ {} (:at 1656036336104) (:by |rJoDgvdeG) (:text |and) (:type :leaf)
+                                              |b $ {} (:at 1656036336104) (:by |rJoDgvdeG) (:type :expr)
+                                                :data $ {}
+                                                  |T $ {} (:at 1656036847673) (:by |rJoDgvdeG) (:text |.includes?) (:type :leaf)
+                                                  |X $ {} (:at 1656036831886) (:by |rJoDgvdeG) (:text |disabled-commands) (:type :leaf)
+                                                  |Z $ {} (:at 1656036835569) (:by |rJoDgvdeG) (:type :expr)
+                                                    :data $ {}
+                                                      |T $ {} (:at 1656036835569) (:by |rJoDgvdeG) (:text |.-key) (:type :leaf)
+                                                      |b $ {} (:at 1656036835569) (:by |rJoDgvdeG) (:text |event) (:type :leaf)
+                                              |h $ {} (:at 1656036336104) (:by |rJoDgvdeG) (:type :expr)
+                                                :data $ {}
+                                                  |T $ {} (:at 1656036336104) (:by |rJoDgvdeG) (:text |or) (:type :leaf)
+                                                  |b $ {} (:at 1656036336104) (:by |rJoDgvdeG) (:type :expr)
+                                                    :data $ {}
+                                                      |T $ {} (:at 1656036336104) (:by |rJoDgvdeG) (:text |.-ctrlKey) (:type :leaf)
+                                                      |b $ {} (:at 1656036336104) (:by |rJoDgvdeG) (:text |event) (:type :leaf)
+                                                  |h $ {} (:at 1656036336104) (:by |rJoDgvdeG) (:type :expr)
+                                                    :data $ {}
+                                                      |T $ {} (:at 1656036336104) (:by |rJoDgvdeG) (:text |.-metaKey) (:type :leaf)
+                                                      |b $ {} (:at 1656036336104) (:by |rJoDgvdeG) (:text |event) (:type :leaf)
+                                          |h $ {} (:at 1656036336104) (:by |rJoDgvdeG) (:type :expr)
+                                            :data $ {}
+                                              |T $ {} (:at 1656036336104) (:by |rJoDgvdeG) (:text |.!preventDefault) (:type :leaf)
+                                              |b $ {} (:at 1656036336104) (:by |rJoDgvdeG) (:text |event) (:type :leaf)
+                                      |l $ {} (:at 1656036336104) (:by |rJoDgvdeG) (:type :expr)
+                                        :data $ {}
+                                          |T $ {} (:at 1656036336104) (:by |rJoDgvdeG) (:text |.!dispatchEvent) (:type :leaf)
+                                          |b $ {} (:at 1656036336104) (:by |rJoDgvdeG) (:text |el) (:type :leaf)
+                                          |h $ {} (:at 1656036336104) (:by |rJoDgvdeG) (:type :expr)
+                                            :data $ {}
+                                              |T $ {} (:at 1656036336104) (:by |rJoDgvdeG) (:text |new) (:type :leaf)
+                                              |b $ {} (:at 1656036336104) (:by |rJoDgvdeG) (:text |js/KeyboardEvent) (:type :leaf)
+                                              |h $ {} (:at 1656036336104) (:by |rJoDgvdeG) (:type :expr)
+                                                :data $ {}
+                                                  |T $ {} (:at 1656036336104) (:by |rJoDgvdeG) (:text |.-type) (:type :leaf)
+                                                  |b $ {} (:at 1656036336104) (:by |rJoDgvdeG) (:text |event) (:type :leaf)
+                                              |l $ {} (:at 1656036336104) (:by |rJoDgvdeG) (:text |event) (:type :leaf)
+                          |V $ {} (:at 1656036929853) (:by |rJoDgvdeG) (:type :expr)
+                            :data $ {}
+                              |T $ {} (:at 1656036932294) (:by |rJoDgvdeG) (:text |if-let) (:type :leaf)
+                              |b $ {} (:at 1656036932819) (:by |rJoDgvdeG) (:type :expr)
+                                :data $ {}
+                                  |T $ {} (:at 1656036938571) (:by |rJoDgvdeG) (:text |prev-listener) (:type :leaf)
+                                  |b $ {} (:at 1656036943649) (:by |rJoDgvdeG) (:type :expr)
+                                    :data $ {}
+                                      |T $ {} (:at 1656036943649) (:by |rJoDgvdeG) (:text |aget) (:type :leaf)
+                                      |b $ {} (:at 1656036943649) (:by |rJoDgvdeG) (:text |el) (:type :leaf)
+                                      |h $ {} (:at 1656036943649) (:by |rJoDgvdeG) (:text |dirty-field) (:type :leaf)
+                              |h $ {} (:at 1656036949028) (:by |rJoDgvdeG) (:type :expr)
+                                :data $ {}
+                                  |T $ {} (:at 1656036949028) (:by |rJoDgvdeG) (:text |js/window.removeEventListener) (:type :leaf)
+                                  |b $ {} (:at 1656036949028) (:by |rJoDgvdeG) (:text "|\"keydown") (:type :leaf)
+                                  |h $ {} (:at 1656036950215) (:by |rJoDgvdeG) (:text |prev-listener) (:type :leaf)
+                          |X $ {} (:at 1656036352218) (:by |rJoDgvdeG) (:type :expr)
+                            :data $ {}
+                              |T $ {} (:at 1656036507411) (:by |rJoDgvdeG) (:text |aset) (:type :leaf)
+                              |e $ {} (:at 1656036352218) (:by |rJoDgvdeG) (:text |el) (:type :leaf)
+                              |f $ {} (:at 1656036533537) (:by |rJoDgvdeG) (:text |dirty-field) (:type :leaf)
+                              |h $ {} (:at 1656036352218) (:by |rJoDgvdeG) (:text |handler) (:type :leaf)
+                          |b $ {} (:at 1656036348120) (:by |rJoDgvdeG) (:type :expr)
+                            :data $ {}
+                              |T $ {} (:at 1656036348120) (:by |rJoDgvdeG) (:text |js/window.addEventListener) (:type :leaf)
+                              |b $ {} (:at 1656036348120) (:by |rJoDgvdeG) (:text "|\"keydown") (:type :leaf)
+                              |h $ {} (:at 1656036348120) (:by |rJoDgvdeG) (:text |handler) (:type :leaf)
+                  |o $ {} (:at 1656036165980) (:by |rJoDgvdeG) (:type :expr)
+                    :data $ {}
+                      |T $ {} (:at 1656036441586) (:by |rJoDgvdeG) (:type :expr)
+                        :data $ {}
+                          |D $ {} (:at 1656036442167) (:by |rJoDgvdeG) (:text |=) (:type :leaf)
+                          |L $ {} (:at 1656036444687) (:by |rJoDgvdeG) (:text |action) (:type :leaf)
+                          |T $ {} (:at 1656036165980) (:by |rJoDgvdeG) (:text |:unmount) (:type :leaf)
+                      |b $ {} (:at 1656036361484) (:by |rJoDgvdeG) (:type :expr)
+                        :data $ {}
+                          |D $ {} (:at 1656036362651) (:by |rJoDgvdeG) (:text |let) (:type :leaf)
+                          |L $ {} (:at 1656036365733) (:by |rJoDgvdeG) (:type :expr)
+                            :data $ {}
+                              |T $ {} (:at 1656036363482) (:by |rJoDgvdeG) (:type :expr)
+                                :data $ {}
+                                  |T $ {} (:at 1656036363482) (:by |rJoDgvdeG) (:text |handler) (:type :leaf)
+                                  |b $ {} (:at 1656036368361) (:by |rJoDgvdeG) (:type :expr)
+                                    :data $ {}
+                                      |T $ {} (:at 1656036540239) (:by |rJoDgvdeG) (:text |aget) (:type :leaf)
+                                      |b $ {} (:at 1656036368361) (:by |rJoDgvdeG) (:text |el) (:type :leaf)
+                                      |h $ {} (:at 1656036542716) (:by |rJoDgvdeG) (:text |dirty-field) (:type :leaf)
+                          |T $ {} (:at 1656036165980) (:by |rJoDgvdeG) (:type :expr)
+                            :data $ {}
+                              |T $ {} (:at 1656036165980) (:by |rJoDgvdeG) (:text |js/window.removeEventListener) (:type :leaf)
+                              |b $ {} (:at 1656036165980) (:by |rJoDgvdeG) (:text "|\"keydown") (:type :leaf)
+                              |h $ {} (:at 1656036165980) (:by |rJoDgvdeG) (:text |handler) (:type :leaf)
+                          |b $ {} (:at 1656036372076) (:by |rJoDgvdeG) (:type :expr)
+                            :data $ {}
+                              |T $ {} (:at 1656036548534) (:by |rJoDgvdeG) (:text |aset) (:type :leaf)
+                              |b $ {} (:at 1656036372076) (:by |rJoDgvdeG) (:text |el) (:type :leaf)
+                              |e $ {} (:at 1656036551265) (:by |rJoDgvdeG) (:text |dirty-field) (:type :leaf)
+                              |h $ {} (:at 1656036374628) (:by |rJoDgvdeG) (:text |nil) (:type :leaf)
+                  |q $ {} (:at 1656036445644) (:by |rJoDgvdeG) (:type :expr)
+                    :data $ {}
+                      |T $ {} (:at 1656036446965) (:by |rJoDgvdeG) (:text |true) (:type :leaf)
+                      |b $ {} (:at 1656036447507) (:by |rJoDgvdeG) (:text |nil) (:type :leaf)
+        :ns $ {} (:at 1656036112806) (:by |rJoDgvdeG) (:type :expr)
+          :data $ {}
+            |T $ {} (:at 1656036112806) (:by |rJoDgvdeG) (:text |ns) (:type :leaf)
+            |b $ {} (:at 1656036112806) (:by |rJoDgvdeG) (:text |respo.comp.global-keydown) (:type :leaf)
+            |h $ {} (:at 1656036197488) (:by |rJoDgvdeG) (:type :expr)
+              :data $ {}
+                |T $ {} (:at 1656036197488) (:by |rJoDgvdeG) (:text |:require) (:type :leaf)
+                |h $ {} (:at 1656036197488) (:by |rJoDgvdeG) (:type :expr)
+                  :data $ {}
+                    |T $ {} (:at 1656036197488) (:by |rJoDgvdeG) (:text |respo.core) (:type :leaf)
+                    |b $ {} (:at 1656036197488) (:by |rJoDgvdeG) (:text |:refer) (:type :leaf)
+                    |h $ {} (:at 1656036197488) (:by |rJoDgvdeG) (:type :expr)
+                      :data $ {}
+                        |T $ {} (:at 1656036197488) (:by |rJoDgvdeG) (:text |defcomp) (:type :leaf)
+                        |b $ {} (:at 1656036197488) (:by |rJoDgvdeG) (:text |defeffect) (:type :leaf)
+                        |h $ {} (:at 1656036197488) (:by |rJoDgvdeG) (:text |<>) (:type :leaf)
+                        |l $ {} (:at 1656036197488) (:by |rJoDgvdeG) (:text |>>) (:type :leaf)
+                        |o $ {} (:at 1656036197488) (:by |rJoDgvdeG) (:text |div) (:type :leaf)
+                        |q $ {} (:at 1656036197488) (:by |rJoDgvdeG) (:text |button) (:type :leaf)
+                        |s $ {} (:at 1656036197488) (:by |rJoDgvdeG) (:text |textarea) (:type :leaf)
+                        |t $ {} (:at 1656036197488) (:by |rJoDgvdeG) (:text |span) (:type :leaf)
+                        |u $ {} (:at 1656036197488) (:by |rJoDgvdeG) (:text |input) (:type :leaf)
+                        |v $ {} (:at 1656036197488) (:by |rJoDgvdeG) (:text |a) (:type :leaf)
+                        |w $ {} (:at 1656036197488) (:by |rJoDgvdeG) (:text |list->) (:type :leaf)
       |respo.comp.inspect $ {}
         :defs $ {}
           |comp-inspect $ {} (:at 1504774121421) (:by nil) (:type :expr)

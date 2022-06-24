@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.14.39)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.14.40)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
   :entries $ {}
   :files $ {}
@@ -17,6 +17,9 @@
                   {} $ :style style-states
                   <> $ str "|states: "
                     pr-str $ :states store
+                comp-global-keydown
+                  {} $ :disabled-commands (#{} "\"s" "\"p")
+                  fn (e d!) (js/console.log "\"keydown" e)
         |style-global $ quote
           def style-global $ {} (:font-family |Avenir,Verdana)
         |style-states $ quote
@@ -26,6 +29,7 @@
           respo.core :refer $ defcomp div span <> >> a
           respo.app.comp.todolist :refer $ comp-todolist
           respo.comp.space :refer $ =<
+          respo.comp.global-keydown :refer $ comp-global-keydown
     |respo.app.comp.task $ {}
       :defs $ {}
         |comp-task $ quote
@@ -331,6 +335,42 @@
       :ns $ quote
         ns respo.app.updater $ :require
           respo.cursor :refer $ update-states
+    |respo.comp.global-keydown $ {}
+      :defs $ {}
+        |comp-global-keydown $ quote
+          defcomp comp-global-keydown (options on-event) (; "\"dirty solution: proxy window keydown event to a `<span/>`, comes with some restrictions. however Respo does not allow effects to modify states.")
+            [] (effect-listen-keyboard options)
+              span $ {}
+                :on-keydown $ fn (e d!) (on-event e d!)
+        |dirty-field $ quote (def dirty-field "\"_global_listener")
+        |effect-listen-keyboard $ quote
+          defeffect effect-listen-keyboard (options) (action el at?)
+            cond
+                or (= action :mount) (= action :update)
+                let
+                    disabled-commands $ noted "\"copied event does not support `event.preventDefault()`, so we need to pass a set of configs"
+                      either (:disabled-commands options) (#{} "\"p" "\"s")
+                    handler $ fn (event)
+                      if
+                        and
+                          .includes? disabled-commands $ .-key event
+                          or (.-ctrlKey event) (.-metaKey event)
+                        .!preventDefault event
+                      .!dispatchEvent el $ new js/KeyboardEvent (.-type event) event
+                  if-let
+                    prev-listener $ aget el dirty-field
+                    js/window.removeEventListener "\"keydown" prev-listener
+                  aset el dirty-field handler
+                  js/window.addEventListener "\"keydown" handler
+              (= action :unmount)
+                let
+                    handler $ aget el dirty-field
+                  js/window.removeEventListener "\"keydown" handler
+                  aset el dirty-field nil
+              true nil
+      :ns $ quote
+        ns respo.comp.global-keydown $ :require
+          respo.core :refer $ defcomp defeffect <> >> div button textarea span input a list->
     |respo.comp.inspect $ {}
       :defs $ {}
         |comp-inspect $ quote
