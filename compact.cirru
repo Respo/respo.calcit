@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.14.41)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.14.42)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
   :entries $ {}
   :files $ {}
@@ -132,7 +132,7 @@
                       fn (task)
                         let
                             task-id $ :id task
-                          [] task-id $ memof-call comp-task (>> states task-id) task
+                          [] task-id $ memof1-call-by task-id comp-task (>> states task-id) task
                   if
                     > (count tasks) 0
                     div
@@ -223,7 +223,7 @@
           respo.app.comp.wrap :refer $ comp-wrap
           respo.util.dom :refer $ text-width
           respo.app.style.widget :as widget
-          memof.alias :refer $ memof-call
+          memof.once :refer $ memof1-call-by
           respo.css :refer $ defstyle
     |respo.app.comp.wrap $ {}
       :defs $ {}
@@ -375,12 +375,16 @@
       :defs $ {}
         |comp-inspect $ quote
           defcomp comp-inspect (tip data style)
-            pre $ {} (:class-name style-data)
-              :inner-text $ str tip "|: " (grab-info data)
-              :style style
-              :on-click $ fn (e d!)
-                if (some? js/window.devtoolsFormatters) (js/console.log data)
-                  js/console.log $ to-js-data data
+            let
+                class-name $ if (string? style) style
+                style-map $ if (map? style) style
+              pre $ {}
+                :class-name $ str-spaced style-data class-name
+                :inner-text $ str tip "|: " (grab-info data)
+                :style style-map
+                :on-click $ fn (e d!)
+                  if (some? js/window.devtoolsFormatters) (js/console.log data)
+                    js/console.log $ to-js-data data
         |grab-info $ quote
           defn grab-info (data)
             cond
