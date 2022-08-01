@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.14.40)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.14.42)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
   :entries $ {}
   :files $ {}
@@ -132,7 +132,7 @@
                       fn (task)
                         let
                             task-id $ :id task
-                          [] task-id $ memof-call comp-task (>> states task-id) task
+                          [] task-id $ memof1-call-by task-id comp-task (>> states task-id) task
                   if
                     > (count tasks) 0
                     div
@@ -223,7 +223,7 @@
           respo.app.comp.wrap :refer $ comp-wrap
           respo.util.dom :refer $ text-width
           respo.app.style.widget :as widget
-          memof.alias :refer $ memof-call
+          memof.once :refer $ memof1-call-by
           respo.css :refer $ defstyle
     |respo.app.comp.wrap $ {}
       :defs $ {}
@@ -375,12 +375,16 @@
       :defs $ {}
         |comp-inspect $ quote
           defcomp comp-inspect (tip data style)
-            pre $ {} (:class-name style-data)
-              :inner-text $ str tip "|: " (grab-info data)
-              :style style
-              :on-click $ fn (e d!)
-                if (some? js/window.devtoolsFormatters) (js/console.log data)
-                  js/console.log $ to-js-data data
+            let
+                class-name $ if (string? style) style
+                style-map $ if (map? style) style
+              pre $ {}
+                :class-name $ str-spaced style-data class-name
+                :inner-text $ str tip "|: " (grab-info data)
+                :style style-map
+                :on-click $ fn (e d!)
+                  if (some? js/window.devtoolsFormatters) (js/console.log data)
+                    js/console.log $ to-js-data data
         |grab-info $ quote
           defn grab-info (data)
             cond
@@ -737,6 +741,8 @@
       :defs $ {}
         |*style-caches $ quote
           defatom *style-caches $ {}
+        |*style-list-in-nodejs $ quote
+          defatom *style-list-in-nodejs $ []
         |create-style! $ quote
           defn create-style! (style-name rules)
             assert "\"expected rules in map" $ map? rules
@@ -751,11 +757,13 @@
                   , style-name
               let
                   css-block $ render-css-block style-name rules
-                  style-el $ js/document.createElement "\"style"
-                set! (.-innerHTML style-el) css-block
-                set! (.-id style-el) style-name
-                js/document.head.appendChild style-el
-                swap! *style-caches assoc style-name $ {} (:rules rules) (:el style-el)
+                if nodejs? (swap! *style-list-in-nodejs conj css-block)
+                  let
+                      style-el $ js/document.createElement "\"style"
+                    set! (.-innerHTML style-el) css-block
+                    set! (.-id style-el) style-name
+                    js/document.head.appendChild style-el
+                    swap! *style-caches assoc style-name $ {} (:rules rules) (:el style-el)
                 , style-name
         |defstyle $ quote
           defmacro defstyle (style-name rules)
@@ -766,6 +774,8 @@
                     turn-string $ :ns (&extract-code-into-edn style-name)
                     , "\"." "\"_"
               quasiquote $ def ~style-name (create-style! ~style-name-str ~rules)
+        |nodejs? $ quote
+          def nodejs? $ and (exists? js/process) (= js/process.release.name "\"node")
         |render-css-block $ quote
           defn render-css-block (style-name rules)
             -> rules
