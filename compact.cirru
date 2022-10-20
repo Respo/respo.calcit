@@ -511,8 +511,6 @@
         |*dom-changes $ quote
           defatom *dom-changes $ []
         |*global-element $ quote (defatom *global-element nil)
-        |*rerender-changes $ quote
-          defatom *rerender-changes $ []
         |<> $ quote
           defn <> (content ? style)
             if (string? style)
@@ -682,9 +680,7 @@
             assert (component? element) "|2nd argument should be a component"
             let
                 app-element $ .-firstElementChild target
-                *changes $ do
-                  reset! *rerender-changes $ []
-                  , *rerender-changes
+                *changes $ atom ([])
                 collect! $ fn (op coord n-coord v)
                   swap! *changes conj $ [] op coord n-coord v
                 deliver-event $ build-deliver-event *global-element dispatch!
@@ -700,9 +696,7 @@
           defn rerender-app! (target element *dispatch-fn) (tick-calling-loop!)
             let
                 deliver-event $ build-deliver-event *global-element *dispatch-fn
-                *changes $ do
-                  reset! *rerender-changes $ []
-                  , *rerender-changes
+                *changes $ atom ([])
                 collect! $ fn (op coord n-coord v)
                   swap! *changes conj $ [] op coord n-coord v
               ; println @*global-element
@@ -816,7 +810,7 @@
             add-watch *store :rerender $ fn (store prev) (render-app! mount-target)
             ; reset! *changes-logger $ fn (old-tree new-tree changes) (js/console.log changes)
             println |Loaded. $ js/performance.now
-            aset js/window |onbeforeunload $ fn (event) (save-store!)
+            set! js/window.onbeforeunload $ fn (event) (save-store!)
         |mount-target $ quote
           def mount-target $ if (exists? js/document) (.querySelector js/document |.app) nil
         |reload! $ quote
