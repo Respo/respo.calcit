@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.14.42)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.14.43)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
   :entries $ {}
   :files $ {}
@@ -827,6 +827,26 @@
           respo.app.core :refer $ handle-ssr!
     |respo.render.diff $ {}
       :defs $ {}
+        |detect-keys-dup $ quote
+          defn detect-keys-dup (child-keys)
+            let
+                size $ count child-keys
+                last-pos $ dec size
+              if (> size 1)
+                apply-args (0 1)
+                  fn (p q)
+                    if
+                      &= (nth child-keys p) (nth child-keys q)
+                      do
+                        eprintln "\"duplicated key" $ nth child-keys p
+                        , true
+                      if (&< q last-pos)
+                        recur p $ inc q
+                        let
+                            p-next $ inc p
+                          if (&< p-next last-pos)
+                            recur p-next $ inc p-next
+                            , false
         |find-children-diffs $ quote
           defn find-children-diffs (collect! coord n-coord index old-children new-children) (; js/console.log "|diff children:" n-coord index old-children new-children)
             let
@@ -962,6 +982,9 @@
                     let
                         old-children $ &record:get old-tree :children
                         new-children $ &record:get new-tree :children
+                      if dev? $ if
+                        detect-keys-dup $ map new-children first
+                        js/console.error "\"Parent that has dups" new-tree
                       find-children-diffs collect! coord n-coord 0 old-children new-children
               true $ js/console.warn "\"Diffing unknown params" old-tree new-tree
         |find-props-diffs $ quote
@@ -1041,6 +1064,7 @@
           respo.schema.op :as op
           respo.render.effect :refer $ collect-mounting collect-updating collect-unmounting
           respo.util.list :refer $ val-of-first
+          respo.schema :refer $ dev?
     |respo.render.dom $ {}
       :defs $ {}
         |make-element $ quote
@@ -1391,6 +1415,8 @@
         |Element $ quote (defrecord Element :name :coord :attrs :style :event :children)
         |cache-info $ quote
           def cache-info $ {} (:value nil) (:initial-loop nil) (:last-hit nil) (:hit-times 0)
+        |dev? $ quote
+          def dev? $ &= "\"dev" (get-env "\"mode" "\"release")
         |effect $ quote
           def effect $ {} (:name nil) (:respo-node :effect)
             :coord $ []
