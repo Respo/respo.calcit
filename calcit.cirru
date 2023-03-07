@@ -1,6 +1,6 @@
 
 {}
-  :configs $ {} (:compact-output? true) (:extension |.cljs) (:init-fn |respo.main/main!) (:output |src) (:port 6001) (:reload-fn |respo.main/reload!) (:storage-key |calcit.cirru) (:version |0.14.43)
+  :configs $ {} (:compact-output? true) (:extension |.cljs) (:init-fn |respo.main/main!) (:output |src) (:port 6001) (:reload-fn |respo.main/reload!) (:storage-key |calcit.cirru) (:version |0.14.44)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
   :entries $ {}
   :ir $ {} (:package |respo)
@@ -10028,6 +10028,50 @@
                               |D $ {} (:at 1678121966889) (:by |rJoDgvdeG) (:text |.-innerText) (:type :leaf)
                               |T $ {} (:at 1678121958269) (:by |rJoDgvdeG) (:text |target) (:type :leaf)
                           |h $ {} (:at 1678121969305) (:by |rJoDgvdeG) (:text "|\"") (:type :leaf)
+                  |e $ {} (:at 1678121950452) (:by |rJoDgvdeG) (:type :expr)
+                    :data $ {}
+                      |T $ {} (:at 1678207945986) (:by |rJoDgvdeG) (:text |:innerHTML) (:type :leaf)
+                      |b $ {} (:at 1678121954426) (:by |rJoDgvdeG) (:type :expr)
+                        :data $ {}
+                          |T $ {} (:at 1678121957068) (:by |rJoDgvdeG) (:text |set!) (:type :leaf)
+                          |b $ {} (:at 1678121961331) (:by |rJoDgvdeG) (:type :expr)
+                            :data $ {}
+                              |D $ {} (:at 1678207949946) (:by |rJoDgvdeG) (:text |.-innerHTML) (:type :leaf)
+                              |T $ {} (:at 1678121958269) (:by |rJoDgvdeG) (:text |target) (:type :leaf)
+                          |h $ {} (:at 1678121969305) (:by |rJoDgvdeG) (:text "|\"") (:type :leaf)
+                  |h $ {} (:at 1678207904032) (:by |rJoDgvdeG) (:type :expr)
+                    :data $ {}
+                      |T $ {} (:at 1678207905636) (:by |rJoDgvdeG) (:text |:checked) (:type :leaf)
+                      |b $ {} (:at 1678207907506) (:by |rJoDgvdeG) (:type :expr)
+                        :data $ {}
+                          |T $ {} (:at 1678207909316) (:by |rJoDgvdeG) (:text |set!) (:type :leaf)
+                          |b $ {} (:at 1678207910057) (:by |rJoDgvdeG) (:type :expr)
+                            :data $ {}
+                              |T $ {} (:at 1678207912715) (:by |rJoDgvdeG) (:text |.-checked) (:type :leaf)
+                              |b $ {} (:at 1678207913786) (:by |rJoDgvdeG) (:text |target) (:type :leaf)
+                          |h $ {} (:at 1678207915490) (:by |rJoDgvdeG) (:text |false) (:type :leaf)
+                  |l $ {} (:at 1678207916390) (:by |rJoDgvdeG) (:type :expr)
+                    :data $ {}
+                      |T $ {} (:at 1678207923119) (:by |rJoDgvdeG) (:text |:disabled) (:type :leaf)
+                      |b $ {} (:at 1678207926116) (:by |rJoDgvdeG) (:type :expr)
+                        :data $ {}
+                          |T $ {} (:at 1678207926116) (:by |rJoDgvdeG) (:text |set!) (:type :leaf)
+                          |b $ {} (:at 1678207926116) (:by |rJoDgvdeG) (:type :expr)
+                            :data $ {}
+                              |T $ {} (:at 1678207928242) (:by |rJoDgvdeG) (:text |.-disabled) (:type :leaf)
+                              |b $ {} (:at 1678207926116) (:by |rJoDgvdeG) (:text |target) (:type :leaf)
+                          |h $ {} (:at 1678207926116) (:by |rJoDgvdeG) (:text |false) (:type :leaf)
+                  |o $ {} (:at 1678207916390) (:by |rJoDgvdeG) (:type :expr)
+                    :data $ {}
+                      |T $ {} (:at 1678207935207) (:by |rJoDgvdeG) (:text |:selected) (:type :leaf)
+                      |b $ {} (:at 1678207926116) (:by |rJoDgvdeG) (:type :expr)
+                        :data $ {}
+                          |T $ {} (:at 1678207926116) (:by |rJoDgvdeG) (:text |set!) (:type :leaf)
+                          |b $ {} (:at 1678207926116) (:by |rJoDgvdeG) (:type :expr)
+                            :data $ {}
+                              |T $ {} (:at 1678207938275) (:by |rJoDgvdeG) (:text |.-selected) (:type :leaf)
+                              |b $ {} (:at 1678207926116) (:by |rJoDgvdeG) (:text |target) (:type :leaf)
+                          |h $ {} (:at 1678207926116) (:by |rJoDgvdeG) (:text |false) (:type :leaf)
           |rm-style $ {} (:at 1504774121421) (:by nil) (:type :expr)
             :data $ {}
               |T $ {} (:at 1504774121421) (:by |root) (:text |defn) (:type :leaf)

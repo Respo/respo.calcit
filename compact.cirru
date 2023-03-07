@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.14.43)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.14.44)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
   :entries $ {}
   :files $ {}
@@ -1401,6 +1401,10 @@
               :class-name $ .!removeAttribute target "\"class"
               :href $ .!removeAttribute target "\"href"
               :inner-text $ set! (.-innerText target) "\""
+              :innerHTML $ set! (.-innerHTML target) "\""
+              :checked $ set! (.-checked target) false
+              :disabled $ set! (.-disabled target) false
+              :selected $ set! (.-selected target) false
         |rm-style $ quote
           defn rm-style (target op)
             &let
