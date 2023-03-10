@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.14.43)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.14.44)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
   :entries $ {}
   :files $ {}
@@ -99,6 +99,7 @@
               [] (effect-focus)
                 div
                   {} $ :style style-root
+                  ; a $ {} (; :href "\"A") (; :class-name "\"B") (; :inner-text "\"C") (; :height "\"100px")
                   comp-inspect |States state $ {} (:left |80px)
                   div
                     {} $ :style style-panel
@@ -214,7 +215,7 @@
                   println |result: $ sort acc number-order
       :ns $ quote
         ns respo.app.comp.todolist $ :require
-          respo.core :refer $ defcomp div span input <> list-> defeffect >>
+          respo.core :refer $ defcomp div span input <> list-> defeffect >> a
           respo.util.format :refer $ hsl
           respo.app.comp.task :refer $ comp-task
           respo.comp.space :refer $ =<
@@ -1392,9 +1393,18 @@
               aset target event-prop nil
         |rm-prop $ quote
           defn rm-prop (target op)
-            let
-                k $ dashed->camel (turn-string op)
-              aset target k nil
+            case-default op
+              let
+                  k $ dashed->camel (turn-string op)
+                  ; ks $ prop->attr (turn-string op)
+                aset target k nil
+              :class-name $ .!removeAttribute target "\"class"
+              :href $ .!removeAttribute target "\"href"
+              :inner-text $ set! (.-innerText target) "\""
+              :innerHTML $ set! (.-innerHTML target) "\""
+              :checked $ set! (.-checked target) false
+              :disabled $ set! (.-disabled target) false
+              :selected $ set! (.-selected target) false
         |rm-style $ quote
           defn rm-style (target op)
             &let
@@ -1405,7 +1415,7 @@
             if (some? target) (method target) (js/console.warn "\"Unknown effects target:" coord)
       :ns $ quote
         ns respo.render.patch $ :require
-          respo.util.format :refer $ dashed->camel event->prop get-style-value
+          respo.util.format :refer $ dashed->camel event->prop get-style-value prop->attr
           respo.render.dom :refer $ make-element style->string
           respo.schema.op :as op
     |respo.schema $ {}
