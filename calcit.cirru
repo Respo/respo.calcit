@@ -1,6 +1,6 @@
 
 {}
-  :configs $ {} (:compact-output? true) (:extension |.cljs) (:init-fn |respo.main/main!) (:output |src) (:port 6001) (:reload-fn |respo.main/reload!) (:storage-key |calcit.cirru) (:version |0.14.44)
+  :configs $ {} (:compact-output? true) (:extension |.cljs) (:init-fn |respo.main/main!) (:output |src) (:port 6001) (:reload-fn |respo.main/reload!) (:storage-key |calcit.cirru) (:version |0.14.45)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
   :entries $ {}
   :ir $ {} (:package |respo)
@@ -1105,7 +1105,7 @@
                   |T $ {} (:at 1651251935862) (:by |rJoDgvdeG) (:text |{}) (:type :leaf)
                   |b $ {} (:at 1651251936490) (:by |rJoDgvdeG) (:type :expr)
                     :data $ {}
-                      |T $ {} (:at 1651251937925) (:by |rJoDgvdeG) (:text "|\"$0") (:type :leaf)
+                      |T $ {} (:at 1684292239223) (:by |rJoDgvdeG) (:text "|\"$0") (:type :leaf)
                       |b $ {} (:at 1651251938261) (:by |rJoDgvdeG) (:type :expr)
                         :data $ {}
                           |T $ {} (:at 1651251938552) (:by |rJoDgvdeG) (:text |{}) (:type :leaf)
@@ -5471,7 +5471,11 @@
                                               |T $ {} (:at 1651175625214) (:by |rJoDgvdeG) (:text |.!replace) (:type :leaf)
                                               |b $ {} (:at 1651175625214) (:by |rJoDgvdeG) (:text |k) (:type :leaf)
                                               |h $ {} (:at 1651175625214) (:by |rJoDgvdeG) (:text "|\"$0") (:type :leaf)
-                                              |l $ {} (:at 1651175625214) (:by |rJoDgvdeG) (:text |style-name) (:type :leaf)
+                                              |l $ {} (:at 1684292013419) (:by |rJoDgvdeG) (:type :expr)
+                                                :data $ {}
+                                                  |D $ {} (:at 1684292014166) (:by |rJoDgvdeG) (:text |str) (:type :leaf)
+                                                  |L $ {} (:at 1684292015948) (:by |rJoDgvdeG) (:text "|\".") (:type :leaf)
+                                                  |T $ {} (:at 1651175625214) (:by |rJoDgvdeG) (:text |style-name) (:type :leaf)
                                       |b $ {} (:at 1651175625214) (:by |rJoDgvdeG) (:type :expr)
                                         :data $ {}
                                           |T $ {} (:at 1651175625214) (:by |rJoDgvdeG) (:text |css-line) (:type :leaf)
@@ -5485,7 +5489,6 @@
                                   |h $ {} (:at 1651175625214) (:by |rJoDgvdeG) (:type :expr)
                                     :data $ {}
                                       |T $ {} (:at 1651175625214) (:by |rJoDgvdeG) (:text |str) (:type :leaf)
-                                      |X $ {} (:at 1651176406285) (:by |rJoDgvdeG) (:text "|\".") (:type :leaf)
                                       |b $ {} (:at 1651175625214) (:by |rJoDgvdeG) (:text |rule-name) (:type :leaf)
                                       |h $ {} (:at 1651175625214) (:by |rJoDgvdeG) (:text "|\" {") (:type :leaf)
                                       |l $ {} (:at 1651175625214) (:by |rJoDgvdeG) (:text |&newline) (:type :leaf)

@@ -1,12 +1,12 @@
 {
-  "version": "0.14.44",
+  "version": "0.14.45",
   "dependencies": {
-    "@calcit/procs": "^0.6.23"
+    "@calcit/procs": "^0.6.27"
   },
   "scripts": {
     "test": "cr --once --emit-js --init-fn=respo.test.main/main! && node test.mjs"
   },
   "devDependencies": {
-    "vite": "^4.1.4"
+    "vite": "^4.3.7"
   }
 }

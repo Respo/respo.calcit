@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.14.44)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.14.45)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
   :entries $ {}
   :files $ {}
@@ -781,9 +781,9 @@
                   assert "\"expected rule name in string" $ string? k
                   assert "\"expected rule styles in map" $ map? v
                   let
-                      rule-name $ .!replace k "\"$0" style-name
+                      rule-name $ .!replace k "\"$0" (str "\"." style-name)
                       css-line $ style->string (.to-list v)
-                    str "\"." rule-name "\" {" &newline css-line &newline "\"}"
+                    str rule-name "\" {" &newline css-line &newline "\"}"
               .to-list
               .join-str $ str &newline &newline
       :ns $ quote
