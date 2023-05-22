@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@calcit/procs@^0.6.27":
-  version "0.6.27"
-  resolved "https://registry.npmmirror.com/@calcit/procs/-/procs-0.6.27.tgz#dbd9f7fba1a359171bce65e1c131a4b4975cb361"
-  integrity sha512-8DTo90gyW99bzyCVz1lnj1rd38j6r/+BFhAh7OMnUxCBStrzVeGwm40pbgW19ZqlMl60MjU6XV/3xIrBsqdIKQ==
+"@calcit/procs@^0.6.28":
+  version "0.6.28"
+  resolved "https://registry.npmmirror.com/@calcit/procs/-/procs-0.6.28.tgz#e5c1f4f0c9e9685bce77f371bcca2b484e20dc95"
+  integrity sha512-AjeOM7YHdFHA6JrIZlrGSAMuoZGPtzAaG4wuMegoHwjemZstpypfV6IkUuh9CQQRnwjKRF5TuEYNMzE3L7eAig==
   dependencies:
     "@calcit/ternary-tree" "0.0.19"
     "@cirru/parser.ts" "^0.0.6"
@@ -189,9 +189,9 @@ postcss@^8.4.23:
     source-map-js "^1.0.2"
 
 rollup@^3.21.0:
-  version "3.21.8"
-  resolved "https://registry.npmmirror.com/rollup/-/rollup-3.21.8.tgz#fc768008fe2c953f18210370fd70fe1ffff59e2c"
-  integrity sha512-SSFV2T2fWtQ/vvBip85u2Nr0GNKireabH9d7nXswBg+XSH+jbVDSYptRAEbCEsquhs503rpPA9POYAp0/Jhasw==
+  version "3.22.1"
+  resolved "https://registry.npmmirror.com/rollup/-/rollup-3.22.1.tgz#cf876bd933000aeda2f8807371448b788e094481"
+  integrity sha512-ZI+GSAqOkCyTtJPlwyPOaYKa0RqvztN4miRVusVJseMj6BIBT2f6pFeK90IdJsQ86FLMYkxju2whuck3yKPE4Q==
   optionalDependencies:
     fsevents "~2.3.2"
 
@@ -200,10 +200,10 @@ source-map-js@^1.0.2:
   resolved "https://registry.npmmirror.com/source-map-js/-/source-map-js-1.0.2.tgz#adbc361d9c62df380125e7f161f71c826f1e490c"
   integrity sha512-R0XvVJ9WusLiqTCEiGCmICCMplcCkIwwR11mOSD9CR5u+IXYdiseeEuXCVAjS54zqwkLcPNnmU4OeJ6tUrWhDw==
 
-vite@^4.3.7:
-  version "4.3.7"
-  resolved "https://registry.npmmirror.com/vite/-/vite-4.3.7.tgz#04f98ab0f4689490545b2f6fa0515e95072bb298"
-  integrity sha512-MTIFpbIm9v7Hh5b0wSBgkcWzSBz7SAa6K/cBTwS4kUiQJfQLFlZZRJRQgqunCVzhTPCk674tW+0Qaqh3Q00dBg==
+vite@^4.3.8:
+  version "4.3.8"
+  resolved "https://registry.npmmirror.com/vite/-/vite-4.3.8.tgz#70cd6a294ab52d7fb8f37f5bc63d117dd19e9918"
+  integrity sha512-uYB8PwN7hbMrf4j1xzGDk/lqjsZvCDbt/JC5dyfxc19Pg8kRm14LinK/uq+HSLNswZEoKmweGdtpbnxRtrAXiQ==
   dependencies:
     esbuild "^0.17.5"
     postcss "^8.4.23"
