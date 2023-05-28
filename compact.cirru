@@ -397,7 +397,7 @@
                 str |Set/ $ count data
               (nil? data) |nil
               (number? data) (str data)
-              (keyword? data) (str data)
+              (tag? data) (str data)
               (bool? data) (str data)
               (fn? data) |Fn
               true $ pr-str data
@@ -587,7 +587,7 @@
             quasiquote $ defn ~comp-name (~ params)
               extract-effects-list $ %{} schema/Component
                 :effects $ []
-                :name $ ~ (turn-keyword comp-name)
+                :name $ ~ (turn-tag comp-name)
                 :tree $ do (~@ body)
         |defeffect $ quote
           defmacro defeffect (effect-name args params & body)
@@ -598,7 +598,7 @@
                 params-var $ gensym "\"params"
               quasiquote $ defn ~effect-name ~args
                 %{} schema/Effect
-                  :name $ ~ (turn-keyword effect-name)
+                  :name $ ~ (turn-tag effect-name)
                   :coord $ []
                   :args $ [] ~@args
                   :method $ fn (~args-var ~params-var)
@@ -1253,7 +1253,7 @@
                       style->string v
                     (bool? v) (str v)
                     (number? v) (str v)
-                    (keyword? v) (turn-string v)
+                    (tag? v) (turn-string v)
                     (string? v) (escape-html v)
                     true $ str v
         |escape-html $ quote
@@ -1679,7 +1679,7 @@
             cond
                 string? x
                 , x
-              (keyword? x) (turn-string x)
+              (tag? x) (turn-string x)
               (number? x)
                 if (.!test pattern-non-dimension-props prop) (str x) (str x "\"px")
               true $ str x
@@ -1778,7 +1778,7 @@
                     if
                       starts-with? (turn-string k) |on-
                       []
-                        turn-keyword $ &str:slice (turn-string k) 3
+                        turn-tag $ &str:slice (turn-string k) 3
                         , v
                       , nil
         |val-exists? $ quote
