@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.14.45)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.14.47)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
   :entries $ {}
   :files $ {}
@@ -39,7 +39,7 @@
                 state $ either (:data states) |
               [] (effect-log task)
                 div
-                  {} $ :style style-task
+                  {} $ :class-name css-task
                   comp-inspect |Task task $ {} (:left 200)
                   button $ {} (:class-name style-done)
                     :style $ {}
@@ -67,6 +67,9 @@
                     <> |Remove
                   =< 8 nil
                   div ({}) (<> state)
+        |css-task $ quote
+          defstyle css-task $ {}
+            "\"&" $ {} (:display :flex) (:padding "|4px 0px")
         |effect-log $ quote
           defeffect effect-log (task) (action parent at-place?) (; js/console.log "\"Task effect" action at-place?)
             case-default action nil
@@ -79,8 +82,6 @@
         |style-done $ quote
           defstyle style-done $ {}
             "\"$0" $ {} (:width 32) (:height 32) (:outline :none) (:border :none) (:vertical-align :middle)
-        |style-task $ quote
-          def style-task $ {} (:display :flex) (:padding "|4px 0px")
       :ns $ quote
         ns respo.app.comp.task $ :require
           respo.core :refer $ defcomp div input span button <> defeffect
@@ -781,7 +782,8 @@
                   assert "\"expected rule name in string" $ string? k
                   assert "\"expected rule styles in map" $ map? v
                   let
-                      rule-name $ .!replace k "\"$0" (str "\"." style-name)
+                      class-rule $ str "\"." style-name
+                      rule-name $ -> k (.!replace "\"$0" class-rule) (.!replace "\"&" class-rule)
                       css-line $ style->string (.to-list v)
                     str rule-name "\" {" &newline css-line &newline "\"}"
               .to-list
