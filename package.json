@@ -1,7 +1,7 @@
 {
-  "version": "0.14.47",
+  "version": "0.15.0-a1",
   "dependencies": {
-    "@calcit/procs": "^0.7.0-a7"
+    "@calcit/procs": "^0.7.2"
   },
   "scripts": {
     "test": "cr --once --emit-js --init-fn=respo.test.main/main! && node test.mjs"
