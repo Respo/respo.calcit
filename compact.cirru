@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.14.47)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.15.0-a1)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
   :entries $ {}
   :files $ {}
@@ -45,7 +45,7 @@
                     :style $ {}
                       "\"background-color" $ if (:done? task) (hsl 200 20 80) (hsl 200 80 70)
                     :on-click $ fn (e d!)
-                      d! :toggle $ :id task
+                      d! $ : toggle (:id task)
                   =< 8 nil
                   input $ {}
                     :value $ :text task
@@ -54,7 +54,7 @@
                       let
                           task-id $ :id task
                           text $ :value e
-                        d! :update $ {} (:id task-id) (:text text)
+                        d! $ : update task-id text
                   =< 8 nil
                   input $ {} (:value state) (:class-name widget/style-input)
                     :on-input $ fn (e d!)
@@ -117,7 +117,7 @@
                     span
                       {} (:class-name widget/style-button)
                         :on-click $ fn (e d!)
-                          d! :add $ :draft state
+                          d! $ : add (:draft state)
                           d! cursor $ assoc state :draft |
                       span $ {} (:on-click nil) (:inner-text "\"Add")
                     =< 8 nil
@@ -143,7 +143,8 @@
                         {} (:style widget/button)
                           :on-click $ if
                             not $ :locked? state
-                            fn (e d!) (d! :clear nil)
+                            fn (e d!)
+                              d! $ : clear
                         <> |Clear2
                       =< 8 nil
                       div
@@ -197,7 +198,7 @@
                   recur $ dec x
               loop
                   x 20
-                dispatch! :hit-first $ js/Math.random
+                dispatch! $ : hit-first (js/Math.random)
                 if (> x 0)
                   recur $ dec x
               dispatch! :clear nil
@@ -247,9 +248,10 @@
       :defs $ {}
         |*store $ quote (defatom *store schema/store)
         |dispatch! $ quote
-          defn dispatch! (op op-data) (; println op op-data)
+          defn dispatch! (op ? op-data)
+            if dev? $ js/console.log op op-data
             let
-                store $ updater @*store op op-data (generate-id!)
+                store $ updater @*store op (generate-id!)
               reset! *store store
         |handle-ssr! $ quote
           defn handle-ssr! (mount-target)
@@ -261,6 +263,7 @@
         ns respo.app.core $ :require
           respo.app.comp.container :refer $ comp-container
           respo.core :refer $ render! realize-ssr!
+          respo.schema :refer $ dev?
           respo.app.schema :as schema
           respo.app.updater :refer $ updater
     |respo.app.schema $ {}
@@ -297,43 +300,40 @@
     |respo.app.updater $ {}
       :defs $ {}
         |updater $ quote
-          defn updater (store op-type op-data op-id) (; println store op-type op-data)
-            case-default op-type
-              do (println "\"Unknown op" op-type) store
-              :states $ update-states store op-data
-              :add $ update store :tasks
-                fn (tasks)
-                  conj tasks $ {} (:text op-data) (:id op-id) (:done? false)
-              :remove $ update store :tasks
-                fn (tasks)
+          defn updater (store op op-id) (; println store op)
+            tag-match op
+                :states cursor s
+                update-states store cursor s
+              (:add text)
+                update store :tasks $ fn (tasks)
+                  conj tasks $ {} (:text text) (:id op-id) (:done? false)
+              (:remove task-id)
+                update store :tasks $ fn (tasks)
                   -> tasks $ filter
                     fn (task)
-                      not $ = (:id task) op-data
-              :clear $ assoc store :tasks ([])
-              :update $ update store :tasks
-                fn (tasks)
-                  let
-                      task-id $ :id op-data
-                      text $ :text op-data
-                    -> tasks $ map
-                      fn (task)
-                        if
-                          = (:id task) task-id
-                          assoc task :text text
-                          , task
-              :hit-first $ -> store
-                update-in ([] :tasks 0)
-                  fn (task) (assoc task :text op-data)
-              :toggle $ update store :tasks
-                fn (tasks)
-                  let
-                      task-id op-data
-                    -> tasks $ map
-                      fn (task)
-                        if
-                          = (:id task) task-id
-                          update task :done? not
-                          , task
+                      not $ = (:id task) task-id
+              (:clear)
+                assoc store :tasks $ []
+              (:update task-id text)
+                update store :tasks $ fn (tasks)
+                  -> tasks $ map
+                    fn (task)
+                      if
+                        = (:id task) task-id
+                        assoc task :text text
+                        , task
+              (:hit-first rd)
+                -> store $ update-in ([] :tasks 0)
+                  fn (task) (assoc task :text rd)
+              (:toggle task-id)
+                update store :tasks $ fn (tasks)
+                  -> tasks $ map
+                    fn (task)
+                      if
+                        = (:id task) task-id
+                        update task :done? not
+                        , task
+              _ $ do (eprintln "\"Unknown op:" op) store
       :ns $ quote
         ns respo.app.updater $ :require
           respo.cursor :refer $ update-states
@@ -456,12 +456,14 @@
                   target-listener $ if (some? target-element)
                     get (:event target-element) event-name
                     do (js/console.warn "\"found no element" coord event-name) nil
-                  dispatch-wrap $ fn (op data)
+                  dispatch-wrap $ fn (op ? data)
                     let
                         dispatch! $ deref *dispatch-fn
                       if (list? op)
-                        dispatch! :states $ [] op data
-                        dispatch! op data
+                        dispatch! $ : states op data
+                        if (tag? op)
+                          dispatch! $ :: op data
+                          dispatch! op
                 if (some? target-listener)
                   do (; println "|listener found:" coord event-name) (target-listener simple-event dispatch-wrap)
                   ; println "|found no listener:" coord event-name
@@ -794,13 +796,10 @@
     |respo.cursor $ {}
       :defs $ {}
         |update-states $ quote
-          defn update-states (store pair)
-            let
-                cursor $ get pair 0
-                new-state $ get pair 1
-              assoc-in store
-                concat ([] :states) cursor $ [] :data
-                , new-state
+          defn update-states (store cursor new-state)
+            assoc-in store
+              concat ([] :states) cursor $ [] :data
+              , new-state
       :ns $ quote (ns respo.cursor)
     |respo.main $ {}
       :defs $ {}
