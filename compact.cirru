@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.15.0-a2)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.15.1)
     :modules $ [] |memof/compact.cirru |lilac/compact.cirru |calcit-test/compact.cirru
   :entries $ {}
   :files $ {}
@@ -127,7 +127,7 @@
                     div ({})
                       div
                         {} (:class-name widget/style-button) (:on-click on-test)
-                        <> "|heavy tasks" css-bold
+                        <> "|heavy tasks" css-bold!
                   list->
                     {} (:class-name |task-list) (:style style-list)
                     -> tasks .to-list .reverse $ map
@@ -157,9 +157,9 @@
                       =< 8 nil
                       comp-wrap $ comp-zero
                   comp-inspect |Tasks tasks $ {} (:left 500) (:top 20)
-        |css-bold $ quote
-          defstyle css-bold $ {}
-            "\"$0" $ {} (:font-weight :bold)
+        |css-bold! $ quote
+          defstyle css-bold! $ {}
+            "\"$0" $ {} (:font-weight "\"bold !important")
         |effect-focus $ quote
           defeffect effect-focus () (action parent at-place?) (js/console.log "\"todolist effect:" action)
         |initial-state $ quote
@@ -494,17 +494,19 @@
         |get-markup-at $ quote
           defn get-markup-at (markup coord)
             ; println |markup: $ pr-str coord
-            if (empty? coord) markup $ if (component? markup)
-              recur (:tree markup) (rest coord)
-              let
-                  coord-head $ first coord
-                  child-pair $ find (:children markup)
-                    fn (child-entry)
-                      = (get child-entry 0) coord-head
-                if (some? child-pair)
-                  get-markup-at (get child-pair 1) (rest coord)
-                  raise $ str "|child not found:" coord
-                    map (:children markup) first
+            list-match coord
+              () markup
+              (coord-head cs)
+                if (component? markup)
+                  recur (:tree markup) cs
+                  let
+                      child-pair $ find (:children markup)
+                        fn (child-entry)
+                          = (get child-entry 0) coord-head
+                    if (some? child-pair)
+                      get-markup-at (get child-pair 1) cs
+                      raise $ str "|child not found:" coord
+                        map (:children markup) first
       :ns $ quote
         ns respo.controller.resolve $ :require
           respo.util.detect :refer $ component? element?
@@ -761,10 +763,13 @@
           defmacro defstyle (style-name rules)
             assert "\"expected symbol of style-name" $ symbol? style-name
             let
-                style-name-str $ str (turn-string style-name) "\"__"
-                  .replace
-                    turn-string $ :ns (&extract-code-into-edn style-name)
-                    , "\"." "\"_"
+                style-name-str $ str
+                  -> (turn-string style-name) (&str:replace "\"!" "\"_EX_") (&str:replace "\"?" "\"_QU_")
+                  , "\"__"
+                    ->
+                      :ns $ &extract-code-into-edn style-name
+                      turn-string
+                      &str:replace "\"." "\"_"
               quasiquote $ def ~style-name (create-style! ~style-name-str ~rules)
         |nodejs? $ quote
           def nodejs? $ and (exists? js/process) (= js/process.release.name "\"node")
