@@ -1,12 +1,10 @@
-
-Respo: A virtual DOM library in Calcit-js
-----
+## Respo: A virtual DOM library in Calcit-js
 
 > Inspired by React and Reagent. Previously [Respo/respo.cljs](https://github.com/Respo/respo.cljs).
 
-* Home http://respo-mvc.org
-* [Bundled example](http://repo.respo-mvc.org/respo.calcit/)
-* [Guide](https://github.com/Respo/guidebook)
+- Home http://respo-mvc.org
+- [Bundled example](http://repo.respo-mvc.org/respo.calcit/)
+- [Guide](https://github.com/Respo/guidebook)
 
 ### Usage
 
@@ -49,13 +47,14 @@ App initialization:
 ; initialize store and update store
 defatom *store $ {} (:point 0)
   :states $ {}
-defn dispatch! (op op-data)
-  reset! *store (updater @*store op op-data)
+defn dispatch! (op)
+  reset! *store (updater @*store op)
 
 ; TODO
-defn updater (store op data)
-  case-default op (do (println "|Unknown op:" op) store)
-    :TODO TODO
+defn updater (store op)
+  tag-match op
+    (:TODO a b) TODO
+    _ (do (eprintln "|Unknown op:" op) store)
 
 ; render to the DOM
 render! mount-point (comp-container @*store) dispatch!
@@ -102,10 +101,11 @@ Define a hooks plugin based on Calcit Record, better use a pure function:
 
 ```cirru
 defn plugin-x (states options)
-  ::
+  %::
     %{} PluginX
       :render $ fn (self) (nth self 1)
       :show $ fn (self d! ? text)
+    , :plugin-name
     div ({}) (<> "|Demo")
 ```
 
