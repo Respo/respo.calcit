@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.0-a2)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.0-a3)
     :modules $ [] |memof/ |lilac/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -539,7 +539,7 @@
                           recur $ :tree m
                           , m
                   element-exists? $ some? target-element
-                ; println "|target element:" $ pr-str event-name
+                ; println "|target element:" $ to-lispy-string event-name
                 if
                   and element-exists? $ some?
                     get (:event target-element) event-name
@@ -552,7 +552,7 @@
         |get-markup-at $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn get-markup-at (markup coord)
-              ; println |markup: $ pr-str coord
+              ; println |markup: $ to-lispy-string coord
               list-match coord
                 () markup
                 (coord-head cs)
@@ -628,7 +628,7 @@
           :code $ quote
             defn create-element (tag-name props & children)
               ; assert
-                str "|For rendering lists, please use list-> , got: " $ pr-str children
+                str "|For rendering lists, please use list-> , got: " $ to-lispy-string children
                 and
                   > (count children) 0
                   not $ any? list? children
@@ -1779,7 +1779,7 @@
                   real-name $ .!toLowerCase (.-tagName element)
                 when (not= virtual-name real-name)
                   js/console.warn "\"SSR checking: tag names do not match:"
-                    pr-str $ dissoc vdom :children
+                    to-lispy-string $ dissoc vdom :children
                     , element
               if
                 not=
@@ -1793,7 +1793,7 @@
                       = maybe-html $ .-innerHTML element
                       js/console.warn "\"SSR checking: noticed dom containing innerHTML:" element
                     do (js/console.error "\"SSR checking: children sizes do not match!")
-                      js/console.log "\"virtual:" $ -> vdom :children (map last) (map :name) pr-str
+                      js/console.log "\"virtual:" $ -> vdom :children (map last) (map :name) to-lispy-string
                       js/console.log "\"real:" $ .-children element
                 let
                     real-children $ .-children element

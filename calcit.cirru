@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:port 6001) (:reload-fn |respo.main/reload!) (:storage-key |calcit.cirru) (:version |0.16.0-a2)
+  :configs $ {} (:init-fn |respo.main/main!) (:port 6001) (:reload-fn |respo.main/reload!) (:storage-key |calcit.cirru) (:version |0.16.0-a3)
     :modules $ [] |memof/ |lilac/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -3288,7 +3288,7 @@
                       |r $ %{} :Leaf (:at 1504774121421) (:by |root) (:text "||target element:")
                       |v $ %{} :Expr (:at 1504774121421) (:by nil)
                         :data $ {}
-                          |T $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |pr-str)
+                          |T $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |to-lispy-string)
                           |j $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |event-name)
                   |v $ %{} :Expr (:at 1504774121421) (:by nil)
                     :data $ {}
@@ -3356,7 +3356,7 @@
                   |r $ %{} :Leaf (:at 1504774121421) (:by |root) (:text ||markup:)
                   |v $ %{} :Expr (:at 1504774121421) (:by nil)
                     :data $ {}
-                      |T $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |pr-str)
+                      |T $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |to-lispy-string)
                       |j $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |coord)
               |y $ %{} :Expr (:at 1691040045606) (:by |rJoDgvdeG)
                 :data $ {}
@@ -3791,7 +3791,7 @@
                       |j $ %{} :Leaf (:at 1611379933883) (:by |rJoDgvdeG) (:text "||For rendering lists, please use list-> , got: ")
                       |r $ %{} :Expr (:at 1611379933883) (:by |rJoDgvdeG)
                         :data $ {}
-                          |T $ %{} :Leaf (:at 1611379933883) (:by |rJoDgvdeG) (:text |pr-str)
+                          |T $ %{} :Leaf (:at 1611379933883) (:by |rJoDgvdeG) (:text |to-lispy-string)
                           |j $ %{} :Leaf (:at 1611379933883) (:by |rJoDgvdeG) (:text |children)
                   |T $ %{} :Expr (:at 1610187405339) (:by |rJoDgvdeG)
                     :data $ {}
@@ -11457,7 +11457,7 @@
                           |n $ %{} :Leaf (:at 1529832761307) (:by |root) (:text "|\"SSR checking: tag names do not match:")
                           |t $ %{} :Expr (:at 1529832830626) (:by |root)
                             :data $ {}
-                              |D $ %{} :Leaf (:at 1529832832009) (:by |root) (:text |pr-str)
+                              |D $ %{} :Leaf (:at 1529832832009) (:by |root) (:text |to-lispy-string)
                               |T $ %{} :Expr (:at 1529831819690) (:by |root)
                                 :data $ {}
                                   |D $ %{} :Leaf (:at 1529831821094) (:by |root) (:text |dissoc)
@@ -11549,7 +11549,7 @@
                                         :data $ {}
                                           |T $ %{} :Leaf (:at 1529832871319) (:by |root) (:text |map)
                                           |j $ %{} :Leaf (:at 1529832873317) (:by |root) (:text |:name)
-                                      |q $ %{} :Leaf (:at 1529833137299) (:by |root) (:text |pr-str)
+                                      |q $ %{} :Leaf (:at 1529833137299) (:by |root) (:text |to-lispy-string)
                               |r $ %{} :Expr (:at 1529831602840) (:by |root)
                                 :data $ {}
                                   |j $ %{} :Leaf (:at 1622299065086) (:by |rJoDgvdeG) (:text |js/console.log)
@@ -12775,7 +12775,7 @@
                                   |L $ {} (:at 1623582927810) (:by |rJoDgvdeG) (:text "||states: ") (:type :leaf)
                                   |T $ {} (:at 1504774121421) (:by nil) (:type :expr)
                                     :data $ {}
-                                      |T $ {} (:at 1504774121421) (:by |root) (:text |pr-str) (:type :leaf)
+                                      |T $ {} (:at 1504774121421) (:by |root) (:text |to-lispy-string) (:type :leaf)
                                       |j $ {} (:at 1504774121421) (:by nil) (:type :expr)
                                         :data $ {}
                                           |T $ {} (:at 1505327099898) (:by |root) (:text |:states) (:type :leaf)
@@ -15387,7 +15387,7 @@
                       |T $ {} (:at 1610203140138) (:by |rJoDgvdeG) (:text |true) (:type :leaf)
                       |j $ {} (:at 1504774121421) (:by nil) (:type :expr)
                         :data $ {}
-                          |T $ {} (:at 1504774121421) (:by |root) (:text |pr-str) (:type :leaf)
+                          |T $ {} (:at 1504774121421) (:by |root) (:text |to-lispy-string) (:type :leaf)
                           |j $ {} (:at 1504774121421) (:by |root) (:text |data) (:type :leaf)
           |style-data $ {} (:at 1504774121421) (:by nil) (:type :expr)
             :data $ {}
@@ -15968,7 +15968,7 @@
                       |r $ {} (:at 1504774121421) (:by |root) (:text "||target element:") (:type :leaf)
                       |v $ {} (:at 1504774121421) (:by nil) (:type :expr)
                         :data $ {}
-                          |T $ {} (:at 1504774121421) (:by |root) (:text |pr-str) (:type :leaf)
+                          |T $ {} (:at 1504774121421) (:by |root) (:text |to-lispy-string) (:type :leaf)
                           |j $ {} (:at 1504774121421) (:by |root) (:text |event-name) (:type :leaf)
                   |v $ {} (:at 1504774121421) (:by nil) (:type :expr)
                     :data $ {}
@@ -16035,7 +16035,7 @@
                   |r $ {} (:at 1504774121421) (:by |root) (:text ||markup:) (:type :leaf)
                   |v $ {} (:at 1504774121421) (:by nil) (:type :expr)
                     :data $ {}
-                      |T $ {} (:at 1504774121421) (:by |root) (:text |pr-str) (:type :leaf)
+                      |T $ {} (:at 1504774121421) (:by |root) (:text |to-lispy-string) (:type :leaf)
                       |j $ {} (:at 1504774121421) (:by |root) (:text |coord) (:type :leaf)
               |y $ {} (:at 1691040045606) (:by |rJoDgvdeG) (:type :expr)
                 :data $ {}
@@ -16457,7 +16457,7 @@
                       |j $ {} (:at 1611379933883) (:by |rJoDgvdeG) (:text "||For rendering lists, please use list-> , got: ") (:type :leaf)
                       |r $ {} (:at 1611379933883) (:by |rJoDgvdeG) (:type :expr)
                         :data $ {}
-                          |T $ {} (:at 1611379933883) (:by |rJoDgvdeG) (:text |pr-str) (:type :leaf)
+                          |T $ {} (:at 1611379933883) (:by |rJoDgvdeG) (:text |to-lispy-string) (:type :leaf)
                           |j $ {} (:at 1611379933883) (:by |rJoDgvdeG) (:text |children) (:type :leaf)
                   |T $ {} (:at 1610187405339) (:by |rJoDgvdeG) (:type :expr)
                     :data $ {}
@@ -24047,7 +24047,7 @@
                           |n $ {} (:at 1529832761307) (:by |root) (:text "|\"SSR checking: tag names do not match:") (:type :leaf)
                           |t $ {} (:at 1529832830626) (:by |root) (:type :expr)
                             :data $ {}
-                              |D $ {} (:at 1529832832009) (:by |root) (:text |pr-str) (:type :leaf)
+                              |D $ {} (:at 1529832832009) (:by |root) (:text |to-lispy-string) (:type :leaf)
                               |T $ {} (:at 1529831819690) (:by |root) (:type :expr)
                                 :data $ {}
                                   |D $ {} (:at 1529831821094) (:by |root) (:text |dissoc) (:type :leaf)
@@ -24139,7 +24139,7 @@
                                         :data $ {}
                                           |T $ {} (:at 1529832871319) (:by |root) (:text |map) (:type :leaf)
                                           |j $ {} (:at 1529832873317) (:by |root) (:text |:name) (:type :leaf)
-                                      |q $ {} (:at 1529833137299) (:by |root) (:text |pr-str) (:type :leaf)
+                                      |q $ {} (:at 1529833137299) (:by |root) (:text |to-lispy-string) (:type :leaf)
                               |r $ {} (:at 1529831602840) (:by |root) (:type :expr)
                                 :data $ {}
                                   |j $ {} (:at 1622299065086) (:by |rJoDgvdeG) (:text |js/console.log) (:type :leaf)
