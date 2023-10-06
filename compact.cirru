@@ -929,7 +929,7 @@
               set! js/window.onbeforeunload $ fn (event) (save-store!)
         |mount-target $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def mount-target $ if (exists? js/document) (.querySelector js/document |.app) nil
+            def mount-target $ if (exists? js/document) (js/document.querySelector |.app) nil
         |reload! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn reload! () (remove-watch *store :rerender) (clear-cache!) (render-app! mount-target)

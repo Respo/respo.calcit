@@ -5767,8 +5767,7 @@
                       |j $ %{} :Leaf (:at 1610284973062) (:by |rJoDgvdeG) (:text |js/document)
                   |T $ %{} :Expr (:at 1511714063789) (:by |rJoDgvdeG)
                     :data $ {}
-                      |T $ %{} :Leaf (:at 1511714131169) (:by |rJoDgvdeG) (:text |.querySelector)
-                      |j $ %{} :Leaf (:at 1511714135296) (:by |rJoDgvdeG) (:text |js/document)
+                      |j $ %{} :Leaf (:at 1696611514416) (:by |rJoDgvdeG) (:text |js/document.querySelector)
                       |r $ %{} :Leaf (:at 1511714138171) (:by |rJoDgvdeG) (:text ||.app)
                   |j $ %{} :Leaf (:at 1610284978780) (:by |rJoDgvdeG) (:text |nil)
         |reload! $ %{} :CodeEntry (:doc |)
