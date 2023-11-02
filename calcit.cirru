@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:port 6001) (:reload-fn |respo.main/reload!) (:storage-key |calcit.cirru) (:version |0.16.0-a3)
+  :configs $ {} (:init-fn |respo.main/main!) (:port 6001) (:reload-fn |respo.main/reload!) (:storage-key |calcit.cirru) (:version |0.16.1)
     :modules $ [] |memof/ |lilac/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -3661,9 +3661,6 @@
               |j $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |clear-cache!)
               |r $ %{} :Expr (:at 1504774121421) (:by nil)
                 :data $ {}
-              |x $ %{} :Expr (:at 1592132484436) (:by |rJoDgvdeG)
-                :data $ {}
-                  |T $ %{} :Leaf (:at 1611825969046) (:by |rJoDgvdeG) (:text |reset-calling-caches!)
               |y $ %{} :Expr (:at 1650634141757) (:by |rJoDgvdeG)
                 :data $ {}
                   |T $ %{} :Leaf (:at 1650634142422) (:by |rJoDgvdeG) (:text |reset-memof1-caches!)
@@ -4937,9 +4934,6 @@
                   |T $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |target)
                   |j $ %{} :Leaf (:at 1612012096451) (:by |rJoDgvdeG) (:text |element)
                   |r $ %{} :Leaf (:at 1615647037251) (:by |rJoDgvdeG) (:text |*dispatch-fn)
-              |t $ %{} :Expr (:at 1592135595342) (:by |rJoDgvdeG)
-                :data $ {}
-                  |T $ %{} :Leaf (:at 1611825931759) (:by |rJoDgvdeG) (:text |tick-calling-loop!)
               |v $ %{} :Expr (:at 1504774121421) (:by nil)
                 :data $ {}
                   |T $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |let)
@@ -5205,14 +5199,6 @@
                     |v $ %{} :Expr (:at 1612763281759) (:by |rJoDgvdeG)
                       :data $ {}
                         |j $ %{} :Leaf (:at 1612763283031) (:by |rJoDgvdeG) (:text |compare-to-dom!)
-                |yy $ %{} :Expr (:at 1592132244745) (:by |rJoDgvdeG)
-                  :data $ {}
-                    |j $ %{} :Leaf (:at 1611825950983) (:by |rJoDgvdeG) (:text |memof.alias)
-                    |r $ %{} :Leaf (:at 1611825939259) (:by |rJoDgvdeG) (:text |:refer)
-                    |v $ %{} :Expr (:at 1611825936682) (:by |rJoDgvdeG)
-                      :data $ {}
-                        |T $ %{} :Leaf (:at 1611825934103) (:by |rJoDgvdeG) (:text |tick-calling-loop!)
-                        |j $ %{} :Leaf (:at 1611825972923) (:by |rJoDgvdeG) (:text |reset-calling-caches!)
                 |z $ %{} :Expr (:at 1650634103152) (:by |rJoDgvdeG)
                   :data $ {}
                     |T $ %{} :Leaf (:at 1650634107485) (:by |rJoDgvdeG) (:text |memof.once)

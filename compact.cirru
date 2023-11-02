@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.0-a3)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.1)
     :modules $ [] |memof/ |lilac/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -606,7 +606,7 @@
               create-element :button props & $ map children confirm-child
         |clear-cache! $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn clear-cache! () (reset-calling-caches!) (reset-memof1-caches!)
+            defn clear-cache! () $ reset-memof1-caches!
         |code $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn code (props & children) (create-element :code props & children)
@@ -792,7 +792,7 @@
               if (some? @*global-element) (rerender-app! target markup *dispatch-fn) (mount-app! target markup *dispatch-fn)
         |rerender-app! $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn rerender-app! (target element *dispatch-fn) (tick-calling-loop!)
+            defn rerender-app! (target element *dispatch-fn)
               let
                   deliver-event $ build-deliver-event *global-element *dispatch-fn
                   *changes $ atom ([])
@@ -834,7 +834,6 @@
             respo.util.detect :refer $ component? element? effect?
             respo.schema :as schema
             respo.util.dom :refer $ compare-to-dom!
-            memof.alias :refer $ tick-calling-loop! reset-calling-caches!
             memof.once :refer $ reset-memof1-caches!
     |respo.css $ %{} :FileEntry
       :defs $ {}
