@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.1)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.2)
     :modules $ [] |memof/ |lilac/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -21,6 +21,9 @@
                   comp-global-keydown
                     {} $ :disabled-commands (#{} "\"s" "\"p")
                     fn (e d!) (js/console.log "\"keydown" e)
+                  comp-global-keyup
+                    {} $ :disabled-commands (#{} "\"s" "\"p")
+                    fn (e d!) (js/console.log "\"keyup" e)
         |style-global $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-global $ {} (:font-family |Avenir,Verdana)
@@ -33,7 +36,7 @@
             respo.core :refer $ defcomp div span <> >> a
             respo.app.comp.todolist :refer $ comp-todolist
             respo.comp.space :refer $ =<
-            respo.comp.global-keydown :refer $ comp-global-keydown
+            respo.comp.global-keydown :refer $ comp-global-keydown comp-global-keyup
     |respo.app.comp.task $ %{} :FileEntry
       :defs $ {}
         |comp-task $ %{} :CodeEntry (:doc |)
@@ -382,14 +385,20 @@
         |comp-global-keydown $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-global-keydown (options on-event) (; "\"dirty solution: proxy window keydown event to a `<span/>`, comes with some restrictions. however Respo does not allow effects to modify states.")
-              [] (effect-listen-keyboard options)
+              [] (effect-listen-keyboard options "\"keydown")
                 span $ {}
                   :on-keydown $ fn (e d!) (on-event e d!)
+        |comp-global-keyup $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defcomp comp-global-keyup (options on-event) (; "\"dirty solution: proxy window keydown event to a `<span/>`, comes with some restrictions. however Respo does not allow effects to modify states.")
+              [] (effect-listen-keyboard options "\"keyup")
+                span $ {}
+                  :on-keyup $ fn (e d!) (on-event e d!)
         |dirty-field $ %{} :CodeEntry (:doc |)
           :code $ quote (def dirty-field "\"_global_listener")
         |effect-listen-keyboard $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defeffect effect-listen-keyboard (options) (action el at?)
+            defeffect effect-listen-keyboard (options event-name) (action el at?)
               cond
                   or (= action :mount) (= action :update)
                   let
@@ -404,13 +413,13 @@
                         .!dispatchEvent el $ new js/KeyboardEvent (.-type event) event
                     if-let
                       prev-listener $ aget el dirty-field
-                      js/window.removeEventListener "\"keydown" prev-listener
+                      js/window.removeEventListener event-name prev-listener
                     aset el dirty-field handler
-                    js/window.addEventListener "\"keydown" handler
+                    js/window.addEventListener event-name handler
                 (= action :unmount)
                   let
                       handler $ aget el dirty-field
-                    js/window.removeEventListener "\"keydown" handler
+                    js/window.removeEventListener event-name handler
                     aset el dirty-field nil
                 true nil
       :ns $ %{} :CodeEntry (:doc |)

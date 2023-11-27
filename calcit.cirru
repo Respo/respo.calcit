@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:port 6001) (:reload-fn |respo.main/reload!) (:storage-key |calcit.cirru) (:version |0.16.1)
+  :configs $ {} (:init-fn |respo.main/main!) (:port 6001) (:reload-fn |respo.main/reload!) (:storage-key |calcit.cirru) (:version |0.16.2)
     :modules $ [] |memof/ |lilac/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -94,6 +94,32 @@
                                   |T $ %{} :Leaf (:at 1656036593406) (:by |rJoDgvdeG) (:text |js/console.log)
                                   |b $ %{} :Leaf (:at 1656036697578) (:by |rJoDgvdeG) (:text "|\"keydown")
                                   |h $ %{} :Leaf (:at 1656036595798) (:by |rJoDgvdeG) (:text |e)
+                      |u $ %{} :Expr (:at 1656036581270) (:by |rJoDgvdeG)
+                        :data $ {}
+                          |T $ %{} :Leaf (:at 1699983962961) (:by |rJoDgvdeG) (:text |comp-global-keyup)
+                          |X $ %{} :Expr (:at 1656036736229) (:by |rJoDgvdeG)
+                            :data $ {}
+                              |T $ %{} :Leaf (:at 1656036736614) (:by |rJoDgvdeG) (:text |{})
+                              |b $ %{} :Expr (:at 1656036737351) (:by |rJoDgvdeG)
+                                :data $ {}
+                                  |T $ %{} :Leaf (:at 1656036756646) (:by |rJoDgvdeG) (:text |:disabled-commands)
+                                  |b $ %{} :Expr (:at 1656036867350) (:by |rJoDgvdeG)
+                                    :data $ {}
+                                      |T $ %{} :Leaf (:at 1656036894841) (:by |rJoDgvdeG) (:text |#{})
+                                      |b $ %{} :Leaf (:at 1656036980245) (:by |rJoDgvdeG) (:text "|\"s")
+                                      |h $ %{} :Leaf (:at 1656036982066) (:by |rJoDgvdeG) (:text "|\"p")
+                          |b $ %{} :Expr (:at 1656036585590) (:by |rJoDgvdeG)
+                            :data $ {}
+                              |T $ %{} :Leaf (:at 1656036586012) (:by |rJoDgvdeG) (:text |fn)
+                              |b $ %{} :Expr (:at 1656036586746) (:by |rJoDgvdeG)
+                                :data $ {}
+                                  |T $ %{} :Leaf (:at 1656036588563) (:by |rJoDgvdeG) (:text |e)
+                                  |b $ %{} :Leaf (:at 1656036589332) (:by |rJoDgvdeG) (:text |d!)
+                              |h $ %{} :Expr (:at 1656036590111) (:by |rJoDgvdeG)
+                                :data $ {}
+                                  |T $ %{} :Leaf (:at 1656036593406) (:by |rJoDgvdeG) (:text |js/console.log)
+                                  |b $ %{} :Leaf (:at 1699983972260) (:by |rJoDgvdeG) (:text "|\"keyup")
+                                  |h $ %{} :Leaf (:at 1656036595798) (:by |rJoDgvdeG) (:text |e)
         |style-global $ %{} :CodeEntry (:doc |)
           :code $ %{} :Expr (:at 1504774121421) (:by nil)
             :data $ {}
@@ -159,6 +185,7 @@
                     |h $ %{} :Expr (:at 1656036572901) (:by |rJoDgvdeG)
                       :data $ {}
                         |T $ %{} :Leaf (:at 1656036578628) (:by |rJoDgvdeG) (:text |comp-global-keydown)
+                        |b $ %{} :Leaf (:at 1699983983431) (:by |rJoDgvdeG) (:text |comp-global-keyup)
     |respo.app.comp.task $ %{} :FileEntry
       :defs $ {}
         |comp-task $ %{} :CodeEntry (:doc |)
@@ -2282,6 +2309,7 @@
                     :data $ {}
                       |T $ %{} :Leaf (:at 1656036187991) (:by |rJoDgvdeG) (:text |effect-listen-keyboard)
                       |b $ %{} :Leaf (:at 1656036788322) (:by |rJoDgvdeG) (:text |options)
+                      |h $ %{} :Leaf (:at 1699983944829) (:by |rJoDgvdeG) (:text "|\"keydown")
                   |h $ %{} :Expr (:at 1656036187991) (:by |rJoDgvdeG)
                     :data $ {}
                       |T $ %{} :Leaf (:at 1656036187991) (:by |rJoDgvdeG) (:text |span)
@@ -2303,6 +2331,48 @@
                                       |T $ %{} :Leaf (:at 1656036187991) (:by |rJoDgvdeG) (:text |on-event)
                                       |b $ %{} :Leaf (:at 1656036187991) (:by |rJoDgvdeG) (:text |e)
                                       |h $ %{} :Leaf (:at 1656036187991) (:by |rJoDgvdeG) (:text |d!)
+        |comp-global-keyup $ %{} :CodeEntry (:doc |)
+          :code $ %{} :Expr (:at 1699983902849) (:by |rJoDgvdeG)
+            :data $ {}
+              |T $ %{} :Leaf (:at 1699983902849) (:by |rJoDgvdeG) (:text |defcomp)
+              |b $ %{} :Leaf (:at 1699983905994) (:by |rJoDgvdeG) (:text |comp-global-keyup)
+              |h $ %{} :Expr (:at 1699983902849) (:by |rJoDgvdeG)
+                :data $ {}
+                  |T $ %{} :Leaf (:at 1699983902849) (:by |rJoDgvdeG) (:text |options)
+                  |b $ %{} :Leaf (:at 1699983902849) (:by |rJoDgvdeG) (:text |on-event)
+              |l $ %{} :Expr (:at 1699983902849) (:by |rJoDgvdeG)
+                :data $ {}
+                  |T $ %{} :Leaf (:at 1699983902849) (:by |rJoDgvdeG) (:text |;)
+                  |b $ %{} :Leaf (:at 1699983902849) (:by |rJoDgvdeG) (:text "|\"dirty solution: proxy window keydown event to a `<span/>`, comes with some restrictions. however Respo does not allow effects to modify states.")
+              |o $ %{} :Expr (:at 1699983902849) (:by |rJoDgvdeG)
+                :data $ {}
+                  |T $ %{} :Leaf (:at 1699983902849) (:by |rJoDgvdeG) (:text |[])
+                  |b $ %{} :Expr (:at 1699983902849) (:by |rJoDgvdeG)
+                    :data $ {}
+                      |T $ %{} :Leaf (:at 1699983902849) (:by |rJoDgvdeG) (:text |effect-listen-keyboard)
+                      |b $ %{} :Leaf (:at 1699983902849) (:by |rJoDgvdeG) (:text |options)
+                      |h $ %{} :Leaf (:at 1699983922323) (:by |rJoDgvdeG) (:text "|\"keyup")
+                  |h $ %{} :Expr (:at 1699983902849) (:by |rJoDgvdeG)
+                    :data $ {}
+                      |T $ %{} :Leaf (:at 1699983902849) (:by |rJoDgvdeG) (:text |span)
+                      |b $ %{} :Expr (:at 1699983902849) (:by |rJoDgvdeG)
+                        :data $ {}
+                          |T $ %{} :Leaf (:at 1699983902849) (:by |rJoDgvdeG) (:text |{})
+                          |b $ %{} :Expr (:at 1699983902849) (:by |rJoDgvdeG)
+                            :data $ {}
+                              |T $ %{} :Leaf (:at 1699983908715) (:by |rJoDgvdeG) (:text |:on-keyup)
+                              |b $ %{} :Expr (:at 1699983902849) (:by |rJoDgvdeG)
+                                :data $ {}
+                                  |T $ %{} :Leaf (:at 1699983902849) (:by |rJoDgvdeG) (:text |fn)
+                                  |b $ %{} :Expr (:at 1699983902849) (:by |rJoDgvdeG)
+                                    :data $ {}
+                                      |T $ %{} :Leaf (:at 1699983902849) (:by |rJoDgvdeG) (:text |e)
+                                      |b $ %{} :Leaf (:at 1699983902849) (:by |rJoDgvdeG) (:text |d!)
+                                  |h $ %{} :Expr (:at 1699983902849) (:by |rJoDgvdeG)
+                                    :data $ {}
+                                      |T $ %{} :Leaf (:at 1699983902849) (:by |rJoDgvdeG) (:text |on-event)
+                                      |b $ %{} :Leaf (:at 1699983902849) (:by |rJoDgvdeG) (:text |e)
+                                      |h $ %{} :Leaf (:at 1699983902849) (:by |rJoDgvdeG) (:text |d!)
         |dirty-field $ %{} :CodeEntry (:doc |)
           :code $ %{} :Expr (:at 1656036533964) (:by |rJoDgvdeG)
             :data $ {}
@@ -2317,6 +2387,7 @@
               |e $ %{} :Expr (:at 1656036666042) (:by |rJoDgvdeG)
                 :data $ {}
                   |T $ %{} :Leaf (:at 1656036793640) (:by |rJoDgvdeG) (:text |options)
+                  |b $ %{} :Leaf (:at 1699983929063) (:by |rJoDgvdeG) (:text |event-name)
               |h $ %{} :Expr (:at 1656036165980) (:by |rJoDgvdeG)
                 :data $ {}
                   |T $ %{} :Leaf (:at 1656036165980) (:by |rJoDgvdeG) (:text |action)
@@ -2429,7 +2500,7 @@
                               |h $ %{} :Expr (:at 1656036949028) (:by |rJoDgvdeG)
                                 :data $ {}
                                   |T $ %{} :Leaf (:at 1656036949028) (:by |rJoDgvdeG) (:text |js/window.removeEventListener)
-                                  |b $ %{} :Leaf (:at 1656036949028) (:by |rJoDgvdeG) (:text "|\"keydown")
+                                  |b $ %{} :Leaf (:at 1699983847872) (:by |rJoDgvdeG) (:text |event-name)
                                   |h $ %{} :Leaf (:at 1656036950215) (:by |rJoDgvdeG) (:text |prev-listener)
                           |X $ %{} :Expr (:at 1656036352218) (:by |rJoDgvdeG)
                             :data $ {}
@@ -2440,7 +2511,7 @@
                           |b $ %{} :Expr (:at 1656036348120) (:by |rJoDgvdeG)
                             :data $ {}
                               |T $ %{} :Leaf (:at 1656036348120) (:by |rJoDgvdeG) (:text |js/window.addEventListener)
-                              |b $ %{} :Leaf (:at 1656036348120) (:by |rJoDgvdeG) (:text "|\"keydown")
+                              |b $ %{} :Leaf (:at 1699983846697) (:by |rJoDgvdeG) (:text |event-name)
                               |h $ %{} :Leaf (:at 1656036348120) (:by |rJoDgvdeG) (:text |handler)
                   |o $ %{} :Expr (:at 1656036165980) (:by |rJoDgvdeG)
                     :data $ {}
@@ -2465,7 +2536,7 @@
                           |T $ %{} :Expr (:at 1656036165980) (:by |rJoDgvdeG)
                             :data $ {}
                               |T $ %{} :Leaf (:at 1656036165980) (:by |rJoDgvdeG) (:text |js/window.removeEventListener)
-                              |b $ %{} :Leaf (:at 1656036165980) (:by |rJoDgvdeG) (:text "|\"keydown")
+                              |b $ %{} :Leaf (:at 1699983857391) (:by |rJoDgvdeG) (:text |event-name)
                               |h $ %{} :Leaf (:at 1656036165980) (:by |rJoDgvdeG) (:text |handler)
                           |b $ %{} :Expr (:at 1656036372076) (:by |rJoDgvdeG)
                             :data $ {}
