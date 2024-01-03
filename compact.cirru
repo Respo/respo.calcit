@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.2)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.3)
     :modules $ [] |memof/ |lilac/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -1554,7 +1554,7 @@
                     , op
                   style-name $ dashed->camel (turn-string p)
                 -> (.-style target)
-                  aset style-name $ get-style-value v (dashed->camel style-name)
+                  aset style-name $ get-style-value v style-name
         |rm-element $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn rm-element (target op)
@@ -1882,6 +1882,7 @@
                 (tag? x) (turn-string x)
                 (number? x)
                   if (.!test pattern-non-dimension-props prop) (str x) (str x "\"px")
+                (nil? x) nil
                 true $ str x
         |hsl $ %{} :CodeEntry (:doc |)
           :code $ quote
