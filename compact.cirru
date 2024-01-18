@@ -1023,7 +1023,7 @@
                     if (nil? y1) (js/console.warn "\"nil key is bad in Respo")
                     ; println "\"compare:" x1 new-keys x1-remains? y1 y1-existed? old-keys
                     cond
-                        = x1 y1
+                        &= x1 y1
                         let
                             old-element $ val-of-first old-children
                             new-element $ val-of-first new-children
@@ -1055,7 +1055,7 @@
                           first-new-entry $ first new-children
                           new-n-coord $ conj n-coord index
                         ; println |index: xi yi
-                        if (<= xi yi)
+                        if (&<= xi yi)
                           let
                               new-element $ val-of-first new-children
                               new-coord $ conj coord y1
@@ -1123,8 +1123,8 @@
                       let
                           old-children $ &record:get old-tree :children
                           new-children $ &record:get new-tree :children
-                        if dev? $ if
-                          detect-keys-dup $ map new-children first
+                        if
+                          and dev? $ detect-keys-dup (map new-children first)
                           js/console.error "\"Parent that has dups" new-tree
                         find-children-diffs collect! coord n-coord 0 old-children new-children
                 true $ js/console.warn "\"Diffing unknown params" old-tree new-tree
@@ -1157,7 +1157,7 @@
                       old-follows $ rest old-props
                       new-follows $ rest new-props
                     ; js/console.log old-k new-k old-v new-v
-                    case-default (&compare old-k new-k) (println "\"[Respo] unknown result")
+                    case-default (&compare old-k new-k) (eprintln "\"[Respo] unknown compare result for props keys")
                       -1 $ do
                         collect! $ :: :rm-prop coord n-coord old-k
                         recur collect! coord n-coord old-follows new-props
@@ -1196,7 +1196,7 @@
                       new-follows $ rest new-style
                     case-default
                       &compare (first old-entry) (first new-entry)
-                      println "\"[Respo] unknown compare result for style keys"
+                      eprintln "\"[Respo] unknown compare result for style keys"
                       -1 $ do
                         collect! $ :: :rm-style c-coord coord (first old-entry)
                         recur collect! c-coord coord old-follows new-style
@@ -1529,12 +1529,12 @@
         |find-target $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn find-target (root coord)
-              if (empty? coord) root $ let
-                  index $ first coord
-                  child $ aget (.-children root) index
-                if (some? child)
-                  recur child $ rest coord
-                  , nil
+              list-match coord
+                () root
+                (index xss)
+                  if-let
+                    child $ aget (.-children root) index
+                    recur child xss
         |replace-element $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn replace-element (target op listener-builder coord)
