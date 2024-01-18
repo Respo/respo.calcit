@@ -47,7 +47,7 @@
                   state $ either (:data states) |
                 [] (effect-log task)
                   div
-                    {} $ :class-name css-task
+                    {} $ :class-name style-task
                     comp-inspect |Task task $ {} (:left 200)
                     button $ {} (:class-name style-done)
                       :style $ {}
@@ -75,10 +75,6 @@
                       <> |Remove
                     =< 8 nil
                     div ({}) (<> state)
-        |css-task $ %{} :CodeEntry (:doc |)
-          :code $ quote
-            defstyle css-task $ {}
-              "\"&" $ {} (:display :flex) (:padding "|4px 0px")
         |effect-log $ %{} :CodeEntry (:doc |)
           :code $ quote
             defeffect effect-log (task) (action parent at-place?) (; js/console.log "\"Task effect" action at-place?)
@@ -92,7 +88,11 @@
         |style-done $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-done $ {}
-              "\"$0" $ {} (:width 32) (:height 32) (:outline :none) (:border :none) (:vertical-align :middle)
+              "\"&" $ {} (:width 32) (:height 32) (:outline :none) (:border :none) (:vertical-align :middle)
+        |style-task $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-task $ {}
+              "\"&" $ {} (:display :flex) (:padding "|4px 0px")
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.app.comp.task $ :require
@@ -112,7 +112,7 @@
                   state $ either (:data states) initial-state
                 [] (effect-focus)
                   div
-                    {} $ :style style-root
+                    {} $ :class-name style-todo-root
                     ; a $ {} (; :href "\"A") (; :class-name "\"B") (; :inner-text "\"C") (; :height "\"100px")
                     comp-inspect |States state $ {} (:left |80px)
                     div
@@ -140,7 +140,7 @@
                       div ({})
                         div
                           {} (:class-name widget/style-button) (:on-click on-test)
-                          <> "|heavy tasks" css-bold!
+                          <> "|heavy tasks" style-bold!
                     list->
                       {} (:class-name |task-list) (:style style-list)
                       -> tasks .to-list .reverse $ map
@@ -170,10 +170,6 @@
                         =< 8 nil
                         comp-wrap $ comp-zero
                     comp-inspect |Tasks tasks $ {} (:left 500) (:top 20)
-        |css-bold! $ %{} :CodeEntry (:doc |)
-          :code $ quote
-            defstyle css-bold! $ {}
-              "\"$0" $ {} (:font-weight "\"bold !important")
         |effect-focus $ %{} :CodeEntry (:doc |)
           :code $ quote
             defeffect effect-focus () (action parent at-place?) (js/console.log "\"todolist effect:" action)
@@ -191,6 +187,10 @@
           :code $ quote
             defn on-test (e dispatch!) (println "|trigger test!")
               try-test! dispatch! $ []
+        |style-bold! $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-bold! $ {}
+              "\"&" $ {} (:font-weight "\"bold !important")
         |style-list $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-list $ {} (:color :black)
@@ -198,14 +198,15 @@
         |style-panel $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-panel $ {} (:display :flex) (:margin-bottom 4)
-        |style-root $ %{} :CodeEntry (:doc |)
+        |style-todo-root $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def style-root $ {} (:color :black)
-              :background-color $ hsl 120 20 98
-              :line-height |24px
-              "\"font-size" 16
-              :padding 10
-              :font-family "|\"微软雅黑\", Verdana"
+            defstyle style-todo-root $ {}
+              "\"&" $ {} (:color :black)
+                :background-color $ hsl 120 20 98
+                :line-height |24px
+                "\"font-size" 16
+                :padding 10
+                :font-family "|\"微软雅黑\", Verdana"
         |style-toolbar $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-toolbar $ {} (:display :flex) (:flex-direction :row) (:justify-content :start) (:padding "\"4px 0") (:white-space :nowrap)
@@ -325,8 +326,8 @@
               :transition-duration "\"200ms"
         |style-button $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defstyle style-button $ {} ("\"$0" button)
-              "\"$0:hover" $ {} (:transform "\"scale(1.04)")
+            defstyle style-button $ {} ("\"&" button)
+              "\"&:hover" $ {} (:transform "\"scale(1.04)")
         |style-input $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-input $ {}
@@ -460,7 +461,7 @@
         |style-data $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-data $ {}
-              "\"$0" $ {} (:position :absolute) (:background-color "\"hsl(240,100%,0%)") (:color :white) (:opacity 0.2) (:font-size |12px) (:font-family |Avenir,Verdana) (:line-height "\"1.4em") (:padding "|2px 6px") (:border-radius |4px) (:max-width 160) (:max-height 32) (:white-space :normal) (:overflow :ellipsis) (:cursor :default)
+              "\"&" $ {} (:position :absolute) (:background-color "\"hsl(240,100%,0%)") (:color :white) (:opacity 0.2) (:font-size |12px) (:font-family |Avenir,Verdana) (:line-height "\"1.4em") (:padding "|2px 6px") (:border-radius |4px) (:max-width 160) (:max-height 32) (:white-space :normal) (:overflow :ellipsis) (:cursor :default)
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.comp.inspect $ :require
@@ -940,9 +941,12 @@
             def mount-target $ if (exists? js/document) (js/document.querySelector |.app) nil
         |reload! $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn reload! () (remove-watch *store :rerender) (clear-cache!) (render-app! mount-target)
-              add-watch *store :rerender $ fn (store prev) (render-app! mount-target)
-              js/console.log "|code updated."
+            defn reload () $ if (nil? build-errors)
+              do (remove-watch *store :rerender) (clear-cache!) (render-app! mount-target)
+                add-watch *store :rerender $ fn (store prev) (render-app! mount-target)
+                hud! "\"ok~" "\"Ok"
+                js/console.log "|code updated."
+              hud! "\"error" build-errors
         |save-store! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn save-store! () $ js/window.localStorage.setItem |respo.calcit
@@ -953,6 +957,8 @@
             respo.core :refer $ *changes-logger clear-cache!
             respo.app.core :refer $ render-app! *store
             respo.app.core :refer $ handle-ssr!
+            "\"./calcit.build-errors" :default build-errors
+            "\"bottom-tip" :default hud!
     |respo.render.diff $ %{} :FileEntry
       :defs $ {}
         |detect-keys-dup $ %{} :CodeEntry (:doc |)
