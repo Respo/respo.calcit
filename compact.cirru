@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.3)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.4)
     :modules $ [] |memof/ |lilac/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -912,7 +912,7 @@
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.css $ :require
-            respo.render.html :refer $ style->string
+            respo.render.dom :refer $ style->string
     |respo.cursor $ %{} :FileEntry
       :defs $ {}
         |update-states $ %{} :CodeEntry (:doc |)
@@ -1262,7 +1262,7 @@
                   &doseq (child-element child-elements)
                     if (some? child-element) (.!appendChild element child-element)
                   , element
-        |style->string $ %{} :CodeEntry (:doc |)
+        |style->string $ %{} :CodeEntry (:doc "|this functions is used inside DOM operations, inserting styles into a `<style>` element. to render to HTML, use `style->html` instead")
           :code $ quote
             defn style->string (styles)
               apply-args ("\"" styles)
@@ -1370,7 +1370,7 @@
             respo.util.list :refer $ val-of-first
     |respo.render.html $ %{} :FileEntry
       :defs $ {}
-        |element->string $ %{} :CodeEntry (:doc |)
+        |element->string $ %{} :CodeEntry (:doc "|which is actually `element->html`")
           :code $ quote
             defn element->string (element)
               let
@@ -1385,7 +1385,7 @@
                   tailored-props $ &let
                     props $ -> attrs (dissoc :innerHTML) (dissoc :inner-text)
                     if (empty? styles) props $ assoc props :style styles
-                  props-in-string $ props->string tailored-props
+                  props-in-string $ props->html tailored-props
                 if (&set:includes? self-closing tag-name)
                   str |< tag-name
                     if (blank? props-in-string) | "| "
@@ -1401,9 +1401,9 @@
                       , props-in-string |>
                         either text-inside $ join-str children |
                         , |</ tag-name |>
-        |entry->string $ %{} :CodeEntry (:doc |)
+        |entry->html $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn entry->string (entry)
+            defn entry->html (entry)
               let
                   k $ first entry
                   v $ last entry
@@ -1412,7 +1412,7 @@
                   , |= $ .escape
                     cond
                         = k :style
-                        style->string v
+                        style->html v
                       (bool? v) (str v)
                       (number? v) (str v)
                       (tag? v) (turn-string v)
@@ -1426,9 +1426,9 @@
           :code $ quote
             defn make-string (element)
               element->string $ purify-element (mute-element element)
-        |props->string $ %{} :CodeEntry (:doc |)
+        |props->html $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn props->string (props)
+            defn props->html (props)
               -> props (.to-list)
                 filter $ fn (pair)
                   let
@@ -1436,14 +1436,15 @@
                       v $ last pair
                     and (some? v)
                       not $ starts-with? (turn-string k) |on-
-                map entry->string
+                .sort-by first
+                map entry->html
                 join-str "| "
         |self-closing $ %{} :CodeEntry (:doc |)
           :code $ quote
             def self-closing $ #{} "\"area" "\"base" "\"br" "\"col" "\"embed" "\"hr" "\"img" "\"input" "\"link" "\"meta" "\"param" "\"source" "\"track" "\"wbr"
-        |style->string $ %{} :CodeEntry (:doc |)
+        |style->html $ %{} :CodeEntry (:doc "|this function is intended for HTML rendering since it escaped characters.")
           :code $ quote
-            defn style->string (styles)
+            defn style->html (styles)
               -> styles
                 map $ fn (entry)
                   let

@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:port 6001) (:reload-fn |respo.main/reload!) (:storage-key |calcit.cirru) (:version |0.16.3)
+  :configs $ {} (:init-fn |respo.main/main!) (:port 6001) (:reload-fn |respo.main/reload!) (:storage-key |calcit.cirru) (:version |0.16.4)
     :modules $ [] |memof/ |lilac/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -5683,7 +5683,7 @@
                 |T $ %{} :Leaf (:at 1651175809147) (:by |rJoDgvdeG) (:text |:require)
                 |b $ %{} :Expr (:at 1651175809751) (:by |rJoDgvdeG)
                   :data $ {}
-                    |T $ %{} :Leaf (:at 1651175809751) (:by |rJoDgvdeG) (:text |respo.render.html)
+                    |T $ %{} :Leaf (:at 1705683689090) (:by |rJoDgvdeG) (:text |respo.render.dom)
                     |b $ %{} :Leaf (:at 1651175809751) (:by |rJoDgvdeG) (:text |:refer)
                     |h $ %{} :Expr (:at 1651175809751) (:by |rJoDgvdeG)
                       :data $ {}
@@ -8263,7 +8263,7 @@
                                   |j $ %{} :Leaf (:at 1610194936664) (:by |rJoDgvdeG) (:text |element)
                                   |r $ %{} :Leaf (:at 1610194936664) (:by |rJoDgvdeG) (:text |child-element)
                       |yT $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |element)
-        |style->string $ %{} :CodeEntry (:doc |)
+        |style->string $ %{} :CodeEntry (:doc "|this functions is used inside DOM operations, inserting styles into a `<style>` element. to render to HTML, use `style->html` instead")
           :code $ %{} :Expr (:at 1504774121421) (:by nil)
             :data $ {}
               |T $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |defn)
@@ -8973,7 +8973,7 @@
                         |j $ %{} :Leaf (:at 1572885781518) (:by |rJoDgvdeG) (:text |val-of-first)
     |respo.render.html $ %{} :FileEntry
       :defs $ {}
-        |element->string $ %{} :CodeEntry (:doc |)
+        |element->string $ %{} :CodeEntry (:doc "|which is actually `element->html`")
           :code $ %{} :Expr (:at 1504774121421) (:by nil)
             :data $ {}
               |T $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |defn)
@@ -9094,7 +9094,7 @@
                           |T $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |props-in-string)
                           |j $ %{} :Expr (:at 1504774121421) (:by nil)
                             :data $ {}
-                              |T $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |props->string)
+                              |T $ %{} :Leaf (:at 1705684231638) (:by |rJoDgvdeG) (:text |props->html)
                               |j $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |tailored-props)
                   |n $ %{} :Expr (:at 1625579782265) (:by |rJoDgvdeG)
                     :data $ {}
@@ -9187,11 +9187,11 @@
                               |yj $ %{} :Leaf (:at 1625579902065) (:by |rJoDgvdeG) (:text ||</)
                               |yr $ %{} :Leaf (:at 1625579902065) (:by |rJoDgvdeG) (:text |tag-name)
                               |yv $ %{} :Leaf (:at 1625579902065) (:by |rJoDgvdeG) (:text ||>)
-        |entry->string $ %{} :CodeEntry (:doc |)
+        |entry->html $ %{} :CodeEntry (:doc |)
           :code $ %{} :Expr (:at 1504774121421) (:by nil)
             :data $ {}
               |T $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |defn)
-              |j $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |entry->string)
+              |j $ %{} :Leaf (:at 1705684210113) (:by |rJoDgvdeG) (:text |entry->html)
               |r $ %{} :Expr (:at 1504774121421) (:by nil)
                 :data $ {}
                   |T $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |entry)
@@ -9240,7 +9240,7 @@
                                       |r $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |:style)
                                   |j $ %{} :Expr (:at 1504774121421) (:by nil)
                                     :data $ {}
-                                      |T $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |style->string)
+                                      |T $ %{} :Leaf (:at 1705684049444) (:by |rJoDgvdeG) (:text |style->html)
                                       |j $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |v)
                               |v $ %{} :Expr (:at 1508599021605) (:by |root)
                                 :data $ {}
@@ -9347,11 +9347,11 @@
                         :data $ {}
                           |T $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |mute-element)
                           |j $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |element)
-        |props->string $ %{} :CodeEntry (:doc |)
+        |props->html $ %{} :CodeEntry (:doc |)
           :code $ %{} :Expr (:at 1504774121421) (:by nil)
             :data $ {}
               |T $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |defn)
-              |j $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |props->string)
+              |j $ %{} :Leaf (:at 1705684202394) (:by |rJoDgvdeG) (:text |props->html)
               |r $ %{} :Expr (:at 1504774121421) (:by nil)
                 :data $ {}
                   |T $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |props)
@@ -9408,10 +9408,14 @@
                                               |T $ %{} :Leaf (:at 1619542574914) (:by |rJoDgvdeG) (:text |turn-string)
                                               |j $ %{} :Leaf (:at 1619542547145) (:by |rJoDgvdeG) (:text |k)
                                           |j $ %{} :Leaf (:at 1619542576248) (:by |rJoDgvdeG) (:text ||on-)
+                  |t $ %{} :Expr (:at 1705684124001) (:by |rJoDgvdeG)
+                    :data $ {}
+                      |T $ %{} :Leaf (:at 1705684127571) (:by |rJoDgvdeG) (:text |.sort-by)
+                      |b $ %{} :Leaf (:at 1705684129024) (:by |rJoDgvdeG) (:text |first)
                   |v $ %{} :Expr (:at 1504774121421) (:by nil)
                     :data $ {}
                       |T $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |map)
-                      |j $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |entry->string)
+                      |j $ %{} :Leaf (:at 1705684211846) (:by |rJoDgvdeG) (:text |entry->html)
                   |x $ %{} :Expr (:at 1504774121421) (:by nil)
                     :data $ {}
                       |T $ %{} :Leaf (:at 1610285926671) (:by |rJoDgvdeG) (:text |join-str)
@@ -9438,11 +9442,11 @@
                   |yyT $ %{} :Leaf (:at 1625579825169) (:by |rJoDgvdeG) (:text "|\"source")
                   |yyj $ %{} :Leaf (:at 1625579827647) (:by |rJoDgvdeG) (:text "|\"track")
                   |yyr $ %{} :Leaf (:at 1625579829632) (:by |rJoDgvdeG) (:text "|\"wbr")
-        |style->string $ %{} :CodeEntry (:doc |)
+        |style->html $ %{} :CodeEntry (:doc "|this function is intended for HTML rendering since it escaped characters.")
           :code $ %{} :Expr (:at 1504774121421) (:by nil)
             :data $ {}
               |T $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |defn)
-              |j $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |style->string)
+              |j $ %{} :Leaf (:at 1705684031885) (:by |rJoDgvdeG) (:text |style->html)
               |r $ %{} :Expr (:at 1504774121421) (:by nil)
                 :data $ {}
                   |T $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |styles)
@@ -9497,10 +9501,10 @@
                                   |T $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |str)
                                   |f $ %{} :Leaf (:at 1613290150922) (:by |rJoDgvdeG) (:text |style-name)
                                   |r $ %{} :Leaf (:at 1504774121421) (:by |root) (:text ||:)
-                                  |v $ %{} :Expr (:at 1613290173324) (:by |rJoDgvdeG)
+                                  |v $ %{} :Expr (:at 1705683598727) (:by |rJoDgvdeG)
                                     :data $ {}
-                                      |T $ %{} :Leaf (:at 1613290173324) (:by |rJoDgvdeG) (:text |escape-html)
-                                      |j $ %{} :Leaf (:at 1613290173324) (:by |rJoDgvdeG) (:text |v)
+                                      |D $ %{} :Leaf (:at 1705683603153) (:by |rJoDgvdeG) (:text |escape-html)
+                                      |T $ %{} :Leaf (:at 1613290173324) (:by |rJoDgvdeG) (:text |v)
                                   |x $ %{} :Leaf (:at 1504774121421) (:by |root) (:text ||;)
                   |v $ %{} :Expr (:at 1504774121421) (:by nil)
                     :data $ {}
