@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.3)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.4)
     :modules $ [] |memof/ |lilac/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -47,7 +47,7 @@
                   state $ either (:data states) |
                 [] (effect-log task)
                   div
-                    {} $ :class-name css-task
+                    {} $ :class-name style-task
                     comp-inspect |Task task $ {} (:left 200)
                     button $ {} (:class-name style-done)
                       :style $ {}
@@ -75,10 +75,6 @@
                       <> |Remove
                     =< 8 nil
                     div ({}) (<> state)
-        |css-task $ %{} :CodeEntry (:doc |)
-          :code $ quote
-            defstyle css-task $ {}
-              "\"&" $ {} (:display :flex) (:padding "|4px 0px")
         |effect-log $ %{} :CodeEntry (:doc |)
           :code $ quote
             defeffect effect-log (task) (action parent at-place?) (; js/console.log "\"Task effect" action at-place?)
@@ -92,7 +88,11 @@
         |style-done $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-done $ {}
-              "\"$0" $ {} (:width 32) (:height 32) (:outline :none) (:border :none) (:vertical-align :middle)
+              "\"&" $ {} (:width 32) (:height 32) (:outline :none) (:border :none) (:vertical-align :middle)
+        |style-task $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-task $ {}
+              "\"&" $ {} (:display :flex) (:padding "|4px 0px")
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.app.comp.task $ :require
@@ -112,7 +112,7 @@
                   state $ either (:data states) initial-state
                 [] (effect-focus)
                   div
-                    {} $ :style style-root
+                    {} $ :class-name style-todo-root
                     ; a $ {} (; :href "\"A") (; :class-name "\"B") (; :inner-text "\"C") (; :height "\"100px")
                     comp-inspect |States state $ {} (:left |80px)
                     div
@@ -140,7 +140,7 @@
                       div ({})
                         div
                           {} (:class-name widget/style-button) (:on-click on-test)
-                          <> "|heavy tasks" css-bold!
+                          <> "|heavy tasks" style-bold!
                     list->
                       {} (:class-name |task-list) (:style style-list)
                       -> tasks .to-list .reverse $ map
@@ -170,10 +170,6 @@
                         =< 8 nil
                         comp-wrap $ comp-zero
                     comp-inspect |Tasks tasks $ {} (:left 500) (:top 20)
-        |css-bold! $ %{} :CodeEntry (:doc |)
-          :code $ quote
-            defstyle css-bold! $ {}
-              "\"$0" $ {} (:font-weight "\"bold !important")
         |effect-focus $ %{} :CodeEntry (:doc |)
           :code $ quote
             defeffect effect-focus () (action parent at-place?) (js/console.log "\"todolist effect:" action)
@@ -191,6 +187,10 @@
           :code $ quote
             defn on-test (e dispatch!) (println "|trigger test!")
               try-test! dispatch! $ []
+        |style-bold! $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-bold! $ {}
+              "\"&" $ {} (:font-weight "\"bold !important")
         |style-list $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-list $ {} (:color :black)
@@ -198,14 +198,15 @@
         |style-panel $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-panel $ {} (:display :flex) (:margin-bottom 4)
-        |style-root $ %{} :CodeEntry (:doc |)
+        |style-todo-root $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def style-root $ {} (:color :black)
-              :background-color $ hsl 120 20 98
-              :line-height |24px
-              "\"font-size" 16
-              :padding 10
-              :font-family "|\"微软雅黑\", Verdana"
+            defstyle style-todo-root $ {}
+              "\"&" $ {} (:color :black)
+                :background-color $ hsl 120 20 98
+                :line-height |24px
+                "\"font-size" 16
+                :padding 10
+                :font-family "|\"微软雅黑\", Verdana"
         |style-toolbar $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-toolbar $ {} (:display :flex) (:flex-direction :row) (:justify-content :start) (:padding "\"4px 0") (:white-space :nowrap)
@@ -325,8 +326,8 @@
               :transition-duration "\"200ms"
         |style-button $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defstyle style-button $ {} ("\"$0" button)
-              "\"$0:hover" $ {} (:transform "\"scale(1.04)")
+            defstyle style-button $ {} ("\"&" button)
+              "\"&:hover" $ {} (:transform "\"scale(1.04)")
         |style-input $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-input $ {}
@@ -460,7 +461,7 @@
         |style-data $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-data $ {}
-              "\"$0" $ {} (:position :absolute) (:background-color "\"hsl(240,100%,0%)") (:color :white) (:opacity 0.2) (:font-size |12px) (:font-family |Avenir,Verdana) (:line-height "\"1.4em") (:padding "|2px 6px") (:border-radius |4px) (:max-width 160) (:max-height 32) (:white-space :normal) (:overflow :ellipsis) (:cursor :default)
+              "\"&" $ {} (:position :absolute) (:background-color "\"hsl(240,100%,0%)") (:color :white) (:opacity 0.2) (:font-size |12px) (:font-family |Avenir,Verdana) (:line-height "\"1.4em") (:padding "|2px 6px") (:border-radius |4px) (:max-width 160) (:max-height 32) (:white-space :normal) (:overflow :ellipsis) (:cursor :default)
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.comp.inspect $ :require
@@ -911,7 +912,7 @@
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.css $ :require
-            respo.render.html :refer $ style->string
+            respo.render.dom :refer $ style->string
     |respo.cursor $ %{} :FileEntry
       :defs $ {}
         |update-states $ %{} :CodeEntry (:doc |)
@@ -940,9 +941,12 @@
             def mount-target $ if (exists? js/document) (js/document.querySelector |.app) nil
         |reload! $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn reload! () (remove-watch *store :rerender) (clear-cache!) (render-app! mount-target)
-              add-watch *store :rerender $ fn (store prev) (render-app! mount-target)
-              js/console.log "|code updated."
+            defn reload () $ if (nil? build-errors)
+              do (remove-watch *store :rerender) (clear-cache!) (render-app! mount-target)
+                add-watch *store :rerender $ fn (store prev) (render-app! mount-target)
+                hud! "\"ok~" "\"Ok"
+                js/console.log "|code updated."
+              hud! "\"error" build-errors
         |save-store! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn save-store! () $ js/window.localStorage.setItem |respo.calcit
@@ -953,6 +957,8 @@
             respo.core :refer $ *changes-logger clear-cache!
             respo.app.core :refer $ render-app! *store
             respo.app.core :refer $ handle-ssr!
+            "\"./calcit.build-errors" :default build-errors
+            "\"bottom-tip" :default hud!
     |respo.render.diff $ %{} :FileEntry
       :defs $ {}
         |detect-keys-dup $ %{} :CodeEntry (:doc |)
@@ -1017,7 +1023,7 @@
                     if (nil? y1) (js/console.warn "\"nil key is bad in Respo")
                     ; println "\"compare:" x1 new-keys x1-remains? y1 y1-existed? old-keys
                     cond
-                        = x1 y1
+                        &= x1 y1
                         let
                             old-element $ val-of-first old-children
                             new-element $ val-of-first new-children
@@ -1049,7 +1055,7 @@
                           first-new-entry $ first new-children
                           new-n-coord $ conj n-coord index
                         ; println |index: xi yi
-                        if (<= xi yi)
+                        if (&<= xi yi)
                           let
                               new-element $ val-of-first new-children
                               new-coord $ conj coord y1
@@ -1117,8 +1123,8 @@
                       let
                           old-children $ &record:get old-tree :children
                           new-children $ &record:get new-tree :children
-                        if dev? $ if
-                          detect-keys-dup $ map new-children first
+                        if
+                          and dev? $ detect-keys-dup (map new-children first)
                           js/console.error "\"Parent that has dups" new-tree
                         find-children-diffs collect! coord n-coord 0 old-children new-children
                 true $ js/console.warn "\"Diffing unknown params" old-tree new-tree
@@ -1151,7 +1157,7 @@
                       old-follows $ rest old-props
                       new-follows $ rest new-props
                     ; js/console.log old-k new-k old-v new-v
-                    case-default (&compare old-k new-k) (println "\"[Respo] unknown result")
+                    case-default (&compare old-k new-k) (eprintln "\"[Respo] unknown compare result for props keys")
                       -1 $ do
                         collect! $ :: :rm-prop coord n-coord old-k
                         recur collect! coord n-coord old-follows new-props
@@ -1190,7 +1196,7 @@
                       new-follows $ rest new-style
                     case-default
                       &compare (first old-entry) (first new-entry)
-                      println "\"[Respo] unknown compare result for style keys"
+                      eprintln "\"[Respo] unknown compare result for style keys"
                       -1 $ do
                         collect! $ :: :rm-style c-coord coord (first old-entry)
                         recur collect! c-coord coord old-follows new-style
@@ -1256,7 +1262,7 @@
                   &doseq (child-element child-elements)
                     if (some? child-element) (.!appendChild element child-element)
                   , element
-        |style->string $ %{} :CodeEntry (:doc |)
+        |style->string $ %{} :CodeEntry (:doc "|this functions is used inside DOM operations, inserting styles into a `<style>` element. to render to HTML, use `style->html` instead")
           :code $ quote
             defn style->string (styles)
               apply-args ("\"" styles)
@@ -1364,7 +1370,7 @@
             respo.util.list :refer $ val-of-first
     |respo.render.html $ %{} :FileEntry
       :defs $ {}
-        |element->string $ %{} :CodeEntry (:doc |)
+        |element->string $ %{} :CodeEntry (:doc "|which is actually `element->html`")
           :code $ quote
             defn element->string (element)
               let
@@ -1379,7 +1385,7 @@
                   tailored-props $ &let
                     props $ -> attrs (dissoc :innerHTML) (dissoc :inner-text)
                     if (empty? styles) props $ assoc props :style styles
-                  props-in-string $ props->string tailored-props
+                  props-in-string $ props->html tailored-props
                 if (&set:includes? self-closing tag-name)
                   str |< tag-name
                     if (blank? props-in-string) | "| "
@@ -1395,9 +1401,9 @@
                       , props-in-string |>
                         either text-inside $ join-str children |
                         , |</ tag-name |>
-        |entry->string $ %{} :CodeEntry (:doc |)
+        |entry->html $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn entry->string (entry)
+            defn entry->html (entry)
               let
                   k $ first entry
                   v $ last entry
@@ -1406,7 +1412,7 @@
                   , |= $ .escape
                     cond
                         = k :style
-                        style->string v
+                        style->html v
                       (bool? v) (str v)
                       (number? v) (str v)
                       (tag? v) (turn-string v)
@@ -1420,9 +1426,9 @@
           :code $ quote
             defn make-string (element)
               element->string $ purify-element (mute-element element)
-        |props->string $ %{} :CodeEntry (:doc |)
+        |props->html $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn props->string (props)
+            defn props->html (props)
               -> props (.to-list)
                 filter $ fn (pair)
                   let
@@ -1430,14 +1436,15 @@
                       v $ last pair
                     and (some? v)
                       not $ starts-with? (turn-string k) |on-
-                map entry->string
+                .sort-by first
+                map entry->html
                 join-str "| "
         |self-closing $ %{} :CodeEntry (:doc |)
           :code $ quote
             def self-closing $ #{} "\"area" "\"base" "\"br" "\"col" "\"embed" "\"hr" "\"img" "\"input" "\"link" "\"meta" "\"param" "\"source" "\"track" "\"wbr"
-        |style->string $ %{} :CodeEntry (:doc |)
+        |style->html $ %{} :CodeEntry (:doc "|this function is intended for HTML rendering since it escaped characters.")
           :code $ quote
-            defn style->string (styles)
+            defn style->html (styles)
               -> styles
                 map $ fn (entry)
                   let
@@ -1523,12 +1530,12 @@
         |find-target $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn find-target (root coord)
-              if (empty? coord) root $ let
-                  index $ first coord
-                  child $ aget (.-children root) index
-                if (some? child)
-                  recur child $ rest coord
-                  , nil
+              list-match coord
+                () root
+                (index xss)
+                  if-let
+                    child $ aget (.-children root) index
+                    recur child xss
         |replace-element $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn replace-element (target op listener-builder coord)
