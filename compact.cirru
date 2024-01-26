@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.4)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.5)
     :modules $ [] |memof/ |lilac/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -12,7 +12,7 @@
               let
                   states $ :states store
                 div
-                  {} $ :style style-global
+                  {} (; :class-name highlight-defcomp) (:style style-global)
                   comp-todolist states $ :tasks store
                   div
                     {} $ :style style-states
@@ -37,6 +37,7 @@
             respo.app.comp.todolist :refer $ comp-todolist
             respo.comp.space :refer $ =<
             respo.comp.global-keydown :refer $ comp-global-keydown comp-global-keyup
+            respo.comp.inspect :refer $ highlight-defcomp
     |respo.app.comp.task $ %{} :FileEntry
       :defs $ {}
         |comp-task $ %{} :CodeEntry (:doc |)
@@ -88,7 +89,7 @@
         |style-done $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-done $ {}
-              "\"&" $ {} (:width 32) (:height 32) (:outline :none) (:border :none) (:vertical-align :middle)
+              :& $ {} (:width 32) (:height 32) (:outline :none) (:border :none) (:vertical-align :middle)
         |style-task $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-task $ {}
@@ -151,9 +152,9 @@
                     if
                       > (count tasks) 0
                       div
-                        {} (:spell-check true) (:style style-toolbar)
+                        {} (:spell-check true) (:class-name style-toolbar)
                         div
-                          {} (:style widget/button)
+                          {} (:class-name widget/style-button)
                             :on-click $ if
                               not $ :locked? state
                               fn (e d!)
@@ -161,7 +162,7 @@
                           <> |Clear2
                         =< 8 nil
                         div
-                          {} (:style widget/button)
+                          {} (:class-name widget/style-button)
                             :on-click $ fn (e d!)
                               d! cursor $ update state :locked? not
                           <>
@@ -209,7 +210,8 @@
                 :font-family "|\"微软雅黑\", Verdana"
         |style-toolbar $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def style-toolbar $ {} (:display :flex) (:flex-direction :row) (:justify-content :start) (:padding "\"4px 0") (:white-space :nowrap)
+            defstyle style-toolbar $ {}
+              "\"&" $ {} (:display :flex) (:flex-direction :row) (:justify-content :start) (:padding "\"4px 0") (:white-space :nowrap)
         |try-test! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn try-test! (dispatch! acc)
@@ -326,7 +328,7 @@
               :transition-duration "\"200ms"
         |style-button $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defstyle style-button $ {} ("\"&" button)
+            defstyle style-button $ {} (:& button)
               "\"&:hover" $ {} (:transform "\"scale(1.04)")
         |style-input $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -458,15 +460,21 @@
                 (bool? data) (str data)
                 (fn? data) |Fn
                 true $ to-lispy-string data
+        |highlight-defcomp $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle highlight-defcomp $ {}
+              "\"& *" $ {}
+                :outline $ str "\"1px dashed " (hsl 200 40 50 0.5)
         |style-data $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-data $ {}
-              "\"&" $ {} (:position :absolute) (:background-color "\"hsl(240,100%,0%)") (:color :white) (:opacity 0.2) (:font-size |12px) (:font-family |Avenir,Verdana) (:line-height "\"1.4em") (:padding "|2px 6px") (:border-radius |4px) (:max-width 160) (:max-height 32) (:white-space :normal) (:overflow :ellipsis) (:cursor :default)
+              "\"&" $ {} (:position :absolute) (:background-color "\"hsl(240,100%,0%)") (:color :white) (:opacity 0.2) (:font-size |12px) (:font-family |Avenir,Verdana) (:line-height "\"1.4em") (:padding "|2px 6px") (:border-radius |4px) (:max-width 160) (:max-height 32) (:white-space :normal) (:text-overflow :ellipsis) (:cursor :default)
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.comp.inspect $ :require
             respo.core :refer $ defcomp pre <>
             respo.css :refer $ defstyle
+            respo.util.format :refer $ hsl
     |respo.comp.space $ %{} :FileEntry
       :defs $ {}
         |=< $ %{} :CodeEntry (:doc |)
@@ -475,15 +483,17 @@
         |comp-space $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-space (w h)
-              div $ {}
-                :style $ if (some? w) (assoc style-space :width w) (assoc style-space :height h)
+              div $ {} (:class-name style-space)
+                :style $ if (some? w) (&{} :width w) (&{} :height h)
         |style-space $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def style-space $ {} (:height 1) (:width 1) (:display :inline-block)
+            defstyle style-space $ {}
+              :& $ {} (:height 1) (:width 1) (:display :inline-block)
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.comp.space $ :require
             respo.core :refer $ div defcomp
+            respo.css :refer $ defstyle
     |respo.controller.client $ %{} :FileEntry
       :defs $ {}
         |activate-instance! $ %{} :CodeEntry (:doc |)
@@ -898,7 +908,7 @@
               -> rules
                 .map-list $ fn (pair)
                   let
-                      k $ nth pair 0
+                      k $ turn-string (nth pair 0)
                       v $ nth pair 1
                     assert "\"expected rule name in string" $ string? k
                     assert "\"expected rule styles in map" $ map? v
@@ -933,7 +943,7 @@
                 swap! *store assoc :tasks $ parse-cirru-edn raw
               render-app! mount-target
               add-watch *store :rerender $ fn (store prev) (render-app! mount-target)
-              ; reset! *changes-logger $ fn (old-tree new-tree changes) (js/console.log changes)
+              ; reset! *changes-logger $ fn (old-tree new-tree changes) (js/console.log "\"Patch" changes)
               println |Loaded. $ js/performance.now
               set! js/window.onbeforeunload $ fn (event) (save-store!)
         |mount-target $ %{} :CodeEntry (:doc |)
@@ -1226,6 +1236,7 @@
                 make-element (&record:get virtual-element :tree) listener-builder $ conj coord (&record:get virtual-element :name)
                 let
                     tag-name $ turn-string (&record:get virtual-element :name)
+                    comp-mark $ last coord
                     attrs $ &record:get virtual-element :attrs
                     style $ &record:get virtual-element :style
                     children $ &record:get virtual-element :children
@@ -1238,6 +1249,8 @@
                           when (nil? k) (js/console.warn "\"nil key is bad for Respo")
                           when (some? child)
                             make-element child listener-builder $ conj coord k
+                  if (tag? comp-mark)
+                    aset (.-dataset element) "\"defcomp" $ turn-string comp-mark
                   &doseq (entry attrs)
                     let
                         k $ dashed->camel
