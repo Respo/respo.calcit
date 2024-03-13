@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:port 6001) (:reload-fn |respo.main/reload!) (:storage-key |calcit.cirru) (:version |0.16.6)
+  :configs $ {} (:init-fn |respo.main/main!) (:port 6001) (:reload-fn |respo.main/reload!) (:storage-key |calcit.cirru) (:version |0.16.7)
     :modules $ [] |memof/ |lilac/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -701,7 +701,7 @@
                                   |j $ %{} :Leaf (:at 1705596410178) (:by |rJoDgvdeG) (:text |style-todo-root)
                               |n $ %{} :Expr (:at 1710342003984) (:by |rJoDgvdeG)
                                 :data $ {}
-                                  |T $ %{} :Leaf (:at 1710342013667) (:by |rJoDgvdeG) (:text |:data-name)
+                                  |T $ %{} :Leaf (:at 1710344400705) (:by |rJoDgvdeG) (:text |:data-name)
                                   |b $ %{} :Leaf (:at 1710342684369) (:by |rJoDgvdeG) (:text "|\"todolist")
                           |n $ %{} :Expr (:at 1678121659036) (:by |rJoDgvdeG)
                             :data $ {}
@@ -10554,13 +10554,12 @@
                               |h $ %{} :Leaf (:at 1710309148054) (:by |rJoDgvdeG) (:text |.-dataset)
                               |l $ %{} :Expr (:at 1710309148727) (:by |rJoDgvdeG)
                                 :data $ {}
-                                  |T $ %{} :Leaf (:at 1710343012074) (:by |rJoDgvdeG) (:text |js-set)
+                                  |T $ %{} :Leaf (:at 1710344356296) (:by |rJoDgvdeG) (:text |js-delete)
                                   |b $ %{} :Expr (:at 1710309163494) (:by |rJoDgvdeG)
                                     :data $ {}
                                       |T $ %{} :Leaf (:at 1710309165097) (:by |rJoDgvdeG) (:text |.!slice)
                                       |X $ %{} :Leaf (:at 1710309168539) (:by |rJoDgvdeG) (:text |prop-str)
                                       |b $ %{} :Leaf (:at 1710309165987) (:by |rJoDgvdeG) (:text |5)
-                                  |h $ %{} :Leaf (:at 1710343013009) (:by |rJoDgvdeG) (:text |nil)
                           |T $ %{} :Expr (:at 1678121938603) (:by |rJoDgvdeG)
                             :data $ {}
                               |T $ %{} :Leaf (:at 1678121938603) (:by |rJoDgvdeG) (:text |let)

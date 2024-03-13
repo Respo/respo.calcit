@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.6)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.7)
     :modules $ [] |memof/ |lilac/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -1605,7 +1605,7 @@
                 let
                     prop-str $ turn-string op
                   if (.!startsWith prop-str "\"data-")
-                    -> target .-dataset $ js-set (.!slice prop-str 5) nil
+                    -> target .-dataset $ js-delete (.!slice prop-str 5)
                     let
                         k $ dashed->camel prop-str
                         ; ks $ prop->attr prop-str
