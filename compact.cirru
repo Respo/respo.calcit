@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.5)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.7)
     :modules $ [] |memof/ |lilac/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -113,7 +113,7 @@
                   state $ either (:data states) initial-state
                 [] (effect-focus)
                   div
-                    {} $ :class-name style-todo-root
+                    {} (:class-name style-todo-root) (:data-name "\"todolist")
                     ; a $ {} (; :href "\"A") (; :class-name "\"B") (; :inner-text "\"C") (; :height "\"100px")
                     comp-inspect |States state $ {} (:left |80px)
                     div
@@ -136,7 +136,8 @@
                         span $ {} (:on-click nil) (:inner-text "\"Add")
                       =< 8 nil
                       span $ {} (:inner-text |Clear) (:class-name widget/style-button)
-                        :on-click $ fn (e d!) (d! :clear nil)
+                        :on-click $ fn (e d!)
+                          d! $ :: :clear
                       =< 8 nil
                       div ({})
                         div
@@ -217,7 +218,7 @@
             defn try-test! (dispatch! acc)
               let
                   started $ js/Date.now
-                dispatch! :clear nil
+                dispatch! $ :: :clear
                 loop
                     x 20
                   dispatch! :add |empty
@@ -228,7 +229,7 @@
                   dispatch! $ : hit-first (js/Math.random)
                   if (> x 0)
                     recur $ dec x
-                dispatch! :clear nil
+                dispatch! $ :: :clear
                 loop
                     x 10
                   dispatch! :add "|only 10 items"
@@ -423,7 +424,7 @@
                   let
                       handler $ aget el dirty-field
                     js/window.removeEventListener event-name handler
-                    aset el dirty-field nil
+                    js-delete el dirty-field
                 true nil
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
@@ -1253,10 +1254,13 @@
                     aset (.-dataset element) "\"defcomp" $ turn-string comp-mark
                   &doseq (entry attrs)
                     let
-                        k $ dashed->camel
-                          turn-string $ first entry
+                        prop-str $ turn-string (first entry)
                         v $ last entry
-                      if (some? v) (aset element k v)
+                      if (.!startsWith prop-str "\"data-")
+                        -> element .-dataset $ js-set (.!slice prop-str 5) v
+                        let
+                            k $ dashed->camel prop-str
+                          if (some? v) (aset element k v)
                   &doseq (entry style)
                     let
                         style-name $ turn-string (first entry)
@@ -1490,19 +1494,19 @@
                   .!stopPropagation event
         |add-prop $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn add-prop (target op)
-              let-sugar
-                    [] p prop-value
-                    , op
-                  prop-name $ dashed->camel (turn-string p)
-                case-default prop-name (aset target prop-name prop-value)
-                  |style $ aset target prop-name (style->string prop-value)
+            defn add-prop (target p prop-value)
+              let
+                  prop-str $ turn-string p
+                if (.!startsWith prop-str "\"data-")
+                  -> target .-dataset $ js-set (.!slice prop-str 5) prop-value
+                  let
+                      prop-name $ dashed->camel prop-str
+                    case-default prop-name (js-set target prop-name prop-value)
+                      |style $ js-set target prop-name (style->string prop-value)
         |add-style $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn add-style (target op)
-              let-sugar
-                    [] p v
-                    , op
+            defn add-style (target p v)
+              let
                   style-name $ dashed->camel (turn-string p)
                   style-value $ get-style-value v style-name
                 -> (.-style target) (aset style-name style-value)
@@ -1523,11 +1527,14 @@
                       target $ find-target root n-coord
                     tag-match op
                         :replace-prop _coord _n-coord op-data
-                        replace-prop target op-data
-                      (:add-prop _coord _n-coord op-data) (add-prop target op-data)
+                        replace-prop target (nth op-data 0) (nth op-data 1)
+                      (:add-prop _coord _n-coord op-data)
+                        add-prop target (nth op-data 0) (nth op-data 1)
                       (:rm-prop _coord _n-coord op-data) (rm-prop target op-data)
-                      (:add-style _coord _n-coord op-data) (add-style target op-data)
-                      (:replace-style _coord _n-coord op-data) (replace-style target op-data)
+                      (:add-style _coord _n-coord op-data)
+                        add-style target (nth op-data 0) (nth op-data 1)
+                      (:replace-style _coord _n-coord op-data)
+                        replace-style target (nth op-data 0) (nth op-data 1)
                       (:rm-style _coord _n-coord op-data) (rm-style target op-data)
                       (:set-event coord _n-coord op-data) (add-event target op-data listener-builder coord)
                       (:rm-event _coord _n-coord op-data) (rm-event target op-data)
@@ -1558,20 +1565,26 @@
                 .!remove target
         |replace-prop $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn replace-prop (target op)
-              let[] (p prop-value) op $ let
-                  prop-name $ dashed->camel (turn-string p)
-                if (identical? prop-name |value)
-                  if
-                    not= prop-value $ .-value target
-                    aset target prop-name prop-value
-                  aset target prop-name prop-value
+            defn replace-prop (target p prop-value)
+              let
+                  prop-str $ turn-string p
+                if (.!startsWith prop-str "\"data-")
+                  let
+                      name $ .!slice prop-str 5
+                    if
+                      not= prop-value $ -> target .-dataset (aget name)
+                      -> target .-dataset $ js-set name prop-value
+                  let
+                      prop-name $ dashed->camel prop-str
+                    if (identical? prop-name |value)
+                      if
+                        not= prop-value $ .-value target
+                        js-set target prop-name prop-value
+                      js-set target prop-name prop-value
         |replace-style $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn replace-style (target op)
-              let-sugar
-                    [] p v
-                    , op
+            defn replace-style (target p v)
+              let
                   style-name $ dashed->camel (turn-string p)
                 -> (.-style target)
                   aset style-name $ get-style-value v style-name
@@ -1584,15 +1597,19 @@
             defn rm-event (target event-name)
               &let
                 event-prop $ event->prop event-name
-                aset target event-prop nil
+                js-set target event-prop nil
         |rm-prop $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn rm-prop (target op)
               case-default op
                 let
-                    k $ dashed->camel (turn-string op)
-                    ; ks $ prop->attr (turn-string op)
-                  aset target k nil
+                    prop-str $ turn-string op
+                  if (.!startsWith prop-str "\"data-")
+                    -> target .-dataset $ js-delete (.!slice prop-str 5)
+                    let
+                        k $ dashed->camel prop-str
+                        ; ks $ prop->attr prop-str
+                      aset target k nil
                 :class-name $ .!removeAttribute target "\"class"
                 :href $ .!removeAttribute target "\"href"
                 :inner-text $ set! (.-innerText target) "\""
@@ -1605,7 +1622,7 @@
             defn rm-style (target op)
               &let
                 style-name $ dashed->camel (turn-string op)
-                -> (.-style target) (aset style-name nil)
+                -> (.-style target) (js-set style-name nil)
         |run-effect $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn run-effect (target method coord)
