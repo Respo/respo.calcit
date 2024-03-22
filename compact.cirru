@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.7)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.8)
     :modules $ [] |memof/ |lilac/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -52,7 +52,7 @@
                     comp-inspect |Task task $ {} (:left 200)
                     button $ {} (:class-name style-done)
                       :style $ {}
-                        "\"background-color" $ if (:done? task) (hsl 200 20 80) (hsl 200 80 70)
+                        :background-color $ if (:done? task) (hsl 200 20 80) (hsl 200 80 70)
                       :on-click $ fn (e d!)
                         d! $ : toggle (:id task)
                     =< 8 nil
@@ -89,7 +89,7 @@
         |style-done $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-done $ {}
-              :& $ {} (:width 32) (:height 32) (:outline :none) (:border :none) (:vertical-align :middle)
+              :& $ {} (:width 32) (:height 32) (:outline :none) (:border :none) (:vertical-align :middle) (:cursor :pointer)
         |style-task $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-task $ {}
@@ -685,10 +685,15 @@
               assert "\"expected list for params" $ list? params
               assert "\"some component retured" $ &> (count body) 0
               quasiquote $ defn ~comp-name (~ params)
-                extract-effects-list $ %{} schema/Component
-                  :effects $ []
-                  :name $ ~ (turn-tag comp-name)
-                  :tree $ do (~@ body)
+                ->
+                  extract-effects-list $ %{} schema/Component
+                    :effects $ []
+                    :name $ ~ (turn-tag comp-name)
+                    :tree $ do (~@ body)
+                  update-in ([] :tree :attrs)
+                    fn (attrs)
+                      conj attrs $ [] :data-comp
+                        ~ $ turn-string comp-name
         |defeffect $ %{} :CodeEntry (:doc |)
           :code $ quote
             defmacro defeffect (effect-name args params & body)
@@ -1237,7 +1242,6 @@
                 make-element (&record:get virtual-element :tree) listener-builder $ conj coord (&record:get virtual-element :name)
                 let
                     tag-name $ turn-string (&record:get virtual-element :name)
-                    comp-mark $ last coord
                     attrs $ &record:get virtual-element :attrs
                     style $ &record:get virtual-element :style
                     children $ &record:get virtual-element :children
@@ -1250,8 +1254,6 @@
                           when (nil? k) (js/console.warn "\"nil key is bad for Respo")
                           when (some? child)
                             make-element child listener-builder $ conj coord k
-                  if (tag? comp-mark)
-                    aset (.-dataset element) "\"defcomp" $ turn-string comp-mark
                   &doseq (entry attrs)
                     let
                         prop-str $ turn-string (first entry)
