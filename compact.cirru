@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.8)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.9)
     :modules $ [] |memof/ |lilac/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -678,6 +678,14 @@
                   event $ pick-event props
                 %{} schema/Element (:name tag-name) (:coord nil) (:attrs attrs) (:style styles) (:event event)
                   :children $ map child-map confirm-child-pair
+        |decorate-defcomp $ %{} :CodeEntry (:doc "|detect root element under component and add `data-defcomp` mark")
+          :code $ quote
+            defn decorate-defcomp (c name)
+              update c :tree $ fn (tree)
+                if (&record:matches? tree schema/Element)
+                  update tree :attrs $ fn (attrs)
+                    conj attrs $ [] :data-comp name
+                  , tree
         |defcomp $ %{} :CodeEntry (:doc |)
           :code $ quote
             defmacro defcomp (comp-name params & body)
@@ -685,15 +693,12 @@
               assert "\"expected list for params" $ list? params
               assert "\"some component retured" $ &> (count body) 0
               quasiquote $ defn ~comp-name (~ params)
-                ->
+                decorate-defcomp
                   extract-effects-list $ %{} schema/Component
                     :effects $ []
                     :name $ ~ (turn-tag comp-name)
                     :tree $ do (~@ body)
-                  update-in ([] :tree :attrs)
-                    fn (attrs)
-                      conj attrs $ [] :data-comp
-                        ~ $ turn-string comp-name
+                  ~ $ turn-string comp-name
         |defeffect $ %{} :CodeEntry (:doc |)
           :code $ quote
             defmacro defeffect (effect-name args params & body)
