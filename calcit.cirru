@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:port 6001) (:reload-fn |respo.main/reload!) (:storage-key |calcit.cirru) (:version |0.16.8)
+  :configs $ {} (:init-fn |respo.main/main!) (:port 6001) (:reload-fn |respo.main/reload!) (:storage-key |calcit.cirru) (:version |0.16.9)
     :modules $ [] |memof/ |lilac/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -4185,6 +4185,55 @@
                               |T $ %{} :Leaf (:at 1645977174439) (:by |rJoDgvdeG) (:text |map)
                               |b $ %{} :Leaf (:at 1645977177860) (:by |rJoDgvdeG) (:text |child-map)
                               |h $ %{} :Leaf (:at 1645977369915) (:by |rJoDgvdeG) (:text |confirm-child-pair)
+        |decorate-defcomp $ %{} :CodeEntry (:doc "|detect root element under component and add `data-defcomp` mark")
+          :code $ %{} :Expr (:at 1711382115224) (:by |rJoDgvdeG)
+            :data $ {}
+              |T $ %{} :Leaf (:at 1711382115224) (:by |rJoDgvdeG) (:text |defn)
+              |b $ %{} :Leaf (:at 1711382115224) (:by |rJoDgvdeG) (:text |decorate-defcomp)
+              |h $ %{} :Expr (:at 1711382115224) (:by |rJoDgvdeG)
+                :data $ {}
+                  |T $ %{} :Leaf (:at 1711382119346) (:by |rJoDgvdeG) (:text |c)
+                  |b $ %{} :Leaf (:at 1711382201482) (:by |rJoDgvdeG) (:text |name)
+              |l $ %{} :Expr (:at 1711382294189) (:by |rJoDgvdeG)
+                :data $ {}
+                  |D $ %{} :Leaf (:at 1711382295516) (:by |rJoDgvdeG) (:text |update)
+                  |L $ %{} :Leaf (:at 1711382296549) (:by |rJoDgvdeG) (:text |c)
+                  |P $ %{} :Leaf (:at 1711382298946) (:by |rJoDgvdeG) (:text |:tree)
+                  |T $ %{} :Expr (:at 1711382299980) (:by |rJoDgvdeG)
+                    :data $ {}
+                      |D $ %{} :Leaf (:at 1711382300511) (:by |rJoDgvdeG) (:text |fn)
+                      |L $ %{} :Expr (:at 1711382300755) (:by |rJoDgvdeG)
+                        :data $ {}
+                          |T $ %{} :Leaf (:at 1711382301738) (:by |rJoDgvdeG) (:text |tree)
+                      |T $ %{} :Expr (:at 1711382120136) (:by |rJoDgvdeG)
+                        :data $ {}
+                          |T $ %{} :Leaf (:at 1711382120596) (:by |rJoDgvdeG) (:text |if)
+                          |b $ %{} :Expr (:at 1711382121356) (:by |rJoDgvdeG)
+                            :data $ {}
+                              |T $ %{} :Leaf (:at 1711382125018) (:by |rJoDgvdeG) (:text |&record:matches?)
+                              |b $ %{} :Leaf (:at 1711382304381) (:by |rJoDgvdeG) (:text |tree)
+                              |h $ %{} :Leaf (:at 1711382147184) (:by |rJoDgvdeG) (:text |schema/Element)
+                          |h $ %{} :Expr (:at 1711382168608) (:by |rJoDgvdeG)
+                            :data $ {}
+                              |T $ %{} :Leaf (:at 1711382312068) (:by |rJoDgvdeG) (:text |update)
+                              |X $ %{} :Leaf (:at 1711382306092) (:by |rJoDgvdeG) (:text |tree)
+                              |b $ %{} :Leaf (:at 1711382168608) (:by |rJoDgvdeG) (:text |:attrs)
+                              |h $ %{} :Expr (:at 1711382168608) (:by |rJoDgvdeG)
+                                :data $ {}
+                                  |T $ %{} :Leaf (:at 1711382168608) (:by |rJoDgvdeG) (:text |fn)
+                                  |b $ %{} :Expr (:at 1711382168608) (:by |rJoDgvdeG)
+                                    :data $ {}
+                                      |T $ %{} :Leaf (:at 1711382168608) (:by |rJoDgvdeG) (:text |attrs)
+                                  |h $ %{} :Expr (:at 1711382168608) (:by |rJoDgvdeG)
+                                    :data $ {}
+                                      |T $ %{} :Leaf (:at 1711382168608) (:by |rJoDgvdeG) (:text |conj)
+                                      |b $ %{} :Leaf (:at 1711382168608) (:by |rJoDgvdeG) (:text |attrs)
+                                      |h $ %{} :Expr (:at 1711382168608) (:by |rJoDgvdeG)
+                                        :data $ {}
+                                          |T $ %{} :Leaf (:at 1711382168608) (:by |rJoDgvdeG) (:text |[])
+                                          |b $ %{} :Leaf (:at 1711382168608) (:by |rJoDgvdeG) (:text |:data-comp)
+                                          |h $ %{} :Leaf (:at 1711382198221) (:by |rJoDgvdeG) (:text |name)
+                          |l $ %{} :Leaf (:at 1711382307466) (:by |rJoDgvdeG) (:text |tree)
         |defcomp $ %{} :CodeEntry (:doc |)
           :code $ %{} :Expr (:at 1612711003106) (:by |rJoDgvdeG)
             :data $ {}
@@ -4235,71 +4284,49 @@
                         :data $ {}
                           |T $ %{} :Leaf (:at 1612711003106) (:by |rJoDgvdeG) (:text |~)
                           |j $ %{} :Leaf (:at 1612711003106) (:by |rJoDgvdeG) (:text |params)
-                      |v $ %{} :Expr (:at 1710958958414) (:by |rJoDgvdeG)
+                      |t $ %{} :Expr (:at 1711382162729) (:by |rJoDgvdeG)
                         :data $ {}
-                          |D $ %{} :Leaf (:at 1710958959319) (:by |rJoDgvdeG) (:text |->)
-                          |T $ %{} :Expr (:at 1612711003106) (:by |rJoDgvdeG)
+                          |T $ %{} :Leaf (:at 1711382162729) (:by |rJoDgvdeG) (:text |decorate-defcomp)
+                          |b $ %{} :Expr (:at 1711382162729) (:by |rJoDgvdeG)
                             :data $ {}
-                              |T $ %{} :Leaf (:at 1612711003106) (:by |rJoDgvdeG) (:text |extract-effects-list)
-                              |j $ %{} :Expr (:at 1612711003106) (:by |rJoDgvdeG)
+                              |T $ %{} :Leaf (:at 1711382162729) (:by |rJoDgvdeG) (:text |extract-effects-list)
+                              |b $ %{} :Expr (:at 1711382162729) (:by |rJoDgvdeG)
                                 :data $ {}
-                                  |T $ %{} :Leaf (:at 1615278702930) (:by |rJoDgvdeG) (:text |%{})
-                                  |b $ %{} :Leaf (:at 1615278717160) (:by |rJoDgvdeG) (:text |schema/Component)
-                                  |r $ %{} :Expr (:at 1612711003106) (:by |rJoDgvdeG)
+                                  |T $ %{} :Leaf (:at 1711382162729) (:by |rJoDgvdeG) (:text |%{})
+                                  |b $ %{} :Leaf (:at 1711382162729) (:by |rJoDgvdeG) (:text |schema/Component)
+                                  |h $ %{} :Expr (:at 1711382162729) (:by |rJoDgvdeG)
                                     :data $ {}
-                                      |T $ %{} :Leaf (:at 1612711003106) (:by |rJoDgvdeG) (:text |:effects)
-                                      |j $ %{} :Expr (:at 1612711003106) (:by |rJoDgvdeG)
+                                      |T $ %{} :Leaf (:at 1711382162729) (:by |rJoDgvdeG) (:text |:effects)
+                                      |b $ %{} :Expr (:at 1711382162729) (:by |rJoDgvdeG)
                                         :data $ {}
-                                          |T $ %{} :Leaf (:at 1612711003106) (:by |rJoDgvdeG) (:text |[])
-                                  |v $ %{} :Expr (:at 1612711003106) (:by |rJoDgvdeG)
+                                          |T $ %{} :Leaf (:at 1711382162729) (:by |rJoDgvdeG) (:text |[])
+                                  |l $ %{} :Expr (:at 1711382162729) (:by |rJoDgvdeG)
                                     :data $ {}
-                                      |T $ %{} :Leaf (:at 1612711003106) (:by |rJoDgvdeG) (:text |:name)
-                                      |j $ %{} :Expr (:at 1612711003106) (:by |rJoDgvdeG)
+                                      |T $ %{} :Leaf (:at 1711382162729) (:by |rJoDgvdeG) (:text |:name)
+                                      |b $ %{} :Expr (:at 1711382162729) (:by |rJoDgvdeG)
                                         :data $ {}
-                                          |T $ %{} :Leaf (:at 1612711003106) (:by |rJoDgvdeG) (:text |~)
-                                          |j $ %{} :Expr (:at 1612711003106) (:by |rJoDgvdeG)
+                                          |T $ %{} :Leaf (:at 1711382162729) (:by |rJoDgvdeG) (:text |~)
+                                          |b $ %{} :Expr (:at 1711382162729) (:by |rJoDgvdeG)
                                             :data $ {}
-                                              |T $ %{} :Leaf (:at 1685259441652) (:by |rJoDgvdeG) (:text |turn-tag)
-                                              |j $ %{} :Leaf (:at 1612711003106) (:by |rJoDgvdeG) (:text |comp-name)
-                                  |x $ %{} :Expr (:at 1612711003106) (:by |rJoDgvdeG)
+                                              |T $ %{} :Leaf (:at 1711382162729) (:by |rJoDgvdeG) (:text |turn-tag)
+                                              |b $ %{} :Leaf (:at 1711382162729) (:by |rJoDgvdeG) (:text |comp-name)
+                                  |o $ %{} :Expr (:at 1711382162729) (:by |rJoDgvdeG)
                                     :data $ {}
-                                      |T $ %{} :Leaf (:at 1612711003106) (:by |rJoDgvdeG) (:text |:tree)
-                                      |j $ %{} :Expr (:at 1710960309222) (:by |rJoDgvdeG)
+                                      |T $ %{} :Leaf (:at 1711382162729) (:by |rJoDgvdeG) (:text |:tree)
+                                      |b $ %{} :Expr (:at 1711382162729) (:by |rJoDgvdeG)
                                         :data $ {}
-                                          |T $ %{} :Leaf (:at 1710960309222) (:by |rJoDgvdeG) (:text |do)
-                                          |b $ %{} :Expr (:at 1710960309222) (:by |rJoDgvdeG)
+                                          |T $ %{} :Leaf (:at 1711382162729) (:by |rJoDgvdeG) (:text |do)
+                                          |b $ %{} :Expr (:at 1711382162729) (:by |rJoDgvdeG)
                                             :data $ {}
-                                              |T $ %{} :Leaf (:at 1710960309222) (:by |rJoDgvdeG) (:text |~@)
-                                              |b $ %{} :Leaf (:at 1710960309222) (:by |rJoDgvdeG) (:text |body)
-                          |b $ %{} :Expr (:at 1710960307220) (:by |rJoDgvdeG)
+                                              |T $ %{} :Leaf (:at 1711382162729) (:by |rJoDgvdeG) (:text |~@)
+                                              |b $ %{} :Leaf (:at 1711382162729) (:by |rJoDgvdeG) (:text |body)
+                          |h $ %{} :Expr (:at 1711382204817) (:by |rJoDgvdeG)
                             :data $ {}
-                              |T $ %{} :Leaf (:at 1710960307220) (:by |rJoDgvdeG) (:text |update-in)
-                              |b $ %{} :Expr (:at 1710960307220) (:by |rJoDgvdeG)
+                              |T $ %{} :Leaf (:at 1711382204817) (:by |rJoDgvdeG) (:text |~)
+                              |b $ %{} :Expr (:at 1711382204817) (:by |rJoDgvdeG)
                                 :data $ {}
-                                  |T $ %{} :Leaf (:at 1710960307220) (:by |rJoDgvdeG) (:text |[])
-                                  |b $ %{} :Leaf (:at 1710960307220) (:by |rJoDgvdeG) (:text |:tree)
-                                  |h $ %{} :Leaf (:at 1710960307220) (:by |rJoDgvdeG) (:text |:attrs)
-                              |h $ %{} :Expr (:at 1710960307220) (:by |rJoDgvdeG)
-                                :data $ {}
-                                  |T $ %{} :Leaf (:at 1710960307220) (:by |rJoDgvdeG) (:text |fn)
-                                  |b $ %{} :Expr (:at 1710960307220) (:by |rJoDgvdeG)
-                                    :data $ {}
-                                      |T $ %{} :Leaf (:at 1710960307220) (:by |rJoDgvdeG) (:text |attrs)
-                                  |h $ %{} :Expr (:at 1710960307220) (:by |rJoDgvdeG)
-                                    :data $ {}
-                                      |T $ %{} :Leaf (:at 1710960307220) (:by |rJoDgvdeG) (:text |conj)
-                                      |b $ %{} :Leaf (:at 1710960307220) (:by |rJoDgvdeG) (:text |attrs)
-                                      |h $ %{} :Expr (:at 1710960307220) (:by |rJoDgvdeG)
-                                        :data $ {}
-                                          |T $ %{} :Leaf (:at 1710960307220) (:by |rJoDgvdeG) (:text |[])
-                                          |b $ %{} :Leaf (:at 1710960307220) (:by |rJoDgvdeG) (:text |:data-comp)
-                                          |h $ %{} :Expr (:at 1710960307220) (:by |rJoDgvdeG)
-                                            :data $ {}
-                                              |T $ %{} :Leaf (:at 1710960307220) (:by |rJoDgvdeG) (:text |~)
-                                              |b $ %{} :Expr (:at 1710960307220) (:by |rJoDgvdeG)
-                                                :data $ {}
-                                                  |T $ %{} :Leaf (:at 1710960307220) (:by |rJoDgvdeG) (:text |turn-string)
-                                                  |b $ %{} :Leaf (:at 1710960307220) (:by |rJoDgvdeG) (:text |comp-name)
+                                  |T $ %{} :Leaf (:at 1711382204817) (:by |rJoDgvdeG) (:text |turn-string)
+                                  |b $ %{} :Leaf (:at 1711382204817) (:by |rJoDgvdeG) (:text |comp-name)
         |defeffect $ %{} :CodeEntry (:doc |)
           :code $ %{} :Expr (:at 1610030655710) (:by |rJoDgvdeG)
             :data $ {}
