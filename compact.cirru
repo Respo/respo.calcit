@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.9)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.10)
     :modules $ [] |memof/ |lilac/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -1249,6 +1249,7 @@
                     tag-name $ turn-string (&record:get virtual-element :name)
                     attrs $ &record:get virtual-element :attrs
                     style $ &record:get virtual-element :style
+                    events $ &record:get virtual-element :event
                     children $ &record:get virtual-element :children
                     element $ js/document.createElement tag-name
                     child-elements $ -> children
@@ -1259,7 +1260,7 @@
                           when (nil? k) (js/console.warn "\"nil key is bad for Respo")
                           when (some? child)
                             make-element child listener-builder $ conj coord k
-                  &doseq (entry attrs)
+                  each attrs $ fn (entry)
                     let
                         prop-str $ turn-string (first entry)
                         v $ last entry
@@ -1268,14 +1269,13 @@
                         let
                             k $ dashed->camel prop-str
                           if (some? v) (aset element k v)
-                  &doseq (entry style)
+                  each style $ fn (entry)
                     let
                         style-name $ turn-string (first entry)
                         k $ dashed->camel style-name
                         v $ last entry
                       aset (.-style element) k $ get-style-value v k
-                  &doseq
-                    entry $ &record:get virtual-element :event
+                  &doseq (entry events)
                     let
                         event-name $ first entry
                         name-in-string $ event->prop event-name
@@ -1283,7 +1283,7 @@
                           listener-builder event-name
                           , event coord
                         .!stopPropagation event
-                  &doseq (child-element child-elements)
+                  each child-elements $ fn (child-element)
                     if (some? child-element) (.!appendChild element child-element)
                   , element
         |style->string $ %{} :CodeEntry (:doc "|this functions is used inside DOM operations, inserting styles into a `<style>` element. to render to HTML, use `style->html` instead")
