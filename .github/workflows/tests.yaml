@@ -19,7 +19,7 @@ jobs:
 
     - uses: calcit-lang/setup-cr@0.0.3
       with:
-        version: '0.8.44'
+        version: '0.8.50'
 
     - name: "load deps"
       run: caps --ci && yarn

@@ -8,6 +8,16 @@
 
 ### Usage
 
+In `package.cirru` and run `caps`:
+
+```cirru
+{}
+  :dependencies $ {}
+    |Respo/respo.calcit |main
+```
+
+![Latest](https://img.shields.io/github/v/release/calcit-lang/calcit)
+
 DOM syntax
 
 ```cirru
