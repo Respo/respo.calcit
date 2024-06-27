@@ -16,7 +16,7 @@ In `package.cirru` and run `caps`:
     |Respo/respo.calcit |main
 ```
 
-![Latest](https://img.shields.io/github/v/release/calcit-lang/calcit)
+![Latest](https://img.shields.io/github/v/release/Respo/respo.calcit)
 
 DOM syntax
 
