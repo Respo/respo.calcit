@@ -17,21 +17,21 @@ jobs:
         node-version: 20
         cache: yarn
 
-    - uses: calcit-lang/setup-cr@0.0.3
+    - uses: calcit-lang/setup-cr@0.0.4
       with:
-        version: '0.8.55'
+        version: '0.9.4'
 
     - name: "load deps"
       run: caps --ci && yarn
 
     - name: "test js"
       run: >
-        cr -1 --emit-js --init-fn=respo.test.main/main!
+        cr -1 --init-fn respo.test.main/main! js
         && node test.mjs
 
     - name: "build js"
       run: >
-        cr --once --emit-js
+        cr --once js
         && yarn vite build --base=./
 
     - name: Deploy to server
