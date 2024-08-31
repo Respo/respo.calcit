@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.10)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.11)
     :modules $ [] |memof/ |lilac/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -651,15 +651,15 @@
               ; assert
                 str "|For rendering lists, please use list-> , got: " $ to-lispy-string children
                 and
-                  > (count children) 0
+                  &> (count children) 0
                   not $ any? list? children
               let
                   attrs $ pick-attrs props
                   styles $ ->
-                    either (:style props) ({})
-                    .to-list
+                    either (&map:get props :style) ({})
+                    &map:to-list
                     sort $ fn (x y)
-                      &compare (first x) (first y)
+                      &compare (nth x 0) (nth y 0)
                   event $ pick-event props
                   children-nodes $ -> children
                     map-indexed $ fn (idx item) (confirm-child item) ([] idx item)
@@ -2016,20 +2016,20 @@
           :code $ quote
             defn pick-attrs (props)
               if (nil? props) ([])
-                -> props (dissoc :on) (dissoc :event) (dissoc :style) (.to-list)
+                -> props (&map:dissoc :on) (&map:dissoc :event) (&map:dissoc :style) (&map:to-list)
                   filter $ fn (pair)
                     let
                         k $ nth pair 0
                         v $ nth pair 1
                       not $ starts-with? (turn-string k) "\"on-"
                   sort $ fn (x y)
-                    &compare (first x) (first y)
+                    &compare (nth x 0) (nth y 0)
         |pick-event $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn pick-event (props)
               if (nil? props) ({})
                 merge
-                  either (:on props) ({})
+                  either (&map:get props :on) ({})
                   -> props $ map-kv
                     fn (k v)
                       if

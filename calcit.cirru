@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:port 6001) (:reload-fn |respo.main/reload!) (:storage-key |calcit.cirru) (:version |0.16.10)
+  :configs $ {} (:init-fn |respo.main/main!) (:port 6001) (:reload-fn |respo.main/reload!) (:storage-key |calcit.cirru) (:version |0.16.11)
     :modules $ [] |memof/ |lilac/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -3953,7 +3953,7 @@
                       |D $ %{} :Leaf (:at 1610187406024) (:by |rJoDgvdeG) (:text |and)
                       |L $ %{} :Expr (:at 1610187406288) (:by |rJoDgvdeG)
                         :data $ {}
-                          |T $ %{} :Leaf (:at 1610187407403) (:by |rJoDgvdeG) (:text |>)
+                          |T $ %{} :Leaf (:at 1725124457567) (:by |rJoDgvdeG) (:text |&>)
                           |b $ %{} :Expr (:at 1610187408824) (:by |rJoDgvdeG)
                             :data $ {}
                               |T $ %{} :Leaf (:at 1610187409608) (:by |rJoDgvdeG) (:text |count)
@@ -3990,14 +3990,15 @@
                                   |T $ %{} :Leaf (:at 1619539932087) (:by |rJoDgvdeG) (:text |either)
                                   |j $ %{} :Expr (:at 1619539932087) (:by |rJoDgvdeG)
                                     :data $ {}
-                                      |T $ %{} :Leaf (:at 1619539932087) (:by |rJoDgvdeG) (:text |:style)
+                                      |T $ %{} :Leaf (:at 1725124451503) (:by |rJoDgvdeG) (:text |&map:get)
                                       |j $ %{} :Leaf (:at 1619539932087) (:by |rJoDgvdeG) (:text |props)
+                                      |n $ %{} :Leaf (:at 1725124452976) (:by |rJoDgvdeG) (:text |:style)
                                   |r $ %{} :Expr (:at 1619539932087) (:by |rJoDgvdeG)
                                     :data $ {}
                                       |T $ %{} :Leaf (:at 1619539932087) (:by |rJoDgvdeG) (:text |{})
-                              |L $ %{} :Expr (:at 1619539924816) (:by |rJoDgvdeG)
+                              |L $ %{} :Expr (:at 1725124595099) (:by |rJoDgvdeG)
                                 :data $ {}
-                                  |T $ %{} :Leaf (:at 1623693621484) (:by |rJoDgvdeG) (:text |.to-list)
+                                  |T $ %{} :Leaf (:at 1725124416565) (:by |rJoDgvdeG) (:text |&map:to-list)
                               |T $ %{} :Expr (:at 1610193060106) (:by |rJoDgvdeG)
                                 :data $ {}
                                   |T $ %{} :Leaf (:at 1610193060106) (:by |rJoDgvdeG) (:text |sort)
@@ -4013,12 +4014,14 @@
                                           |T $ %{} :Leaf (:at 1647337449541) (:by |rJoDgvdeG) (:text |&compare)
                                           |j $ %{} :Expr (:at 1610193060106) (:by |rJoDgvdeG)
                                             :data $ {}
-                                              |T $ %{} :Leaf (:at 1610193060106) (:by |rJoDgvdeG) (:text |first)
+                                              |T $ %{} :Leaf (:at 1725124424967) (:by |rJoDgvdeG) (:text |nth)
                                               |j $ %{} :Leaf (:at 1610193060106) (:by |rJoDgvdeG) (:text |x)
+                                              |n $ %{} :Leaf (:at 1725124425738) (:by |rJoDgvdeG) (:text |0)
                                           |r $ %{} :Expr (:at 1610193060106) (:by |rJoDgvdeG)
                                             :data $ {}
-                                              |T $ %{} :Leaf (:at 1610193060106) (:by |rJoDgvdeG) (:text |first)
+                                              |T $ %{} :Leaf (:at 1725124427718) (:by |rJoDgvdeG) (:text |nth)
                                               |j $ %{} :Leaf (:at 1610193060106) (:by |rJoDgvdeG) (:text |y)
+                                              |n $ %{} :Leaf (:at 1725124428414) (:by |rJoDgvdeG) (:text |0)
                       |r $ %{} :Expr (:at 1504774121421) (:by nil)
                         :data $ {}
                           |T $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |event)
@@ -12919,19 +12922,19 @@
                       |X $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |props)
                       |Z $ %{} :Expr (:at 1504774121421) (:by nil)
                         :data $ {}
-                          |T $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |dissoc)
+                          |T $ %{} :Leaf (:at 1725124505162) (:by |rJoDgvdeG) (:text |&map:dissoc)
                           |j $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |:on)
                       |a $ %{} :Expr (:at 1504774121421) (:by nil)
                         :data $ {}
-                          |T $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |dissoc)
+                          |T $ %{} :Leaf (:at 1725124506503) (:by |rJoDgvdeG) (:text |&map:dissoc)
                           |j $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |:event)
                       |aT $ %{} :Expr (:at 1504774121421) (:by nil)
                         :data $ {}
-                          |T $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |dissoc)
+                          |T $ %{} :Leaf (:at 1725124508743) (:by |rJoDgvdeG) (:text |&map:dissoc)
                           |j $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |:style)
                       |f $ %{} :Expr (:at 1628626097912) (:by |rJoDgvdeG)
                         :data $ {}
-                          |T $ %{} :Leaf (:at 1628626097912) (:by |rJoDgvdeG) (:text |.to-list)
+                          |T $ %{} :Leaf (:at 1725124404385) (:by |rJoDgvdeG) (:text |&map:to-list)
                       |j $ %{} :Expr (:at 1513782825167) (:by |root)
                         :data $ {}
                           |D $ %{} :Leaf (:at 1513782826536) (:by |root) (:text |filter)
@@ -12988,12 +12991,14 @@
                                   |D $ %{} :Leaf (:at 1647337394333) (:by |rJoDgvdeG) (:text |&compare)
                                   |T $ %{} :Expr (:at 1551289849344) (:by |rJoDgvdeG)
                                     :data $ {}
-                                      |T $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |first)
+                                      |T $ %{} :Leaf (:at 1725124468851) (:by |rJoDgvdeG) (:text |nth)
                                       |j $ %{} :Leaf (:at 1551289857807) (:by |rJoDgvdeG) (:text |x)
+                                      |n $ %{} :Leaf (:at 1725124469986) (:by |rJoDgvdeG) (:text |0)
                                   |j $ %{} :Expr (:at 1551289851905) (:by |rJoDgvdeG)
                                     :data $ {}
-                                      |D $ %{} :Leaf (:at 1551289859960) (:by |rJoDgvdeG) (:text |first)
+                                      |D $ %{} :Leaf (:at 1725124474026) (:by |rJoDgvdeG) (:text |nth)
                                       |T $ %{} :Leaf (:at 1551289855532) (:by |rJoDgvdeG) (:text |y)
+                                      |b $ %{} :Leaf (:at 1725124476248) (:by |rJoDgvdeG) (:text |0)
         |pick-event $ %{} :CodeEntry (:doc |)
           :code $ %{} :Expr (:at 1513782743303) (:by |root)
             :data $ {}
@@ -13020,8 +13025,9 @@
                           |D $ %{} :Leaf (:at 1610188531976) (:by |rJoDgvdeG) (:text |either)
                           |T $ %{} :Expr (:at 1513782769122) (:by |root)
                             :data $ {}
-                              |T $ %{} :Leaf (:at 1513785453815) (:by |root) (:text |:on)
+                              |T $ %{} :Leaf (:at 1725124568608) (:by |rJoDgvdeG) (:text |&map:get)
                               |j $ %{} :Leaf (:at 1513782771092) (:by |root) (:text |props)
+                              |n $ %{} :Leaf (:at 1725124521725) (:by |rJoDgvdeG) (:text |:on)
                           |j $ %{} :Expr (:at 1610188532564) (:by |rJoDgvdeG)
                             :data $ {}
                               |T $ %{} :Leaf (:at 1610188532905) (:by |rJoDgvdeG) (:text |{})
