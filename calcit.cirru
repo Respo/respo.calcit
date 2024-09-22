@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:port 6001) (:reload-fn |respo.main/reload!) (:storage-key |calcit.cirru) (:version |0.16.11)
+  :configs $ {} (:init-fn |respo.main/main!) (:port 6001) (:reload-fn |respo.main/reload!) (:storage-key |calcit.cirru) (:version |0.16.12)
     :modules $ [] |memof/ |lilac/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -3990,7 +3990,7 @@
                                   |T $ %{} :Leaf (:at 1619539932087) (:by |rJoDgvdeG) (:text |either)
                                   |j $ %{} :Expr (:at 1619539932087) (:by |rJoDgvdeG)
                                     :data $ {}
-                                      |T $ %{} :Leaf (:at 1725124451503) (:by |rJoDgvdeG) (:text |&map:get)
+                                      |T $ %{} :Leaf (:at 1727011134632) (:by |rJoDgvdeG) (:text |get)
                                       |j $ %{} :Leaf (:at 1619539932087) (:by |rJoDgvdeG) (:text |props)
                                       |n $ %{} :Leaf (:at 1725124452976) (:by |rJoDgvdeG) (:text |:style)
                                   |r $ %{} :Expr (:at 1619539932087) (:by |rJoDgvdeG)

@@ -1,5 +1,5 @@
 {
-  "version": "0.16.11",
+  "version": "0.16.12",
   "dependencies": {
     "@calcit/procs": "0.9.5"
   },
@@ -8,6 +8,6 @@
   },
   "devDependencies": {
     "bottom-tip": "^0.1.5",
-    "vite": "^5.4.2"
+    "vite": "^5.4.7"
   }
 }

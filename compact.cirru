@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.11)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.12)
     :modules $ [] |memof/ |lilac/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -656,7 +656,7 @@
               let
                   attrs $ pick-attrs props
                   styles $ ->
-                    either (&map:get props :style) ({})
+                    either (get props :style) ({})
                     &map:to-list
                     sort $ fn (x y)
                       &compare (nth x 0) (nth y 0)
