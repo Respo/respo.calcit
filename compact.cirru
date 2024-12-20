@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.12)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.13)
     :modules $ [] |memof/ |lilac/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -12,7 +12,7 @@
               let
                   states $ :states store
                 div
-                  {} (; :class-name highlight-defcomp) (:style style-global)
+                  {} (; :class-name highlight-defcomp) (:class-name style-global)
                   comp-todolist states $ :tasks store
                   div
                     {} $ :style style-states
@@ -26,7 +26,10 @@
                     fn (e d!) (js/console.log "\"keyup" e)
         |style-global $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def style-global $ {} (:font-family |Avenir,Verdana)
+            defstyle style-global $ {}
+              "\"&" $ {} (:font-family |Avenir,Verdana)
+              "\"&" $ {} ('contained "\"@media only screen and (max-width: 600px)")
+                :background-color $ hsl 0 0 90
         |style-states $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-states $ {} (:padding 8)
@@ -34,6 +37,8 @@
         :code $ quote
           ns respo.app.comp.container $ :require
             respo.core :refer $ defcomp div span <> >> a
+            respo.util.format :refer $ hsl
+            respo.css :refer $ defstyle
             respo.app.comp.todolist :refer $ comp-todolist
             respo.comp.space :refer $ =<
             respo.comp.global-keydown :refer $ comp-global-keydown comp-global-keyup
@@ -926,8 +931,9 @@
                     let
                         class-rule $ str "\"." style-name
                         rule-name $ -> k (.!replace "\"$0" class-rule) (.!replace "\"&" class-rule)
+                        contained $ get v 'contained
                         css-line $ style->string (.to-list v)
-                      str rule-name "\" {" &newline css-line &newline "\"}"
+                      if (some? contained) (str contained "\" {" &newline rule-name "\" {" &newline css-line &newline "\"}" &newline "\"}") (str rule-name "\" {" &newline css-line &newline "\"}")
                 .to-list
                 .join-str $ str &newline &newline
       :ns $ %{} :CodeEntry (:doc |)
@@ -1294,9 +1300,12 @@
                   if (empty? xs) acc $ let
                       entry $ first xs
                       k $ first entry
-                      style-name $ turn-string k
-                      v $ get-style-value (last entry) style-name
-                    recur (str acc style-name |: v |;) (rest xs)
+                    if (symbol? k)
+                      recur acc $ rest xs
+                      let
+                          style-name $ turn-string k
+                          v $ get-style-value (last entry) style-name
+                        recur (str acc style-name |: v |;) (rest xs)
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.render.dom $ :require
