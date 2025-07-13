@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.14)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.15)
     :modules $ [] |memof/ |lilac/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -130,10 +130,8 @@
                           :width $ &max 200
                             + 24 $ text-width (:draft state) 16 |BlinkMacSystemFont
                         :on-input $ fn (e d!)
-                          d! $ if
-                            nil? $ :data states
-                            :: :states cursor $ assoc state :draft (:value e)
-                            :: :states-kv cursor :draft $ :value e
+                          d! $ :: :states-merge cursor state
+                            {} $ :draft (:value e)
                         :on-focus on-focus
                       =< 8 nil
                       span
@@ -352,14 +350,6 @@
             respo.css :refer $ defstyle
     |respo.app.updater $ %{} :FileEntry
       :defs $ {}
-        |update-states-kv $ %{} :CodeEntry (:doc "|a quick dirty trick to partially update component state.\n\nnotice: need to handle empty state manually.")
-          :code $ quote
-            defn update-states-kv (store cursor k v)
-              update-in store
-                concat ([] :states) cursor $ [] :data
-                fn (s)
-                  if (map? s) (assoc s k v)
-                    do (js/console.warn "\":states-kv expected hashmap, got:" s) s
         |updater $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn updater (store op op-id) (; println store op)
@@ -367,6 +357,7 @@
                   :states cursor s
                   update-states store cursor s
                 (:states-kv cursor k v) (update-states-kv store cursor k v)
+                (:states-merge cursor s o) (update-states-merge store cursor s o)
                 (:add text)
                   update store :tasks $ fn (tasks)
                     conj tasks $ {} (:text text) (:id op-id) (:done? false)
@@ -400,7 +391,7 @@
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.app.updater $ :require
-            respo.cursor :refer $ update-states
+            respo.cursor :refer $ update-states update-states-kv update-states-merge
     |respo.comp.global-keydown $ %{} :FileEntry
       :defs $ {}
         |comp-global-keydown $ %{} :CodeEntry (:doc |)
@@ -960,6 +951,22 @@
               assoc-in store
                 concat ([] :states) cursor $ [] :data
                 , new-state
+        |update-states-kv $ %{} :CodeEntry (:doc "|a quick dirty trick to partially update component state.\n\nnotice: need to handle empty state manually.")
+          :code $ quote
+            defn update-states-kv (store cursor k v)
+              update-in store
+                concat ([] :states) cursor $ [] :data
+                fn (s)
+                  if (map? s) (assoc s k v)
+                    do (js/console.warn "\":states-kv expected hashmap, got:" s) s
+        |update-states-merge $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn update-states-merge (store cursor state changes)
+              update-in store
+                concat ([] :states) cursor $ [] :data
+                fn (s)
+                  if (nil? s) state $ if (map? s) (merge s changes)
+                    do (js/console.warn "\"unknown data to merge:" s) s
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote (ns respo.cursor)
     |respo.main $ %{} :FileEntry
