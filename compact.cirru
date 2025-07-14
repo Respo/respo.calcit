@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.15)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.16)
     :modules $ [] |memof/ |lilac/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -961,12 +961,15 @@
                     do (js/console.warn "\":states-kv expected hashmap, got:" s) s
         |update-states-merge $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn update-states-merge (store cursor state changes)
+            defn update-states-merge (store cursor state0 changes)
               update-in store
                 concat ([] :states) cursor $ [] :data
                 fn (s)
-                  if (nil? s) state $ if (map? s) (merge s changes)
-                    do (js/console.warn "\"unknown data to merge:" s) s
+                  if (nil? s)
+                    noted "\"merge base initial state" $ merge state0 changes
+                    if (map? s)
+                      noted "\"merge base latest state" $ merge s changes
+                      do (js/console.warn "\"unknown data to merge:" s) s
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote (ns respo.cursor)
     |respo.main $ %{} :FileEntry
