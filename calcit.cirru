@@ -3,6 +3,8 @@
   :configs $ {} (:init-fn |respo.main/main!) (:port 6001) (:reload-fn |respo.main/reload!) (:storage-key |calcit.cirru) (:version |0.16.16)
     :modules $ [] |memof/ |lilac/ |calcit-test/
   :entries $ {}
+    |snippet $ {} (:init-fn |respo.main/snippet!) (:reload-fn |respo.main/snippet!)
+      :modules $ []
   :files $ {}
     |respo.app.comp.container $ %{} :FileEntry
       :defs $ {}
@@ -4538,14 +4540,113 @@
                                                       |r $ %{} :Expr (:at 1610030935487) (:by |rJoDgvdeG)
                                                         :data $ {}
                                                           |T $ %{} :Leaf (:at 1623693577109) (:by |rJoDgvdeG) (:text |quasiquote)
-                                                          |j $ %{} :Expr (:at 1610030953478) (:by |rJoDgvdeG)
+                                                          |j $ %{} :Expr (:at 1754335727640) (:by |rJoDgvdeG)
                                                             :data $ {}
-                                                              |T $ %{} :Leaf (:at 1693148224272) (:by |rJoDgvdeG) (:text |println)
-                                                              |j $ %{} :Leaf (:at 1610030971291) (:by |rJoDgvdeG) (:text "|\"WARNING:")
-                                                              |r $ %{} :Leaf (:at 1610030975762) (:by |rJoDgvdeG) (:text |~effect-name)
-                                                              |t $ %{} :Leaf (:at 1610031007777) (:by |rJoDgvdeG) (:text "|\"lack code for handling effects!")
-                                                              |v $ %{} :Leaf (:at 1610030975891) (:by |rJoDgvdeG) (:text |)
+                                                              |T $ %{} :Expr (:at 1610030953478) (:by |rJoDgvdeG)
+                                                                :data $ {}
+                                                                  |T $ %{} :Leaf (:at 1693148224272) (:by |rJoDgvdeG) (:text |println)
+                                                                  |j $ %{} :Leaf (:at 1610030971291) (:by |rJoDgvdeG) (:text "|\"WARNING:")
+                                                                  |r $ %{} :Expr (:at 1754335724845) (:by |rJoDgvdeG)
+                                                                    :data $ {}
+                                                                      |D $ %{} :Leaf (:at 1754335726473) (:by |rJoDgvdeG) (:text |quote)
+                                                                      |T $ %{} :Leaf (:at 1610030975762) (:by |rJoDgvdeG) (:text |~effect-name)
+                                                                  |t $ %{} :Leaf (:at 1610031007777) (:by |rJoDgvdeG) (:text "|\"lack code for handling effects!")
+                                                                  |v $ %{} :Leaf (:at 1610030975891) (:by |rJoDgvdeG) (:text |)
                                                       |v $ %{} :Leaf (:at 1610030944279) (:by |rJoDgvdeG) (:text |body)
+        |deflistener $ %{} :CodeEntry (:doc |)
+          :code $ %{} :Expr (:at 1754334472739) (:by |rJoDgvdeG)
+            :data $ {}
+              |T $ %{} :Leaf (:at 1754334477529) (:by |rJoDgvdeG) (:text |defmacro)
+              |b $ %{} :Leaf (:at 1754334472739) (:by |rJoDgvdeG) (:text |deflistener)
+              |e $ %{} :Expr (:at 1754334480863) (:by |rJoDgvdeG)
+                :data $ {}
+                  |T $ %{} :Leaf (:at 1754334484264) (:by |rJoDgvdeG) (:text |listener-name)
+                  |X $ %{} :Leaf (:at 1754334594260) (:by |rJoDgvdeG) (:text |args)
+                  |b $ %{} :Leaf (:at 1754334492211) (:by |rJoDgvdeG) (:text |&)
+                  |h $ %{} :Leaf (:at 1754334493001) (:by |rJoDgvdeG) (:text |body)
+              |o $ %{} :Expr (:at 1754334474653) (:by |rJoDgvdeG)
+                :data $ {}
+                  |T $ %{} :Leaf (:at 1754334474653) (:by |rJoDgvdeG) (:text |assert)
+                  |b $ %{} :Leaf (:at 1754335230944) (:by |rJoDgvdeG) (:text "|\"args of functions")
+                  |h $ %{} :Expr (:at 1754334474653) (:by |rJoDgvdeG)
+                    :data $ {}
+                      |T $ %{} :Leaf (:at 1754334474653) (:by |rJoDgvdeG) (:text |and)
+                      |b $ %{} :Expr (:at 1754334474653) (:by |rJoDgvdeG)
+                        :data $ {}
+                          |T $ %{} :Leaf (:at 1754334474653) (:by |rJoDgvdeG) (:text |list?)
+                          |b $ %{} :Leaf (:at 1754335219474) (:by |rJoDgvdeG) (:text |args)
+                      |h $ %{} :Expr (:at 1754334474653) (:by |rJoDgvdeG)
+                        :data $ {}
+                          |T $ %{} :Leaf (:at 1754334474653) (:by |rJoDgvdeG) (:text |every?)
+                          |b $ %{} :Leaf (:at 1754335220470) (:by |rJoDgvdeG) (:text |args)
+                          |h $ %{} :Leaf (:at 1754334474653) (:by |rJoDgvdeG) (:text |symbol?)
+              |p $ %{} :Expr (:at 1754335451030) (:by |rJoDgvdeG)
+                :data $ {}
+                  |T $ %{} :Leaf (:at 1754335452676) (:by |rJoDgvdeG) (:text |println)
+                  |b $ %{} :Leaf (:at 1754335457881) (:by |rJoDgvdeG) (:text "|\"inspect args:")
+                  |h $ %{} :Leaf (:at 1754335456766) (:by |rJoDgvdeG) (:text |args)
+              |q $ %{} :Expr (:at 1754334474653) (:by |rJoDgvdeG)
+                :data $ {}
+                  |T $ %{} :Leaf (:at 1754334474653) (:by |rJoDgvdeG) (:text |quasiquote)
+                  |b $ %{} :Expr (:at 1754334727934) (:by |rJoDgvdeG)
+                    :data $ {}
+                      |T $ %{} :Leaf (:at 1754334727934) (:by |rJoDgvdeG) (:text |%{})
+                      |b $ %{} :Leaf (:at 1754334918803) (:by |rJoDgvdeG) (:text |schema/Listener)
+                      |h $ %{} :Expr (:at 1754334727934) (:by |rJoDgvdeG)
+                        :data $ {}
+                          |T $ %{} :Leaf (:at 1754334727934) (:by |rJoDgvdeG) (:text |:name)
+                          |b $ %{} :Expr (:at 1754334727934) (:by |rJoDgvdeG)
+                            :data $ {}
+                              |T $ %{} :Leaf (:at 1754334727934) (:by |rJoDgvdeG) (:text |~)
+                              |b $ %{} :Expr (:at 1754334727934) (:by |rJoDgvdeG)
+                                :data $ {}
+                                  |T $ %{} :Leaf (:at 1754334727934) (:by |rJoDgvdeG) (:text |turn-tag)
+                                  |b $ %{} :Leaf (:at 1754334727934) (:by |rJoDgvdeG) (:text |listener-name)
+                      |l $ %{} :Expr (:at 1754334727934) (:by |rJoDgvdeG)
+                        :data $ {}
+                          |T $ %{} :Leaf (:at 1754334727934) (:by |rJoDgvdeG) (:text |:coord)
+                          |b $ %{} :Expr (:at 1754334727934) (:by |rJoDgvdeG)
+                            :data $ {}
+                              |T $ %{} :Leaf (:at 1754334727934) (:by |rJoDgvdeG) (:text |[])
+                      |o $ %{} :Expr (:at 1754334727934) (:by |rJoDgvdeG)
+                        :data $ {}
+                          |T $ %{} :Leaf (:at 1754334727934) (:by |rJoDgvdeG) (:text |:method)
+                          |b $ %{} :Expr (:at 1754334727934) (:by |rJoDgvdeG)
+                            :data $ {}
+                              |T $ %{} :Leaf (:at 1754334727934) (:by |rJoDgvdeG) (:text |fn)
+                              |a $ %{} :Leaf (:at 1754335841093) (:by |rJoDgvdeG) (:text |~args)
+                              |d $ %{} :Expr (:at 1754335815182) (:by |rJoDgvdeG)
+                                :data $ {}
+                                  |D $ %{} :Leaf (:at 1754335825026) (:by |rJoDgvdeG) (:text |quote)
+                                  |T $ %{} :Leaf (:at 1754335822555) (:by |rJoDgvdeG) (:text |~args)
+                              |h $ %{} :Expr (:at 1754334748634) (:by |rJoDgvdeG)
+                                :data $ {}
+                                  |T $ %{} :Leaf (:at 1754334748634) (:by |rJoDgvdeG) (:text |~@)
+                                  |b $ %{} :Expr (:at 1754334748634) (:by |rJoDgvdeG)
+                                    :data $ {}
+                                      |T $ %{} :Leaf (:at 1754334748634) (:by |rJoDgvdeG) (:text |if)
+                                      |b $ %{} :Expr (:at 1754334748634) (:by |rJoDgvdeG)
+                                        :data $ {}
+                                          |T $ %{} :Leaf (:at 1754334748634) (:by |rJoDgvdeG) (:text |empty?)
+                                          |b $ %{} :Leaf (:at 1754334748634) (:by |rJoDgvdeG) (:text |body)
+                                      |h $ %{} :Expr (:at 1754334748634) (:by |rJoDgvdeG)
+                                        :data $ {}
+                                          |T $ %{} :Leaf (:at 1754334748634) (:by |rJoDgvdeG) (:text |quasiquote)
+                                          |b $ %{} :Expr (:at 1754335629966) (:by |rJoDgvdeG)
+                                            :data $ {}
+                                              |T $ %{} :Expr (:at 1754334748634) (:by |rJoDgvdeG)
+                                                :data $ {}
+                                                  |T $ %{} :Leaf (:at 1754334770964) (:by |rJoDgvdeG) (:text |eprintln)
+                                                  |b $ %{} :Leaf (:at 1754334748634) (:by |rJoDgvdeG) (:text "|\"WARNING:")
+                                                  |h $ %{} :Expr (:at 1754335603925) (:by |rJoDgvdeG)
+                                                    :data $ {}
+                                                      |D $ %{} :Leaf (:at 1754335604959) (:by |rJoDgvdeG) (:text |quote)
+                                                      |T $ %{} :Expr (:at 1754335582906) (:by |rJoDgvdeG)
+                                                        :data $ {}
+                                                          |T $ %{} :Leaf (:at 1754335582223) (:by |rJoDgvdeG) (:text |~)
+                                                          |b $ %{} :Leaf (:at 1754335586934) (:by |rJoDgvdeG) (:text |listener-name)
+                                                  |l $ %{} :Leaf (:at 1754334748634) (:by |rJoDgvdeG) (:text "|\"lack code for handling effects!")
+                                      |l $ %{} :Leaf (:at 1754334748634) (:by |rJoDgvdeG) (:text |body)
         |defplugin $ %{} :CodeEntry (:doc |)
           :code $ %{} :Expr (:at 1610031722067) (:by |rJoDgvdeG)
             :data $ {}
@@ -6292,6 +6393,56 @@
                         :data $ {}
                           |T $ %{} :Leaf (:at 1511714377407) (:by |rJoDgvdeG) (:text |:tasks)
                           |j $ %{} :Leaf (:at 1511714380697) (:by |rJoDgvdeG) (:text |@*store)
+        |snippet! $ %{} :CodeEntry (:doc |)
+          :code $ %{} :Expr (:at 1754335021051) (:by |rJoDgvdeG)
+            :data $ {}
+              |T $ %{} :Leaf (:at 1754335021051) (:by |rJoDgvdeG) (:text |defn)
+              |b $ %{} :Leaf (:at 1754335021051) (:by |rJoDgvdeG) (:text |snippet!)
+              |h $ %{} :Expr (:at 1754335021051) (:by |rJoDgvdeG)
+                :data $ {}
+              |l $ %{} :Expr (:at 1754335025085) (:by |rJoDgvdeG)
+                :data $ {}
+                  |T $ %{} :Leaf (:at 1754335029257) (:by |rJoDgvdeG) (:text |println)
+                  |b $ %{} :Leaf (:at 1754335175028) (:by |rJoDgvdeG) (:text "|\"Expand")
+                  |h $ %{} :Expr (:at 1754335177362) (:by |rJoDgvdeG)
+                    :data $ {}
+                      |D $ %{} :Leaf (:at 1754335181981) (:by |rJoDgvdeG) (:text |macroexpand-1)
+                      |T $ %{} :Expr (:at 1754335176011) (:by |rJoDgvdeG)
+                        :data $ {}
+                          |T $ %{} :Leaf (:at 1754335175539) (:by |rJoDgvdeG) (:text |deflistener)
+                          |b $ %{} :Leaf (:at 1754335199411) (:by |rJoDgvdeG) (:text |listen-a)
+                          |h $ %{} :Expr (:at 1754335199957) (:by |rJoDgvdeG)
+                            :data $ {}
+                              |T $ %{} :Leaf (:at 1754335767565) (:by |rJoDgvdeG) (:text |aaa)
+                              |b $ %{} :Leaf (:at 1754335201100) (:by |rJoDgvdeG) (:text |b)
+                          |l $ %{} :Expr (:at 1754336877130) (:by |rJoDgvdeG)
+                            :data $ {}
+                              |T $ %{} :Leaf (:at 1754336880521) (:by |rJoDgvdeG) (:text |println)
+                              |b $ %{} :Leaf (:at 1754336881092) (:by |rJoDgvdeG) (:text |aaa)
+                              |h $ %{} :Leaf (:at 1754336881573) (:by |rJoDgvdeG) (:text |b)
+              |o $ %{} :Expr (:at 1754335912127) (:by |rJoDgvdeG)
+                :data $ {}
+                  |T $ %{} :Leaf (:at 1754335913075) (:by |rJoDgvdeG) (:text |println)
+                  |b $ %{} :Leaf (:at 1754335915115) (:by |rJoDgvdeG) (:text "|\"Expand")
+                  |h $ %{} :Expr (:at 1754335915657) (:by |rJoDgvdeG)
+                    :data $ {}
+                      |T $ %{} :Leaf (:at 1754335917556) (:by |rJoDgvdeG) (:text |macroexpand-1)
+                      |b $ %{} :Expr (:at 1754335918243) (:by |rJoDgvdeG)
+                        :data $ {}
+                          |T $ %{} :Leaf (:at 1754335920691) (:by |rJoDgvdeG) (:text |defeffect)
+                          |b $ %{} :Leaf (:at 1754335927580) (:by |rJoDgvdeG) (:text |effect-a)
+                          |h $ %{} :Expr (:at 1754335929025) (:by |rJoDgvdeG)
+                            :data $ {}
+                              |T $ %{} :Leaf (:at 1754335929357) (:by |rJoDgvdeG) (:text |a)
+                              |b $ %{} :Leaf (:at 1754335930042) (:by |rJoDgvdeG) (:text |b)
+                          |l $ %{} :Expr (:at 1754335935397) (:by |rJoDgvdeG)
+                            :data $ {}
+                              |T $ %{} :Leaf (:at 1754335935638) (:by |rJoDgvdeG) (:text |c)
+                              |b $ %{} :Leaf (:at 1754335936106) (:by |rJoDgvdeG) (:text |d)
+                          |o $ %{} :Expr (:at 1754335940710) (:by |rJoDgvdeG)
+                            :data $ {}
+                              |T $ %{} :Leaf (:at 1754335944494) (:by |rJoDgvdeG) (:text |println)
+                              |b $ %{} :Leaf (:at 1754335946355) (:by |rJoDgvdeG) (:text ||bbb)
       :ns $ %{} :CodeEntry (:doc |)
         :code $ %{} :Expr (:at 1511714053436) (:by |rJoDgvdeG)
           :data $ {}
@@ -6308,6 +6459,8 @@
                       :data $ {}
                         |r $ %{} :Leaf (:at 1511714101816) (:by |rJoDgvdeG) (:text |*changes-logger)
                         |v $ %{} :Leaf (:at 1610465510488) (:by |rJoDgvdeG) (:text |clear-cache!)
+                        |w $ %{} :Leaf (:at 1754335166621) (:by |rJoDgvdeG) (:text |deflistener)
+                        |x $ %{} :Leaf (:at 1754335923264) (:by |rJoDgvdeG) (:text |defeffect)
                 |v $ %{} :Expr (:at 1511714112837) (:by |rJoDgvdeG)
                   :data $ {}
                     |j $ %{} :Leaf (:at 1511714115981) (:by |rJoDgvdeG) (:text |respo.app.core)
@@ -11086,6 +11239,14 @@
               |yj $ %{} :Leaf (:at 1615278633572) (:by |rJoDgvdeG) (:text |:style)
               |yr $ %{} :Leaf (:at 1615278635355) (:by |rJoDgvdeG) (:text |:event)
               |yv $ %{} :Leaf (:at 1615278638314) (:by |rJoDgvdeG) (:text |:children)
+        |Listener $ %{} :CodeEntry (:doc |)
+          :code $ %{} :Expr (:at 1754334449675) (:by |rJoDgvdeG)
+            :data $ {}
+              |T $ %{} :Leaf (:at 1754334455832) (:by |rJoDgvdeG) (:text |defrecord)
+              |b $ %{} :Leaf (:at 1754334449675) (:by |rJoDgvdeG) (:text |Listener)
+              |h $ %{} :Leaf (:at 1754334451803) (:by |rJoDgvdeG) (:text |:name)
+              |l $ %{} :Leaf (:at 1754334451803) (:by |rJoDgvdeG) (:text |:coord)
+              |q $ %{} :Leaf (:at 1754334451803) (:by |rJoDgvdeG) (:text |:method)
         |cache-info $ %{} :CodeEntry (:doc |)
           :code $ %{} :Expr (:at 1592128521861) (:by |rJoDgvdeG)
             :data $ {}

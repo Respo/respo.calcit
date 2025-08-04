@@ -3,6 +3,8 @@
   :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.16)
     :modules $ [] |memof/ |lilac/ |calcit-test/
   :entries $ {}
+    |snippet $ {} (:init-fn |respo.main/snippet!) (:reload-fn |respo.main/snippet!)
+      :modules $ []
   :files $ {}
     |respo.app.comp.container $ %{} :FileEntry
       :defs $ {}
@@ -723,8 +725,24 @@
                     :method $ fn (~args-var ~params-var)
                       let[] ~args ~args-var $ let[] ~params ~params-var
                         ~@ $ if (empty? body)
-                          quasiquote $ println "\"WARNING:" ~effect-name "\"lack code for handling effects!" 
+                          quasiquote $ 
+                            println "\"WARNING:" (quote ~effect-name) "\"lack code for handling effects!" 
                           , body
+        |deflistener $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defmacro deflistener (listener-name args & body)
+              assert "\"args of functions" $ and (list? args) (every? args symbol?)
+              println "\"inspect args:" args
+              quasiquote $ %{} schema/Listener
+                :name $ ~ (turn-tag listener-name)
+                :coord $ []
+                :method $ fn ~args (quote ~args)
+                  ~@ $ if (empty? body)
+                    quasiquote $ 
+                      eprintln "\"WARNING:"
+                        quote $ ~ listener-name
+                        , "\"lack code for handling effects!"
+                    , body
         |defplugin $ %{} :CodeEntry (:doc |)
           :code $ quote
             defmacro defplugin (x params & body)
@@ -1000,10 +1018,17 @@
           :code $ quote
             defn save-store! () $ js/window.localStorage.setItem |respo.calcit
               format-cirru-edn $ :tasks @*store
+        |snippet! $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn snippet! ()
+              println "\"Expand" $ macroexpand-1
+                deflistener listen-a (aaa b) (println aaa b)
+              println "\"Expand" $ macroexpand-1
+                defeffect effect-a (a b) (c d) (println |bbb)
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.main $ :require
-            respo.core :refer $ *changes-logger clear-cache!
+            respo.core :refer $ *changes-logger clear-cache! deflistener defeffect
             respo.app.core :refer $ render-app! *store
             respo.app.core :refer $ handle-ssr!
             "\"./calcit.build-errors" :default build-errors
@@ -1679,6 +1704,8 @@
           :code $ quote (defrecord Effect :name :coord :args :method)
         |Element $ %{} :CodeEntry (:doc |)
           :code $ quote (defrecord Element :name :coord :attrs :style :event :children)
+        |Listener $ %{} :CodeEntry (:doc |)
+          :code $ quote (defrecord Listener :name :coord :method)
         |cache-info $ %{} :CodeEntry (:doc |)
           :code $ quote
             def cache-info $ {} (:value nil) (:initial-loop nil) (:last-hit nil) (:hit-times 0)
