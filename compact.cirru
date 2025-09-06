@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.16)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.17)
     :modules $ [] |memof/ |lilac/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -723,7 +723,7 @@
                     :method $ fn (~args-var ~params-var)
                       let[] ~args ~args-var $ let[] ~params ~params-var
                         ~@ $ if (empty? body)
-                          quasiquote $ println "\"WARNING:" ~effect-name "\"lack code for handling effects!" 
+                          quasiquote $ println "\"WARNING:" ~effect-name "\"lack code for handling effects!"
                           , body
         |defplugin $ %{} :CodeEntry (:doc |)
           :code $ quote
