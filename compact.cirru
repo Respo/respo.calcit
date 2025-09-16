@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.16)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.18)
     :modules $ [] |memof/ |lilac/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -767,9 +767,18 @@
         |h4 $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn h4 (props & children) (create-element :h4 props & children)
+        |h5 $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn h5 (props & children) (create-element :h5 props & children)
+        |h6 $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn h6 (props & children) (create-element :h6 props & children)
         |head $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn head (props & children) (create-element :head props & children)
+        |hr $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn hr (props) (create-element :hr props)
         |html $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn html (props & children)
@@ -803,9 +812,15 @@
                 collect-mounting collect! ([]) ([]) element true
                 patch-instance! @*changes target deliver-event
                 reset! *global-element element
+        |ol $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn ol (props & children) (create-element :ol props & children)
         |option $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn option (props & children) (create-element :option props & children)
+        |p $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn p (props & children) (create-element :p props & children)
         |pre $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn pre (props & children) (create-element :pre props & children)
@@ -851,6 +866,9 @@
         |span $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn span (props & children) (create-element :span props & children)
+        |strong $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn strong (props & children) (create-element :strong props & children)
         |style $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn style (props & children) (create-element :style props & children)
@@ -861,7 +879,10 @@
         |title $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn title (props & children) (create-element :title props & children)
-      :ns $ %{} :CodeEntry (:doc |)
+        |ul $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn ul (props & children) (create-element :ul props & children)
+      :ns $ %{} :CodeEntry (:doc "|provide core APIs for Respo, many of them are elements. if expected element is not defined yet, use `create-element :tag-name ...` to use it dynamically.\n")
         :code $ quote
           ns respo.core $ :require
             respo.controller.resolve :refer $ build-deliver-event
