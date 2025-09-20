@@ -926,10 +926,24 @@
                       js/document.head.appendChild style-el
                       swap! *style-caches assoc style-name $ {} (:rules rules) (:el style-el)
                   , style-name
-        |defstyle $ %{} :CodeEntry (:doc |)
+        |defstyle $ %{} :CodeEntry (:doc "|a macro for turning CSS rules into className, and only works for JavaScript.\n\nuse `defsytle` like:\n\n```cirru\ndefstyle style-demo $ {}\n  |& $ {} (:color :red)\n  \"|&:hover\" $ {}\n    :background-color :blue\n```\n\nwhere `&` refers to current element.\n\nIn the rules, it's nested hashmaps. `|&` and `|&:hover` are CSS queries. and in nested hashmaps there are CSS properties defined in calcit data.\n")
           :code $ quote
             defmacro defstyle (style-name rules)
               assert "\"expected symbol of style-name" $ symbol? style-name
+              if-let
+                query0 $ nth rules 1
+                assert "\"expected rule 0 to be hashmap or symbol, use `defstyle` like:\n\n```cirru\ndefstyle style-demo $ {}\n  |& $ {}\n    :color :red\n```\n\nwhere `&` refers to current element.\n" $ if-let
+                  rule0 $ nth query0 1
+                  or (symbol? rule0)
+                    and (list? rule0)
+                      &= '{} $ &list:nth rule0 0
+              if-let
+                query1 $ nth rules 2
+                assert "\"expected rule 1 to be hashmap or symbol, use `defsytle` like:\n\n```cirru\ndefstyle style-demo $ {}\n  |& $ {} (:color :red)\n  \"|&:hover\" $ {}\n    :background-color :blue\n```\n\nwhere `&` refers to current element" $ if-let
+                  rule1 $ nth query1 1
+                  or (symbol? rule1)
+                    and (list? rule1)
+                      &= '{} $ &list:nth rule1 0
               let
                   style-name-str $ str
                     -> (turn-string style-name) (&str:replace "\"!" "\"_EX_") (&str:replace "\"?" "\"_QU_")
