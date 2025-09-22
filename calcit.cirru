@@ -5796,7 +5796,7 @@
                                           |T $ %{} :Leaf (:at 1651175374961) (:by |rJoDgvdeG) (:text |:el)
                                           |b $ %{} :Leaf (:at 1651175384722) (:by |rJoDgvdeG) (:text |style-el)
                       |b $ %{} :Leaf (:at 1659097593779) (:by |rJoDgvdeG) (:text |style-name)
-        |defstyle $ %{} :CodeEntry (:doc "|a macro for turning CSS rules into className, and only works for JavaScript.\n\nuse `defsytle` like:\n\n```cirru\ndefstyle style-demo $ {}\n  |& $ {} (:color :red)\n  \"|&:hover\" $ {}\n    :background-color :blue\n```\n\nwhere `&` refers to current element.\n\nIn the rules, it's nested hashmaps. `|&` and `|&:hover` are CSS queries. and in nested hashmaps there are CSS properties defined in calcit data.\n")
+        |defstyle $ %{} :CodeEntry (:doc "|a macro for turning CSS rules into className, and only works for JavaScript.\n\nuse `defstyle` like:\n\n```cirru\ndefstyle style-demo $ {}\n  |& $ {} (:color :red)\n  \"|&:hover\" $ {}\n    :background-color :blue\n```\n\nwhere `&` refers to current element.\n\nIn the rules, it's nested hashmaps. `|&` and `|&:hover` are CSS queries. and in nested hashmaps there are CSS properties defined in calcit data.\n")
           :code $ %{} :Expr (:at 1651174523252) (:by |rJoDgvdeG)
             :data $ {}
               |T $ %{} :Leaf (:at 1651174631916) (:by |rJoDgvdeG) (:text |defmacro)
@@ -5821,7 +5821,7 @@
                       |T $ %{} :Leaf (:at 1758393506809) (:by |rJoDgvdeG) (:text |query0)
                       |b $ %{} :Expr (:at 1758393493590) (:by |rJoDgvdeG)
                         :data $ {}
-                          |T $ %{} :Leaf (:at 1758393513934) (:by |rJoDgvdeG) (:text |nth)
+                          |T $ %{} :Leaf (:at 1758541488049) (:by |rJoDgvdeG) (:text |&list:nth)
                           |b $ %{} :Leaf (:at 1758393493590) (:by |rJoDgvdeG) (:text |rules)
                           |h $ %{} :Leaf (:at 1758393812523) (:by |rJoDgvdeG) (:text |1)
                   |T $ %{} :Expr (:at 1758393346768) (:by |rJoDgvdeG)
@@ -5836,7 +5836,7 @@
                               |T $ %{} :Leaf (:at 1758393381400) (:by |rJoDgvdeG) (:text |rule0)
                               |h $ %{} :Expr (:at 1758393517309) (:by |rJoDgvdeG)
                                 :data $ {}
-                                  |D $ %{} :Leaf (:at 1758393518224) (:by |rJoDgvdeG) (:text |nth)
+                                  |D $ %{} :Leaf (:at 1758541483840) (:by |rJoDgvdeG) (:text |&list:nth)
                                   |T $ %{} :Leaf (:at 1758393511458) (:by |rJoDgvdeG) (:text |query0)
                                   |b $ %{} :Leaf (:at 1758393519234) (:by |rJoDgvdeG) (:text |1)
                           |h $ %{} :Expr (:at 1758393390787) (:by |rJoDgvdeG)
@@ -5870,13 +5870,13 @@
                       |T $ %{} :Leaf (:at 1758393529254) (:by |rJoDgvdeG) (:text |query1)
                       |b $ %{} :Expr (:at 1758393527266) (:by |rJoDgvdeG)
                         :data $ {}
-                          |T $ %{} :Leaf (:at 1758393527266) (:by |rJoDgvdeG) (:text |nth)
+                          |T $ %{} :Leaf (:at 1758541496266) (:by |rJoDgvdeG) (:text |&list:nth)
                           |b $ %{} :Leaf (:at 1758393527266) (:by |rJoDgvdeG) (:text |rules)
                           |h $ %{} :Leaf (:at 1758393813948) (:by |rJoDgvdeG) (:text |2)
                   |h $ %{} :Expr (:at 1758393527266) (:by |rJoDgvdeG)
                     :data $ {}
                       |T $ %{} :Leaf (:at 1758393527266) (:by |rJoDgvdeG) (:text |assert)
-                      |b $ %{} :Leaf (:at 1758394369979) (:by |rJoDgvdeG) (:text "|\"expected rule 1 to be hashmap or symbol, use `defsytle` like:\n\n```cirru\ndefstyle style-demo $ {}\n  |& $ {} (:color :red)\n  \"|&:hover\" $ {}\n    :background-color :blue\n```\n\nwhere `&` refers to current element")
+                      |b $ %{} :Leaf (:at 1758541464805) (:by |rJoDgvdeG) (:text "|\"expected rule 1 to be hashmap or symbol, use `defstyle` like:\n\n```cirru\ndefstyle style-demo $ {}\n  |& $ {} (:color :red)\n  \"|&:hover\" $ {}\n    :background-color :blue\n```\n\nwhere `&` refers to current element")
                       |h $ %{} :Expr (:at 1758393527266) (:by |rJoDgvdeG)
                         :data $ {}
                           |T $ %{} :Leaf (:at 1758394153375) (:by |rJoDgvdeG) (:text |if-let)
@@ -5885,7 +5885,7 @@
                               |T $ %{} :Leaf (:at 1758393535571) (:by |rJoDgvdeG) (:text |rule1)
                               |b $ %{} :Expr (:at 1758393527266) (:by |rJoDgvdeG)
                                 :data $ {}
-                                  |T $ %{} :Leaf (:at 1758393527266) (:by |rJoDgvdeG) (:text |nth)
+                                  |T $ %{} :Leaf (:at 1758541493149) (:by |rJoDgvdeG) (:text |&list:nth)
                                   |b $ %{} :Leaf (:at 1758393830746) (:by |rJoDgvdeG) (:text |query1)
                                   |h $ %{} :Leaf (:at 1758394196061) (:by |rJoDgvdeG) (:text |1)
                           |h $ %{} :Expr (:at 1758393527266) (:by |rJoDgvdeG)
