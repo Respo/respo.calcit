@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.18)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.19)
     :modules $ [] |memof/ |lilac/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -440,7 +440,7 @@
             respo.core :refer $ defcomp defeffect <> >> div button textarea span input a list->
     |respo.comp.inspect $ %{} :FileEntry
       :defs $ {}
-        |comp-inspect $ %{} :CodeEntry (:doc |)
+        |comp-inspect $ %{} :CodeEntry (:doc "|put a label in tag with absolute position, click it to print data.\n\n3 parameters are,\n- `tip` a string of comment,\n- `data` Calcit data to inspect, which will be printed in Console,\n- `style` string of className, or hashmap of styles")
           :code $ quote
             defcomp comp-inspect (tip data style)
               let
@@ -486,7 +486,7 @@
             respo.util.format :refer $ hsl
     |respo.comp.space $ %{} :FileEntry
       :defs $ {}
-        |=< $ %{} :CodeEntry (:doc |)
+        |=< $ %{} :CodeEntry (:doc "|insert a tiny space, horizontally or verticaly.\n\n- `8 nil` for horizontal width 8px,\n- `nil 8` for vertical height 8px.\n")
           :code $ quote
             defn =< (w x) (comp-space w x)
         |comp-space $ %{} :CodeEntry (:doc |)
@@ -694,7 +694,7 @@
                   update tree :attrs $ fn (attrs)
                     conj attrs $ [] :data-comp name
                   , tree
-        |defcomp $ %{} :CodeEntry (:doc |)
+        |defcomp $ %{} :CodeEntry (:doc "|Respo component can be plain functions. However `defcomp` is provided as a macro to transform effects into component effects, and it returns component instead of element.\n\nparameters are:\n\n- component name\n- a list of params\n- spreading argument of body, last item used as returned value")
           :code $ quote
             defmacro defcomp (comp-name params & body)
               assert "\"expected symbol of comp-name" $ symbol? comp-name
@@ -707,7 +707,7 @@
                     :name $ ~ (turn-tag comp-name)
                     :tree $ do (~@ body)
                   ~ $ turn-string comp-name
-        |defeffect $ %{} :CodeEntry (:doc |)
+        |defeffect $ %{} :CodeEntry (:doc "|a macro for defining a effect. if returns an function.\n\nparameters:\n\n- effect name\n- list of arguments\n- list of effect lifecycle arguments\n  - action name\n  - element that take place\n  - boolean if happen at current element\n- spreading arguments of body\n")
           :code $ quote
             defmacro defeffect (effect-name args params & body)
               assert "\"args in symbol" $ and (list? args) (every? args symbol?)
@@ -840,7 +840,7 @@
                 collect-mounting collect! ([]) ([]) element true
                 patch-instance! @*changes target deliver-event
                 reset! *global-element $ mute-element element
-        |render! $ %{} :CodeEntry (:doc |)
+        |render! $ %{} :CodeEntry (:doc "|sync virtual DOM to real DOM. newly creating for the first time, and diff/patch for reset of calls:\n\ntakes arguments:\n- `target`, the mount point,\n- `markup` which is the virtual DOM,\n- `dispatch!` the dispatcher function for handling actions.")
           :code $ quote
             defn render! (target markup dispatch!) (reset! *dispatch-fn dispatch!)
               if (some? @*global-element) (rerender-app! target markup *dispatch-fn) (mount-app! target markup *dispatch-fn)
