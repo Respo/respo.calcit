@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:port 6001) (:reload-fn |respo.main/reload!) (:storage-key |calcit.cirru) (:version |0.16.18)
+  :configs $ {} (:init-fn |respo.main/main!) (:port 6001) (:reload-fn |respo.main/reload!) (:storage-key |calcit.cirru) (:version |0.16.19)
     :modules $ [] |memof/ |lilac/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -2689,7 +2689,7 @@
                         |w $ %{} :Leaf (:at 1656036197488) (:by |rJoDgvdeG) (:text |list->)
     |respo.comp.inspect $ %{} :FileEntry
       :defs $ {}
-        |comp-inspect $ %{} :CodeEntry (:doc |)
+        |comp-inspect $ %{} :CodeEntry (:doc "|put a label in tag with absolute position, click it to print data.\n\n3 parameters are,\n- `tip` a string of comment,\n- `data` Calcit data to inspect, which will be printed in Console,\n- `style` string of className, or hashmap of styles")
           :code $ %{} :Expr (:at 1504774121421) (:by nil)
             :data $ {}
               |T $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |defcomp)
@@ -3019,7 +3019,7 @@
                         |T $ %{} :Leaf (:at 1706301916052) (:by |rJoDgvdeG) (:text |hsl)
     |respo.comp.space $ %{} :FileEntry
       :defs $ {}
-        |=< $ %{} :CodeEntry (:doc |)
+        |=< $ %{} :CodeEntry (:doc "|insert a tiny space, horizontally or verticaly.\n\n- `8 nil` for horizontal width 8px,\n- `nil 8` for vertical height 8px.\n")
           :code $ %{} :Expr (:at 1504774121421) (:by nil)
             :data $ {}
               |T $ %{} :Leaf (:at 1509729563664) (:by |root) (:text |defn)
@@ -4314,7 +4314,7 @@
                                           |b $ %{} :Leaf (:at 1711382168608) (:by |rJoDgvdeG) (:text |:data-comp)
                                           |h $ %{} :Leaf (:at 1711382198221) (:by |rJoDgvdeG) (:text |name)
                           |l $ %{} :Leaf (:at 1711382307466) (:by |rJoDgvdeG) (:text |tree)
-        |defcomp $ %{} :CodeEntry (:doc |)
+        |defcomp $ %{} :CodeEntry (:doc "|Respo component can be plain functions. However `defcomp` is provided as a macro to transform effects into component effects, and it returns component instead of element.\n\nparameters are:\n\n- component name\n- a list of params\n- spreading argument of body, last item used as returned value")
           :code $ %{} :Expr (:at 1612711003106) (:by |rJoDgvdeG)
             :data $ {}
               |T $ %{} :Leaf (:at 1612711003106) (:by |rJoDgvdeG) (:text |defmacro)
@@ -4407,7 +4407,7 @@
                                 :data $ {}
                                   |T $ %{} :Leaf (:at 1711382204817) (:by |rJoDgvdeG) (:text |turn-string)
                                   |b $ %{} :Leaf (:at 1711382204817) (:by |rJoDgvdeG) (:text |comp-name)
-        |defeffect $ %{} :CodeEntry (:doc |)
+        |defeffect $ %{} :CodeEntry (:doc "|a macro for defining a effect. if returns an function.\n\nparameters:\n\n- effect name\n- list of arguments\n- list of effect lifecycle arguments\n  - action name\n  - element that take place\n  - boolean if happen at current element\n- spreading arguments of body\n")
           :code $ %{} :Expr (:at 1610030655710) (:by |rJoDgvdeG)
             :data $ {}
               |T $ %{} :Leaf (:at 1610030665066) (:by |rJoDgvdeG) (:text |defmacro)
@@ -5268,7 +5268,7 @@
                         :data $ {}
                           |T $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |mute-element)
                           |j $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |element)
-        |render! $ %{} :CodeEntry (:doc |)
+        |render! $ %{} :CodeEntry (:doc "|sync virtual DOM to real DOM. newly creating for the first time, and diff/patch for reset of calls:\n\ntakes arguments:\n- `target`, the mount point,\n- `markup` which is the virtual DOM,\n- `dispatch!` the dispatcher function for handling actions.")
           :code $ %{} :Expr (:at 1504774121421) (:by nil)
             :data $ {}
               |T $ %{} :Leaf (:at 1504774121421) (:by |root) (:text |defn)
@@ -5796,7 +5796,7 @@
                                           |T $ %{} :Leaf (:at 1651175374961) (:by |rJoDgvdeG) (:text |:el)
                                           |b $ %{} :Leaf (:at 1651175384722) (:by |rJoDgvdeG) (:text |style-el)
                       |b $ %{} :Leaf (:at 1659097593779) (:by |rJoDgvdeG) (:text |style-name)
-        |defstyle $ %{} :CodeEntry (:doc |)
+        |defstyle $ %{} :CodeEntry (:doc "|a macro for turning CSS rules into className, and only works for JavaScript.\n\nuse `defstyle` like:\n\n```cirru\ndefstyle style-demo $ {}\n  |& $ {} (:color :red)\n  \"|&:hover\" $ {}\n    :background-color :blue\n```\n\nwhere `&` refers to current element.\n\nIn the rules, it's nested hashmaps. `|&` and `|&:hover` are CSS queries. and in nested hashmaps there are CSS properties defined in calcit data.\n")
           :code $ %{} :Expr (:at 1651174523252) (:by |rJoDgvdeG)
             :data $ {}
               |T $ %{} :Leaf (:at 1651174631916) (:by |rJoDgvdeG) (:text |defmacro)
@@ -5813,6 +5813,104 @@
                     :data $ {}
                       |T $ %{} :Leaf (:at 1651174843100) (:by |rJoDgvdeG) (:text |symbol?)
                       |b $ %{} :Leaf (:at 1651175893994) (:by |rJoDgvdeG) (:text |style-name)
+              |j $ %{} :Expr (:at 1758393483849) (:by |rJoDgvdeG)
+                :data $ {}
+                  |D $ %{} :Leaf (:at 1758393489253) (:by |rJoDgvdeG) (:text |if-let)
+                  |L $ %{} :Expr (:at 1758393489589) (:by |rJoDgvdeG)
+                    :data $ {}
+                      |T $ %{} :Leaf (:at 1758393506809) (:by |rJoDgvdeG) (:text |query0)
+                      |b $ %{} :Expr (:at 1758393493590) (:by |rJoDgvdeG)
+                        :data $ {}
+                          |T $ %{} :Leaf (:at 1758541488049) (:by |rJoDgvdeG) (:text |&list:nth)
+                          |b $ %{} :Leaf (:at 1758393493590) (:by |rJoDgvdeG) (:text |rules)
+                          |h $ %{} :Leaf (:at 1758393812523) (:by |rJoDgvdeG) (:text |1)
+                  |T $ %{} :Expr (:at 1758393346768) (:by |rJoDgvdeG)
+                    :data $ {}
+                      |T $ %{} :Leaf (:at 1758393349034) (:by |rJoDgvdeG) (:text |assert)
+                      |b $ %{} :Leaf (:at 1758394379970) (:by |rJoDgvdeG) (:text "|\"expected rule 0 to be hashmap or symbol, use `defstyle` like:\n\n```cirru\ndefstyle style-demo $ {}\n  |& $ {}\n    :color :red\n```\n\nwhere `&` refers to current element.\n")
+                      |h $ %{} :Expr (:at 1758393377104) (:by |rJoDgvdeG)
+                        :data $ {}
+                          |T $ %{} :Leaf (:at 1758394157823) (:by |rJoDgvdeG) (:text |if-let)
+                          |b $ %{} :Expr (:at 1758393379575) (:by |rJoDgvdeG)
+                            :data $ {}
+                              |T $ %{} :Leaf (:at 1758393381400) (:by |rJoDgvdeG) (:text |rule0)
+                              |h $ %{} :Expr (:at 1758393517309) (:by |rJoDgvdeG)
+                                :data $ {}
+                                  |D $ %{} :Leaf (:at 1758541483840) (:by |rJoDgvdeG) (:text |&list:nth)
+                                  |T $ %{} :Leaf (:at 1758393511458) (:by |rJoDgvdeG) (:text |query0)
+                                  |b $ %{} :Leaf (:at 1758393519234) (:by |rJoDgvdeG) (:text |1)
+                          |h $ %{} :Expr (:at 1758393390787) (:by |rJoDgvdeG)
+                            :data $ {}
+                              |T $ %{} :Leaf (:at 1758393392890) (:by |rJoDgvdeG) (:text |or)
+                              |b $ %{} :Expr (:at 1758393393242) (:by |rJoDgvdeG)
+                                :data $ {}
+                                  |T $ %{} :Leaf (:at 1758393397206) (:by |rJoDgvdeG) (:text |symbol?)
+                                  |b $ %{} :Leaf (:at 1758393400689) (:by |rJoDgvdeG) (:text |rule0)
+                              |h $ %{} :Expr (:at 1758393407696) (:by |rJoDgvdeG)
+                                :data $ {}
+                                  |D $ %{} :Leaf (:at 1758393409875) (:by |rJoDgvdeG) (:text |and)
+                                  |T $ %{} :Expr (:at 1758393402564) (:by |rJoDgvdeG)
+                                    :data $ {}
+                                      |T $ %{} :Leaf (:at 1758393404052) (:by |rJoDgvdeG) (:text |list?)
+                                      |b $ %{} :Leaf (:at 1758393407090) (:by |rJoDgvdeG) (:text |rule0)
+                                  |b $ %{} :Expr (:at 1758393415084) (:by |rJoDgvdeG)
+                                    :data $ {}
+                                      |D $ %{} :Leaf (:at 1758393853921) (:by |rJoDgvdeG) (:text |&=)
+                                      |L $ %{} :Leaf (:at 1758393551025) (:by |rJoDgvdeG) (:text |'{})
+                                      |T $ %{} :Expr (:at 1758393412244) (:by |rJoDgvdeG)
+                                        :data $ {}
+                                          |T $ %{} :Leaf (:at 1758393695993) (:by |rJoDgvdeG) (:text |&list:nth)
+                                          |b $ %{} :Leaf (:at 1758393414507) (:by |rJoDgvdeG) (:text |rule0)
+                                          |h $ %{} :Leaf (:at 1758393416646) (:by |rJoDgvdeG) (:text |0)
+              |k $ %{} :Expr (:at 1758393527266) (:by |rJoDgvdeG)
+                :data $ {}
+                  |T $ %{} :Leaf (:at 1758393527266) (:by |rJoDgvdeG) (:text |if-let)
+                  |b $ %{} :Expr (:at 1758393527266) (:by |rJoDgvdeG)
+                    :data $ {}
+                      |T $ %{} :Leaf (:at 1758393529254) (:by |rJoDgvdeG) (:text |query1)
+                      |b $ %{} :Expr (:at 1758393527266) (:by |rJoDgvdeG)
+                        :data $ {}
+                          |T $ %{} :Leaf (:at 1758541496266) (:by |rJoDgvdeG) (:text |&list:nth)
+                          |b $ %{} :Leaf (:at 1758393527266) (:by |rJoDgvdeG) (:text |rules)
+                          |h $ %{} :Leaf (:at 1758393813948) (:by |rJoDgvdeG) (:text |2)
+                  |h $ %{} :Expr (:at 1758393527266) (:by |rJoDgvdeG)
+                    :data $ {}
+                      |T $ %{} :Leaf (:at 1758393527266) (:by |rJoDgvdeG) (:text |assert)
+                      |b $ %{} :Leaf (:at 1758541464805) (:by |rJoDgvdeG) (:text "|\"expected rule 1 to be hashmap or symbol, use `defstyle` like:\n\n```cirru\ndefstyle style-demo $ {}\n  |& $ {} (:color :red)\n  \"|&:hover\" $ {}\n    :background-color :blue\n```\n\nwhere `&` refers to current element")
+                      |h $ %{} :Expr (:at 1758393527266) (:by |rJoDgvdeG)
+                        :data $ {}
+                          |T $ %{} :Leaf (:at 1758394153375) (:by |rJoDgvdeG) (:text |if-let)
+                          |b $ %{} :Expr (:at 1758393527266) (:by |rJoDgvdeG)
+                            :data $ {}
+                              |T $ %{} :Leaf (:at 1758393535571) (:by |rJoDgvdeG) (:text |rule1)
+                              |b $ %{} :Expr (:at 1758393527266) (:by |rJoDgvdeG)
+                                :data $ {}
+                                  |T $ %{} :Leaf (:at 1758541493149) (:by |rJoDgvdeG) (:text |&list:nth)
+                                  |b $ %{} :Leaf (:at 1758393830746) (:by |rJoDgvdeG) (:text |query1)
+                                  |h $ %{} :Leaf (:at 1758394196061) (:by |rJoDgvdeG) (:text |1)
+                          |h $ %{} :Expr (:at 1758393527266) (:by |rJoDgvdeG)
+                            :data $ {}
+                              |T $ %{} :Leaf (:at 1758393527266) (:by |rJoDgvdeG) (:text |or)
+                              |b $ %{} :Expr (:at 1758393527266) (:by |rJoDgvdeG)
+                                :data $ {}
+                                  |T $ %{} :Leaf (:at 1758393527266) (:by |rJoDgvdeG) (:text |symbol?)
+                                  |b $ %{} :Leaf (:at 1758393837824) (:by |rJoDgvdeG) (:text |rule1)
+                              |h $ %{} :Expr (:at 1758393527266) (:by |rJoDgvdeG)
+                                :data $ {}
+                                  |T $ %{} :Leaf (:at 1758393527266) (:by |rJoDgvdeG) (:text |and)
+                                  |b $ %{} :Expr (:at 1758393527266) (:by |rJoDgvdeG)
+                                    :data $ {}
+                                      |T $ %{} :Leaf (:at 1758393527266) (:by |rJoDgvdeG) (:text |list?)
+                                      |b $ %{} :Leaf (:at 1758393537182) (:by |rJoDgvdeG) (:text |rule1)
+                                  |h $ %{} :Expr (:at 1758393527266) (:by |rJoDgvdeG)
+                                    :data $ {}
+                                      |T $ %{} :Leaf (:at 1758393851618) (:by |rJoDgvdeG) (:text |&=)
+                                      |b $ %{} :Leaf (:at 1758393545679) (:by |rJoDgvdeG) (:text |'{})
+                                      |h $ %{} :Expr (:at 1758394217020) (:by |rJoDgvdeG)
+                                        :data $ {}
+                                          |T $ %{} :Leaf (:at 1758393697583) (:by |rJoDgvdeG) (:text |&list:nth)
+                                          |b $ %{} :Leaf (:at 1758393538621) (:by |rJoDgvdeG) (:text |rule1)
+                                          |h $ %{} :Leaf (:at 1758393527266) (:by |rJoDgvdeG) (:text |0)
               |l $ %{} :Expr (:at 1651174697214) (:by |rJoDgvdeG)
                 :data $ {}
                   |D $ %{} :Leaf (:at 1651174698002) (:by |rJoDgvdeG) (:text |let)

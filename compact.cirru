@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.18)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.19)
     :modules $ [] |memof/ |lilac/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -24,15 +24,18 @@
                   comp-global-keyup
                     {} $ :disabled-commands (#{} "\"s" "\"p")
                     fn (e d!) (js/console.log "\"keyup" e)
+          :examples $ []
         |style-global $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-global $ {}
               "\"&" $ {} (:font-family |Avenir,Verdana)
               "\"&" $ {} ('contained "\"@media only screen and (max-width: 600px)")
                 :background-color $ hsl 0 0 90
+          :examples $ []
         |style-states $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-states $ {} (:padding 8)
+          :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.app.comp.container $ :require
@@ -81,6 +84,7 @@
                       <> |Remove
                     =< 8 nil
                     div ({}) (<> state)
+          :examples $ []
         |effect-log $ %{} :CodeEntry (:doc |)
           :code $ quote
             defeffect effect-log (task) (action parent at-place?) (; js/console.log "\"Task effect" action at-place?)
@@ -91,14 +95,17 @@
                   , nil
                 :update (; println "\"read") nil
                 :unmount (; println "\"read") nil
+          :examples $ []
         |style-done $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-done $ {}
               :& $ {} (:width 32) (:height 32) (:outline :none) (:border :none) (:vertical-align :middle) (:cursor :pointer)
+          :examples $ []
         |style-task $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-task $ {}
               "\"&" $ {} (:display :flex) (:padding "|4px 0px")
+          :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.app.comp.task $ :require
@@ -178,34 +185,43 @@
                         =< 8 nil
                         comp-wrap $ comp-zero
                     comp-inspect |Tasks tasks $ {} (:left 500) (:top 20)
+          :examples $ []
         |effect-focus $ %{} :CodeEntry (:doc |)
           :code $ quote
             defeffect effect-focus () (action parent at-place?) (js/console.log "\"todolist effect:" action)
+          :examples $ []
         |initial-state $ %{} :CodeEntry (:doc |)
           :code $ quote
             def initial-state $ {} (:draft |) (:locked? false)
+          :examples $ []
         |number-order $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn number-order (a b)
               if (&< a b) -1 $ if (&> a b) 1 0
+          :examples $ []
         |on-focus $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-focus (e dispatch!) (println "|Just focused~")
+          :examples $ []
         |on-test $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-test (e dispatch!) (println "|trigger test!")
               try-test! dispatch! $ []
+          :examples $ []
         |style-bold! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-bold! $ {}
               "\"&" $ {} (:font-weight "\"bold !important")
+          :examples $ []
         |style-list $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-list $ {} (:color :black)
               :background-color $ hsl 120 20 98
+          :examples $ []
         |style-panel $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-panel $ {} (:display :flex) (:margin-bottom 4)
+          :examples $ []
         |style-todo-root $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-todo-root $ {}
@@ -215,10 +231,12 @@
                 "\"font-size" 16
                 :padding 10
                 :font-family "|\"微软雅黑\", Verdana"
+          :examples $ []
         |style-toolbar $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-toolbar $ {}
               "\"&" $ {} (:display :flex) (:flex-direction :row) (:justify-content :start) (:padding "\"4px 0") (:white-space :nowrap)
+          :examples $ []
         |try-test! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn try-test! (dispatch! acc)
@@ -249,6 +267,7 @@
                       fn () $ try-test! dispatch! (conj acc cost)
                       , 0
                     println |result: $ sort acc number-order
+          :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.app.comp.todolist $ :require
@@ -269,6 +288,7 @@
           :code $ quote
             defcomp comp-wrap (x)
               div ({}) x
+          :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.app.comp.wrap $ :require
@@ -279,6 +299,7 @@
           :code $ quote
             defcomp comp-zero () $ div
               {} $ :inner-text 0
+          :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.app.comp.zero $ :require
@@ -287,6 +308,7 @@
       :defs $ {}
         |*store $ %{} :CodeEntry (:doc |)
           :code $ quote (defatom *store schema/store)
+          :examples $ []
         |dispatch! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn dispatch! (op ? op-data)
@@ -294,14 +316,17 @@
               let
                   store $ updater @*store op (generate-id!)
                 reset! *store store
+          :examples $ []
         |handle-ssr! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn handle-ssr! (mount-target)
               realize-ssr! mount-target (comp-container @*store) dispatch!
+          :examples $ []
         |render-app! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn render-app! (mount-target)
               render! mount-target (comp-container @*store) dispatch!
+          :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.app.core $ :require
@@ -318,9 +343,11 @@
               :tasks $ []
               :states $ {}
               :cursor $ []
+          :examples $ []
         |task $ %{} :CodeEntry (:doc |)
           :code $ quote
             def task $ {} (:id nil) (:text |) (:done? false)
+          :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote (ns respo.app.schema)
     |respo.app.style.widget $ %{} :FileEntry
@@ -333,16 +360,19 @@
               :height 28
               :line-height "\"28px"
               :transition-duration "\"200ms"
+          :examples $ []
         |style-button $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-button $ {} (:& button)
               "\"&:hover" $ {} (:transform "\"scale(1.04)")
+          :examples $ []
         |style-input $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-input $ {}
               "\"&" $ {} (:font-size |16px) (:line-height |24px) (:padding "|0px 8px") (:outline :none) (:min-width |300px)
                 :background-color $ hsl 0 0 94
                 :border :none
+          :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.app.style.widget $ :require
@@ -388,6 +418,7 @@
                           update task :done? not
                           , task
                 _ $ do (eprintln "\"Unknown op:" op) store
+          :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.app.updater $ :require
@@ -400,14 +431,17 @@
               [] (effect-listen-keyboard options "\"keydown")
                 span $ {}
                   :on-keydown $ fn (e d!) (on-event e d!)
+          :examples $ []
         |comp-global-keyup $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-global-keyup (options on-event) (; "\"dirty solution: proxy window keydown event to a `<span/>`, comes with some restrictions. however Respo does not allow effects to modify states.")
               [] (effect-listen-keyboard options "\"keyup")
                 span $ {}
                   :on-keyup $ fn (e d!) (on-event e d!)
+          :examples $ []
         |dirty-field $ %{} :CodeEntry (:doc |)
           :code $ quote (def dirty-field "\"_global_listener")
+          :examples $ []
         |effect-listen-keyboard $ %{} :CodeEntry (:doc |)
           :code $ quote
             defeffect effect-listen-keyboard (options event-name) (action el at?)
@@ -434,13 +468,14 @@
                     js/window.removeEventListener event-name handler
                     js-delete el dirty-field
                 true nil
+          :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.comp.global-keydown $ :require
             respo.core :refer $ defcomp defeffect <> >> div button textarea span input a list->
     |respo.comp.inspect $ %{} :FileEntry
       :defs $ {}
-        |comp-inspect $ %{} :CodeEntry (:doc |)
+        |comp-inspect $ %{} :CodeEntry (:doc "|put a label in tag with absolute position, click it to print data.\n\n3 parameters are,\n- `tip` a string of comment,\n- `data` Calcit data to inspect, which will be printed in Console,\n- `style` string of className, or hashmap of styles")
           :code $ quote
             defcomp comp-inspect (tip data style)
               let
@@ -453,6 +488,7 @@
                   :on-click $ fn (e d!)
                     if (some? js/window.devtoolsFormatters) (js/console.log data)
                       js/console.log $ to-js-data data
+          :examples $ []
         |grab-info $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn grab-info (data)
@@ -469,15 +505,18 @@
                 (bool? data) (str data)
                 (fn? data) |Fn
                 true $ to-lispy-string data
+          :examples $ []
         |highlight-defcomp $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle highlight-defcomp $ {}
               "\"& *" $ {}
                 :outline $ str "\"1px dashed " (hsl 200 40 50 0.5)
+          :examples $ []
         |style-data $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-data $ {}
               "\"&" $ {} (:position :absolute) (:background-color "\"hsl(240,100%,0%)") (:color :white) (:opacity 0.2) (:font-size |12px) (:font-family |Avenir,Verdana) (:line-height "\"1.4em") (:padding "|2px 6px") (:border-radius |4px) (:max-width 160) (:max-height 32) (:white-space :normal) (:text-overflow :ellipsis) (:cursor :default)
+          :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.comp.inspect $ :require
@@ -486,18 +525,21 @@
             respo.util.format :refer $ hsl
     |respo.comp.space $ %{} :FileEntry
       :defs $ {}
-        |=< $ %{} :CodeEntry (:doc |)
+        |=< $ %{} :CodeEntry (:doc "|insert a tiny space, horizontally or verticaly.\n\n- `8 nil` for horizontal width 8px,\n- `nil 8` for vertical height 8px.\n")
           :code $ quote
             defn =< (w x) (comp-space w x)
+          :examples $ []
         |comp-space $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-space (w h)
               div $ {} (:class-name style-space)
                 :style $ if (some? w) (&{} :width w) (&{} :height h)
+          :examples $ []
         |style-space $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-space $ {}
               :& $ {} (:height 1) (:width 1) (:display :inline-block)
+          :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.comp.space $ :require
@@ -512,6 +554,7 @@
                   listener-builder $ fn (event-name) (build-listener event-name deliver-event)
                 set! (.-innerHTML mount-point) |
                 .!appendChild mount-point $ make-element entire-dom listener-builder ([])
+          :examples $ []
         |build-listener $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn build-listener (event-name deliver-event)
@@ -519,12 +562,14 @@
                 let
                     simple-event $ event->edn event
                   deliver-event coord event-name simple-event
+          :examples $ []
         |patch-instance! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn patch-instance! (changes mount-point deliver-event)
               let
                   listener-builder $ fn (event-name) (build-listener event-name deliver-event)
                 apply-dom-changes changes mount-point listener-builder
+          :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.controller.client $ :require
@@ -553,6 +598,7 @@
                   if (some? target-listener)
                     do (; println "|listener found:" coord event-name) (target-listener simple-event dispatch-wrap)
                     ; println "|found no listener:" coord event-name
+          :examples $ []
         |find-event-target $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn find-event-target (element coord event-name) (; echo "\"looking for" coord event-name)
@@ -578,6 +624,7 @@
                         slice coord 0 $ - (count coord) 1
                         , event-name
                       , nil
+          :examples $ []
         |get-markup-at $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn get-markup-at (markup coord)
@@ -595,6 +642,7 @@
                         get-markup-at (get child-pair 1) cs
                         raise $ str "|child not found:" coord
                           map (:children markup) first
+          :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.controller.resolve $ :require
@@ -603,16 +651,20 @@
       :defs $ {}
         |*changes-logger $ %{} :CodeEntry (:doc |)
           :code $ quote (defatom *changes-logger nil)
+          :examples $ []
         |*dispatch-fn $ %{} :CodeEntry (:doc |)
           :code $ quote (defatom *dispatch-fn nil)
+          :examples $ []
         |*global-element $ %{} :CodeEntry (:doc |)
           :code $ quote (defatom *global-element nil)
+          :examples $ []
         |<> $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn <> (content ? style)
               if (string? style)
                 span $ {} (:inner-text content) (:class-name style)
                 span $ {} (:inner-text content) (:style style)
+          :examples $ []
         |>> $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn >> (states k)
@@ -620,30 +672,38 @@
                   parent-cursor $ either (:cursor states) ([])
                   branch $ either (get states k) ({})
                 assoc branch :cursor $ conj parent-cursor k
+          :examples $ []
         |a $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn a (props & children) (create-element :a props & children)
+          :examples $ []
         |blockquote $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn blockquote (props & children) (create-element :blockquote props & children)
+          :examples $ []
         |body $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn body (props & children) (create-element :body props & children)
+          :examples $ []
         |button $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn button (props & children)
               create-element :button props & $ map children confirm-child
+          :examples $ []
         |clear-cache! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn clear-cache! () $ reset-memof1-caches!
+          :examples $ []
         |code $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn code (props & children) (create-element :code props & children)
+          :examples $ []
         |confirm-child $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn confirm-child (x)
               assert "\"Invalid data in elements tree: " $ or (nil? x) (element? x) (component? x)
               , x
+          :examples $ []
         |confirm-child-pair $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn confirm-child-pair (pair)
@@ -653,6 +713,7 @@
                 x $ nth pair 1
                 assert "\"Invalid data in elements tree: " $ or (nil? x) (element? x) (component? x)
               , pair
+          :examples $ []
         |create-element $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn create-element (tag-name props & children)
@@ -673,6 +734,7 @@
                     map-indexed $ fn (idx item) (confirm-child item) ([] idx item)
                     filter val-exists?
                 %{} schema/Element (:name tag-name) (:coord nil) (:attrs attrs) (:style styles) (:event event) (:children children-nodes)
+          :examples $ []
         |create-list-element $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn create-list-element (tag-name props child-map)
@@ -686,6 +748,7 @@
                   event $ pick-event props
                 %{} schema/Element (:name tag-name) (:coord nil) (:attrs attrs) (:style styles) (:event event)
                   :children $ map child-map confirm-child-pair
+          :examples $ []
         |decorate-defcomp $ %{} :CodeEntry (:doc "|detect root element under component and add `data-defcomp` mark")
           :code $ quote
             defn decorate-defcomp (c name)
@@ -694,7 +757,8 @@
                   update tree :attrs $ fn (attrs)
                     conj attrs $ [] :data-comp name
                   , tree
-        |defcomp $ %{} :CodeEntry (:doc |)
+          :examples $ []
+        |defcomp $ %{} :CodeEntry (:doc "|Respo component can be plain functions. However `defcomp` is provided as a macro to transform effects into component effects, and it returns component instead of element.\n\nparameters are:\n\n- component name\n- a list of params\n- spreading argument of body, last item used as returned value")
           :code $ quote
             defmacro defcomp (comp-name params & body)
               assert "\"expected symbol of comp-name" $ symbol? comp-name
@@ -707,7 +771,8 @@
                     :name $ ~ (turn-tag comp-name)
                     :tree $ do (~@ body)
                   ~ $ turn-string comp-name
-        |defeffect $ %{} :CodeEntry (:doc |)
+          :examples $ []
+        |defeffect $ %{} :CodeEntry (:doc "|a macro for defining a effect. if returns an function.\n\nparameters:\n\n- effect name\n- list of arguments\n- list of effect lifecycle arguments\n  - action name\n  - element that take place\n  - boolean if happen at current element\n- spreading arguments of body\n")
           :code $ quote
             defmacro defeffect (effect-name args params & body)
               assert "\"args in symbol" $ and (list? args) (every? args symbol?)
@@ -725,6 +790,7 @@
                         ~@ $ if (empty? body)
                           quasiquote $ println "\"WARNING:" ~effect-name "\"lack code for handling effects!" 
                           , body
+          :examples $ []
         |defplugin $ %{} :CodeEntry (:doc |)
           :code $ quote
             defmacro defplugin (x params & body)
@@ -732,12 +798,15 @@
               assert "\"expected params" $ list? params
               assert "\"expected some result" $ > (count body) 0
               quasiquote $ defn ~x ~params ~@body
+          :examples $ []
         |div $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn div (props & children) (create-element :div props & children)
+          :examples $ []
         |element-type $ %{} :CodeEntry (:doc |)
           :code $ quote
             def element-type $ if (exists? js/Element) js/Element js/Error
+          :examples $ []
         |extract-effects-list $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn extract-effects-list (markup)
@@ -755,49 +824,64 @@
                         effects-list $ -> markup-tree (filter effect?)
                       -> markup (assoc :tree node-tree) (assoc :effects effects-list)
                   true markup
+          :examples $ []
         |h1 $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn h1 (props & children) (create-element :h1 props & children)
+          :examples $ []
         |h2 $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn h2 (props & children) (create-element :h2 props & children)
+          :examples $ []
         |h3 $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn h3 (props & children) (create-element :h3 props & children)
+          :examples $ []
         |h4 $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn h4 (props & children) (create-element :h4 props & children)
+          :examples $ []
         |h5 $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn h5 (props & children) (create-element :h5 props & children)
+          :examples $ []
         |h6 $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn h6 (props & children) (create-element :h6 props & children)
+          :examples $ []
         |head $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn head (props & children) (create-element :head props & children)
+          :examples $ []
         |hr $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn hr (props) (create-element :hr props)
+          :examples $ []
         |html $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn html (props & children)
               create-element :html props & $ map children confirm-child
+          :examples $ []
         |img $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn img (props & children) (create-element :img props & children)
+          :examples $ []
         |input $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn input (props & children) (create-element :input props & children)
+          :examples $ []
         |li $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn li (props & children) (create-element :li props & children)
+          :examples $ []
         |link $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn link (props & children) (create-element :link props & children)
+          :examples $ []
         |list-> $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn list-> (props children) (create-list-element :div props children)
+          :examples $ []
         |mount-app! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn mount-app! (target element *dispatch-fn)
@@ -812,18 +896,23 @@
                 collect-mounting collect! ([]) ([]) element true
                 patch-instance! @*changes target deliver-event
                 reset! *global-element element
+          :examples $ []
         |ol $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn ol (props & children) (create-element :ol props & children)
+          :examples $ []
         |option $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn option (props & children) (create-element :option props & children)
+          :examples $ []
         |p $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn p (props & children) (create-element :p props & children)
+          :examples $ []
         |pre $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn pre (props & children) (create-element :pre props & children)
+          :examples $ []
         |realize-ssr! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn realize-ssr! (target element dispatch!)
@@ -840,10 +929,12 @@
                 collect-mounting collect! ([]) ([]) element true
                 patch-instance! @*changes target deliver-event
                 reset! *global-element $ mute-element element
-        |render! $ %{} :CodeEntry (:doc |)
+          :examples $ []
+        |render! $ %{} :CodeEntry (:doc "|sync virtual DOM to real DOM. newly creating for the first time, and diff/patch for rest of calls:\n\ntakes arguments:\n- `target`, the mount point,\n- `markup` which is the virtual DOM,\n- `dispatch!` the dispatcher function for handling actions.")
           :code $ quote
             defn render! (target markup dispatch!) (reset! *dispatch-fn dispatch!)
               if (some? @*global-element) (rerender-app! target markup *dispatch-fn) (mount-app! target markup *dispatch-fn)
+          :examples $ []
         |rerender-app! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn rerender-app! (target element *dispatch-fn)
@@ -857,31 +948,40 @@
                 ; js/console.log |Changes: @*changes
                 patch-instance! @*changes target deliver-event
                 reset! *global-element element
+          :examples $ []
         |script $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn script (props & children) (create-element :script props & children)
+          :examples $ []
         |select $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn select (props & children) (create-element :select props & children)
+          :examples $ []
         |span $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn span (props & children) (create-element :span props & children)
+          :examples $ []
         |strong $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn strong (props & children) (create-element :strong props & children)
+          :examples $ []
         |style $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn style (props & children) (create-element :style props & children)
+          :examples $ []
         |textarea $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn textarea (props & children)
               create-element :textarea props & $ map children confirm-child
+          :examples $ []
         |title $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn title (props & children) (create-element :title props & children)
+          :examples $ []
         |ul $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn ul (props & children) (create-element :ul props & children)
+          :examples $ []
       :ns $ %{} :CodeEntry (:doc "|provide core APIs for Respo, many of them are elements. if expected element is not defined yet, use `create-element :tag-name ...` to use it dynamically.\n")
         :code $ quote
           ns respo.core $ :require
@@ -900,9 +1000,11 @@
         |*style-caches $ %{} :CodeEntry (:doc |)
           :code $ quote
             defatom *style-caches $ {}
+          :examples $ []
         |*style-list-in-nodejs $ %{} :CodeEntry (:doc |)
           :code $ quote
             defatom *style-list-in-nodejs $ []
+          :examples $ []
         |create-style! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn create-style! (style-name rules)
@@ -926,10 +1028,25 @@
                       js/document.head.appendChild style-el
                       swap! *style-caches assoc style-name $ {} (:rules rules) (:el style-el)
                   , style-name
-        |defstyle $ %{} :CodeEntry (:doc |)
+          :examples $ []
+        |defstyle $ %{} :CodeEntry (:doc "|a macro for turning CSS rules into className, and only works for JavaScript.\n\nuse `defstyle` like:\n\n```cirru\ndefstyle style-demo $ {}\n  |& $ {} (:color :red)\n  \"|&:hover\" $ {}\n    :background-color :blue\n```\n\nwhere `&` refers to current element.\n\nIn the rules, it's nested hashmaps. `|&` and `|&:hover` are CSS queries. and in nested hashmaps there are CSS properties defined in calcit data.\n")
           :code $ quote
             defmacro defstyle (style-name rules)
               assert "\"expected symbol of style-name" $ symbol? style-name
+              if-let
+                query0 $ &list:nth rules 1
+                assert "\"expected rule 0 to be hashmap or symbol, use `defstyle` like:\n\n```cirru\ndefstyle style-demo $ {}\n  |& $ {}\n    :color :red\n```\n\nwhere `&` refers to current element.\n" $ if-let
+                  rule0 $ &list:nth query0 1
+                  or (symbol? rule0)
+                    and (list? rule0)
+                      &= '{} $ &list:nth rule0 0
+              if-let
+                query1 $ &list:nth rules 2
+                assert "\"expected rule 1 to be hashmap or symbol, use `defstyle` like:\n\n```cirru\ndefstyle style-demo $ {}\n  |& $ {} (:color :red)\n  \"|&:hover\" $ {}\n    :background-color :blue\n```\n\nwhere `&` refers to current element" $ if-let
+                  rule1 $ &list:nth query1 1
+                  or (symbol? rule1)
+                    and (list? rule1)
+                      &= '{} $ &list:nth rule1 0
               let
                   style-name-str $ str
                     -> (turn-string style-name) (&str:replace "\"!" "\"_EX_") (&str:replace "\"?" "\"_QU_")
@@ -939,9 +1056,11 @@
                         turn-string
                         &str:replace "\"." "\"_"
                 quasiquote $ def ~style-name (create-style! ~style-name-str ~rules)
+          :examples $ []
         |nodejs? $ %{} :CodeEntry (:doc |)
           :code $ quote
             def nodejs? $ and (exists? js/process) (= js/process.release.name "\"node")
+          :examples $ []
         |render-css-block $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn render-css-block (style-name rules)
@@ -960,6 +1079,7 @@
                       if (some? contained) (str contained "\" {" &newline rule-name "\" {" &newline css-line &newline "\"}" &newline "\"}") (str rule-name "\" {" &newline css-line &newline "\"}")
                 .to-list
                 .join-str $ str &newline &newline
+          :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.css $ :require
@@ -972,6 +1092,7 @@
               assoc-in store
                 concat ([] :states) cursor $ [] :data
                 , new-state
+          :examples $ []
         |update-states-kv $ %{} :CodeEntry (:doc "|a quick dirty trick to partially update component state.\n\nnotice: need to handle empty state manually.")
           :code $ quote
             defn update-states-kv (store cursor k v)
@@ -980,6 +1101,7 @@
                 fn (s)
                   if (map? s) (assoc s k v)
                     do (js/console.warn "\":states-kv expected hashmap, got:" s) s
+          :examples $ []
         |update-states-merge $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn update-states-merge (store cursor state0 changes)
@@ -991,6 +1113,7 @@
                     if (map? s)
                       noted "\"merge base latest state" $ merge s changes
                       do (js/console.warn "\"unknown data to merge:" s) s
+          :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote (ns respo.cursor)
     |respo.main $ %{} :FileEntry
@@ -1006,9 +1129,11 @@
               ; reset! *changes-logger $ fn (old-tree new-tree changes) (js/console.log "\"Patch" changes)
               println |Loaded. $ js/performance.now
               set! js/window.onbeforeunload $ fn (event) (save-store!)
+          :examples $ []
         |mount-target $ %{} :CodeEntry (:doc |)
           :code $ quote
             def mount-target $ if (exists? js/document) (js/document.querySelector |.app) nil
+          :examples $ []
         |reload! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn reload () $ if (nil? build-errors)
@@ -1017,10 +1142,12 @@
                 hud! "\"ok~" "\"Ok"
                 js/console.log "|code updated."
               hud! "\"error" build-errors
+          :examples $ []
         |save-store! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn save-store! () $ js/window.localStorage.setItem |respo.calcit
               format-cirru-edn $ :tasks @*store
+          :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.main $ :require
@@ -1052,6 +1179,7 @@
                             if (&< p-next last-pos)
                               recur p-next $ inc p-next
                               , false
+          :examples $ []
         |find-children-diffs $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn find-children-diffs (collect! coord n-coord index old-children new-children) (; js/console.log "|diff children:" n-coord index old-children new-children)
@@ -1136,6 +1264,7 @@
                             collect-unmounting collect! coord new-n-coord (val-of-first old-children) true
                             collect! $ :: :rm-element (conj coord x1) new-n-coord nil
                             recur collect! coord n-coord index old-follows new-children
+          :examples $ []
         |find-element-diffs $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn find-element-diffs (collect! coord n-coord old-tree new-tree) (; js/console.log "|element diffing:" n-coord old-tree new-tree) (; echo "\"element coord" coord)
@@ -1198,6 +1327,7 @@
                           js/console.error "\"Parent that has dups" new-tree
                         find-children-diffs collect! coord n-coord 0 old-children new-children
                 true $ js/console.warn "\"Diffing unknown params" old-tree new-tree
+          :examples $ []
         |find-props-diffs $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn find-props-diffs (collect! coord n-coord old-props new-props)
@@ -1238,6 +1368,7 @@
                         if (not= old-v new-v)
                           collect! $ :: :replace-prop coord n-coord new-pair
                         recur collect! coord n-coord old-follows new-follows
+          :examples $ []
         |find-style-diffs $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn find-style-diffs (collect! c-coord coord old-style new-style)
@@ -1278,6 +1409,7 @@
                           not $ identical? (last old-entry) (last new-entry)
                           collect! $ :: :replace-style c-coord coord new-entry
                         recur collect! c-coord coord old-follows new-follows
+          :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.render.diff $ :require
@@ -1335,6 +1467,7 @@
                   each child-elements $ fn (child-element)
                     if (some? child-element) (.!appendChild element child-element)
                   , element
+          :examples $ []
         |style->string $ %{} :CodeEntry (:doc "|this functions is used inside DOM operations, inserting styles into a `<style>` element. to render to HTML, use `style->html` instead")
           :code $ quote
             defn style->string (styles)
@@ -1349,6 +1482,7 @@
                           style-name $ turn-string k
                           v $ get-style-value (last entry) style-name
                         recur (str acc style-name |: v |;) (rest xs)
+          :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.render.dom $ :require
@@ -1386,6 +1520,7 @@
                           collect-mounting collect! (conj coord k) (conj n-coord idx) (last pair) false
                         recur (rest children) (inc idx)
                 true $ js/console.warn "\"Unknown entry for mounting:" tree
+          :examples $ []
         |collect-unmounting $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn collect-unmounting (collect! coord n-coord tree at-place?)
@@ -1415,6 +1550,7 @@
                         collect-unmounting collect! (conj coord k) (conj n-coord idx) (last pair) false
                       recur (rest children) (inc idx)
                 true $ js/console.warn "\"Unknown entry for unmounting:" tree
+          :examples $ []
         |collect-updating $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn collect-updating (collect! action coord n-coord old-tree new-tree)
@@ -1439,6 +1575,7 @@
                           , next-coord n-coord
                             fn (target)
                               method (:args new-effect) ([] action target)
+          :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.render.effect $ :require (respo.schema.op :as op)
@@ -1477,6 +1614,7 @@
                       , props-in-string |>
                         either text-inside $ join-str children |
                         , |</ tag-name |>
+          :examples $ []
         |entry->html $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn entry->html (entry)
@@ -1494,14 +1632,17 @@
                       (tag? v) (turn-string v)
                       (string? v) (escape-html v)
                       true $ str v
+          :examples $ []
         |escape-html $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn escape-html (text)
               if (nil? text) "\"" $ -> text (.replace "|\"" |&quot;) (.replace |< |&lt;) (.replace |> |&gt;) (.replace &newline "\"&#13;&#10;")
+          :examples $ []
         |make-string $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn make-string (element)
               element->string $ purify-element (mute-element element)
+          :examples $ []
         |props->html $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn props->html (props)
@@ -1515,9 +1656,11 @@
                 .sort-by first
                 map entry->html
                 join-str "| "
+          :examples $ []
         |self-closing $ %{} :CodeEntry (:doc |)
           :code $ quote
             def self-closing $ #{} "\"area" "\"base" "\"br" "\"col" "\"embed" "\"hr" "\"img" "\"input" "\"link" "\"meta" "\"param" "\"source" "\"track" "\"wbr"
+          :examples $ []
         |style->html $ %{} :CodeEntry (:doc "|this function is intended for HTML rendering since it escaped characters.")
           :code $ quote
             defn style->html (styles)
@@ -1529,6 +1672,7 @@
                       v $ get-style-value (last entry) (dashed->camel style-name)
                     str style-name |: (escape-html v) |;
                 join-str |
+          :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.render.html $ :require
@@ -1542,6 +1686,7 @@
               let
                   new-element $ make-element op listener-builder coord
                 -> (.-parentElement target) (.!insertBefore new-element target)
+          :examples $ []
         |add-event $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn add-event (target event-name listener-builder coord)
@@ -1551,6 +1696,7 @@
                     listener-builder event-name
                     , event coord
                   .!stopPropagation event
+          :examples $ []
         |add-prop $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn add-prop (target p prop-value)
@@ -1562,6 +1708,7 @@
                       prop-name $ dashed->camel prop-str
                     case-default prop-name (js-set target prop-name prop-value)
                       |style $ js-set target prop-name (style->string prop-value)
+          :examples $ []
         |add-style $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn add-style (target p v)
@@ -1569,12 +1716,14 @@
                   style-name $ dashed->camel (turn-string p)
                   style-value $ get-style-value v style-name
                 -> (.-style target) (aset style-name style-value)
+          :examples $ []
         |append-element $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn append-element (target op listener-builder coord)
               &let
                 new-element $ make-element op listener-builder coord
                 .!appendChild target new-element
+          :examples $ []
         |apply-dom-changes $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn apply-dom-changes (changes mount-point listener-builder)
@@ -1606,6 +1755,7 @@
                       (:effect-update _coord n-coord op-data) (run-effect target op-data n-coord)
                       (:effect-before-update _coord n-coord op-data) (run-effect target op-data n-coord)
                       _ $ eprintln "|not implemented:" op
+          :examples $ []
         |find-target $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn find-target (root coord)
@@ -1615,6 +1765,7 @@
                   if-let
                     child $ aget (.-children root) index
                     recur child xss
+          :examples $ []
         |replace-element $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn replace-element (target op listener-builder coord)
@@ -1622,6 +1773,7 @@
                   new-element $ make-element op listener-builder coord
                 -> (.-parentElement target) (.!insertBefore new-element target)
                 .!remove target
+          :examples $ []
         |replace-prop $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn replace-prop (target p prop-value)
@@ -1640,6 +1792,7 @@
                         not= prop-value $ .-value target
                         js-set target prop-name prop-value
                       js-set target prop-name prop-value
+          :examples $ []
         |replace-style $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn replace-style (target p v)
@@ -1647,16 +1800,19 @@
                   style-name $ dashed->camel (turn-string p)
                 -> (.-style target)
                   aset style-name $ get-style-value v style-name
+          :examples $ []
         |rm-element $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn rm-element (target op)
               if (some? target) (.!remove target) (js/console.warn "|Respo: Element already removed! Probably by :inner-text.")
+          :examples $ []
         |rm-event $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn rm-event (target event-name)
               &let
                 event-prop $ event->prop event-name
                 js-set target event-prop nil
+          :examples $ []
         |rm-prop $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn rm-prop (target op)
@@ -1676,16 +1832,19 @@
                 :checked $ set! (.-checked target) false
                 :disabled $ set! (.-disabled target) false
                 :selected $ set! (.-selected target) false
+          :examples $ []
         |rm-style $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn rm-style (target op)
               &let
                 style-name $ dashed->camel (turn-string op)
                 -> (.-style target) (js-set style-name nil)
+          :examples $ []
         |run-effect $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn run-effect (target method coord)
               if (some? target) (method target) (js/console.warn "\"Unknown effects target:" coord)
+          :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.render.patch $ :require
@@ -1696,16 +1855,21 @@
       :defs $ {}
         |Component $ %{} :CodeEntry (:doc |)
           :code $ quote (defrecord Component :name :effects :tree)
+          :examples $ []
         |Effect $ %{} :CodeEntry (:doc |)
           :code $ quote (defrecord Effect :name :coord :args :method)
+          :examples $ []
         |Element $ %{} :CodeEntry (:doc |)
           :code $ quote (defrecord Element :name :coord :attrs :style :event :children)
+          :examples $ []
         |cache-info $ %{} :CodeEntry (:doc |)
           :code $ quote
             def cache-info $ {} (:value nil) (:initial-loop nil) (:last-hit nil) (:hit-times 0)
+          :examples $ []
         |dev? $ %{} :CodeEntry (:doc |)
           :code $ quote
             def dev? $ &= "\"dev" (get-env "\"mode" "\"release")
+          :examples $ []
         |effect $ %{} :CodeEntry (:doc |)
           :code $ quote
             def effect $ {} (:name nil) (:respo-node :effect)
@@ -1713,6 +1877,7 @@
               :args $ []
               :method $ fn (props args)
                 ; args $ [] action parent at-place?
+          :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote (ns respo.schema)
     |respo.test.comp.task $ %{} :FileEntry
@@ -1723,6 +1888,7 @@
               div ({})
                 span $ {}
                   :inner-text $ :text task
+          :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.test.comp.task $ :require
@@ -1739,9 +1905,11 @@
                   either tasks $ []
                   map $ fn (task)
                     [] (:id task) (comp-task task)
+          :examples $ []
         |style-todolist $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-todolist $ {} (:color :blue) (:font-family "|\"微软雅黑\", Verdana")
+          :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.test.comp.todolist $ :require
@@ -1757,12 +1925,14 @@
                     :style $ {} (:content "|d\"e\"f")
               testing "|HTML contains quotes" $ is
                 = (slurp |test/examples/quote.html) (make-string tree-demo)
+          :examples $ []
         |html-test $ %{} :CodeEntry (:doc |)
           :code $ quote
             deftest html-test $ let
                 todo-demo $ comp-todolist todolist-store
               testing "|test generated HTML from component" $ is
                 = (slurp |test/examples/demo.html) (make-string todo-demo)
+          :examples $ []
         |nil-prop-test $ %{} :CodeEntry (:doc |)
           :code $ quote
             deftest nil-prop-test $ let
@@ -1770,9 +1940,11 @@
                   {} (:src "\"a.js") (:defer nil)
               testing "|test generate script with nil" $ is
                 = "|<script src=\"a.js\"></script>" $ make-string piece
+          :examples $ []
         |run-tests $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn run-tests () (html-quote-test) (nil-prop-test) (simple-html-test) (textarea-test)
+          :examples $ []
         |simple-html-test $ %{} :CodeEntry (:doc |)
           :code $ quote
             deftest simple-html-test $ let
@@ -1787,9 +1959,11 @@
                       div $ {}
               testing "|test generated HTML from tree" $ is
                 = (slurp |test/examples/simple.html) (make-string tree-demo)
+          :examples $ []
         |slurp $ %{} :CodeEntry (:doc |)
           :code $ quote
             defmacro slurp (file-path) (read-file file-path)
+          :examples $ []
         |textarea-test $ %{} :CodeEntry (:doc |)
           :code $ quote
             deftest textarea-test $ let
@@ -1797,11 +1971,13 @@
                   {} $ :value "|a\nb\nc\n\"\nd"
               testing "|test generated HTML from component" $ is
                 = "|<textarea value=\"a&#13;&#10;b&#13;&#10;c&#13;&#10;&quot;&#13;&#10;d\">a&#13;&#10;b&#13;&#10;c&#13;&#10;&quot;&#13;&#10;d</textarea>" $ make-string piece
+          :examples $ []
         |todolist-store $ %{} :CodeEntry (:doc |)
           :code $ quote
             def todolist-store $ []
               {} (:id 101) (:text |101)
               {} (:id 102) (:text |102)
+          :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.test.html $ :require
@@ -1813,9 +1989,11 @@
         |main! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn main! () (html/run-tests) (test-pick-attrs) (test-pick-event)
+          :examples $ []
         |reload! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn reload! () $ println "\"reload."
+          :examples $ []
         |test-pick-attrs $ %{} :CodeEntry (:doc |)
           :code $ quote
             deftest test-pick-attrs $ is
@@ -1823,6 +2001,7 @@
                 pick-attrs $ {} (:value |string)
                   :on-click $ fn () nil
                 [] $ [] :value |string
+          :examples $ []
         |test-pick-event $ %{} :CodeEntry (:doc |)
           :code $ quote
             deftest test-pick-event $ testing "|test event"
@@ -1835,6 +2014,7 @@
                   pick-event $ {} (:value |a) (:on-click f)
                     :on $ {} (:input f)
                   {} (:click f) (:input f)
+          :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.test.main $ :require (respo.test.html :as html)
@@ -1855,18 +2035,22 @@
                   (= (first xs) (first ys))
                     recur (rest xs) (rest ys)
                   true false
+          :examples $ []
         |component? $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn component? (x)
               if (record? x) (&record:matches? schema/Component x) false
+          :examples $ []
         |effect? $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn effect? (x)
               and (record? x) (&record:matches? schema/Effect x)
+          :examples $ []
         |element? $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn element? (x)
               if (record? x) (&record:matches? schema/Element x) false
+          :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.util.detect $ :require (respo.schema :as schema)
@@ -1908,12 +2092,14 @@
                       not $ empty? other-children
                       compare-to-dom! (val-of-first other-children) (aget real-children acc)
                       recur (inc acc) (rest other-children)
+          :examples $ []
         |shared-canvas-context $ %{} :CodeEntry (:doc |)
           :code $ quote
             def shared-canvas-context $ if
               and (exists? js/window) (exists? js/document)
               .!getContext (js/document.createElement |canvas) |2d
               , nil
+          :examples $ []
         |text-width $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn text-width (content font-size font-family)
@@ -1922,6 +2108,7 @@
                   set! (.-font shared-canvas-context) (str font-size "|px " font-family)
                   .-width $ .!measureText shared-canvas-context content
                 , nil
+          :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.util.dom $ :require
@@ -1933,9 +2120,11 @@
             defn dashed->camel (x)
               .!replace x dashed-letter-pattern $ fn (cc pos prop)
                 .!toUpperCase $ aget cc 1
+          :examples $ []
         |dashed-letter-pattern $ %{} :CodeEntry (:doc |)
           :code $ quote
             def dashed-letter-pattern $ new js/RegExp "\"-[a-z]" "\"g"
+          :examples $ []
         |event->edn $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn event->edn (event) (; js/console.log "\"simplify event:" event)
@@ -1961,14 +2150,17 @@
                   "\"focus" $ {} (:type :focus)
                 assoc :original-event event
                 assoc :event event
+          :examples $ []
         |event->prop $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn event->prop (x)
               str |on $ turn-string x
+          :examples $ []
         |event->string $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn event->string (x)
               &str:slice (turn-string x) 3
+          :examples $ []
         |get-style-value $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn get-style-value (x prop)
@@ -1980,12 +2172,14 @@
                   if (.!test pattern-non-dimension-props prop) (str x) (str x "\"px")
                 (nil? x) nil
                 true $ str x
+          :examples $ []
         |hsl $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn hsl (h s l ? arg)
               let
                   a $ either arg 1
                 str "\"hsl(" h "\"," s "\"%," l "\"%," a "\")"
+          :examples $ []
         |map-keyboard-event $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn map-keyboard-event (event)
@@ -1996,6 +2190,7 @@
                 :meta? $ .-metaKey event
                 :alt? $ .-altKey event
                 :shift? $ .-shiftKey event
+          :examples $ []
         |mute-element $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn mute-element (element)
@@ -2007,14 +2202,17 @@
                       fn (entry)
                         [] (first entry)
                           mute-element $ last entry
+          :examples $ []
         |pattern-non-dimension-props $ %{} :CodeEntry (:doc |)
           :code $ quote
             def pattern-non-dimension-props $ new js/RegExp "\"acit|ex(?:s|g|n|p|$)|rph|grid|ows|mnc|ntw|ine[ch]|zoo|^ord|itera" "\"i"
+          :examples $ []
         |prop->attr $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn prop->attr (x)
               when (includes? x "\"?") (println "\"[Respo] warning: property includes `?` in" x)
               case-default x x (|class-name |class) (|tab-index |tabindex) (|read-only |readonly)
+          :examples $ []
         |purify-element $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn purify-element (markup)
@@ -2036,6 +2234,7 @@
                               child $ last pair
                             [] k $ purify-element child
                 true $ do (js/console.warn "\"Unknown markup during purify:" markup) nil
+          :examples $ []
         |purify-events $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn purify-events (events)
@@ -2045,12 +2244,14 @@
                     some? $ last pair
                     conj acc $ first pair
                     , acc
+          :examples $ []
         |text->html $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn text->html (x)
               if (some? x)
                 -> (str x) (.replace |> |&gt;) (.replace |< |&lt;)
                 , nil
+          :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.util.format $ :require
@@ -2064,6 +2265,7 @@
               assert (list? xs) "|expects list"
               map-indexed xs $ fn (idx x)
                 [] idx $ f x
+          :examples $ []
         |pick-attrs $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn pick-attrs (props)
@@ -2076,6 +2278,7 @@
                       not $ starts-with? (turn-string k) "\"on-"
                   sort $ fn (x y)
                     &compare (nth x 0) (nth y 0)
+          :examples $ []
         |pick-event $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn pick-event (props)
@@ -2090,14 +2293,17 @@
                           turn-tag $ &str:slice (turn-string k) 3
                           , v
                         , nil
+          :examples $ []
         |val-exists? $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn val-exists? (pair)
               some? $ last pair
+          :examples $ []
         |val-of-first $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn val-of-first (x)
               last $ first x
+          :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.util.list $ :require
