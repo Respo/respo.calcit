@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.20)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.21)
     :modules $ [] |memof/ |lilac/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -1039,14 +1039,18 @@
                   rule0 $ &list:nth query0 1
                   or (symbol? rule0)
                     and (list? rule0)
-                      &= '{} $ &list:nth rule0 0
+                      &let
+                        h $ &list:nth rule0 0
+                        or (&= '{} h) (&= 'merge h)
               if-let
                 query1 $ &list:nth rules 2
                 assert "\"expected rule 1 to be hashmap or symbol, use `defstyle` like:\n\n```cirru\ndefstyle style-demo $ {}\n  |& $ {} (:color :red)\n  \"|&:hover\" $ {}\n    :background-color :blue\n```\n\nwhere `&` refers to current element" $ if-let
                   rule1 $ &list:nth query1 1
                   or (symbol? rule1)
                     and (list? rule1)
-                      &= '{} $ &list:nth rule1 0
+                      &let
+                        h $ &list:nth rule1 0
+                        or (&= '{} h) (&= 'merge h)
               let
                   style-name-str $ str
                     -> (turn-string style-name) (&str:replace "\"!" "\"_EX_") (&str:replace "\"?" "\"_QU_")
