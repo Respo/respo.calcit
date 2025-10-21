@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.19)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.21)
     :modules $ [] |memof/ |lilac/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -930,7 +930,7 @@
                 patch-instance! @*changes target deliver-event
                 reset! *global-element $ mute-element element
           :examples $ []
-        |render! $ %{} :CodeEntry (:doc "|sync virtual DOM to real DOM. newly creating for the first time, and diff/patch for rest of calls:\n\ntakes arguments:\n- `target`, the mount point,\n- `markup` which is the virtual DOM,\n- `dispatch!` the dispatcher function for handling actions.")
+        |render! $ %{} :CodeEntry (:doc "|sync virtual DOM to real DOM. newly creating for the first time, and diff/patch for reset of calls:\n\ntakes arguments:\n- `target`, the mount point,\n- `markup` which is the virtual DOM,\n- `dispatch!` the dispatcher function for handling actions.")
           :code $ quote
             defn render! (target markup dispatch!) (reset! *dispatch-fn dispatch!)
               if (some? @*global-element) (rerender-app! target markup *dispatch-fn) (mount-app! target markup *dispatch-fn)
@@ -1039,14 +1039,18 @@
                   rule0 $ &list:nth query0 1
                   or (symbol? rule0)
                     and (list? rule0)
-                      &= '{} $ &list:nth rule0 0
+                      &let
+                        h $ &list:nth rule0 0
+                        or (&= '{} h) (&= 'merge h)
               if-let
                 query1 $ &list:nth rules 2
                 assert "\"expected rule 1 to be hashmap or symbol, use `defstyle` like:\n\n```cirru\ndefstyle style-demo $ {}\n  |& $ {} (:color :red)\n  \"|&:hover\" $ {}\n    :background-color :blue\n```\n\nwhere `&` refers to current element" $ if-let
                   rule1 $ &list:nth query1 1
                   or (symbol? rule1)
                     and (list? rule1)
-                      &= '{} $ &list:nth rule1 0
+                      &let
+                        h $ &list:nth rule1 0
+                        or (&= '{} h) (&= 'merge h)
               let
                   style-name-str $ str
                     -> (turn-string style-name) (&str:replace "\"!" "\"_EX_") (&str:replace "\"?" "\"_QU_")
@@ -2169,7 +2173,7 @@
                   , x
                 (tag? x) (turn-string x)
                 (number? x)
-                  if (.!test pattern-non-dimension-props prop) (str x) (str x "\"px")
+                  if (contains? unitless-props prop) (str x) (str x "\"px")
                 (nil? x) nil
                 true $ str x
           :examples $ []
@@ -2202,10 +2206,6 @@
                       fn (entry)
                         [] (first entry)
                           mute-element $ last entry
-          :examples $ []
-        |pattern-non-dimension-props $ %{} :CodeEntry (:doc |)
-          :code $ quote
-            def pattern-non-dimension-props $ new js/RegExp "\"acit|ex(?:s|g|n|p|$)|rph|grid|ows|mnc|ntw|ine[ch]|zoo|^ord|itera" "\"i"
           :examples $ []
         |prop->attr $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -2251,6 +2251,10 @@
               if (some? x)
                 -> (str x) (.replace |> |&gt;) (.replace |< |&lt;)
                 , nil
+          :examples $ []
+        |unitless-props $ %{} :CodeEntry (:doc "|gemini suggested from popular libs\n")
+          :code $ quote
+            def unitless-props $ {} (|animationDelay true) (|animationDuration true) (|animationIterationCount true) (|aspectRatio true) (|borderImageOutset true) (|borderImageSlice true) (|borderImageWidth true) (|boxFlex true) (|boxFlexGroup true) (|boxOrdinalGroup true) (|columnCount true) (|columns true) (|fillOpacity true) (|flex true) (|flexGrow true) (|flexNegative true) (|flexPositive true) (|flexShrink true) (|floodOpacity true) (|fontSizeAdjust true) (|fontWeight true) (|gridArea true) (|gridColumn true) (|gridColumnEnd true) (|gridColumnSpan true) (|gridColumnStart true) (|gridRow true) (|gridRowEnd true) (|gridRowSpan true) (|gridRowStart true) (|lineClamp true) (|lineHeight true) (|opacity true) (|order true) (|orphans true) (|stopOpacity true) (|strokeDasharray true) (|strokeDashoffset true) (|strokeMiterlimit true) (|strokeOpacity true) (|strokeWidth true) (|tabSize true) (|transitionDelay true) (|transitionDuration true) (|widows true) (|zIndex true) (|zoom true)
           :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
