@@ -1,5 +1,11 @@
 ## `defeffect`
 
+**📚 Documentation Index**
+- [← Back to README](../../README.md)
+- [API Overview](../api.md)
+- [Beginner Guide](../beginner-guide.md)
+- [Related APIs](../api.md): [`defcomp`](defcomp.md) | [Component States](../guide/component-states.md) | [Hot Swapping](../guide/hot-swapping.md)
+
 Add effects:
 
 ```cirru

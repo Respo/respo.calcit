@@ -1,5 +1,11 @@
 ## `render!`
 
+**📚 Documentation Index**
+- [← Back to README](../../README.md)
+- [API Overview](../api.md)
+- [Beginner Guide](../beginner-guide.md)
+- [Related APIs](../api.md): [`clear-cache!`](clear-cache!.md) | [`render-app`](render-app.md) | [`mount-app!`](../guide/)
+
 `render!` comes with side effects, it renders virtual to the mount pointer:
 
 ```cirru

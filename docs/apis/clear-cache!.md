@@ -1,5 +1,11 @@
 ## `clear-cache!`
 
+**📚 Documentation Index**
+- [← Back to README](../../README.md)
+- [API Overview](../api.md)
+- [Beginner Guide](../beginner-guide.md)
+- [Related APIs](../api.md): [`render!`](render!.md) | [Hot Swapping](../guide/hot-swapping.md)
+
 ```cirru
 clear-cache!
 ```

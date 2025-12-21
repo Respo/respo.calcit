@@ -1,5 +1,11 @@
 ## Respo API
 
+**📚 Documentation Index**
+- [← Back to README](../README.md)
+- [Beginner Guide](beginner-guide.md)
+- [Guide Topics](guide/)
+- [CLI Tools Reference](../Agents.md)
+
 ### User APIs
 
 | Namespace            | Function                                   |
