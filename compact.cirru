@@ -46,6 +46,7 @@
             respo.comp.space :refer $ =<
             respo.comp.global-keydown :refer $ comp-global-keydown comp-global-keyup
             respo.comp.inspect :refer $ highlight-defcomp
+        :examples $ []
     |respo.app.comp.task $ %{} :FileEntry
       :defs $ {}
         |comp-task $ %{} :CodeEntry (:doc |)
@@ -115,6 +116,7 @@
             respo.comp.inspect :refer $ comp-inspect
             respo.app.style.widget :as widget
             respo.css :refer $ defstyle
+        :examples $ []
     |respo.app.comp.todolist $ %{} :FileEntry
       :defs $ {}
         |comp-todolist $ %{} :CodeEntry (:doc |)
@@ -282,6 +284,7 @@
             respo.app.style.widget :as widget
             memof.once :refer $ memof1-call-by
             respo.css :refer $ defstyle
+        :examples $ []
     |respo.app.comp.wrap $ %{} :FileEntry
       :defs $ {}
         |comp-wrap $ %{} :CodeEntry (:doc |)
@@ -293,6 +296,7 @@
         :code $ quote
           ns respo.app.comp.wrap $ :require
             respo.core :refer $ defcomp div
+        :examples $ []
     |respo.app.comp.zero $ %{} :FileEntry
       :defs $ {}
         |comp-zero $ %{} :CodeEntry (:doc |)
@@ -304,6 +308,7 @@
         :code $ quote
           ns respo.app.comp.zero $ :require
             respo.core :refer $ defcomp div
+        :examples $ []
     |respo.app.core $ %{} :FileEntry
       :defs $ {}
         |*store $ %{} :CodeEntry (:doc |)
@@ -322,6 +327,10 @@
             defn handle-ssr! (mount-target)
               realize-ssr! mount-target (comp-container @*store) dispatch!
           :examples $ []
+        |new-fn $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn new-fn () $ println |hello
+          :examples $ []
         |render-app! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn render-app! (mount-target)
@@ -335,6 +344,7 @@
             respo.schema :refer $ dev?
             respo.app.schema :as schema
             respo.app.updater :refer $ updater
+        :examples $ []
     |respo.app.schema $ %{} :FileEntry
       :defs $ {}
         |store $ %{} :CodeEntry (:doc |)
@@ -350,6 +360,7 @@
           :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote (ns respo.app.schema)
+        :examples $ []
     |respo.app.style.widget $ %{} :FileEntry
       :defs $ {}
         |button $ %{} :CodeEntry (:doc |)
@@ -378,6 +389,7 @@
           ns respo.app.style.widget $ :require
             respo.util.format :refer $ hsl
             respo.css :refer $ defstyle
+        :examples $ []
     |respo.app.updater $ %{} :FileEntry
       :defs $ {}
         |updater $ %{} :CodeEntry (:doc |)
@@ -423,6 +435,7 @@
         :code $ quote
           ns respo.app.updater $ :require
             respo.cursor :refer $ update-states update-states-kv update-states-merge
+        :examples $ []
     |respo.comp.global-keydown $ %{} :FileEntry
       :defs $ {}
         |comp-global-keydown $ %{} :CodeEntry (:doc |)
@@ -473,6 +486,7 @@
         :code $ quote
           ns respo.comp.global-keydown $ :require
             respo.core :refer $ defcomp defeffect <> >> div button textarea span input a list->
+        :examples $ []
     |respo.comp.inspect $ %{} :FileEntry
       :defs $ {}
         |comp-inspect $ %{} :CodeEntry (:doc "|put a label in tag with absolute position, click it to print data.\n\n3 parameters are,\n- `tip` a string of comment,\n- `data` Calcit data to inspect, which will be printed in Console,\n- `style` string of className, or hashmap of styles")
@@ -523,6 +537,7 @@
             respo.core :refer $ defcomp pre <>
             respo.css :refer $ defstyle
             respo.util.format :refer $ hsl
+        :examples $ []
     |respo.comp.space $ %{} :FileEntry
       :defs $ {}
         |=< $ %{} :CodeEntry (:doc "|insert a tiny space, horizontally or verticaly.\n\n- `8 nil` for horizontal width 8px,\n- `nil 8` for vertical height 8px.\n")
@@ -545,6 +560,7 @@
           ns respo.comp.space $ :require
             respo.core :refer $ div defcomp
             respo.css :refer $ defstyle
+        :examples $ []
     |respo.controller.client $ %{} :FileEntry
       :defs $ {}
         |activate-instance! $ %{} :CodeEntry (:doc |)
@@ -576,6 +592,7 @@
             respo.render.patch :refer $ apply-dom-changes
             respo.util.format :refer $ event->edn
             respo.render.dom :refer $ make-element
+        :examples $ []
     |respo.controller.resolve $ %{} :FileEntry
       :defs $ {}
         |build-deliver-event $ %{} :CodeEntry (:doc |)
@@ -647,6 +664,7 @@
         :code $ quote
           ns respo.controller.resolve $ :require
             respo.util.detect :refer $ component? element?
+        :examples $ []
     |respo.core $ %{} :FileEntry
       :defs $ {}
         |*changes-logger $ %{} :CodeEntry (:doc |)
@@ -788,7 +806,7 @@
                     :method $ fn (~args-var ~params-var)
                       let[] ~args ~args-var $ let[] ~params ~params-var
                         ~@ $ if (empty? body)
-                          quasiquote $ println "\"WARNING:" ~effect-name "\"lack code for handling effects!" 
+                          quasiquote $ println "\"WARNING:" ~effect-name "\"lack code for handling effects!"
                           , body
           :examples $ []
         |defplugin $ %{} :CodeEntry (:doc |)
@@ -995,6 +1013,7 @@
             respo.schema :as schema
             respo.util.dom :refer $ compare-to-dom!
             memof.once :refer $ reset-memof1-caches!
+        :examples $ []
     |respo.css $ %{} :FileEntry
       :defs $ {}
         |*style-caches $ %{} :CodeEntry (:doc |)
@@ -1029,7 +1048,7 @@
                       swap! *style-caches assoc style-name $ {} (:rules rules) (:el style-el)
                   , style-name
           :examples $ []
-        |defstyle $ %{} :CodeEntry (:doc "|a macro for turning CSS rules into className, and only works for JavaScript.\n\nuse `defstyle` like:\n\n```cirru\ndefstyle style-demo $ {}\n  |& $ {} (:color :red)\n  \"|&:hover\" $ {}\n    :background-color :blue\n```\n\nwhere `&` refers to current element.\n\nIn the rules, it's nested hashmaps. `|&` and `|&:hover` are CSS queries. and in nested hashmaps there are CSS properties defined in calcit data.\n")
+        |defstyle $ %{} :CodeEntry (:doc "|a macro for turning CSS rules into className, and only works for JavaScript.\n\nuse `defstyle` like:\n\n```cirru\ndefstyle style-demo $ {}\n  |& $ {} (:color :red)\n  \"|&:hover\" $ {}\n    :background-color :blue\n```\n\nwhere `&` refers to current element.\n\nIn the rules, it\'s nested hashmaps. `|&` and `|&:hover` are CSS queries. and in nested hashmaps there are CSS properties defined in calcit data.\n")
           :code $ quote
             defmacro defstyle (style-name rules)
               assert "\"expected symbol of style-name" $ symbol? style-name
@@ -1088,6 +1107,7 @@
         :code $ quote
           ns respo.css $ :require
             respo.render.dom :refer $ style->string
+        :examples $ []
     |respo.cursor $ %{} :FileEntry
       :defs $ {}
         |update-states $ %{} :CodeEntry (:doc |)
@@ -1120,6 +1140,7 @@
           :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote (ns respo.cursor)
+        :examples $ []
     |respo.main $ %{} :FileEntry
       :defs $ {}
         |main! $ %{} :CodeEntry (:doc |)
@@ -1160,6 +1181,7 @@
             respo.app.core :refer $ handle-ssr!
             "\"./calcit.build-errors" :default build-errors
             "\"bottom-tip" :default hud!
+        :examples $ []
     |respo.render.diff $ %{} :FileEntry
       :defs $ {}
         |detect-keys-dup $ %{} :CodeEntry (:doc |)
@@ -1422,6 +1444,7 @@
             respo.render.effect :refer $ collect-mounting collect-updating collect-unmounting
             respo.util.list :refer $ val-of-first
             respo.schema :refer $ dev?
+        :examples $ []
     |respo.render.dom $ %{} :FileEntry
       :defs $ {}
         |make-element $ %{} :CodeEntry (:doc |)
@@ -1492,6 +1515,7 @@
           ns respo.render.dom $ :require
             respo.util.format :refer $ dashed->camel event->prop get-style-value
             respo.util.detect :refer $ component?
+        :examples $ []
     |respo.render.effect $ %{} :FileEntry
       :defs $ {}
         |collect-mounting $ %{} :CodeEntry (:doc |)
@@ -1585,6 +1609,7 @@
           ns respo.render.effect $ :require (respo.schema.op :as op)
             respo.util.detect :refer $ component? element? =seq
             respo.util.list :refer $ val-of-first
+        :examples $ []
     |respo.render.html $ %{} :FileEntry
       :defs $ {}
         |element->string $ %{} :CodeEntry (:doc "|which is actually `element->html`")
@@ -1682,6 +1707,7 @@
           ns respo.render.html $ :require
             respo.util.format :refer $ prop->attr purify-element mute-element text->html get-style-value dashed->camel
             respo.util.detect :refer $ component? element?
+        :examples $ []
     |respo.render.patch $ %{} :FileEntry
       :defs $ {}
         |add-element $ %{} :CodeEntry (:doc |)
@@ -1855,6 +1881,7 @@
             respo.util.format :refer $ dashed->camel event->prop get-style-value prop->attr
             respo.render.dom :refer $ make-element style->string
             respo.schema.op :as op
+        :examples $ []
     |respo.schema $ %{} :FileEntry
       :defs $ {}
         |Component $ %{} :CodeEntry (:doc |)
@@ -1884,6 +1911,7 @@
           :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote (ns respo.schema)
+        :examples $ []
     |respo.test.comp.task $ %{} :FileEntry
       :defs $ {}
         |comp-task $ %{} :CodeEntry (:doc |)
@@ -1898,6 +1926,7 @@
           ns respo.test.comp.task $ :require
             respo.util.format :refer $ hsl
             respo.core :refer $ defcomp div span
+        :examples $ []
     |respo.test.comp.todolist $ %{} :FileEntry
       :defs $ {}
         |comp-todolist $ %{} :CodeEntry (:doc |)
@@ -1919,6 +1948,7 @@
           ns respo.test.comp.todolist $ :require
             respo.test.comp.task :refer $ comp-task
             respo.core :refer $ defcomp div list->
+        :examples $ []
     |respo.test.html $ %{} :FileEntry
       :defs $ {}
         |html-quote-test $ %{} :CodeEntry (:doc |)
@@ -1988,6 +2018,7 @@
             calcit-test.core :refer $ deftest is testing
             respo.core :refer $ html head title script div link textarea body
             respo.render.html :refer $ make-string
+        :examples $ []
     |respo.test.main $ %{} :FileEntry
       :defs $ {}
         |main! $ %{} :CodeEntry (:doc |)
@@ -2024,6 +2055,7 @@
           ns respo.test.main $ :require (respo.test.html :as html)
             calcit-test.core :refer $ deftest testing is
             respo.util.list :refer $ pick-attrs pick-event
+        :examples $ []
     |respo.util.detect $ %{} :FileEntry
       :defs $ {}
         |=seq $ %{} :CodeEntry (:doc |)
@@ -2058,6 +2090,7 @@
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.util.detect $ :require (respo.schema :as schema)
+        :examples $ []
     |respo.util.dom $ %{} :FileEntry
       :defs $ {}
         |compare-to-dom! $ %{} :CodeEntry (:doc |)
@@ -2117,6 +2150,7 @@
         :code $ quote
           ns respo.util.dom $ :require
             respo.util.list :refer $ val-of-first
+        :examples $ []
     |respo.util.format $ %{} :FileEntry
       :defs $ {}
         |dashed->camel $ %{} :CodeEntry (:doc |)
@@ -2260,6 +2294,7 @@
         :code $ quote
           ns respo.util.format $ :require
             respo.util.detect :refer $ component? element?
+        :examples $ []
     |respo.util.list $ %{} :FileEntry
       :defs $ {}
         |map-with-idx $ %{} :CodeEntry (:doc |)
@@ -2312,3 +2347,4 @@
         :code $ quote
           ns respo.util.list $ :require
             respo.util.detect :refer $ component? element?
+        :examples $ []

@@ -1,7 +1,9 @@
 ## `render!`
 
 **📚 Documentation Index**
+
 - [← Back to README](../../README.md)
+- [🤖 Respo-Agent Guide](../Respo-Agent.md) - Rendering patterns & debugging
 - [API Overview](../api.md)
 - [Beginner Guide](../beginner-guide.md)
 - [Related APIs](../api.md): [`clear-cache!`](clear-cache!.md) | [`render-app`](render-app.md) | [`mount-app!`](../guide/)

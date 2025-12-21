@@ -1,6 +1,7 @@
 ## DOM properties
 
 **📚 Documentation Index**
+
 - [← Back to README](../../README.md)
 - [Beginner Guide](../beginner-guide.md)
 - [API Reference](../api.md)

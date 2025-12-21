@@ -26,6 +26,7 @@ And note that the HTML transferred over the network does not bind events, and we
 ### Server rendering
 
 **📚 Documentation Index**
+
 - [← Back to README](../../README.md)
 - [Beginner Guide](../beginner-guide.md)
 - [API Reference](../api.md)

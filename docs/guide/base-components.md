@@ -1,8 +1,10 @@
 ## Base components
 
 **📚 Documentation Index**
+
 - [← Back to README](../../README.md)
 - [Beginner Guide](../beginner-guide.md)
+- [🤖 Respo-Agent Guide](../Respo-Agent.md) - For LLM development
 - [API Reference](../api.md)
 - [All Guides](./): [Why Respo](./why-respo.md) | [Virtual DOM](./virtual-dom.md) | [Component States](./component-states.md) | [Styles](./styles.md) | [Events](./dom-events.md)
 
