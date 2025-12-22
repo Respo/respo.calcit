@@ -64,31 +64,31 @@ The Respo project is a virtual DOM library written in Calcit-js, containing:
 
 ```bash
 # List all namespaces in the project
-cr query ls-ns
+cr query ns
 
 # Get details about a specific namespace (imports, definitions)
-cr query read-ns respo.core
-cr query read-ns respo.app.core
+cr query ns respo.core
+cr query ns respo.app.core
 
 # List all definitions in a namespace
-cr query ls-defs respo.core
-cr query ls-defs respo.app.updater
+cr query defs respo.core
+cr query defs respo.app.updater
 
 # Quick peek at a definition (signature, parameters, docs)
-cr query peek-def respo.core defcomp
-cr query peek-def respo.core render!
+cr query peek respo.core/defcomp
+cr query peek respo.core/render!
 
 # Get complete definition as JSON syntax tree
-cr query read-def respo.core render!
-cr query read-def respo.app.core dispatch!
+cr query def respo.core/render!
+cr query def respo.app.core/dispatch!
 
 # Search for a symbol across all namespaces
-cr query find-symbol render!
-cr query find-symbol *store
+cr query find render!
+cr query find *store
 
 # Find all usages of a specific definition
-cr query usages respo.core render!
-cr query usages respo.app.core dispatch!
+cr query usages respo.core/render!
+cr query usages respo.app.core/dispatch!
 ```
 
 ### 2. Precise Code Navigation (read-at pattern)
@@ -97,23 +97,23 @@ When you need to understand or modify specific parts of a definition:
 
 ```bash
 # Step 1: Read the complete definition first
-cr query read-def respo.app.updater updater
+cr query def respo.app.updater/updater
 
-# Step 2: Use read-at to examine the structure (limit depth to reduce output)
-cr query read-at respo.app.updater updater -p "" -d 1    # View root level
+# Step 2: Use at to examine the structure (limit depth to reduce output)
+cr query at respo.app.updater/updater -p "" -d 1    # View root level
 
 # Step 3: Dive deeper into specific indices
-cr query read-at respo.app.updater updater -p "2" -d 1   # Check 3rd element
-cr query read-at respo.app.updater updater -p "2,1" -d 1 # Check 2nd child of 3rd element
+cr query at respo.app.updater/updater -p "2" -d 1   # Check 3rd element
+cr query at respo.app.updater/updater -p "2,1" -d 1 # Check 2nd child of 3rd element
 
 # Step 4: Confirm target location before editing
-cr query read-at respo.app.updater updater -p "2,1,0"    # Final confirmation
+cr query at respo.app.updater/updater -p "2,1,0"    # Final confirmation
 
-# Step 5: Use operate-at for surgical modifications
-# Cirru via stdin (reliable)
-echo '"new-value"' | cr edit operate-at respo.app.updater updater -p "2,1,0" -o replace -s -c
-# Or JSON inline
-cr edit operate-at respo.app.updater updater -p "2,1,0" -o replace -j '"new-value"'
+# Step 5: Use at for surgical modifications
+# JSON inline (recommended)
+cr edit at respo.app.updater/updater -p "2,1,0" -o replace -j '"new-value"'
+# Or from stdin
+echo '["defn", "hello", [], ["println", "|Hello"]]' | cr edit at respo.app.updater/updater -p "2,1,0" -o replace -s -J
 ```
 
 ### 3. Code Modification (updated `cr edit` inputs)
@@ -126,39 +126,39 @@ cr edit operate-at respo.app.updater updater -p "2,1,0" -o replace -j '"new-valu
 - JSON from file/stdin: 搭配 `-J/--json-input` 与 `-f/--file` 或 `-s/--stdin`
 
 ```bash
-# Add or update a definition (Cirru via stdin)
-echo 'defn new-fn () (println "|hello")' | cr edit upsert-def respo.app.core new-fn -s -c
+# Add or update a definition (JSON inline - recommended)
+cr edit def respo.app.core/new-fn -j '["defn", "new-fn", [], ["println", "|hello"]]'
 
-# Add or update with JSON (inline)
-cr edit upsert-def respo.app.core new-fn -j '["defn", "new-fn", [], ["println", "|hello"]]'
+# Add or update from stdin (JSON format)
+echo '["defn", "hello", [], ["println", "|Hello"]]' | cr edit def respo.app.core/hello -s -J
 
 # Delete a definition
-cr edit delete-def respo.app.core unused-fn
+cr edit rm-def respo.app.core/unused-fn
 
-# Add a new namespace (Cirru default)
+# Add a new namespace
 cr edit add-ns my.new.namespace
 
 # Delete a namespace
-cr edit delete-ns my.old.namespace
+cr edit rm-ns my.old.namespace
 
-# Update namespace imports (JSON inline; use -J if from file/stdin)
-cr edit update-imports respo.app.core -j '[["respo.core", ":refer", ["div", "render!"]], ["respo.app.schema", ":as", "schema"]]'
+# Update namespace imports (JSON inline)
+cr edit imports respo.app.core -j '[["respo.core", ":refer", ["div", "render!"]], ["respo.app.schema", ":as", "schema"]]'
 
 # Add/remove module dependencies
 cr edit add-module "path/to/module"
-cr edit delete-module "path/to/module"
+cr edit rm-module "path/to/module"
 ```
 
 ### 4. Project Configuration
 
 ```bash
 # Get project configuration (init-fn, reload-fn, version)
-cr query configs
+cr query config
 
 # Set project configuration
-cr edit set-config version "0.16.22"
-cr edit set-config init-fn "respo.main/main!"
-cr edit set-config reload-fn "respo.main/reload!"
+cr edit config version "0.16.22"
+cr edit config init-fn "respo.main/main!"
+cr edit config reload-fn "respo.main/reload!"
 ```
 
 ### 5. Documentation and Language
@@ -189,9 +189,9 @@ cr cirru format '["div", {}, ["<>", "hello"]]'
 
 ```bash
 # Always start by exploring related code
-cr query read-ns respo.app.updater        # Understand state management
-cr query find-symbol my-function-name     # Find where it's defined/used
-cr query usages respo.core render!        # See how render! is used
+cr query ns respo.app.updater             # Understand state management
+cr query find my-function-name            # Find where it's defined/used
+cr query usages respo.core/render!        # See how render! is used
 ```
 
 ### Step 2: Implement the Solution
@@ -200,24 +200,22 @@ Use the **precise editing pattern** for complex changes:
 
 ```bash
 # 1. Read the whole definition
-cr query read-def namespace function-name
+cr query def namespace/function-name
 
-# 2. Map out the structure with read-at
-cr query read-at namespace function-name -p "" -d 1
+# 2. Map out the structure with at
+cr query at namespace/function-name -p "" -d 1
 
 # 3. Navigate to target position
-cr query read-at namespace function-name -p "2,1" -d 1
+cr query at namespace/function-name -p "2,1" -d 1
 
-# 4. Make the change (recommended: Cirru via stdin/file, or JSON inline)
+# 4. Make the change (JSON inline recommended)
+cr edit at namespace/function-name -p "2,1,0" -o replace -j '["new", "code"]'
 
-# Cirru via stdin (reliable)
-echo '["new" "code"]' | cr edit operate-at namespace function-name -p "2,1,0" -o replace -s -c
-
-# JSON inline (quick one-liner)
-cr edit operate-at namespace function-name -p "2,1,0" -o replace -j '["new", "code"]'
+# Or from stdin (JSON format)
+echo '["new", "code"]' | cr edit at namespace/function-name -p "2,1,0" -o replace -s -J
 
 # 5. Verify
-cr query read-at namespace function-name -p "2,1"
+cr query at namespace/function-name -p "2,1"
 ```
 
 ### Step 3: Test and Validate
@@ -249,11 +247,11 @@ cr query error
 cat .calcit-error.cirru  # (if it exists)
 
 # Search for the problematic code
-cr query find-symbol problem-symbol
-cr query usages namespace definition
+cr query find problem-symbol
+cr query usages namespace/definition
 
 # Review the definition in detail
-cr query read-def namespace definition
+cr query def namespace/definition
 ```
 
 ---
@@ -407,12 +405,12 @@ div
 
 ```bash
 # Check if render-app! is being called
-cr query find-symbol render-app!
-cr query usages respo.main render-app!
+cr query find render-app!
+cr query usages respo.main/render-app!
 
 # Verify store watcher is set up
-cr query read-def respo.app.core dispatch!
-cr query read-def respo.main main!
+cr query def respo.app.core/dispatch!
+cr query def respo.main/main!
 ```
 
 **Solution Pattern**:
@@ -437,13 +435,13 @@ defn reload! ()
 
 ```bash
 # Check updater function logic
-cr query read-def respo.app.updater updater
+cr query def respo.app.updater/updater
 
 # Verify dispatch! is calling updater correctly
-cr query read-def respo.app.core dispatch!
+cr query def respo.app.core/dispatch!
 
 # Check the state path in component
-cr query read-def respo.app.comp.container comp-container
+cr query def respo.app.comp.container/comp-container
 ```
 
 **Solution Pattern**:
@@ -466,11 +464,11 @@ dispatch! [:action-name actual-value]
 
 ```bash
 # Check effect definition
-cr query read-def respo.core defeffect  ; macro documentation
+cr query def respo.core/defeffect  # macro documentation
 
 # Find effect in component
-cr query find-symbol my-effect
-cr query usages respo.app.comp.task my-effect
+cr query find my-effect
+cr query usages respo.app.comp.task/my-effect
 ```
 
 **Solution Pattern**:
@@ -498,10 +496,10 @@ defeffect my-effect (initial-value)
 
 ```bash
 # Check reload! function
-cr query read-def respo.main reload!
+cr query def respo.main/reload!
 
 # Verify clear-cache! is called
-cr query usages respo.core clear-cache!
+cr query usages respo.core/clear-cache!
 ```
 
 **Solution Pattern**:
@@ -525,51 +523,51 @@ defn reload! ()
 1. **Understand the context**
 
    ```bash
-   cr query read-ns namespace-name  # See imports and doc
-   cr query peek-def namespace def-name  # See signature
+   cr query ns namespace-name  # See imports and doc
+   cr query peek namespace-name/def-name  # See signature
    ```
 
 2. **Map the exact location**
 
    ```bash
-   cr query read-at namespace def-name -p "" -d 2  # Overview
-   cr query read-at namespace def-name -p "2" -d 2  # Check section
-   cr query read-at namespace def-name -p "2,1" -d 2  # Precise location
+   cr query at namespace-name/def-name -p "" -d 2  # Overview
+   cr query at namespace-name/def-name -p "2" -d 2  # Check section
+   cr query at namespace-name/def-name -p "2,1" -d 2  # Precise location
    ```
 
 3. **Make surgical change**
 
 ```bash
-# Cirru input (default)
-echo '"new-value"' | cr edit operate-at namespace def-name -p "2,1,0" -o replace -s -c
+# JSON inline (recommended)
+cr edit at namespace-name/def-name -p "2,1,0" -o replace -j '"new-value"'
 
-# If you really need JSON, add -j (inline) or -J with file/stdin
-cr edit operate-at namespace def-name -p "2,1,0" -o replace -j '"new-value"'
+# Or from stdin (JSON format)
+echo '"new-value"' | cr edit at namespace-name/def-name -p "2,1,0" -o replace -s -J
 ```
 
 4. **Verify immediately**
    ```bash
-   cr query read-at namespace def-name -p "2,1"  # Confirm change
+   cr query at namespace-name/def-name -p "2,1"  # Confirm change
    cr --check-only  # Verify syntax
    ```
 
 ### Common edit operations:
 
 ```bash
-# Replace a value (Cirru input)
-echo '"new-value"' | cr edit operate-at ns def -p "2,1,0" -o replace -s -c
+# Replace a value (JSON inline)
+cr edit at ns/def -p "2,1,0" -o replace -j '"new-value"'
 
-# Insert before a position (Cirru list)
-echo '["new" "element"]' | cr edit operate-at ns def -p "2,1" -o insert-before -s -c
+# Insert before a position (JSON)
+cr edit at ns/def -p "2,1" -o insert-before -j '["new", "element"]'
 
-# Insert after a position (JSON alternative)
-cr edit operate-at ns def -p "2,1" -o insert-after -j '["new", "element"]'
+# Insert after a position (JSON)
+cr edit at ns/def -p "2,1" -o insert-after -j '["new", "element"]'
 
 # Delete a node
-cr edit operate-at ns def -p "2,1,0" -o delete
+cr edit at ns/def -p "2,1,0" -o delete
 
-# Insert as child (append)
-echo '"child-value"' | cr edit operate-at ns def -p "2,1" -o insert-child -s -c
+# Insert as child (append, from stdin)
+echo '"child-value"' | cr edit at ns/def -p "2,1" -o insert-child -s -J
 ```
 
 ---
@@ -596,8 +594,8 @@ cr -1 js
 
 ```bash
 # Look at test files
-cr query ls-defs respo.test.main
-cr query read-def respo.test.main test-fn
+cr query defs respo.test.main
+cr query def respo.test.main/test-fn
 
 # Run tests
 cr -1  ; (if init-fn runs tests)
@@ -611,13 +609,13 @@ cr query error
 cat .calcit-error.cirru
 
 # Search for the problematic definition
-cr query find-symbol problem-name
+cr query find problem-name
 
 # Check the full definition
-cr query read-def namespace problem-name
+cr query def namespace/problem-name
 
 # Validate dependencies
-cr query read-ns namespace-name  ; Check imports
+cr query ns namespace-name  # Check imports
 ```
 
 ---
@@ -645,35 +643,35 @@ cr query read-ns namespace-name  ; Check imports
 4. **ALWAYS verify modifications work**
 
    ```bash
-   cr query read-at namespace def -p "modified-path"  # Confirm change
+   cr query at namespace/def -p "modified-path"  # Confirm change
    cr --check-only  # Check syntax
    cr -1  # Test run
    ```
 
-5. **Use peek-def before read-def** to reduce token consumption
+5. **Use peek before def** to reduce token consumption
    ```bash
-   cr query peek-def ns def  # Light summary
-   cr query read-def ns def  # Full AST (use only if needed)
+   cr query peek ns/def  # Light summary
+   cr query def ns/def  # Full AST (use only if needed)
    ```
 
 ### 🎯 Optimization Tips for Token Usage
 
 ```bash
 # Fast exploration with limited output
-cr query peek-def respo.core defcomp          # 5-10 lines
-cr query ls-defs respo.app.updater            # Quick list
+cr query peek respo.core/defcomp              # 5-10 lines
+cr query defs respo.app.updater               # Quick list
 
 # Slower but comprehensive
-cr query read-def respo.app.updater updater   # Full JSON AST
+cr query def respo.app.updater/updater        # Full JSON AST
 
 # Use -d flag to limit JSON depth
-cr query read-at ns def -p "2,1" -d 1         # Shallow
-cr query read-at ns def -p "2,1" -d 3         # Medium
-cr query read-at ns def -p "2,1"              # Full (default)
+cr query at ns/def -p "2,1" -d 1              # Shallow
+cr query at ns/def -p "2,1" -d 3              # Medium
+cr query at ns/def -p "2,1"                   # Full (default)
 
 # Search before diving deep
-cr query find-symbol my-function              # Find location first
-cr query usages ns def                        # See usage patterns
+cr query find my-function                     # Find location first
+cr query usages ns/def                        # See usage patterns
 ```
 
 ### 📖 Documentation Strategy
@@ -686,7 +684,7 @@ When stuck, use these resources in order:
 4. [API Reference](./api.md) - Specific API documentation
 5. [Guide docs](./guide/) - Detailed topics
 6. `cr docs api <keyword>` - Language documentation
-7. Project code itself: `cr query read-ns <namespace>`
+7. Project code itself: `cr query ns <namespace>`
 
 ---
 
@@ -696,23 +694,23 @@ When stuck, use these resources in order:
 
 ```bash
 # Exploration (read-only, no changes)
-cr query ls-ns                           # List namespaces
-cr query read-ns respo.core              # Read namespace details
-cr query ls-defs respo.app.core          # List definitions
-cr query peek-def respo.core render!     # Quick peek
-cr query read-def respo.core render!     # Full definition
-cr query find-symbol render!             # Search globally
-cr query usages respo.core render!       # Find usages
+cr query ns                              # List namespaces
+cr query ns respo.core                   # Read namespace details
+cr query defs respo.app.core             # List definitions
+cr query peek respo.core/render!         # Quick peek
+cr query def respo.core/render!          # Full definition
+cr query find render!                    # Search globally
+cr query usages respo.core/render!       # Find usages
 
 # Navigation (precise editing)
-cr query read-at ns def -p "" -d 1       # View structure
-cr query read-at ns def -p "2,1" -d 1    # Drill down
-cr query read-at ns def -p "2,1,0"       # Confirm target
+cr query at ns/def -p "" -d 1            # View structure
+cr query at ns/def -p "2,1" -d 1         # Drill down
+cr query at ns/def -p "2,1,0"            # Confirm target
 
 # Modification (careful!)
-cr edit upsert-def ns def -c 'defn func () body'
-cr edit operate-at ns def -p "2,1,0" -o replace -c '"value"'
-cr edit delete-def ns def
+cr edit def ns/def -j '["defn", "func", [], "body"]'
+cr edit at ns/def -p "2,1,0" -o replace -j '"value"'
+cr edit rm-def ns/def
 
 # Validation
 cr --check-only                          # Check syntax

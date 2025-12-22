@@ -1,5 +1,5 @@
 {}
-  :calcit-version |0.10.1
+  :calcit-version |0.10.2
   :dependencies $ {}
     |calcit-lang/memof |main
     |calcit-lang/lilac |main
