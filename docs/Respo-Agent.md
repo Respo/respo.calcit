@@ -116,14 +116,21 @@ cr edit at respo.app.updater/updater -p "2,1,0" -o replace -j '"new-value"'
 echo '["defn", "hello", [], ["println", "|Hello"]]' | cr edit at respo.app.updater/updater -p "2,1,0" -o replace -s -J
 ```
 
+echo '["defn", "hello", [], ["println", "|Hello"]]' | cr edit def respo.app.core/hello -s -J
+
 ### 3. Code Modification (updated `cr edit` inputs)
 
-**Input modes:** `cr edit` accepts **Cirru by default**, but Cirru 正文通常通过 stdin 或文件传入；若用 JSON 内联最稳妥。
+**Input modes:** `cr edit` 默认解析 Cirru；Cirru 正文通常通过 stdin 或文件传入，JSON 内联最稳妥。
 
 - Cirru via stdin: `echo '<cirru>' | cr edit ... -s -c`
 - Cirru via file: `cr edit ... -f <cirru-file> -c`
-- JSON inline: `-j '<json>'` (最简单的单行示例方式)
+- JSON inline: `-j '<json>'`（最简单）
 - JSON from file/stdin: 搭配 `-J/--json-input` 与 `-f/--file` 或 `-s/--stdin`
+- Inline code: `-e/--code '<text>'`（默认按 Cirru one-liner；如果看起来像 JSON 会按 JSON 解析）
+- `--cirru-one`: 把 stdin/file 输入当成单行 Cirru 表达式
+- `--json-leaf`: 把输入当成 JSON string leaf
+
+**推荐简化规则：** 单行 JSON 用 `-j` 或 `-e '<json>'`；单行 Cirru 用 `-e '<expr>'`；多行 Cirru 用文件/stdin；需要明确 JSON 则用 `-j`。
 
 ```bash
 # Add or update a definition (JSON inline - recommended)
@@ -131,6 +138,12 @@ cr edit def respo.app.core/new-fn -j '["defn", "new-fn", [], ["println", "|hello
 
 # Add or update from stdin (JSON format)
 echo '["defn", "hello", [], ["println", "|Hello"]]' | cr edit def respo.app.core/hello -s -J
+
+# Add via Cirru one-liner
+cr edit def respo.app.core/demo-one -e 'println $ str $ &+ 1 2'
+
+# JSON leaf input
+cr edit def respo.app.core/demo-leaf --json-leaf -e '"demo-leaf"'
 
 # Delete a definition
 cr edit rm-def respo.app.core/unused-fn
@@ -179,6 +192,40 @@ cr cirru parse '(div {} (<> "hello"))'
 
 # Format JSON to Cirru code
 cr cirru format '["div", {}, ["<>", "hello"]]'
+
+# Parse EDN to JSON
+cr cirru parse-edn '{:a 1 :b [2 3]}'
+
+# Show Cirru syntax guide (read before generating Cirru)
+cr cirru show-guide
+```
+
+### 6. Library Management
+
+```bash
+# List official libraries
+cr libs
+
+# Search libraries by keyword
+cr libs search router
+
+# Read library README from GitHub
+cr libs readme respo
+
+# Install/update dependencies
+caps
+```
+
+### 7. Code Analysis
+
+```bash
+# Call tree analysis from init-fn (or custom root)
+cr analyze call-tree
+cr analyze call-tree --root app.main/main! --ns-prefix app. --include-core --max-depth 5 --format json
+
+# Call count statistics
+cr analyze count-call
+cr analyze count-call --root app.main/main! --ns-prefix app. --include-core --format json --sort count
 ```
 
 ---
