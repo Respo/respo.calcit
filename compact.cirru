@@ -544,6 +544,9 @@
           :code $ quote
             defn =< (w x) (comp-space w x)
           :examples $ []
+            quote $ =< 8 nil
+            quote $ =< nil 16
+            quote $ =< 12 nil
         |comp-space $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-space (w h)
@@ -670,13 +673,13 @@
         |*changes-logger $ %{} :CodeEntry (:doc |)
           :code $ quote (defatom *changes-logger nil)
           :examples $ []
-        |*dispatch-fn $ %{} :CodeEntry (:doc |)
+        |*dispatch-fn $ %{} :CodeEntry (:doc "|internal atom storing the dispatch function. used to handle events and state updates throughout the application.")
           :code $ quote (defatom *dispatch-fn nil)
           :examples $ []
-        |*global-element $ %{} :CodeEntry (:doc |)
+        |*global-element $ %{} :CodeEntry (:doc "|internal atom storing the current virtual DOM tree. used by render! to track and update the application state.")
           :code $ quote (defatom *global-element nil)
           :examples $ []
-        |<> $ %{} :CodeEntry (:doc |)
+        |<> $ %{} :CodeEntry (:doc "|create a text node using span element. first argument is the text content. optional second argument is style (hashmap) or class-name (string).")
           :code $ quote
             defn <> (content ? style)
               if (string? style)
@@ -699,10 +702,15 @@
           :code $ quote
             defn blockquote (props & children) (create-element :blockquote props & children)
           :examples $ []
-        |body $ %{} :CodeEntry (:doc |)
+        |body $ %{} :CodeEntry (:doc "|create a body element with properties and children. first argument is a hashmap for properties, rest arguments are children elements.")
           :code $ quote
             defn body (props & children) (create-element :body props & children)
           :examples $ []
+            quote $ body ({})
+              div ({}) (<> |Content)
+            quote $ body
+              {} $ :style
+                {} $ :margin |0
         |button $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn button (props & children)
@@ -732,7 +740,7 @@
                 assert "\"Invalid data in elements tree: " $ or (nil? x) (element? x) (component? x)
               , pair
           :examples $ []
-        |create-element $ %{} :CodeEntry (:doc |)
+        |create-element $ %{} :CodeEntry (:doc "|create a virtual DOM element with tag name, properties and children. used internally by element macros like div, span, etc.")
           :code $ quote
             defn create-element (tag-name props & children)
               ; assert
@@ -753,6 +761,12 @@
                     filter val-exists?
                 %{} schema/Element (:name tag-name) (:coord nil) (:attrs attrs) (:style styles) (:event event) (:children children-nodes)
           :examples $ []
+            quote $ create-element :div ({})
+            quote $ create-element :span
+              {} $ :class-name |text
+            quote $ create-element :a
+              {} $ :href |/home
+              <> |Home
         |create-list-element $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn create-list-element (tag-name props child-map)
@@ -790,6 +804,17 @@
                     :tree $ do (~@ body)
                   ~ $ turn-string comp-name
           :examples $ []
+            quote $ defcomp comp-demo ()
+              div ({}) (<> |Hello)
+            quote $ defcomp comp-button (text)
+              button ({}) (<> text)
+            quote $ defcomp comp-link (href text)
+              a
+                {} $ :href href
+                <> text
+            quote $ defcomp comp-with-effect (value)
+              [] (effect-log value)
+                div ({}) (<> value)
         |defeffect $ %{} :CodeEntry (:doc "|a macro for defining a effect. if returns an function.\n\nparameters:\n\n- effect name\n- list of arguments\n- list of effect lifecycle arguments\n  - action name\n  - element that take place\n  - boolean if happen at current element\n- spreading arguments of body\n")
           :code $ quote
             defmacro defeffect (effect-name args params & body)
@@ -817,10 +842,22 @@
               assert "\"expected some result" $ > (count body) 0
               quasiquote $ defn ~x ~params ~@body
           :examples $ []
-        |div $ %{} :CodeEntry (:doc |)
+        |div $ %{} :CodeEntry (:doc "|create a div element with properties and children. first argument is a hashmap for properties like :class-name, :style, :on. rest arguments are children elements.")
           :code $ quote
             defn div (props & children) (create-element :div props & children)
           :examples $ []
+            quote $ div ({}) (<> |text)
+            quote $ div
+              {} $ :class-name |container
+            quote $ div
+              {} $ :style
+                {} $ :color |red
+            quote $ div
+              {} $ :on
+                {} $ :click on-click
+            quote $ div ({})
+              div ({}) (<> |child1)
+              div ({}) (<> |child2)
         |element-type $ %{} :CodeEntry (:doc |)
           :code $ quote
             def element-type $ if (exists? js/Element) js/Element js/Error
@@ -975,10 +1012,17 @@
           :code $ quote
             defn select (props & children) (create-element :select props & children)
           :examples $ []
-        |span $ %{} :CodeEntry (:doc |)
+        |span $ %{} :CodeEntry (:doc "|create a span element with properties and children. first argument is a hashmap for properties, rest arguments are children elements.")
           :code $ quote
             defn span (props & children) (create-element :span props & children)
           :examples $ []
+            quote $ span ({}) (<> |text)
+            quote $ span
+              {} $ :class-name |highlight
+            quote $ span
+              {} $ :style
+                {} $ :color |blue
+              <> |Blue
         |strong $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn strong (props & children) (create-element :strong props & children)
@@ -1048,7 +1092,7 @@
                       swap! *style-caches assoc style-name $ {} (:rules rules) (:el style-el)
                   , style-name
           :examples $ []
-        |defstyle $ %{} :CodeEntry (:doc "|a macro for turning CSS rules into className, and only works for JavaScript.\n\nuse `defstyle` like:\n\n```cirru\ndefstyle style-demo $ {}\n  |& $ {} (:color :red)\n  \"|&:hover\" $ {}\n    :background-color :blue\n```\n\nwhere `&` refers to current element.\n\nIn the rules, it\'s nested hashmaps. `|&` and `|&:hover` are CSS queries. and in nested hashmaps there are CSS properties defined in calcit data.\n")
+        |defstyle $ %{} :CodeEntry (:doc "|a macro for turning CSS rules into className, and only works for JavaScript.\n\nuse `defstyle` like:\n\n```cirru\ndefstyle style-demo $ {}\n  |& $ {} (:color :red)\n  \"|&:hover\" $ {}\n    :background-color :blue\n```\n\nwhere `&` refers to current element.\n\nIn the rules, it's nested hashmaps. `|&` and `|&:hover` are CSS queries. and in nested hashmaps there are CSS properties defined in calcit data.\n")
           :code $ quote
             defmacro defstyle (style-name rules)
               assert "\"expected symbol of style-name" $ symbol? style-name
@@ -1080,6 +1124,42 @@
                         &str:replace "\"." "\"_"
                 quasiquote $ def ~style-name (create-style! ~style-name-str ~rules)
           :examples $ []
+            quote $ defstyle style-button
+              {} (:& button)
+                |&:hover $ {} (:transform "|scale(1.04)")
+            quote $ defstyle style-input
+              {} $ |&
+                {} (:font-size |16px) (:padding "|0px 8px")
+                  :background-color $ hsl 0 0 94
+            quote $ defstyle style-bold
+              {} $ |&
+                {} $ :font-weight "|bold !important"
+            quote $ defstyle style-space
+              {} $ :&
+                {} (:height 1) (:width 1) (:display :inline-block)
+            quote $ defstyle style-global
+              {}
+                |& $ {} (:font-family |Avenir,Verdana)
+                |& $ {} ('contained "|@media only screen and (max-width: 600px)")
+                  :background-color $ hsl 0 0 90
+            quote $ defstyle style-absolute
+              {} $ |&
+                {} (:position :absolute) (:top 0) (:left 0)
+            quote $ defstyle style-card
+              {} $ |&
+                {} (:border-radius |8px) (:box-shadow "|0 2px 8px rgba(0,0,0,0.1)") (:padding |16px)
+            quote $ defstyle style-flex
+              {} $ |&
+                {} (:display :flex) (:align-items :center) (:justify-content :space-between)
+            quote $ defstyle style-link
+              {}
+                |& $ {} (:color |blue) (:text-decoration :none)
+                |&:hover $ {} (:text-decoration :underline)
+            quote $ defstyle style-text
+              {}
+                |& $ {} (:font-size |14px) (:line-height |1.6)
+                  :color $ hsl 0 0 20
+                |&::before $ {} (:content "|\"→ \"")
         |nodejs? $ %{} :CodeEntry (:doc |)
           :code $ quote
             def nodejs? $ and (exists? js/process) (= js/process.release.name "\"node")
@@ -1447,7 +1527,7 @@
         :examples $ []
     |respo.render.dom $ %{} :FileEntry
       :defs $ {}
-        |make-element $ %{} :CodeEntry (:doc |)
+        |make-element $ %{} :CodeEntry (:doc "|internal function to create a DOM element from a virtual element. handles properties, styles, events, and recursively creates child elements.")
           :code $ quote
             defn make-element (virtual-element listener-builder coord)
               assert "\"coord is required" $ some? coord
@@ -1518,7 +1598,7 @@
         :examples $ []
     |respo.render.effect $ %{} :FileEntry
       :defs $ {}
-        |collect-mounting $ %{} :CodeEntry (:doc |)
+        |collect-mounting $ %{} :CodeEntry (:doc "|internal function to collect mounting effects from component tree. recursively traverses the virtual DOM and collects effect:mount callbacks.")
           :code $ quote
             defn collect-mounting (collect! coord n-coord tree at-place?)
               cond
@@ -1549,7 +1629,7 @@
                         recur (rest children) (inc idx)
                 true $ js/console.warn "\"Unknown entry for mounting:" tree
           :examples $ []
-        |collect-unmounting $ %{} :CodeEntry (:doc |)
+        |collect-unmounting $ %{} :CodeEntry (:doc "|internal function to collect unmounting effects from component tree. recursively traverses the virtual DOM and collects effect:unmount callbacks.")
           :code $ quote
             defn collect-unmounting (collect! coord n-coord tree at-place?)
               cond
@@ -2072,21 +2152,31 @@
                     recur (rest xs) (rest ys)
                   true false
           :examples $ []
-        |component? $ %{} :CodeEntry (:doc |)
+        |component? $ %{} :CodeEntry (:doc "|check if value is a Respo component. returns true for component records, false otherwise.")
           :code $ quote
             defn component? (x)
               if (record? x) (&record:matches? schema/Component x) false
           :examples $ []
+            quote $ component?
+              defcomp comp-demo () $ div ({})
+            quote $ component?
+              div $ {}
+            quote $ component? nil
         |effect? $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn effect? (x)
               and (record? x) (&record:matches? schema/Effect x)
           :examples $ []
-        |element? $ %{} :CodeEntry (:doc |)
+        |element? $ %{} :CodeEntry (:doc "|check if value is a Respo element. returns true for element records, false otherwise.")
           :code $ quote
             defn element? (x)
               if (record? x) (&record:matches? schema/Element x) false
           :examples $ []
+            quote $ element?
+              div $ {}
+            quote $ element?
+              span $ {} (:inner-text |text)
+            quote $ element? nil
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.util.detect $ :require (respo.schema :as schema)
@@ -2153,12 +2243,15 @@
         :examples $ []
     |respo.util.format $ %{} :FileEntry
       :defs $ {}
-        |dashed->camel $ %{} :CodeEntry (:doc |)
+        |dashed->camel $ %{} :CodeEntry (:doc "|convert dashed-case CSS property names to camelCase. e.g. \"background-color\" -> \"backgroundColor\".")
           :code $ quote
             defn dashed->camel (x)
               .!replace x dashed-letter-pattern $ fn (cc pos prop)
                 .!toUpperCase $ aget cc 1
           :examples $ []
+            quote $ dashed->camel |background-color
+            quote $ dashed->camel |font-size
+            quote $ dashed->camel |margin-top
         |dashed-letter-pattern $ %{} :CodeEntry (:doc |)
           :code $ quote
             def dashed-letter-pattern $ new js/RegExp "\"-[a-z]" "\"g"
