@@ -52,10 +52,6 @@ Calcit 程序使用 `cr` 命令：
   - 同时显示 Doc 和 Examples 的完整内容
 - `cr query examples <namespace/definition>` - 读取定义的示例代码
   - 输出：每个 example 的 Cirru 格式和 JSON 格式
-- `cr query at <namespace/definition> -p <path>` - 读取定义中指定坐标的内容
-  - path：逗号分隔的索引，如 "2,1,0"，空字符串表示根节点
-  - `-d <depth>` 或 `--depth <depth>`：限制 JSON 输出深度（0=无限，默认 0）
-  - 输出包含：类型（leaf/list）、子节点预览、完整 JSON
 
 **符号搜索与引用分析：**
 
@@ -109,9 +105,9 @@ Calcit 程序使用 `cr` 命令：
 
 分析代码结构和调用关系：
 
-**调用树分析：**
+**调用图分析：**
 
-- `cr analyze call-tree` - 分析从入口点开始的调用树结构
+- `cr analyze call-graph` - 分析从入口点开始的调用图结构
   - `--root <ns/def>` - 指定分析入口（默认使用 init_fn）
   - `--ns-prefix <prefix>` - 只显示指定命名空间前缀的定义
   - `--include-core` - 包含 calcit.core 核心库函数
@@ -121,7 +117,7 @@ Calcit 程序使用 `cr` 命令：
 
 **调用次数统计：**
 
-- `cr analyze count-call` - 统计每个定义的调用次数
+- `cr analyze count-calls` - 统计每个定义的调用次数
   - `--root <ns/def>` - 指定分析入口（默认使用 init_fn）
   - `--ns-prefix <prefix>` - 只显示指定命名空间前缀的定义
   - `--include-core` - 包含 calcit.core 核心库函数
@@ -131,20 +127,88 @@ Calcit 程序使用 `cr` 命令：
 **使用示例：**
 
 ```bash
-# 分析整个项目的调用树
-cr analyze call-tree
-
-# 统计调用次数，只看项目代码
-cr analyze count-call
+# 分析整个项目的调用图
+cr analyze call-graph
 
 # 分析特定入口点
-cr analyze call-tree --root app.main/main!
-
-# 包含核心库，输出 JSON
-cr analyze count-call --include-core --format json
+cr analyze call-graph --root app.main/main!
 
 # 只看特定命名空间前缀
-cr analyze call-tree --ns-prefix app.
+cr analyze call-graph --ns-prefix app.
+```
+
+### 精细代码树操作 (`cr tree`)
+
+提供对 AST 节点的低级精确操作，适用于需要精细控制的场景：
+
+**可用操作：**
+
+- `cr tree show <namespace/definition> -p <path>` - 查看指定路径的节点
+
+  - `-d <depth>` - 限制显示深度（0=无限，默认 2）
+
+- `cr tree replace <namespace/definition> -p <path>` - 替换指定路径的节点
+
+  - `-e <code>` - 内联 Cirru 代码（默认单行解析）
+  - `-c, --cirru` - 解析多行 Cirru 代码（当有缩进时使用）
+  - `-f <file>` - 从文件读取
+  - `-j <json>` - 内联 JSON 字符串
+  - `-s` - 从标准输入读取
+  - `-J` - JSON 格式输入
+  - `--json-leaf` - 直接作为叶子节点处理
+  - `--refer-original <placeholder>` - 原节点占位符
+  - `--refer-inner-branch <path>` - 内部分支引用路径
+  - `--refer-inner-placeholder <placeholder>` - 内部分支占位符
+
+- `cr tree delete <namespace/definition> -p <path>` - 删除指定路径的节点
+
+- `cr tree insert-before <namespace/definition> -p <path>` - 在指定位置前插入节点
+
+- `cr tree insert-after <namespace/definition> -p <path>` - 在指定位置后插入节点
+
+- `cr tree insert-child <namespace/definition> -p <path>` - 插入为第一个子节点
+
+- `cr tree append-child <namespace/definition> -p <path>` - 追加为最后一个子节点
+
+- `cr tree swap-next <namespace/definition> -p <path>` - 与下一个兄弟节点交换
+
+- `cr tree swap-prev <namespace/definition> -p <path>` - 与上一个兄弟节点交换
+
+- `cr tree wrap <namespace/definition> -p <path>` - 用新结构包装节点（使用 refer-original 占位符）
+
+**使用示例：**
+
+```bash
+# 查看节点结构
+cr tree show app.main/main! -p "2,1"
+
+# 替换单个符号（默认单行解析）
+cr tree replace app.main/main! -p "0" -e "new-function"
+
+# 替换多行代码块（使用 --cirru 标志）
+cr tree replace app.main/main! -p "2" -f /tmp/code.cirru --cirru
+
+# 删除节点
+cr tree delete app.main/main! -p "1,0"
+
+# 插入子节点
+cr tree insert-child app.main/main! -p "2" -e "new-item"
+```
+
+**⚠️ 重要：精确定位的安全流程**
+
+使用 `cr tree` 前，建议先用 `cr tree show` 确认路径：
+
+```bash
+# 1. 先查看整体结构
+cr tree show app.core/my-fn -p "" -d 1
+
+# 2. 逐层确认目标位置
+cr tree show app.core/my-fn -p "2" -d 2
+cr tree show app.core/my-fn -p "2,1,0"
+
+# 3. 执行修改
+cr tree replace app.core/my-fn -p "2,1,0" -e "new-value"
 ```
 
 ### 代码编辑 (`cr edit`)
@@ -165,7 +229,9 @@ cr analyze call-tree --ns-prefix app.
 对 `--file/--stdin` 输入，还支持以下“格式开关”（与 `-J/--json-input` 类似）：
 
 - `--cirru-one`：把输入解析为**单行 Cirru 表达式**（one-liner parser）。适合在 shell 里写一行表达式（不依赖缩进）。
-- `--json-leaf`：把输入当成 **JSON string**（例如 `"abc"`），并转换为 leaf 节点。
+- `--json-leaf`：把输入当成 **leaf 节点**。输入会直接作为 leaf 值，无需 JSON 引号包裹。
+  - 传入符号：`-e 'my-symbol'`
+  - 传入字符串：需要 Cirru 字符串前缀 `|` 或 `"`，例如 `-e '|my string'` 或 `-e '"my string'`
 
 ⚠️ 注意：这些开关彼此互斥（一次只用一个）。
 
@@ -187,40 +253,38 @@ cr analyze call-tree --ns-prefix app.
 - `cr edit def <namespace/definition> -r -j '<json>'` - 强制覆盖已有定义
 - `cr edit rm-def <namespace/definition>` - 删除定义
 - `cr edit doc <namespace/definition> '<doc>'` - 更新定义的文档
-- `cr edit examples <namespace/definition>` - 设置定义的示例代码
+- `cr edit examples <namespace/definition>` - 设置定义的示例代码（批量替换所有示例）
   - `-j '<json>'` - 内联 JSON 数组
   - `-f <file>` - 从文件读取（默认 Cirru 格式）
   - `-s` - 从 stdin 读取（默认 Cirru 格式）
   - `-J` - 使用 JSON 格式输入
   - `--clear` - 清空所有示例
-- `cr edit at <namespace/definition> -p <path> -o <operation> -j '<json>'` - 在指定路径操作
+- `cr edit add-example <namespace/definition>` - 添加单个示例
+  - `--at <position>` - 指定插入位置（默认追加到末尾，0-based 索引）
+  - `-j '<json>'` - 内联 JSON
+  - `-e '<code>'` - 内联 Cirru 文本
+  - `-f <file>` - 从文件读取（默认 Cirru 格式）
+  - `-s` - 从 stdin 读取
+  - `-O` - 使用 one-liner 解析器
+  - `-J` - 使用 JSON 格式输入
+- `cr edit rm-example <namespace/definition> <index>` - 删除指定索引的示例（0-based）
+- `cr edit at <namespace/definition> -p <path> -o <operation> -j '<json>'` - **已弃用，请使用 `cr tree` 命令**（见下方）
   - path：逗号分隔的索引，如 "2,1,0"
   - operation："insert-before", "insert-after", "replace", "delete", "insert-child"
   - `-d <depth>` 或 `--depth <depth>`：限制结果预览深度（0=无限，默认 2）
   - 执行后会输出被修改节点的预览，方便验证修改结果
 
-**⚠️ 重要：精确编辑的安全流程**
+**⚠️ AST 节点精确操作已迁移**
 
-使用 `edit at` 进行局部修改前，**必须先多次使用 `query at` 确认坐标**，避免错误覆盖代码：
+原来的 `cr edit at` 命令已迁移到 `cr tree` 系列命令，提供更清晰的接口：
 
-```bash
-# 步骤1: 先读取整体结构，了解根节点 (用 -d 1 限制深度减少输出)
-cr query at app.core/my-fn -p "" -d 1
+- `cr edit at ... -o replace` → `cr tree replace`
+- `cr edit at ... -o delete` → `cr tree delete`
+- `cr edit at ... -o insert-before` → `cr tree insert-before`
+- `cr edit at ... -o insert-after` → `cr tree insert-after`
+- `cr edit at ... -o insert-child` → `cr tree insert-child`
 
-# 步骤2: 逐层深入，确认目标位置
-cr query at app.core/my-fn -p "2" -d 1      # 查看第3个子节点
-cr query at app.core/my-fn -p "2,1" -d 1    # 继续深入
-cr query at app.core/my-fn -p "2,1,0"       # 确认最终目标
-
-# 步骤3: 确认无误后再执行修改
-cr edit at app.core/my-fn -p "2,1,0" -o replace -j '"new-value"'
-
-# 或者：用 --json-leaf（JSON string -> leaf，适合直接传 leaf）
-cr edit at app.core/my-fn -p "2,1,0" -o replace --json-leaf -e '"new-value"'
-
-# 步骤4: 验证修改结果
-cr query at app.core/my-fn -p "2,1"
-```
+请参考上面的"精细代码树操作 (`cr tree`)"章节获取详细用法。
 
 **命名空间操作：**
 
@@ -250,8 +314,11 @@ echo '["defn", "hello", [], ["println", "|Hello"]]' | cr edit def app.core/hello
 # 单行 Cirru 表达式输入（one-liner，不走 stdin/文件；-e 默认 one-liner）
 cr edit def app.core/demo-one -e 'println $ str $ &+ 1 2'
 
-# JSON leaf 输入（leaf 节点，注意外层仍是 JSON string）
-cr edit def app.core/demo-leaf --json-leaf -e '"demo-leaf"'
+# JSON leaf 输入（直接传内容作为 leaf 节点）
+# 传符号：
+cr edit def app.core/demo-leaf --json-leaf -e 'demo-leaf'
+# 传字符串（需要 | 或 " 前缀）：
+cr edit def app.core/demo-str --json-leaf -e '|demo string'
 
 # 从文件读取（Cirru 格式）
 cr edit def app.core/complex-fn -f /tmp/code.cirru
@@ -338,7 +405,16 @@ cr edit examples app.core/multiply -j '[["multiply", "3", "4"]]'
 # 从 Cirru 文件设置示例（文件中每行是一个表达式）
 cr edit examples app.core/multiply -f examples.cirru
 
-# 清空示例
+# 添加单个示例到末尾
+cr edit add-example app.core/multiply -e 'multiply 5 6'
+
+# 在指定位置插入示例（在索引 0 位置插入，成为第一个示例）
+cr edit add-example app.core/multiply --at 0 -e 'multiply 1 2'
+
+# 删除第 2 个示例（索引 1）
+cr edit rm-example app.core/multiply 1
+
+# 清空所有示例
 cr edit examples app.core/multiply --clear
 ```
 
@@ -348,16 +424,16 @@ cr edit examples app.core/multiply --clear
 # 1. 读取完整定义
 cr query def app.core/add-numbers
 
-# 2. 多次 query at 确认目标坐标
-cr query at app.core/add-numbers -p "" -d 1
-cr query at app.core/add-numbers -p "2" -d 1
-cr query at app.core/add-numbers -p "2,0"
+# 2. 多次查看节点确认目标坐标
+cr tree show app.core/add-numbers -p "" -d 1
+cr tree show app.core/add-numbers -p "2" -d 1
+cr tree show app.core/add-numbers -p "2,0"
 
-# 3. 执行替换
-cr edit at app.core/add-numbers -p "2,0" -o replace -j '"*"'
+# 3. 执行替换（使用新的 cr tree 命令）
+cr tree replace app.core/add-numbers -p "2,0" -e '"*"'
 
 # 4. 验证
-cr query at app.core/add-numbers -p "2"
+cr tree show app.core/add-numbers -p "2"
 ```
 
 **更新命名空间导入：**
