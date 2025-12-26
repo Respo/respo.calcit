@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.21)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.22)
     :modules $ [] |memof/ |lilac/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -600,7 +600,7 @@
         :examples $ []
     |respo.controller.resolve $ %{} :FileEntry
       :defs $ {}
-        |build-deliver-event $ %{} :CodeEntry (:doc "|Creates a function to dispatch events from the DOM to Respo\'s event handling system.")
+        |build-deliver-event $ %{} :CodeEntry (:doc "|Creates a function to dispatch events from the DOM to Respo's event handling system.")
           :code $ quote
             defn build-deliver-event (*global-element *dispatch-fn)
               fn (coord event-name simple-event) (; echo "\"event coord" coord)
@@ -1124,7 +1124,7 @@
                       swap! *style-caches assoc style-name $ {} (:rules rules) (:el style-el)
                   , style-name
           :examples $ []
-        |defstyle $ %{} :CodeEntry (:doc "|a macro for turning CSS rules into className, and only works for JavaScript.\n\nuse `defstyle` like:\n\n```cirru\ndefstyle style-demo $ {}\n  |& $ {} (:color :red)\n  \"|&:hover\" $ {}\n    :background-color :blue\n```\n\nwhere `&` refers to current element.\n\nIn the rules, it\'s nested hashmaps. `|&` and `|&:hover` are CSS queries. and in nested hashmaps there are CSS properties defined in calcit data.\n")
+        |defstyle $ %{} :CodeEntry (:doc "|a macro for turning CSS rules into className, and only works for JavaScript.\n\nuse `defstyle` like:\n\n```cirru\ndefstyle style-demo $ {}\n  |& $ {} (:color :red)\n  \"|&:hover\" $ {}\n    :background-color :blue\n```\n\nwhere `&` refers to current element.\n\nIn the rules, it's nested hashmaps. `|&` and `|&:hover` are CSS queries. and in nested hashmaps there are CSS properties defined in calcit data.\n")
           :code $ quote
             defmacro defstyle (style-name rules)
               assert "\"expected symbol of style-name" $ symbol? style-name
@@ -1916,7 +1916,7 @@
                 -> (.-parentElement target) (.!insertBefore new-element target)
                 .!remove target
           :examples $ []
-        |replace-prop $ %{} :CodeEntry (:doc "|Updates a property on a DOM element. Handles data attributes and special cases like \'value\'.")
+        |replace-prop $ %{} :CodeEntry (:doc "|Updates a property on a DOM element. Handles data attributes and special cases like 'value'.")
           :code $ quote
             defn replace-prop (target p prop-value)
               let
@@ -2314,7 +2314,7 @@
                 assoc :original-event event
                 assoc :event event
           :examples $ []
-        |event->prop $ %{} :CodeEntry (:doc "|Converts an event keyword (e.g. :click) to a prop name string (e.g. \'onclick\').")
+        |event->prop $ %{} :CodeEntry (:doc "|Converts an event keyword (e.g. :click) to a prop name string (e.g. 'onclick').")
           :code $ quote
             defn event->prop (x)
               str |on $ turn-string x
@@ -2325,7 +2325,7 @@
             defn event->string (x)
               &str:slice (turn-string x) 3
           :examples $ []
-        |get-style-value $ %{} :CodeEntry (:doc "|Formats a style value for a given property. Adds \'px\' to numbers if the property expects units.")
+        |get-style-value $ %{} :CodeEntry (:doc "|Formats a style value for a given property. Adds 'px' to numbers if the property expects units.")
           :code $ quote
             defn get-style-value (x prop)
               cond
