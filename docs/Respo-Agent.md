@@ -118,48 +118,50 @@ echo '["defn", "hello", [], ["println", "|Hello"]]' | cr edit at respo.app.updat
 
 echo '["defn", "hello", [], ["println", "|Hello"]]' | cr edit def respo.app.core/hello -s -J
 
-### 3. Code Modification (updated `cr edit` inputs)
+### 3. Code Modification (Agent Optimized)
 
-**Input modes:** `cr edit` 默认解析 Cirru；Cirru 正文通常通过 stdin 或文件传入，JSON 内联最稳妥。
+**Best Practice: Use JSON AST**
+For LLM Agents, **JSON inline (`-j`) is the most reliable method** for code generation. It avoids whitespace/indentation ambiguity inherent in Cirru.
 
-- Cirru via stdin: `echo '<cirru>' | cr edit ... -s -c`
-- Cirru via file: `cr edit ... -f <cirru-file> -c`
-- JSON inline: `-j '<json>'`（最简单）
-- JSON from file/stdin: 搭配 `-J/--json-input` 与 `-f/--file` 或 `-s/--stdin`
-- Inline code: `-e/--code '<text>'`（默认按 Cirru one-liner；如果看起来像 JSON 会按 JSON 解析）
-- `--cirru-one`: 把 stdin/file 输入当成单行 Cirru 表达式
-- `--json-leaf`: 把输入当成 JSON string leaf
+**Input Modes:**
+- `-j '<json>'`: **Recommended.** Inline JSON string. Escape quotes carefully.
+- `-e '<text>'`: Inline Cirru one-liner. Good for short, simple expressions.
+- `-f <file>` / `-s`: Read from file/stdin (defaults to Cirru).
+- `-J`: Combine with `-f`/`-s` to indicate JSON input.
 
-**推荐简化规则：** 单行 JSON 用 `-j` 或 `-e '<json>'`；单行 Cirru 用 `-e '<expr>'`；多行 Cirru 用文件/stdin；需要明确 JSON 则用 `-j`。
+**JSON AST Structure Guide:**
+- Function: `(defn f (x) x)` -> `["defn", "f", ["x"], "x"]`
+- Map: `{:a 1}` -> `["{}", [":a", "1"]]`
+- String: `"|hello"` -> `"|hello"` (in JSON string: `"\"|hello\""`)
+- Keyword: `:key` -> `":key"`
+
+**Common Commands:**
 
 ```bash
-# Add or update a definition (JSON inline - recommended)
-cr edit def respo.app.core/new-fn -j '["defn", "new-fn", [], ["println", "|hello"]]'
+# 1. Add/Update Definition (JSON)
+# (defn greet (name) (println "|Hello" name))
+cr edit def respo.demo/greet -j '["defn", "greet", ["name"], ["println", "\"|Hello\"", "name"]]'
 
-# Add or update from stdin (JSON format)
-echo '["defn", "hello", [], ["println", "|Hello"]]' | cr edit def respo.app.core/hello -s -J
+# 2. Add Definition (Cirru One-liner - risky for complex code)
+cr edit def respo.demo/simple -e 'defn simple (x) (+ x 1)'
 
-# Add via Cirru one-liner
-cr edit def respo.app.core/demo-one -e 'println $ str $ &+ 1 2'
+# 3. Update Imports (JSON)
+# (ns respo.demo (:require [respo.core :refer [div span]]))
+cr edit imports respo.demo -j '[["respo.core", ":refer", ["div", "span"]]]'
 
-# JSON leaf input
-cr edit def respo.app.core/demo-leaf --json-leaf -e '"demo-leaf"'
+# 4. Remove Definition
+cr edit rm-def respo.demo/old-fn
 
-# Delete a definition
-cr edit rm-def respo.app.core/unused-fn
+# 5. Namespace Operations
+cr edit add-ns respo.new-feature
+cr edit rm-ns respo.deprecated
+```
 
-# Add a new namespace
-cr edit add-ns my.new.namespace
-
-# Delete a namespace
-cr edit rm-ns my.old.namespace
-
-# Update namespace imports (JSON inline)
-cr edit imports respo.app.core -j '[["respo.core", ":refer", ["div", "render!"]], ["respo.app.schema", ":as", "schema"]]'
-
-# Add/remove module dependencies
-cr edit add-module "path/to/module"
-cr edit rm-module "path/to/module"
+**💡 Pro Tip: Validation**
+If unsure about the JSON structure, generate it from Cirru first:
+```bash
+cr cirru parse -O 'defn f (x) (+ x 1)'
+# Output: ["defn", "f", ["x"], ["+", "x", "1"]]
 ```
 
 ### 4. Project Configuration
@@ -174,7 +176,47 @@ cr edit config init-fn "respo.main/main!"
 cr edit config reload-fn "respo.main/reload!"
 ```
 
-### 5. Documentation and Language
+### 5. Workflow: Building From Scratch
+
+Follow this sequence to create a new feature cleanly:
+
+**Step 1: Create Namespace**
+```bash
+cr edit add-ns respo.app.feature-x
+```
+
+**Step 2: Add Imports**
+Define dependencies (e.g., `respo.core`).
+```bash
+# Cirru: (:require [respo.core :refer [defcomp div span]])
+cr edit imports respo.app.feature-x -j '[["respo.core", ":refer", ["defcomp", "div", "span"]]]'
+```
+
+**Step 3: Create Component**
+Define the component logic.
+```bash
+# Cirru: (defcomp comp-x (data) (div {} (<> "Feature X")))
+cr edit def respo.app.feature-x/comp-x -j '["defcomp", "comp-x", ["data"], ["div", ["{}"], ["<>", "\"|Feature X\""]]]'
+```
+
+**Step 4: Verify**
+```bash
+cr query def respo.app.feature-x/comp-x
+cr --check-only
+```
+
+**Step 5: Integrate**
+Mount or use it in `respo.app.comp.container`.
+```bash
+# 1. Add import to container ns
+cr edit require respo.app.comp.container respo.app.feature-x
+
+# 2. Add usage (using surgical edit)
+# Find where to insert using `cr query at ...`
+# cr edit at ... -o insert-child -j '["respo.app.feature-x/comp-x", "data"]'
+```
+
+### 6. Documentation and Language
 
 ```bash
 # Check for syntax errors and warnings
@@ -307,6 +349,7 @@ cr query def namespace/definition
 
 ### 1. Component Definition Pattern
 
+**Cirru (Read):**
 ```cirru
 ; Standard component structure
 defcomp comp-name (param1 param2 & options)
@@ -314,20 +357,13 @@ defcomp comp-name (param1 param2 & options)
     :class-name "|component-name"
     :style $ comp-style
   <> "|Content"
+```
 
-; With effects
-defcomp comp-with-effect (content)
-  []
-    effect-name
-    div $ {} (<> content)
-
-; With state handling
-defcomp comp-stateful (data dispatch!)
-  let
-    states (>> data :my-states)
-  div $ {}
-    :on-click $ fn (e)
-      dispatch! [:action-name value]
+**JSON AST (Write - for `cr edit`):**
+```json
+["defcomp", "comp-name", ["param1", "param2", "&", "options"],
+  ["div", ["{}", [":class-name", "|component-name"], [":style", "comp-style"]],
+    ["<>", "|Content"]]]
 ```
 
 ### 2. State Management Pattern
