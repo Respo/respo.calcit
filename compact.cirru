@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.22)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.23)
     :modules $ [] |memof/ |lilac/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -18,12 +18,6 @@
                     {} $ :style style-states
                     <> $ str "|states: "
                       to-lispy-string $ :states store
-                  comp-global-keydown
-                    {} $ :disabled-commands (#{} "\"s" "\"p")
-                    fn (e d!) (js/console.log "\"keydown" e)
-                  comp-global-keyup
-                    {} $ :disabled-commands (#{} "\"s" "\"p")
-                    fn (e d!) (js/console.log "\"keyup" e)
           :examples $ []
         |style-global $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -44,7 +38,6 @@
             respo.css :refer $ defstyle
             respo.app.comp.todolist :refer $ comp-todolist
             respo.comp.space :refer $ =<
-            respo.comp.global-keydown :refer $ comp-global-keydown comp-global-keyup
             respo.comp.inspect :refer $ highlight-defcomp
         :examples $ []
     |respo.app.comp.task $ %{} :FileEntry
@@ -124,15 +117,15 @@
             defcomp comp-todolist (states tasks)
               let
                   cursor $ either (:cursor states) ([])
-                  state $ either (:data states) initial-state
-                [] (effect-focus)
+                  state $ either (:data states)
+                    {} (:draft |) (:locked? false) (:message "|Press Ctrl+M to change message")
+                [] (on-keydown cursor state) (effect-focus)
                   div
-                    {} (:class-name style-todo-root) (:data-name "\"todolist")
-                    ; a $ {} (; :href "\"A") (; :class-name "\"B") (; :inner-text "\"C") (; :height "\"100px")
+                    {} (:class-name style-todo-root) (:data-name |todolist)
                     comp-inspect |States state $ {} (:left |80px)
                     div
                       {} $ :style style-panel
-                      input $ {} (:placeholder "\"Text")
+                      input $ {} (:placeholder |Text)
                         :value $ :draft state
                         :class-name widget/style-input
                         :style $ {}
@@ -148,7 +141,7 @@
                           :on-click $ fn (e d!)
                             d! $ : add (:draft state)
                             d! cursor $ assoc state :draft |
-                        span $ {} (:on-click nil) (:inner-text "\"Add")
+                        span $ {} (:on-click nil) (:inner-text |Add)
                       =< 8 nil
                       span $ {} (:inner-text |Clear) (:class-name widget/style-button)
                         :on-click $ fn (e d!)
@@ -187,14 +180,31 @@
                         =< 8 nil
                         comp-wrap $ comp-zero
                     comp-inspect |Tasks tasks $ {} (:left 500) (:top 20)
+                    div
+                      {} $ :style
+                        {} (:padding |8px) (:font-size 12) (:color |#999) (:margin-top |16px)
+                      <> $ :message state
           :examples $ []
         |effect-focus $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defeffect effect-focus () (action parent at-place?) (js/console.log "\"todolist effect:" action)
+            defeffect effect-focus () $ action parent at-place?
           :examples $ []
-        |initial-state $ %{} :CodeEntry (:doc |)
+        |make-keydown-listener $ %{} :CodeEntry (:doc "|DEPRECATED: Factory function approach for creating listeners. This was an experimental approach that did not work due to Record serialization issues. Use on-keydown function instead.")
           :code $ quote
-            def initial-state $ {} (:draft |) (:locked? false)
+            defn make-keydown-listener (cursor state)
+              %{} respo.schema/RespoListener (:name :on-keydown)
+                :handler $ fn (event dispatch!)
+                  tag-match event $
+                    :keydown info
+                    when
+                      and
+                        = |m $ :key info
+                        :ctrl info
+                      do (js/console.log "|[7] on-keydown with cursor:" cursor |state: state)
+                        dispatch! cursor $ assoc state :message "|Message changed by Ctrl+M!"
+                        js/window.setTimeout
+                          fn () $ dispatch! cursor (assoc state :message "|Press Ctrl+M to change message")
+                          , 2000
           :examples $ []
         |number-order $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -205,6 +215,25 @@
           :code $ quote
             defn on-focus (e dispatch!) (println "|Just focused~")
           :examples $ []
+        |on-keydown $ %{} :CodeEntry (:doc "|Creates a keyboard listener for Ctrl+M shortcut. This function demonstrates how to create component-local listeners that can access component state through closures. Returns a RespoListener that updates the message state when Ctrl+M is pressed.")
+          :code $ quote
+            defn on-keydown (cursor state)
+              %{} respo.schema/RespoListener (:name :on-keydown)
+                :handler $ fn (event dispatch!)
+                  tag-match event $
+                    :keydown info
+                    when
+                      and
+                        = |m $ :key info
+                        :ctrl info
+                      do
+                        dispatch! $ :: :states cursor (assoc state :message "|Message changed by Ctrl+M!")
+                        js/window.setTimeout
+                          fn () $ dispatch!
+                            :: :states cursor $ assoc state :message "|Press Ctrl+M to change message"
+                          , 2000
+          :examples $ []
+            quote $ on-keydown cursor state
         |on-test $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-test (e dispatch!) (println "|trigger test!")
@@ -591,12 +620,43 @@
                   listener-builder $ fn (event-name) (build-listener event-name deliver-event)
                 apply-dom-changes changes mount-point listener-builder
           :examples $ []
+        |send-to-component! $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn send-to-component! (event-tuple)
+              let
+                  dispatch! @*dispatch-fn
+                  tree @*global-element
+                traverse-and-call tree event-tuple dispatch!
+          :examples $ []
+        |traverse-and-call $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn traverse-and-call (element event-tuple dispatch!)
+              when (some? element)
+                when (component? element)
+                  let
+                      listeners $ &record:get element :listeners
+                      tree $ &record:get element :tree
+                    each listeners $ fn (listener)
+                      let
+                          handler $ &record:get listener :handler
+                        handler event-tuple dispatch!
+                    traverse-and-call tree event-tuple dispatch!
+                when (element? element)
+                  each (&record:get element :children)
+                    fn (pair)
+                      let
+                          child $ get pair 1
+                        traverse-and-call child event-tuple dispatch!
+          :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.controller.client $ :require
             respo.render.patch :refer $ apply-dom-changes
             respo.util.format :refer $ event->edn
             respo.render.dom :refer $ make-element
+            respo.core :refer $ *dispatch-fn *global-element
+            respo.util.detect :refer $ component? element?
+            respo.controller.resolve :refer $ extract-listeners
         :examples $ []
     |respo.controller.resolve $ %{} :FileEntry
       :defs $ {}
@@ -620,6 +680,21 @@
                   if (some? target-listener)
                     do (; println "|listener found:" coord event-name) (target-listener simple-event dispatch-wrap)
                     ; println "|found no listener:" coord event-name
+          :examples $ []
+        |extract-listeners $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn extract-listeners (component-result)
+              if (list? component-result)
+                let
+                    listeners $ filter component-result listener?
+                    elements $ filter component-result
+                      fn (x)
+                        not $ listener? x
+                  {} (:listeners listeners)
+                    :element $ first elements
+                {}
+                  :listeners $ []
+                  :element component-result
           :examples $ []
         |find-event-target $ %{} :CodeEntry (:doc "|Traverses the virtual DOM to find the element that should handle a specific event.")
           :code $ quote
@@ -668,7 +743,7 @@
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.controller.resolve $ :require
-            respo.util.detect :refer $ component? element?
+            respo.util.detect :refer $ component? element? listener?
         :examples $ []
     |respo.core $ %{} :FileEntry
       :defs $ {}
@@ -817,6 +892,7 @@
                   extract-effects-list $ %{} schema/Component
                     :effects $ []
                     :name $ ~ (turn-tag comp-name)
+                    :listeners $ []
                     :tree $ do (~@ body)
                   ~ $ turn-string comp-name
           :examples $ []
@@ -880,7 +956,7 @@
           :code $ quote
             def element-type $ if (exists? js/Element) js/Element js/Error
           :examples $ []
-        |extract-effects-list $ %{} :CodeEntry (:doc "|Separates effects from the component tree structure during rendering.")
+        |extract-effects-list $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn extract-effects-list (markup)
               &let
@@ -895,7 +971,8 @@
                             and (record? x)
                               or (component? x) (element? x)
                         effects-list $ -> markup-tree (filter effect?)
-                      -> markup (assoc :tree node-tree) (assoc :effects effects-list)
+                        listeners-list $ -> markup-tree (filter listener?)
+                      -> markup (assoc :tree node-tree) (assoc :effects effects-list) (assoc :listeners listeners-list)
                   true markup
           :examples $ []
         |h1 $ %{} :CodeEntry (:doc |)
@@ -1085,10 +1162,10 @@
             respo.util.format :refer $ purify-element mute-element
             respo.controller.client :refer $ activate-instance! patch-instance!
             respo.util.list :refer $ pick-attrs pick-event val-exists?
-            respo.util.detect :refer $ component? element? effect?
             respo.schema :as schema
             respo.util.dom :refer $ compare-to-dom!
             memof.once :refer $ reset-memof1-caches!
+            respo.util.detect :refer $ component? element? effect? listener?
         :examples $ []
     |respo.css $ %{} :FileEntry
       :defs $ {}
@@ -1262,6 +1339,16 @@
                 raw $ js/window.localStorage.getItem |respo.calcit
                 swap! *store assoc :tasks $ parse-cirru-edn raw
               render-app! mount-target
+              js/window.addEventListener |keydown $ fn (event)
+                let
+                    event-tuple $ :: :keydown
+                      {}
+                        :key $ .-key event
+                        :ctrl $ .-ctrlKey event
+                        :shift $ .-shiftKey event
+                        :alt $ .-altKey event
+                        :meta $ .-metaKey event
+                  send-to-component! event-tuple
               add-watch *store :rerender $ fn (store prev) (render-app! mount-target)
               ; reset! *changes-logger $ fn (old-tree new-tree changes) (js/console.log "\"Patch" changes)
               println |Loaded. $ js/performance.now
@@ -1293,6 +1380,7 @@
             respo.app.core :refer $ handle-ssr!
             "\"./calcit.build-errors" :default build-errors
             "\"bottom-tip" :default hud!
+            respo.controller.client :refer $ send-to-component!
         :examples $ []
     |respo.render.diff $ %{} :FileEntry
       :defs $ {}
@@ -1997,13 +2085,16 @@
     |respo.schema $ %{} :FileEntry
       :defs $ {}
         |Component $ %{} :CodeEntry (:doc |)
-          :code $ quote (defrecord Component :name :effects :tree)
+          :code $ quote (defrecord Component :name :effects :listeners :tree)
           :examples $ []
         |Effect $ %{} :CodeEntry (:doc |)
           :code $ quote (defrecord Effect :name :coord :args :method)
           :examples $ []
         |Element $ %{} :CodeEntry (:doc |)
           :code $ quote (defrecord Element :name :coord :attrs :style :event :children)
+          :examples $ []
+        |RespoListener $ %{} :CodeEntry (:doc |)
+          :code $ quote (defrecord RespoListener :name :handler)
           :examples $ []
         |cache-info $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -2023,6 +2114,11 @@
           :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote (ns respo.schema)
+        :examples $ []
+    |respo.schema.listener $ %{} :FileEntry
+      :defs $ {}
+      :ns $ %{} :CodeEntry (:doc |)
+        :code $ quote (ns respo.schema.listener)
         :examples $ []
     |respo.test.comp.task $ %{} :FileEntry
       :defs $ {}
@@ -2209,6 +2305,12 @@
             quote $ element?
               span $ {} (:inner-text |text)
             quote $ element? nil
+        |listener? $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn listener? (item)
+              and (record? item)
+                = :RespoListener $ &record:get-name item
+          :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.util.detect $ :require (respo.schema :as schema)
