@@ -11,6 +11,28 @@
 
 这两个文件的格式对空格和结构极其敏感，直接文本修改会破坏文件结构。请使用下面文档中的 CLI 命令进行代码查询和修改。
 
+## Calcit 与 Cirru 的关系
+
+- **Calcit** 是编程语言本身（一门类似 Clojure 的函数式编程语言）
+- **Cirru** 是语法格式（缩进风格的 S-expression，类似去掉括号改用缩进的 Lisp）
+- **关系**：Calcit 代码使用 Cirru 语法书写和存储
+
+**具体体现：**
+
+- `compact.cirru` 和 `calcit.cirru` 是用 Cirru 格式存储的 Calcit 程序
+- `cr cirru` 工具用于 Cirru 语法与 JSON 的转换（帮助理解和生成代码）
+- Cirru 语法特点：
+  - 用缩进代替括号（类似 Python/YAML）
+  - 字符串用前缀 `|` 或 `"` 标记（如 `|hello` 表示字符串 "hello"）
+  - 单行用空格分隔元素（如 `defn add (a b) (+ a b)`）
+
+**类比理解：**
+
+- Python 语言 ← 使用 → Python 语法
+- Calcit 语言 ← 使用 → Cirru 语法
+
+生成 Calcit 代码前，建议先运行 `cr cirru show-guide` 了解 Cirru 语法规则。
+
 ---
 
 ## Calcit CLI 命令
@@ -26,12 +48,27 @@ Calcit 程序使用 `cr` 命令：
   - 对 init_fn 和 reload_fn 进行预处理验证
   - 输出：预处理进度、warnings、检查耗时
   - 用于 CI/CD 或快速验证代码修改
+- `cr js -1` - 检查代码正确性，生成 JavaScript(不进入监听模式)
 - `cr js --check-only` - 检查代码正确性，不生成 JavaScript
 - `cr eval '<code>'` - 执行一段 Calcit 代码片段，用于快速验证写法
 
 ### 查询子命令 (`cr query`)
 
 这些命令用于查询项目信息：
+
+**项目全局分析：**
+
+- `cr analyze call-graph` - 分析从入口点开始的调用图结构
+- `cr analyze count-calls` - 统计每个定义的调用次数
+
+  _使用示例：_
+
+  ```bash
+  # 分析整个项目的调用图
+  cr analyze call-graph
+  # 统计调用次数
+  cr analyze count-calls
+  ```
 
 **基础查询：**
 
@@ -64,14 +101,52 @@ Calcit 程序使用 `cr` 命令：
   - 返回：引用该定义的所有位置（带上下文预览）
   - 用于理解代码影响范围，重构前的影响分析
 
+**代码模式搜索：**
+
+- `cr query search <namespace/definition> -p <pattern> [-l] [-d <depth>]` - 搜索叶子节点（字符串）
+
+  - 默认：精确匹配字符串（`-p "div"` 只匹配 `"div"`）
+  - `-l` / `--loose`：宽松匹配，包含模式（`-p "di"` 匹配所有包含 "di" 的叶子节点）
+  - `-d <depth>`：限制搜索深度（0 = 无限制）
+  - 返回：匹配节点的完整路径 + 父级上下文预览
+  - 示例：`cr query search app.main/main -p "println" -l`
+
+- `cr query search-pattern <namespace/definition> -p <pattern> [-l] [-j] [-d <depth>]` - 搜索结构模式
+  - 模式格式：Cirru one-liner 或 JSON 数组（使用 `-j` 标志）
+  - 默认：精确结构匹配（整个结构完全相同）
+  - `-l` / `--loose`：宽松匹配，查找包含连续子序列的结构
+    - 例如：`-p '["defn", "add"]' -j -l` 匹配任何包含连续 `["defn", "add"]` 的列表
+  - `-j` / `--json`：将模式解析为 JSON 数组而非 Cirru
+  - 返回：匹配节点的路径 + 父级上下文
+  - 示例：
+    - `cr query search-pattern app.util/add -p "(+ a b)"` - 查找精确表达式
+    - `cr query search-pattern app.main/main -p '["defn"]' -j -l` - 查找所有函数定义
+
+**搜索结果格式：**
+
+- 输出格式：`[路径] in 父级上下文`
+- 路径格式：`[索引1,索引2,...]` 表示从根节点到匹配节点的路径
+- 可配合 `cr tree show <target> -p "<path>"` 查看具体节点内容
+
 ### 文档子命令 (`cr docs`)
 
-查询 Calcit 语言文档：
+查询 Calcit 语言文档（guidebook）：
 
-- `cr docs api <keyword>` - 搜索 API 文档（也可用 -t tag 按标签搜索）
-- `cr docs ref <keyword>` - 搜索教程/指南文档
-- `cr docs list-api` - 列出所有 API 文档主题
-- `cr docs list-guide` - 列出所有教程文档主题
+- `cr docs search <keyword> [-c <num>] [-f <filename>]` - 按关键词搜索文档内容
+
+  - `-c <num>` - 显示匹配行的上下文行数（默认 5）
+  - `-f <filename>` - 按文件名过滤搜索结果
+  - 输出：匹配行及其上下文，带行号和高亮
+  - 示例：`cr docs search "macro" -c 10` 或 `cr docs search "defn" -f macros.md`
+
+- `cr docs read <filename> [-s <start>] [-n <lines>]` - 阅读指定文档
+
+  - `-s <start>` - 起始行号（默认 0）
+  - `-n <lines>` - 读取行数（默认 80）
+  - 输出：文档内容、当前范围、是否有更多内容
+  - 示例：`cr docs read macros.md` 或 `cr docs read intro.md -s 20 -n 30`
+
+- `cr docs list` - 列出所有可用文档
 
 ### Cirru 语法工具 (`cr cirru`)
 
@@ -87,8 +162,8 @@ Calcit 程序使用 `cr` 命令：
 运行 `cr cirru show-guide` 获取完整的 Cirru 语法说明，包括：
 
 - `$` 操作符（单节点展开）
-- `|` 前缀（字符串字面量）
-- `,` 操作符（表达式终止符）
+- `|` 前缀（字符串字面量）, 这个是 Cirru 特殊的地方, 而不是直接用引号包裹
+- `,` 操作符（注释标记）
 - `~` 和 `~@`（宏展开）
 - 常见错误和避免方法
 
@@ -98,44 +173,15 @@ Calcit 程序使用 `cr` 命令：
 
 - `cr libs` - 列出所有官方库
 - `cr libs search <keyword>` - 按关键词搜索库（搜索名称、描述、分类）
-- `cr libs readme <package>` - 查看指定库的 README 文档（从 GitHub 获取）
+- `cr libs readme <package> [-f <file>]` - 查看库的文档
+  - 优先从本地 `~/.config/calcit/modules/<package>` 读取
+  - 本地不存在时从 GitHub 仓库获取
+  - `-f` 参数可指定其他文档文件（如 `-f Skills.md`）
+  - 默认读取 `README.md`
+- `cr libs scan-md <module>` - 扫描本地模块目录下的所有 `.md` 文件
+  - 递归扫描子目录
+  - 显示相对路径列表
 - `caps` - 安装/更新依赖
-
-### 代码分析 (`cr analyze`)
-
-分析代码结构和调用关系：
-
-**调用图分析：**
-
-- `cr analyze call-graph` - 分析从入口点开始的调用图结构
-  - `--root <ns/def>` - 指定分析入口（默认使用 init_fn）
-  - `--ns-prefix <prefix>` - 只显示指定命名空间前缀的定义
-  - `--include-core` - 包含 calcit.core 核心库函数
-  - `--max-depth <n>` - 限制遍历深度（0=无限）
-  - `--show-unused` - 显示未使用的定义
-  - `--format text|json` - 输出格式
-
-**调用次数统计：**
-
-- `cr analyze count-calls` - 统计每个定义的调用次数
-  - `--root <ns/def>` - 指定分析入口（默认使用 init_fn）
-  - `--ns-prefix <prefix>` - 只显示指定命名空间前缀的定义
-  - `--include-core` - 包含 calcit.core 核心库函数
-  - `--format text|json` - 输出格式
-  - `--sort count|name` - 按调用次数（默认，降序）或名称排序
-
-**使用示例：**
-
-```bash
-# 分析整个项目的调用图
-cr analyze call-graph
-
-# 分析特定入口点
-cr analyze call-graph --root app.main/main!
-
-# 只看特定命名空间前缀
-cr analyze call-graph --ns-prefix app.
-```
 
 ### 精细代码树操作 (`cr tree`)
 
@@ -150,12 +196,12 @@ cr analyze call-graph --ns-prefix app.
 - `cr tree replace <namespace/definition> -p <path>` - 替换指定路径的节点
 
   - `-e <code>` - 内联 Cirru 代码（默认单行解析）
-  - `-c, --cirru` - 解析多行 Cirru 代码（当有缩进时使用）
+    - Cirru 输入：仅支持单行表达式（one-liner）。若需 leaf 节点可搭配 `--leaf`，直接写符号或 Cirru 字符串（如 `|text`）。
   - `-f <file>` - 从文件读取
   - `-j <json>` - 内联 JSON 字符串
   - `-s` - 从标准输入读取
   - `-J` - JSON 格式输入
-  - `--json-leaf` - 直接作为叶子节点处理
+  - `--leaf` - 直接作为叶子节点处理（Cirru 符号或 `|text` 字符串，无需 JSON 引号）
   - `--refer-original <placeholder>` - 原节点占位符
   - `--refer-inner-branch <path>` - 内部分支引用路径
   - `--refer-inner-placeholder <placeholder>` - 内部分支占位符
@@ -179,20 +225,25 @@ cr analyze call-graph --ns-prefix app.
 **使用示例：**
 
 ```bash
-# 查看节点结构
+# loose 模式快速定位到可能目标叶子节点位置
+cr query search -f app.comp.container/css-search color -l
+
+# 指定路径查看节点结构
 cr tree show app.main/main! -p "2,1"
 
-# 替换单个符号（默认单行解析）
-cr tree replace app.main/main! -p "0" -e "new-function"
+# 替换单个符号（leaf 输入示例，直接 Cirru 语法）
+cr tree replace app.main/main! -p "0" --leaf -e 'new-item'
+# 注意 Cirru 中字面量也是用前缀的, 比如字符串的前缀可以用 `|`
+cr tree replace app.main/main! -p "0" --leaf -e '|new-str'
 
-# 替换多行代码块（使用 --cirru 标志）
-cr tree replace app.main/main! -p "2" -f /tmp/code.cirru --cirru
+# 替换表达式（one-liner）
+cr tree replace app.main/main! -p "2" -e "new-fn new-item"
 
 # 删除节点
 cr tree delete app.main/main! -p "1,0"
 
-# 插入子节点
-cr tree insert-child app.main/main! -p "2" -e "new-item"
+# 插入子表达式
+cr tree insert-child app.main/main! -p "2" -e "new-fn new-item"
 ```
 
 **⚠️ 重要：精确定位的安全流程**
@@ -208,7 +259,7 @@ cr tree show app.core/my-fn -p "2" -d 2
 cr tree show app.core/my-fn -p "2,1,0"
 
 # 3. 执行修改
-cr tree replace app.core/my-fn -p "2,1,0" -e "new-value"
+cr tree replace app.core/my-fn -p "2,1,0" -e "new-fn new-item"
 ```
 
 ### 代码编辑 (`cr edit`)
@@ -228,17 +279,16 @@ cr tree replace app.core/my-fn -p "2,1,0" -e "new-value"
 
 对 `--file/--stdin` 输入，还支持以下“格式开关”（与 `-J/--json-input` 类似）：
 
-- `--cirru-one`：把输入解析为**单行 Cirru 表达式**（one-liner parser）。适合在 shell 里写一行表达式（不依赖缩进）。
-- `--json-leaf`：把输入当成 **leaf 节点**。输入会直接作为 leaf 值，无需 JSON 引号包裹。
+- `--leaf`：把输入当成 **leaf 节点**，直接使用 Cirru 符号或 `|text` 字符串，无需 JSON 引号。
   - 传入符号：`-e 'my-symbol'`
-  - 传入字符串：需要 Cirru 字符串前缀 `|` 或 `"`，例如 `-e '|my string'` 或 `-e '"my string'`
+  - 传入字符串：加 Cirru 字符串前缀 `|` 或 `"`，例如 `-e '|my string'` 或 `-e '"my string'`
 
 ⚠️ 注意：这些开关彼此互斥（一次只用一个）。
 
 **推荐简化规则（命令行更好写）：**
 
 - **JSON（单行）**：优先用 `-j '<json>'` 或 `-e '<json>'`（不需要 `-J`）。
-- **Cirru 单行表达式**：用 `-e '<expr>'`（`-e` 默认按 one-liner 解析；`-O/--cirru-one` 可选）。
+- **Cirru 单行表达式**：用 `-e '<expr>'`（`-e` 默认按 one-liner 解析）。
 - **Cirru 多行缩进**：用 `-f file.cirru` 或 `-s`（stdin）。
 - `-J/--json-input` 主要用于 **file/stdin** 读入 JSON（如 `-f code.json -J` 或 `-s -J`）。
 
@@ -249,51 +299,20 @@ cr tree replace app.core/my-fn -p "2,1,0" -e "new-value"
 
 **定义操作：**
 
-- `cr edit def <namespace/definition> -j '<json>'` - 添加或更新定义
-- `cr edit def <namespace/definition> -r -j '<json>'` - 强制覆盖已有定义
+- `cr edit def <namespace/definition>` - 添加或更新定义
 - `cr edit rm-def <namespace/definition>` - 删除定义
 - `cr edit doc <namespace/definition> '<doc>'` - 更新定义的文档
-- `cr edit examples <namespace/definition>` - 设置定义的示例代码（批量替换所有示例）
-  - `-j '<json>'` - 内联 JSON 数组
-  - `-f <file>` - 从文件读取（默认 Cirru 格式）
-  - `-s` - 从 stdin 读取（默认 Cirru 格式）
-  - `-J` - 使用 JSON 格式输入
-  - `--clear` - 清空所有示例
+- `cr edit examples <namespace/definition>` - 设置定义的示例代码（批量替换）
 - `cr edit add-example <namespace/definition>` - 添加单个示例
-  - `--at <position>` - 指定插入位置（默认追加到末尾，0-based 索引）
-  - `-j '<json>'` - 内联 JSON
-  - `-e '<code>'` - 内联 Cirru 文本
-  - `-f <file>` - 从文件读取（默认 Cirru 格式）
-  - `-s` - 从 stdin 读取
-  - `-O` - 使用 one-liner 解析器
-  - `-J` - 使用 JSON 格式输入
 - `cr edit rm-example <namespace/definition> <index>` - 删除指定索引的示例（0-based）
-- `cr edit at <namespace/definition> -p <path> -o <operation> -j '<json>'` - **已弃用，请使用 `cr tree` 命令**（见下方）
-  - path：逗号分隔的索引，如 "2,1,0"
-  - operation："insert-before", "insert-after", "replace", "delete", "insert-child"
-  - `-d <depth>` 或 `--depth <depth>`：限制结果预览深度（0=无限，默认 2）
-  - 执行后会输出被修改节点的预览，方便验证修改结果
-
-**⚠️ AST 节点精确操作已迁移**
-
-原来的 `cr edit at` 命令已迁移到 `cr tree` 系列命令，提供更清晰的接口：
-
-- `cr edit at ... -o replace` → `cr tree replace`
-- `cr edit at ... -o delete` → `cr tree delete`
-- `cr edit at ... -o insert-before` → `cr tree insert-before`
-- `cr edit at ... -o insert-after` → `cr tree insert-after`
-- `cr edit at ... -o insert-child` → `cr tree insert-child`
-
-请参考上面的"精细代码树操作 (`cr tree`)"章节获取详细用法。
 
 **命名空间操作：**
 
-- `cr edit add-ns <namespace>` - 添加命名空间（创建最小 ns 声明）
-- `cr edit add-ns <namespace> -j '<ns_json>'` - 添加带自定义 ns 代码的命名空间
+- `cr edit add-ns <namespace>` - 添加命名空间
 - `cr edit rm-ns <namespace>` - 删除命名空间
-- `cr edit imports <namespace> -j '<imports_json>'` - 更新导入规则
-- `cr edit require <namespace> -j '<require_rule>'` - 添加单个 require 规则
-- `cr edit rm-require <namespace> <source_ns>` - 移除指定来源的 require 规则
+- `cr edit imports <namespace>` - 更新导入规则（全量替换）
+- `cr edit add-import <namespace>` - 添加单个 import 规则
+- `cr edit rm-import <namespace> <source_ns>` - 移除指定来源的 import 规则
 - `cr edit ns-doc <namespace> '<doc>'` - 更新命名空间文档
 
 **模块和配置：**
@@ -302,32 +321,7 @@ cr tree replace app.core/my-fn -p "2,1,0" -e "new-value"
 - `cr edit rm-module <module-path>` - 删除模块依赖
 - `cr edit config <key> <value>` - 设置配置（key: init-fn, reload-fn, version）
 
-**使用示例：**
-
-```bash
-# 使用内联 JSON 添加定义
-cr edit def app.core/multiply -j '["defn", "multiply", ["x", "y"], ["*", "x", "y"]]'
-
-# 使用 stdin 管道
-echo '["defn", "hello", [], ["println", "|Hello"]]' | cr edit def app.core/hello -s -J
-
-# 单行 Cirru 表达式输入（one-liner，不走 stdin/文件；-e 默认 one-liner）
-cr edit def app.core/demo-one -e 'println $ str $ &+ 1 2'
-
-# JSON leaf 输入（直接传内容作为 leaf 节点）
-# 传符号：
-cr edit def app.core/demo-leaf --json-leaf -e 'demo-leaf'
-# 传字符串（需要 | 或 " 前缀）：
-cr edit def app.core/demo-str --json-leaf -e '|demo string'
-
-# 从文件读取（Cirru 格式）
-cr edit def app.core/complex-fn -f /tmp/code.cirru
-
-# 从文件读取（JSON 格式）
-cr edit def app.core/complex-fn -f /tmp/code.json -J
-```
-
-可以使用 `--help` 参数了解更详细的用法。
+使用 `--help` 参数了解详细的输入方式和参数选项。
 
 ---
 
@@ -373,14 +367,17 @@ cr js     # JS 编译模式
 
 遇到疑问时使用：
 
-- `cr docs ref <keyword>` - 查询 Calcit 教程
-- `cr docs api <keyword>` - 查询 API 文档
+- `cr docs search <keyword>` - 搜索 Calcit 教程内容
+- `cr docs read <filename>` - 阅读完整文档
+- `cr docs list` - 查看所有可用文档
 - `cr query ns <ns>` - 查看命名空间说明和函数文档
 - `cr query peek <ns/def>` - 快速查看定义签名
 - `cr query def <ns/def>` - 读取完整语法树
 - `cr query examples <ns/def>` - 查看示例代码
 - `cr query find <name>` - 跨命名空间搜索符号
 - `cr query usages <ns/def>` - 查找定义的使用位置
+- `cr query search <ns/def> -p <pattern>` - 搜索叶子节点
+- `cr query search-pattern <ns/def> -p <pattern>` - 搜索结构模式
 - `cr query error` - 查看最近的错误堆栈
 
 ---
@@ -390,6 +387,9 @@ cr js     # JS 编译模式
 **添加新函数：**
 
 ```bash
+# Cirru one liner
+cr edit def app.core/multiply -e 'defn multiply (x y) (* x y)'
+# or JSON
 cr edit def app.core/multiply -j '["defn", "multiply", ["x", "y"], ["*", "x", "y"]]'
 ```
 
@@ -399,23 +399,14 @@ cr edit def app.core/multiply -j '["defn", "multiply", ["x", "y"], ["*", "x", "y
 # 更新文档
 cr edit doc app.core/multiply '乘法函数，返回两个数的积'
 
-# 设置示例（JSON 数组，每个元素是一个示例表达式）
+# 设置示例
 cr edit examples app.core/multiply -j '[["multiply", "3", "4"]]'
 
-# 从 Cirru 文件设置示例（文件中每行是一个表达式）
-cr edit examples app.core/multiply -f examples.cirru
-
-# 添加单个示例到末尾
+# 添加示例
 cr edit add-example app.core/multiply -e 'multiply 5 6'
 
-# 在指定位置插入示例（在索引 0 位置插入，成为第一个示例）
-cr edit add-example app.core/multiply --at 0 -e 'multiply 1 2'
-
-# 删除第 2 个示例（索引 1）
+# 删除示例
 cr edit rm-example app.core/multiply 1
-
-# 清空所有示例
-cr edit examples app.core/multiply --clear
 ```
 
 **局部修改（推荐流程）：**
@@ -429,14 +420,30 @@ cr tree show app.core/add-numbers -p "" -d 1
 cr tree show app.core/add-numbers -p "2" -d 1
 cr tree show app.core/add-numbers -p "2,0"
 
-# 3. 执行替换（使用新的 cr tree 命令）
-cr tree replace app.core/add-numbers -p "2,0" -e '"*"'
+# 3. 执行替换
+cr tree replace app.core/add-numbers -p "2,0" -e '*'
 
 # 4. 验证
 cr tree show app.core/add-numbers -p "2"
 ```
 
-**更新命名空间导入：**
+**命名空间增量操作：**
+
+```bash
+# 添加命名空间
+cr edit add-ns app.util
+
+# 添加导入规则
+cr edit add-import app.main -e 'app.util :refer $ helper'
+
+# 移除导入规则
+cr edit rm-import app.main app.util
+
+# 更新项目配置
+cr edit config init-fn app.main/main!
+```
+
+**更新命名空间导入（全量替换）：**
 
 ```bash
 cr edit imports app.main -j '[["app.lib", ":as", "lib"], ["app.util", ":refer", ["helper"]]]'

@@ -124,12 +124,14 @@ echo '["defn", "hello", [], ["println", "|Hello"]]' | cr edit def respo.app.core
 For LLM Agents, **JSON inline (`-j`) is the most reliable method** for code generation. It avoids whitespace/indentation ambiguity inherent in Cirru.
 
 **Input Modes:**
+
 - `-j '<json>'`: **Recommended.** Inline JSON string. Escape quotes carefully.
 - `-e '<text>'`: Inline Cirru one-liner. Good for short, simple expressions.
 - `-f <file>` / `-s`: Read from file/stdin (defaults to Cirru).
 - `-J`: Combine with `-f`/`-s` to indicate JSON input.
 
 **JSON AST Structure Guide:**
+
 - Function: `(defn f (x) x)` -> `["defn", "f", ["x"], "x"]`
 - Map: `{:a 1}` -> `["{}", [":a", "1"]]`
 - String: `"|hello"` -> `"|hello"` (in JSON string: `"\"|hello\""`)
@@ -159,6 +161,7 @@ cr edit rm-ns respo.deprecated
 
 **💡 Pro Tip: Validation**
 If unsure about the JSON structure, generate it from Cirru first:
+
 ```bash
 cr cirru parse -O 'defn f (x) (+ x 1)'
 # Output: ["defn", "f", ["x"], ["+", "x", "1"]]
@@ -181,12 +184,14 @@ cr edit config reload-fn "respo.main/reload!"
 Follow this sequence to create a new feature cleanly:
 
 **Step 1: Create Namespace**
+
 ```bash
 cr edit add-ns respo.app.feature-x
 ```
 
 **Step 2: Add Imports**
 Define dependencies (e.g., `respo.core`).
+
 ```bash
 # Cirru: (:require [respo.core :refer [defcomp div span]])
 cr edit imports respo.app.feature-x -j '[["respo.core", ":refer", ["defcomp", "div", "span"]]]'
@@ -194,12 +199,14 @@ cr edit imports respo.app.feature-x -j '[["respo.core", ":refer", ["defcomp", "d
 
 **Step 3: Create Component**
 Define the component logic.
+
 ```bash
 # Cirru: (defcomp comp-x (data) (div {} (<> "Feature X")))
 cr edit def respo.app.feature-x/comp-x -j '["defcomp", "comp-x", ["data"], ["div", ["{}"], ["<>", "\"|Feature X\""]]]'
 ```
 
 **Step 4: Verify**
+
 ```bash
 cr query def respo.app.feature-x/comp-x
 cr --check-only
@@ -207,6 +214,7 @@ cr --check-only
 
 **Step 5: Integrate**
 Mount or use it in `respo.app.comp.container`.
+
 ```bash
 # 1. Add import to container ns
 cr edit require respo.app.comp.container respo.app.feature-x
@@ -350,6 +358,7 @@ cr query def namespace/definition
 ### 1. Component Definition Pattern
 
 **Cirru (Read):**
+
 ```cirru
 ; Standard component structure
 defcomp comp-name (param1 param2 & options)
@@ -360,10 +369,18 @@ defcomp comp-name (param1 param2 & options)
 ```
 
 **JSON AST (Write - for `cr edit`):**
+
 ```json
-["defcomp", "comp-name", ["param1", "param2", "&", "options"],
-  ["div", ["{}", [":class-name", "|component-name"], [":style", "comp-style"]],
-    ["<>", "|Content"]]]
+[
+  "defcomp",
+  "comp-name",
+  ["param1", "param2", "&", "options"],
+  [
+    "div",
+    ["{}", [":class-name", "|component-name"], [":style", "comp-style"]],
+    ["<>", "|Content"]
+  ]
+]
 ```
 
 ### 2. State Management Pattern
