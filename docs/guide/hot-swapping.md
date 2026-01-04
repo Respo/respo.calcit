@@ -1,5 +1,12 @@
 ## Hot swapping
 
+**📚 Documentation Index**
+
+- [← Back to README](../../README.md)
+- [Beginner Guide](../beginner-guide.md)
+- [API Reference](../api.md)
+- [All Guides](./): [Why Respo](./why-respo.md) | [Base Components](./base-components.md) | [Virtual DOM](./virtual-dom.md) | [Component States](./component-states.md)
+
 Hot swapping is done by the compiler. What you need to do is to call `respo.core/clear-cache!` before re-rendering happens:
 
 ```cirru

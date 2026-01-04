@@ -25,6 +25,13 @@ And note that the HTML transferred over the network does not bind events, and we
 
 ### Server rendering
 
+**📚 Documentation Index**
+
+- [← Back to README](../../README.md)
+- [Beginner Guide](../beginner-guide.md)
+- [API Reference](../api.md)
+- [All Guides](./): [Why Respo](./why-respo.md) | [Base Components](./base-components.md) | [Virtual DOM](./virtual-dom.md) | [Component States](./component-states.md)
+
 Virtual DOM can be rendered on a server, use it like in JavaScript.
 
 [`make-string`](../apis/make-string.md) is the function to render HTML. [`realize-ssr!`](../apis/realize-ssr_.md) is also useful to make first screen look smoother, make sure it's called before `render!`.

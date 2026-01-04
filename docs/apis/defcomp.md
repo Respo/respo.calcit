@@ -1,5 +1,13 @@
 ## `defcomp`
 
+**📚 Documentation Index**
+
+- [← Back to README](../../README.md)
+- [🤖 Respo-Agent Guide](../Respo-Agent.md) - Component patterns & debugging
+- [API Overview](../api.md)
+- [Beginner Guide](../beginner-guide.md)
+- [Related APIs](../api.md): [`div`](div.md) | [`defeffect`](defeffect.md) | [`create-element`](create-element.md)
+
 ```cirru
 defcomp comp-demo (content)
   div

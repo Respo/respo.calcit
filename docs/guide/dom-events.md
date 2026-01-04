@@ -1,5 +1,12 @@
 ## DOM events
 
+**📚 Documentation Index**
+
+- [← Back to README](../../README.md)
+- [Beginner Guide](../beginner-guide.md)
+- [API Reference](../api.md)
+- [All Guides](./): [Why Respo](./why-respo.md) | [Base Components](./base-components.md) | [Virtual DOM](./virtual-dom.md) | [Component States](./component-states.md)
+
 Here is a simple demo handling `input` events:
 
 ```cirru
