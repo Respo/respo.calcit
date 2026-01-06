@@ -44,8 +44,8 @@ The Respo project is a virtual DOM library written in Calcit-js, containing:
 - `respo.render.dom` - DOM element creation and manipulation
 - `respo.render.effect` - Component lifecycle effects
 - `respo.render.patch` - Apply DOM patches
-- `respo.controller.client` - Client-side state management (activate-instance!, patch-instance!)
-- `respo.controller.resolve` - Event handling and resolution
+- `respo.controller.client` - Client-side state management (activate-instance!, patch-instance!, send-to-component!)
+- `respo.controller.resolve` - Event handling and resolution (build-deliver-event, wrap-dispatch)
 
 **Utilities**:
 
@@ -471,6 +471,8 @@ let
 
 ### 6. Event Handling
 
+**DOM Event Handlers:**
+
 ```cirru
 ; Simple click handler
 div
@@ -493,6 +495,59 @@ div
     :on-keydown $ fn (e dispatch!)
       when (= (e.key) "|Enter")
         dispatch! [:submit-form]
+```
+
+**Component-Level Event Listeners:**
+
+Components can define custom listeners that respond to events sent via `send-to-component!`. This is useful for global shortcuts, external triggers, or testing.
+
+```cirru
+; Define a listener function that returns a RespoListener record
+defn on-keydown (cursor state)
+  %{} respo.schema/RespoListener (:name :on-keydown)
+    :handler $ fn (event dispatch!)
+      tag-match event $
+        :keydown info
+        when
+          and
+            = |m $ :key info
+            :ctrl info
+          ; Handle Ctrl+M shortcut
+          dispatch! $ :: :states cursor
+            assoc state :message "|Shortcut triggered!"
+
+; Use listener in component by including it in the component body
+defcomp comp-with-listener (states data)
+  let
+      cursor $ :cursor states
+      state $ either (:data states) ({})
+    [] (on-keydown cursor state)  ; Add listener to component
+      div $ {}
+        <> $ :message state
+```
+
+**Triggering Component Listeners:**
+
+Use `send-to-component!` (from `respo.controller.client`) to programmatically send events to the component tree:
+
+```cirru
+; Send keyboard event to all listening components
+send-to-component! $ :: :keydown
+  {} $ :key "|m"
+    :ctrl true
+
+; Trigger from timer or external source
+js/window.setTimeout
+  fn ()
+    send-to-component! $ :: :custom-event
+      {} $ :data |some-value
+  , 1000
+
+; Useful for:
+; - Global keyboard shortcuts (Ctrl+S, Escape, etc.)
+; - WebSocket message handlers
+; - Timer-based triggers
+; - Testing component event handlers
 ```
 
 ---
