@@ -1,6 +1,6 @@
 
 {} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.23)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.24)
     :modules $ [] |memof/ |lilac/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -624,7 +624,7 @@
           :code $ quote
             defn send-to-component! (event-tuple)
               let
-                  dispatch! @*dispatch-fn
+                  dispatch! $ wrap-dispatch *dispatch-fn
                   tree @*global-element
                 traverse-and-call tree event-tuple dispatch!
           :examples $ []
@@ -648,6 +648,18 @@
                           child $ get pair 1
                         traverse-and-call child event-tuple dispatch!
           :examples $ []
+        |wrap-dispatch $ %{} :CodeEntry (:doc "|Wraps a raw dispatch function to automatically handle different operation types (list, tag, or direct).")
+          :code $ quote
+            defn wrap-dispatch (*dispatch-fn)
+              fn (op ? data)
+                let
+                    dispatch! $ deref *dispatch-fn
+                  if (list? op)
+                    dispatch! $ : states op data
+                    if (tag? op)
+                      dispatch! $ :: op data
+                      dispatch! op
+          :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns respo.controller.client $ :require
@@ -669,14 +681,7 @@
                     target-listener $ if (some? target-element)
                       get (:event target-element) event-name
                       do (js/console.warn "\"found no element" coord event-name) nil
-                    dispatch-wrap $ fn (op ? data)
-                      let
-                          dispatch! $ deref *dispatch-fn
-                        if (list? op)
-                          dispatch! $ : states op data
-                          if (tag? op)
-                            dispatch! $ :: op data
-                            dispatch! op
+                    dispatch-wrap $ wrap-dispatch *dispatch-fn
                   if (some? target-listener)
                     do (; println "|listener found:" coord event-name) (target-listener simple-event dispatch-wrap)
                     ; println "|found no listener:" coord event-name
@@ -744,6 +749,7 @@
         :code $ quote
           ns respo.controller.resolve $ :require
             respo.util.detect :refer $ component? element? listener?
+            respo.controller.client :refer $ wrap-dispatch
         :examples $ []
     |respo.core $ %{} :FileEntry
       :defs $ {}
