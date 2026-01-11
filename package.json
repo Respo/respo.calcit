@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "@calcit/procs": "0.10.5"
+    "@calcit/procs": "0.10.6"
   },
   "scripts": {
     "test": "cr --once --emit-js --init-fn=respo.test.main/main! && node test.mjs"
