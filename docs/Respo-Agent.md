@@ -469,6 +469,31 @@ let
   extended
 ```
 
+**Testing Style to String Conversion:**
+
+```bash
+# Basic example (thread-first pipeline avoids bash escaping issues)
+cr eval 'thread-first ({} (:display "|flex") (:color "|red") (:padding "|10px")) .to-list respo.render.dom/style->string println' --dep respo.calcit/
+# Output: padding:10px;color:red;display:flex;
+```
+
+**Notes:**
+
+- `--dep respo.calcit/` loads the module from `~/.config/calcit/modules/`
+- `thread-first` (or `->`) chains operations: create map → convert to list → style->string → print
+- Direct `ns/def` format to reference functions from loaded modules
+
+**Inline Style Object Format:**
+
+```cirru
+# Map format (key-value pairs)
+my-styles $ {}
+  :display "|flex"
+  :color "|red"
+  :padding "|10px"
+  :font-size "|14px"
+```
+
 ### 6. Event Handling
 
 **DOM Event Handlers:**
@@ -891,7 +916,3 @@ Example from `docs/apis/defcomp.md`:
 - [API Overview](../api.md)
 - [Another API](./render!.md)
 ```
-
----
-
-This guide evolves as the project grows. Last updated: 2025-12-22
