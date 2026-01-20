@@ -1,6 +1,6 @@
 
-{} (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.24)
+{} (:about "|file is generated - never edit directly; learn cr edit/tree workflows before changing") (:package |respo)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.25)
     :modules $ [] |memof/ |lilac/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -622,7 +622,8 @@
           :examples $ []
         |send-to-component! $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn send-to-component! (event-tuple)
+            defn send-to-component! (event-tuple) (assert-type event-tuple :tuple)
+              hint-fn $ return-type :nil
               let
                   dispatch! $ wrap-dispatch *dispatch-fn
                   tree @*global-element
@@ -766,14 +767,14 @@
           :examples $ []
         |<> $ %{} :CodeEntry (:doc "|create a text node using span element. first argument is the text content. optional second argument is style (hashmap) or class-name (string).")
           :code $ quote
-            defn <> (content ? style)
+            defn <> (content ? style) (assert-type content :string)
               if (string? style)
                 span $ {} (:inner-text content) (:class-name style)
                 span $ {} (:inner-text content) (:style style)
           :examples $ []
         |>> $ %{} :CodeEntry (:doc "|Navigates to a sub-state cursor. Used for managing nested component states.")
           :code $ quote
-            defn >> (states k)
+            defn >> (states k) (assert-type states :map)
               let
                   parent-cursor $ either (:cursor states) ([])
                   branch $ either (get states k) ({})
@@ -782,7 +783,7 @@
             quote $ >> states :task-a
         |a $ %{} :CodeEntry (:doc "|Creates HTML link element (anchor tag).\n\nParameters:\n  props - Attribute map, can include standard HTML attributes like href, target, class-name, etc.\n  & children - Variable arguments for child elements, typically link display text or other elements\n\nReturns:\n  Created link element component\n\nUsed to create hyperlinks, supports all standard HTML link attributes.")
           :code $ quote
-            defn a (props & children) (create-element :a props & children)
+            defn a (props & children) (assert-type props :map) (create-element :a props & children)
           :examples $ []
             quote $ a
               {} (:href |https://example.com) (:inner-text "|Visit Example")
@@ -801,7 +802,7 @@
                 {} $ :margin |0
         |button $ %{} :CodeEntry (:doc "|Renders a <button> element. Wrapper around create-element.")
           :code $ quote
-            defn button (props & children)
+            defn button (props & children) (assert-type props :map)
               create-element :button props & $ map children confirm-child
           :examples $ []
             quote $ button
@@ -815,7 +816,7 @@
           :examples $ []
         |code $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn code (props & children) (create-element :code props & children)
+            defn code (props & children) (assert-type props :map) (create-element :code props & children)
           :examples $ []
         |confirm-child $ %{} :CodeEntry (:doc "|Validates if the item is a valid Respo node (element, component, or nil). Returns the item.")
           :code $ quote
@@ -835,7 +836,7 @@
           :examples $ []
         |create-element $ %{} :CodeEntry (:doc "|create a virtual DOM element with tag name, properties and children. used internally by element macros like div, span, etc.")
           :code $ quote
-            defn create-element (tag-name props & children)
+            defn create-element (tag-name props & children) (assert-type tag-name :keyword) (assert-type props :map)
               ; assert
                 str "|For rendering lists, please use list-> , got: " $ to-lispy-string children
                 and
@@ -862,7 +863,7 @@
               <> |Home
         |create-list-element $ %{} :CodeEntry (:doc "|Creates a virtual DOM element for list rendering. Arguments: tag-name, props, child-map (map of key -> child).")
           :code $ quote
-            defn create-list-element (tag-name props child-map)
+            defn create-list-element (tag-name props child-map) (assert-type tag-name :keyword) (assert-type props :map) (assert-type child-map :map)
               let
                   attrs $ pick-attrs props
                   styles $ -> props (:style)
@@ -944,7 +945,7 @@
           :examples $ []
         |div $ %{} :CodeEntry (:doc "|create a div element with properties and children. first argument is a hashmap for properties like :class-name, :style, :on. rest arguments are children elements.")
           :code $ quote
-            defn div (props & children) (create-element :div props & children)
+            defn div (props & children) (assert-type props :map) (create-element :div props & children)
           :examples $ []
             quote $ div ({}) (<> |text)
             quote $ div
@@ -983,15 +984,15 @@
           :examples $ []
         |h1 $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn h1 (props & children) (create-element :h1 props & children)
+            defn h1 (props & children) (assert-type props :map) (create-element :h1 props & children)
           :examples $ []
         |h2 $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn h2 (props & children) (create-element :h2 props & children)
+            defn h2 (props & children) (assert-type props :map) (create-element :h2 props & children)
           :examples $ []
         |h3 $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn h3 (props & children) (create-element :h3 props & children)
+            defn h3 (props & children) (assert-type props :map) (create-element :h3 props & children)
           :examples $ []
         |h4 $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -1024,13 +1025,13 @@
           :examples $ []
         |input $ %{} :CodeEntry (:doc "|Creates HTML input element (input tag).\n\nParameters:\n  props - Attribute map, can include standard HTML attributes and event handlers like type, value, placeholder, on-input, etc.\n  & children - Variable arguments for child elements, usually empty since input is self-closing\n\nReturns:\n  Created input element component\n\nUsed to create various form input controls, supports text, password, number and other input types.")
           :code $ quote
-            defn input (props & children) (create-element :input props & children)
+            defn input (props & children) (assert-type props :map) (create-element :input props & children)
           :examples $ []
             quote $ input
               {} (:type |text) (:placeholder "|Enter your name")
         |li $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn li (props & children) (create-element :li props & children)
+            defn li (props & children) (assert-type props :map) (create-element :li props & children)
           :examples $ []
         |link $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -1061,7 +1062,7 @@
             quote $ mount-app! mount-target (comp-app) *dispatch-fn
         |ol $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn ol (props & children) (create-element :ol props & children)
+            defn ol (props & children) (assert-type props :map) (create-element :ol props & children)
           :examples $ []
         |option $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -1069,11 +1070,11 @@
           :examples $ []
         |p $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn p (props & children) (create-element :p props & children)
+            defn p (props & children) (assert-type props :map) (create-element :p props & children)
           :examples $ []
         |pre $ %{} :CodeEntry (:doc "|Renders a <pre> element. Wrapper around create-element.")
           :code $ quote
-            defn pre (props & children) (create-element :pre props & children)
+            defn pre (props & children) (assert-type props :map) (create-element :pre props & children)
           :examples $ []
             quote $ pre
               {} $ :style
@@ -1098,7 +1099,7 @@
           :examples $ []
         |render! $ %{} :CodeEntry (:doc "|sync virtual DOM to real DOM. newly creating for the first time, and diff/patch for reset of calls:\n\ntakes arguments:\n- `target`, the mount point,\n- `markup` which is the virtual DOM,\n- `dispatch!` the dispatcher function for handling actions.")
           :code $ quote
-            defn render! (target markup dispatch!) (reset! *dispatch-fn dispatch!)
+            defn render! (target markup dispatch!) (assert-type dispatch! :fn) (reset! *dispatch-fn dispatch!)
               if (some? @*global-element) (rerender-app! target markup *dispatch-fn) (mount-app! target markup *dispatch-fn)
           :examples $ []
             quote $ render! mount-target (comp-container @*store) dispatch!
@@ -1123,11 +1124,11 @@
           :examples $ []
         |select $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn select (props & children) (create-element :select props & children)
+            defn select (props & children) (assert-type props :map) (create-element :select props & children)
           :examples $ []
         |span $ %{} :CodeEntry (:doc "|create a span element with properties and children. first argument is a hashmap for properties, rest arguments are children elements.")
           :code $ quote
-            defn span (props & children) (create-element :span props & children)
+            defn span (props & children) (assert-type props :map) (create-element :span props & children)
           :examples $ []
             quote $ span ({}) (<> |text)
             quote $ span
@@ -1148,7 +1149,7 @@
               {} $ :innerHTML "|body { margin: 0; padding: 0; }"
         |textarea $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn textarea (props & children)
+            defn textarea (props & children) (assert-type props :map)
               create-element :textarea props & $ map children confirm-child
           :examples $ []
         |title $ %{} :CodeEntry (:doc |)
@@ -1157,7 +1158,7 @@
           :examples $ []
         |ul $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn ul (props & children) (create-element :ul props & children)
+            defn ul (props & children) (assert-type props :map) (create-element :ul props & children)
           :examples $ []
       :ns $ %{} :CodeEntry (:doc "|provide core APIs for Respo, many of them are elements. if expected element is not defined yet, use `create-element :tag-name ...` to use it dynamically.\n")
         :code $ quote
@@ -1185,8 +1186,9 @@
           :examples $ []
         |create-style! $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn create-style! (style-name rules)
+            defn create-style! (style-name rules) (assert-type style-name :string)
               assert "\"expected rules in map" $ map? rules
+              hint-fn $ return-type :string
               if (contains? @*style-caches style-name)
                 if
                   = rules $ get-in @*style-caches ([] style-name :rules)
@@ -1281,7 +1283,8 @@
           :examples $ []
         |render-css-block $ %{} :CodeEntry (:doc "|Generates a CSS string block from a map of style rules.")
           :code $ quote
-            defn render-css-block (style-name rules)
+            defn render-css-block (style-name rules) (assert-type style-name :string) (assert-type rules :map)
+              hint-fn $ return-type :string
               -> rules
                 .map-list $ fn (pair)
                   let
@@ -1307,14 +1310,14 @@
       :defs $ {}
         |update-states $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn update-states (store cursor new-state)
+            defn update-states (store cursor new-state) (assert-type store :map) (assert-type cursor :list)
               assoc-in store
                 concat ([] :states) cursor $ [] :data
                 , new-state
           :examples $ []
         |update-states-kv $ %{} :CodeEntry (:doc "|a quick dirty trick to partially update component state.\n\nnotice: need to handle empty state manually.")
           :code $ quote
-            defn update-states-kv (store cursor k v)
+            defn update-states-kv (store cursor k v) (assert-type store :map) (assert-type cursor :list)
               update-in store
                 concat ([] :states) cursor $ [] :data
                 fn (s)
@@ -1323,7 +1326,7 @@
           :examples $ []
         |update-states-merge $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn update-states-merge (store cursor state0 changes)
+            defn update-states-merge (store cursor state0 changes) (assert-type store :map) (assert-type cursor :list) (assert-type state0 :map) (assert-type changes :map)
               update-in store
                 concat ([] :states) cursor $ [] :data
                 fn (s)
@@ -1703,7 +1706,7 @@
           :examples $ []
         |style->string $ %{} :CodeEntry (:doc "|this functions is used inside DOM operations, inserting styles into a `<style>` element. to render to HTML, use `style->html` instead")
           :code $ quote
-            defn style->string (styles)
+            defn style->string (styles) (assert-type styles :list)
               apply-args ("\"" styles)
                 fn (acc xs)
                   if (empty? xs) acc $ let
@@ -2289,6 +2292,7 @@
         |component? $ %{} :CodeEntry (:doc "|check if value is a Respo component. returns true for component records, false otherwise.")
           :code $ quote
             defn component? (x)
+              hint-fn $ return-type :bool
               if (record? x) (&record:matches? schema/Component x) false
           :examples $ []
             quote $ component?
@@ -2299,11 +2303,13 @@
         |effect? $ %{} :CodeEntry (:doc "|Checks if the given value is a Respo Effect record.")
           :code $ quote
             defn effect? (x)
+              hint-fn $ return-type :bool
               and (record? x) (&record:matches? schema/Effect x)
           :examples $ []
         |element? $ %{} :CodeEntry (:doc "|check if value is a Respo element. returns true for element records, false otherwise.")
           :code $ quote
             defn element? (x)
+              hint-fn $ return-type :bool
               if (record? x) (&record:matches? schema/Element x) false
           :examples $ []
             quote $ element?
@@ -2314,6 +2320,7 @@
         |listener? $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn listener? (item)
+              hint-fn $ return-type :bool
               and (record? item)
                 = :RespoListener $ &record:get-name item
           :examples $ []
@@ -2369,7 +2376,7 @@
           :examples $ []
         |text-width $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn text-width (content font-size font-family)
+            defn text-width (content font-size font-family) (assert-type content :string) (assert-type font-size :number) (assert-type font-family :string)
               if (some? shared-canvas-context)
                 do
                   set! (.-font shared-canvas-context) (str font-size "|px " font-family)
@@ -2385,7 +2392,8 @@
       :defs $ {}
         |dashed->camel $ %{} :CodeEntry (:doc "|convert dashed-case CSS property names to camelCase. e.g. \"background-color\" -> \"backgroundColor\".")
           :code $ quote
-            defn dashed->camel (x)
+            defn dashed->camel (x) (assert-type x :string)
+              hint-fn $ return-type :string
               .!replace x dashed-letter-pattern $ fn (cc pos prop)
                 .!toUpperCase $ aget cc 1
           :examples $ []
@@ -2399,6 +2407,7 @@
         |event->edn $ %{} :CodeEntry (:doc "|Converts a native DOM event into a Respo EDN event structure.")
           :code $ quote
             defn event->edn (event) (; js/console.log "\"simplify event:" event)
+              hint-fn $ return-type :map
               ->
                 case-default (.-type event)
                   {}
@@ -2449,7 +2458,8 @@
             quote $ get-style-value 1 :opacity
         |hsl $ %{} :CodeEntry (:doc "|Generates HSL color string. Arguments: h, s (percent), l (percent), optional alpha (0-1).")
           :code $ quote
-            defn hsl (h s l ? arg)
+            defn hsl (h s l ? arg) (assert-type h :number) (assert-type s :number) (assert-type l :number)
+              hint-fn $ return-type :string
               let
                   a $ either arg 1
                 str "\"hsl(" h "\"," s "\"%," l "\"%," a "\")"
@@ -2459,6 +2469,7 @@
         |map-keyboard-event $ %{} :CodeEntry (:doc "|Extracts key information from a JavaScript KeyboardEvent.")
           :code $ quote
             defn map-keyboard-event (event)
+              hint-fn $ return-type :map
               {}
                 :key $ .-key event
                 :code $ .-code event
@@ -2559,6 +2570,7 @@
         |pick-event $ %{} :CodeEntry (:doc "|Extracts event listeners from a properties map. Handles both :on map and on-* keys.")
           :code $ quote
             defn pick-event (props)
+              hint-fn $ return-type :map
               if (nil? props) ({})
                 merge
                   either (&map:get props :on) ({})
@@ -2574,6 +2586,7 @@
         |val-exists? $ %{} :CodeEntry (:doc "|Predicate to check if a key-value pair has a non-nil value.")
           :code $ quote
             defn val-exists? (pair)
+              hint-fn $ return-type :bool
               some? $ last pair
           :examples $ []
         |val-of-first $ %{} :CodeEntry (:doc "|Extracts the value (second item) from the first entry of a list.")
