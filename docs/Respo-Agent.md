@@ -449,6 +449,8 @@ list-> $ {}
 
 ### 5. Styling Pattern
 
+**A. Dynamic Inline Styles (Style Maps)**
+
 ```cirru
 ; Define styles as maps
 def style-container $ {}
@@ -468,6 +470,52 @@ let
   extended $ merge base $ {} (:font-size 14)
   extended
 ```
+
+**B. Static CSS Styles with `defstyle` (Recommended for Performance)**
+
+`defstyle` is a macro that generates CSS classes and injects them into `<style>` tags. Use it for static styles that don't need runtime computation.
+
+```cirru
+; Import from respo.css
+ns my.namespace
+  :require (respo.css :refer $ defstyle)
+
+; Basic usage: & refers to current element
+defstyle style-button $ {}
+  |& $ {} (:padding "|8px 16px") (:border-radius "|4px")
+    :background-color $ hsl 200 80 50
+    :color "|white"
+
+; Pseudo-classes: :hover, :focus, :active, etc.
+defstyle style-link $ {}
+  |& $ {} (:color "|blue") (:text-decoration :none)
+  |&:hover $ {} (:text-decoration :underline)
+
+; Pseudo-elements: ::before, ::after
+defstyle style-text $ {}
+  |& $ {} (:font-size "|14px") (:line-height "|1.6")
+  |&::before $ {} (:content "|\"→ \"")
+
+; Media queries using 'contained
+defstyle style-responsive $ {}
+  |& $ {} (:font-family "|Avenir,Verdana")
+  |& $ {} ('contained "|@media only screen and (max-width: 600px)")
+    :background-color $ hsl 0 0 90
+
+; Usage in component (returns className string)
+div
+  {} $ :class-name style-button
+  <> "|Click Me"
+```
+
+**Key Points:**
+
+- `|&` refers to the current element (required)
+- Use string prefix `|` for CSS selectors like `|&:hover`, `|&::before`
+- `'contained` for media queries and container queries
+- `defstyle` generates unique class names automatically
+- Styles are injected into `<head>` before render
+- For SSR: read from `@*style-list-in-nodejs` to extract CSS
 
 **Testing Style to String Conversion:**
 
@@ -808,12 +856,10 @@ cr query ns namespace-name  # Check imports
 ### ⚠️ Critical Rules
 
 1. **NEVER directly edit `calcit.cirru` or `compact.cirru`** with text editors
-
    - Use `cr edit` commands instead
    - These are serialized AST structures, not human-readable code
 
 2. **ALWAYS use relative paths for documentation links**
-
    - Use `../` and `../../` for navigation
    - This allows easy file discovery for LLM tools
 

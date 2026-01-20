@@ -2,6 +2,37 @@
 
 本文档为 AI Agent 提供 Calcit 项目的操作指南。
 
+## 🚀 快速开始（新 LLM 必读）
+
+**核心原则：用命令行工具（不要直接编辑文件），用 search 定位（比逐层导航快 10 倍）**
+
+### 标准流程
+
+```bash
+# 搜索 → 修改 → 验证
+cr query search 'symbol' -f 'ns/def'                      # 1. 定位（输出：[3,2,1] in ...）
+cr tree replace 'ns/def' -p '3,2,1' --leaf -e 'new'     # 2. 修改
+cr tree show 'ns/def' -p '3,2,1'                          # 3. 验证（可选）
+```
+
+### 三种搜索方式
+
+```bash
+cr query search 'target' -f 'ns/def'                      # 搜索符号/字符串
+cr query search-expr 'fn (x)' -f 'ns/def' -l              # 搜索代码结构
+cr tree replace-leaf 'ns/def' --pattern 'old' --replacement 'new'  # 批量替换
+```
+
+### 效率对比
+
+| 操作       | 传统方法                | search 方法         | 效率     |
+| ---------- | ----------------------- | ------------------- | -------- |
+| 定位符号   | 逐层 `tree show` 10+ 步 | `query search` 1 步 | **10倍** |
+| 查找表达式 | 手动遍历代码            | `search-expr` 1 步  | **10倍** |
+| 批量重命名 | 手动找每处              | 自动列出所有位置    | **5倍**  |
+
+---
+
 ## ⚠️ 重要警告：禁止直接修改的文件
 
 以下文件**严格禁止使用文本替换或直接编辑**：
@@ -50,7 +81,10 @@ Calcit 程序使用 `cr` 命令：
   - 用于 CI/CD 或快速验证代码修改
 - `cr js -1` - 检查代码正确性，生成 JavaScript(不进入监听模式)
 - `cr js --check-only` - 检查代码正确性，不生成 JavaScript
-- `cr eval '<code>'` - 执行一段 Calcit 代码片段，用于快速验证写法
+- `cr eval '<code>' [--dep <module>...]` - 执行一段 Calcit 代码片段，用于快速验证写法
+  - `--dep` 参数可以加载 `~/.config/calcit/modules/` 中的模块（直接使用模块名）
+  - 示例：`cr eval 'echo 1' --dep calcit.std`
+  - 可多次使用 `--dep` 加载多个模块
 
 ### 查询子命令 (`cr query`)
 
@@ -78,7 +112,7 @@ Calcit 程序使用 `cr` 命令：
 - `cr query pkg` - 获取项目包名
 - `cr query config` - 读取项目配置（init_fn, reload_fn, version）
 - `cr query error` - 读取 .calcit-error.cirru 错误堆栈文件
-- `cr query modules` - 列出项目模块
+- `cr query modules` - 列出项目依赖的模块（来自 compact.cirru 配置）
 
 **渐进式代码探索（Progressive Disclosure）：**
 
@@ -103,52 +137,49 @@ Calcit 程序使用 `cr` 命令：
   - 返回：引用该定义的所有位置（带上下文预览）
   - 用于理解代码影响范围，重构前的影响分析
 
-**代码模式搜索：**
+**代码模式搜索（快速定位 ⭐⭐⭐）：**
 
-- `cr query search <pattern> [-f <namespace/definition>] [-l] [-d <depth>] [-p <start-path>]` - 搜索叶子节点（字符串）
-
-  - `<pattern>` - 位置参数，要搜索的字符串模式
-  - `-f` / `--filter` - 过滤到特定命名空间或定义（可选）
-  - `-l` / `--loose`：宽松匹配，包含模式（匹配所有包含该模式的叶子节点）
-  - `-d <depth>`：限制搜索深度（0 = 无限制）
-  - `-p` / `--start-path`：从指定路径开始搜索（逗号分隔的索引，如 `"3,2,1"`）
-    - 不指定时从根节点开始搜索整个定义
-    - 指定后只搜索该路径下的子树，适合在大型定义中缩小搜索范围
-  - 返回：匹配节点的完整路径 + 父级上下文预览
+- `cr query search <pattern> [-f <filter>] [-l]` - 搜索叶子节点（符号/字符串），比逐层导航快 10 倍
+  - `-f <filter>` - 过滤到特定命名空间或定义
+  - `-l / --loose`：宽松匹配，包含模式
+  - `-d <max-depth>`：限制搜索深度
+  - `-p <start-path>`：从指定路径开始搜索（如 `"3,2,1"`）
+  - 返回：完整路径 + 父级上下文，多个匹配时自动显示批量替换命令
   - 示例：
-    - `cr query search "println" -f app.main/main -l` - 在 main 函数中搜索包含 "println" 的节点
-    - `cr query search "div"` - 全局精确搜索 "div"
-    - `cr query search "btn" -f app.main/render -p "3,2" -l` - 从路径 [3,2] 开始搜索包含 "btn" 的节点
+    - `cr query search 'println' -f app.main/main!` - 精确搜索
+    - `cr query search 'comp-' -f app.ui/layout -l` - 模糊搜索（所有 comp- 开头）
+    - `cr query search 'task-id' -f app.comp/render` - 返回所有匹配位置并自动排序
 
-- `cr query search-pattern <pattern> [-f <namespace/definition>] [-l] [-j] [-d <depth>]` - 搜索结构模式
-  - `<pattern>` - 位置参数，Cirru one-liner 或 JSON 数组模式
-  - `-f` / `--filter` - 过滤到特定命名空间或定义（可选）
-  - `-l` / `--loose`：宽松匹配，查找包含连续子序列的结构
-  - `-j` / `--json`：将模式解析为 JSON 数组而非 Cirru
-  - 返回：匹配节点的路径 + 父级上下文
+**高级结构搜索（搜索代码结构 ⭐⭐⭐）：**
+
+- `cr query search-expr <pattern> [-f <filter>] [-l] [-j]` - 搜索结构表达式（List）
+  - `-l / --loose`：宽松匹配，查找包含连续子序列的结构
+  - `-j / --json`：将模式解析为 JSON 数组
   - 示例：
-    - `cr query search-pattern "+ a b" -f app.util/add` - 查找精确表达式
-    - `cr query search-pattern '["defn"]' -f app.main/main -j -l` - 查找所有函数定义
+    - `cr query search-expr 'fn (x)' -f app.main/process -l` - 查找函数定义
+    - `cr query search-expr '>> state task-id'` - 查找状态访问
+    - `cr query search-expr 'memof1-call-by' -l` - 查找记忆化调用
 
-**搜索结果格式：**
+**搜索结果格式：** `[索引1,索引2,...] in 父级上下文`，可配合 `cr tree show <ns/def> -p '<path>'` 查看节点。**修改代码时优先用 search 命令，比逐层导航快 10 倍。**
 
-- 输出格式：`[路径] in 父级上下文`
-- 路径格式：`[索引1,索引2,...]` 表示从根节点到匹配节点的路径
-- 可配合 `cr tree show <target> -p "<path>"` 查看具体节点内容
+### LLM 辅助：动态方法提示
+
+- `&inspect-class-methods` - 打印某个值对应 class 的方法清单（不改变原值）
+  - 用法：`(&inspect-class-methods value |optional note)`
+  - 用途：帮助 LLM 发现动态类型的方法与 proc 签名信息（不是测试/验证用途）
+  - 适合在 pipeline 中插入，快速查看方法、参数、命名空间和 proc 类型信息
 
 ### 文档子命令 (`cr docs`)
 
 查询 Calcit 语言文档（guidebook）：
 
 - `cr docs search <keyword> [-c <num>] [-f <filename>]` - 按关键词搜索文档内容
-
   - `-c <num>` - 显示匹配行的上下文行数（默认 5）
   - `-f <filename>` - 按文件名过滤搜索结果
   - 输出：匹配行及其上下文，带行号和高亮
-  - 示例：`cr docs search "macro" -c 10` 或 `cr docs search "defn" -f macros.md`
+  - 示例：`cr docs search 'macro' -c 10` 或 `cr docs search 'defn' -f macros.md`
 
 - `cr docs read <filename> [-s <start>] [-n <lines>]` - 阅读指定文档
-
   - `-s <start>` - 起始行号（默认 0）
   - `-n <lines>` - 读取行数（默认 80）
   - 输出：文档内容、当前范围、是否有更多内容
@@ -191,6 +222,16 @@ Calcit 程序使用 `cr` 命令：
   - 显示相对路径列表
 - `caps` - 安装/更新依赖
 
+**查看已安装模块：**
+
+```bash
+# 列出 ~/.config/calcit/modules/ 下所有已安装的模块
+ls ~/.config/calcit/modules/
+
+# 查看当前项目配置的模块依赖
+cr query modules
+```
+
 ### 精细代码树操作 (`cr tree`)
 
 ⚠️ **关键警告：路径索引动态变化**
@@ -205,11 +246,16 @@ Calcit 程序使用 `cr` 命令：
 
 **主要操作：**
 
-- `cr tree show <ns/def> -p "<path>" [-j]` - 查看节点
+- `cr tree show <ns/def> -p '<path>' [-j]` - 查看节点
   - 默认输出：节点类型、Cirru 预览、子节点索引列表、操作提示
   - `-j` / `--json`：同时输出 JSON 格式（用于程序化处理）
   - 推荐：直接查看 Cirru 格式即可，通常不需要 JSON
 - `cr tree replace` - 替换节点
+- `cr tree replace-leaf` - 查找并替换所有匹配的 leaf 节点（无需指定路径）
+  - `--pattern <pattern>` - 要搜索的模式（精确匹配 leaf 节点）
+  - `--replacement <value>` - 替换值（默认作为 leaf 节点处理）
+  - 自动遍历整个定义，一次性替换所有匹配项
+  - 示例：`cr tree replace-leaf 'ns/def' --pattern 'old-name' --replacement 'new-name'`
 - `cr tree delete` - 删除节点
 - `cr tree insert-before/after` - 插入相邻节点
 - `cr tree insert-child/append-child` - 插入子节点
@@ -222,31 +268,84 @@ Calcit 程序使用 `cr` 命令：
 - `--leaf` - 强制作为 leaf 节点（符号或字符串）
 - `-j '<json>'` / `-f <file>` / `-s` (stdin)
 
-**推荐工作流：**
+**推荐工作流（高效定位 ⭐⭐⭐）：**
 
 ```bash
-# 1. 搜索定位
-cr query search "target" -f namespace/def -l
+# ===== 方案 A：单点修改（精确定位） =====
 
-# 2. 确认节点（命令会显示子节点和路径）
-cr tree show namespace/def -p "<path>"
+# 1. 快速定位目标节点（一步到位）
+cr query search 'target-symbol' -f namespace/def
+# 输出：[3,2,5,1] in (fn (x) target-symbol ...)
 
-# 3. 执行修改（命令会显示 Before/After 和验证提示）
-cr tree replace namespace/def -p "<path>" --leaf -e '<value>'
+# 2. 直接修改（路径已知）
+cr tree replace namespace/def -p '3,2,5,1' --leaf -e 'new-symbol'
 
-# 4. 批量修改：从后往前或重新搜索
-cr tree delete namespace/def -p "3,2,3"  # 先删大索引
-cr tree delete namespace/def -p "3,2,2"
+# 3. 验证结果（可选）
+cr tree show namespace/def -p '3,2,5,1'
+
+
+# ===== 方案 B：批量重命名（多处修改） =====
+
+# 1. 搜索所有匹配位置
+cr query search 'old-name' -f namespace/def
+# 自动显示：4 处匹配，已按路径从大到小排序
+# [3,2,5,8] [3,2,5,2] [3,1,0] [2,1]
+
+# 2. 按提示从后往前修改（避免路径变化）
+cr tree replace namespace/def -p '3,2,5,8' --leaf -e 'new-name'
+cr tree replace namespace/def -p '3,2,5,2' --leaf -e 'new-name'
+# ... 继续按序修改
+
+# 或：一次性替换所有匹配项
+cr tree replace-leaf namespace/def --pattern 'old-name' --replacement 'new-name'
+
+
+# ===== 方案 C：结构搜索（查找表达式） =====
+
+# 1. 搜索包含特定模式的表达式
+cr query search-expr "fn (task)" -f namespace/def -l
+# 输出：[3,2,2,5,2,4,1] in (map $ fn (task) ...)
+
+# 2. 查看完整结构（可选）
+cr tree show namespace/def -p '3,2,2,5,2,4,1'
+
+# 3. 修改整个表达式或子节点
+cr tree replace namespace/def -p '3,2,2,5,2,4,1,2' -e 'let ((x 1)) (+ x task)'
 ```
 
 **关键技巧：**
 
-- 使用 `cr query search` 快速定位路径
-- `cr tree show` 输出会标注每个子节点的索引
-- 遇到路径错误时，命令会自动显示最长有效路径和可用子节点
-- 所有修改操作都会显示 Preview 和 Verify 命令
+- **优先使用 `search` 系列命令**：比逐层导航快 10+ 倍，一步直达目标
+- **路径格式**：`"3,2,1"` 表示第3个子节点 → 第2个子节点 → 第1个子节点
+- **批量修改自动提示**：搜索找到多处时，自动显示路径排序和批量替换命令
+- **路径动态变化**：删除/插入后，同级后续索引会变化，按提示从后往前操作
+- 所有命令都会显示 Next steps 和操作提示
 
-详细参数和示例使用 `cr tree <command> --help` 查看。
+**结构化变更示例：**
+
+这些高级操作允许你在修改时引用原始节点及其内部结构：
+
+- **包裹节点**（使用 `cr tree wrap` 或 `cr tree replace` 的 `--refer-original`）：
+
+  ```bash
+  # 将路径 "3,2" 的节点包裹在 println 中
+  cr tree wrap ns/def -p '3,2' -e 'println $$$$' --refer-original '$$$$'
+  ```
+
+- **重构并复用原子节点**（使用 `--refer-inner-branch`）：
+  - 假设原节点是 `(+ 1 2)` (路径 "3,1")，其子节点索引 1 是 `1`，索引 2 是 `2`
+  - 将其重构为 `(* 2 10)`：
+
+  ```bash
+  cr tree replace ns/def -p '3,1' -e '(* #### 10)' --refer-inner-branch '2' --refer-inner-placeholder '####'
+  ```
+
+- **多处重用原始节点**：
+  ```bash
+  # 将节点 x 变为 (+ x x)
+  cr tree replace ns/def -p '2' -e '(+ $ $)' --refer-original '$'
+  ```
+  详细参数和示例使用 `cr tree <command> --help` 查看。
 
 ### 代码编辑 (`cr edit`)
 
@@ -396,6 +495,36 @@ send-event! $ [] :clipboard/read text
 send-event! $ :: :clipboard/read text
 ```
 
+### 类型标注与检查
+
+Calcit 支持可选的类型标注，用于开发时的类型检查。
+
+#### 函数参数类型 (`assert-type`)
+
+```cirru
+defn calculate-total (items discount)
+  assert-type items :list
+  assert-type discount :number
+  ; let 绑定中的变量会自动推断类型
+  let
+      sum $ foldl items 0 &+
+    * sum $ - 1 discount
+```
+
+#### 函数返回类型 (`hint-fn`)
+
+```cirru
+defn add-numbers (a b)
+  assert-type a :number
+  assert-type b :number
+  hint-fn $ return-type :number
+  &+ a b
+```
+
+**常见类型：** `:number` `:string` `:bool` `:list` `:map` `:set` `:tuple` `:keyword` `:nil`
+
+**验证类型：** `cr --check-only` 或 `cr ir -1` 查看 IR 中的类型信息
+
 ### 其他易错点
 
 比较容易犯的错误：
@@ -516,8 +645,8 @@ cr --check-only    # 仅语法检查
 - `cr query examples <ns/def>` - 查看示例代码
 - `cr query find <name>` - 跨命名空间搜索符号
 - `cr query usages <ns/def>` - 查找定义的使用位置
-- `cr query search <ns/def> -p <pattern>` - 搜索叶子节点
-- `cr query search-pattern <ns/def> -p <pattern>` - 搜索结构模式
+- `cr query search <pattern> [-f <ns/def>]` - 搜索叶子节点
+- `cr query search-expr <pattern> [-f <ns/def>]` - 搜索结构表达式
 - `cr query error` - 查看最近的错误堆栈
 
 ---
@@ -535,8 +664,8 @@ cr edit def app.core/multiply -e 'defn multiply (x y) (* x y)'
 # 添加新函数（命令会提示 Next steps）
 cr edit def 'app.core/multiply' -e 'defn multiply (x y) (* x y)'
 
-# 替换整个定义（-p "" 表示根路径）
-cr tree replace 'app.core/multiply' -p "" -e 'defn multiply (x y z) (* x y z)'
+# 替换整个定义（-p '' 表示根路径）
+cr tree replace 'app.core/multiply' -p '' -e 'defn multiply (x y z) (* x y z)'
 
 # 更新文档和示例
 cr edit doc 'app.core/multiply' '乘法函数，返回两个数的积'
@@ -550,10 +679,10 @@ cr edit add-example 'app.core/multiply' -e 'multiply 5 6'
 cr query search '<pattern>' -f 'ns/def' -l
 
 # 2. 查看节点（输出会显示索引和操作提示）
-cr tree show 'ns/def' -p "<path>"
+cr tree show 'ns/def' -p '<path>'
 
 # 3. 执行替换（会显示 diff 和验证命令）
-cr tree replace 'ns/def' -p "<path>" --leaf -e '<value>'
+cr tree replace 'ns/def' -p '<path>' --leaf -e '<value>'
 
 # 4. 检查结果
 cr query error
@@ -588,7 +717,7 @@ cr edit imports app.main -j '[["app.lib", ":as", "lib"], ["app.util", ":refer", 
 
 - **从后往前操作**（推荐）：先删大索引，再删小索引
 - **单次操作后重新搜索**：每次修改立即用 `cr query search` 更新路径
-- **整体重写**：用 `cr tree replace -p ""` 替换整个定义
+- **整体重写**：用 `cr tree replace -p ''` 替换整个定义
 
 命令会在路径错误时提示最长有效路径和可用子节点。
 
@@ -617,16 +746,16 @@ cr edit imports app.main -j '[["app.lib", ":as", "lib"], ["app.util", ":refer", 
 
 ```bash
 # ✅ 替换表达式
-cr tree replace app.main/fn -p "2" -e 'println |hello'
+cr tree replace app.main/fn -p '2' -e 'println |hello'
 
 # ✅ 替换 leaf（推荐 --leaf）
-cr tree replace app.main/fn -p "2,0" --leaf -e 'new-symbol'
+cr tree replace app.main/fn -p '2,0' --leaf -e 'new-symbol'
 
 # ✅ 替换字符串 leaf
-cr tree replace app.main/fn -p "2,1" --leaf -e '|new text'
+cr tree replace app.main/fn -p '2,1' --leaf -e '|new text'
 
 # ❌ 避免：用 -e 传单个 token（会变成 list）
-cr tree replace app.main/fn -p "2,0" -e 'symbol'  # 结果：["symbol"]
+cr tree replace app.main/fn -p '2,0' -e 'symbol'  # 结果：["symbol"]
 ```
 
 ### 3. Cirru 字符串和数据类型 ⭐⭐
@@ -664,30 +793,43 @@ send-to-component! $ :: :clipboard/read text
 
 ### 4. 推荐工作流程
 
-**基本流程（命令会显示子节点索引、Next steps、批量重命名提示）：**
+**基本流程（search 快速定位 ⭐⭐⭐）：**
 
 ```bash
-# 1. 搜索定位
-cr query search '<pattern>' -f 'ns/def' -l
+# 1. 快速定位（比逐层导航快10倍）
+cr query search 'target' -f 'ns/def'           # 或 search-expr 'fn (x)' -l 搜索结构
 
-# 2. 查看节点（会显示索引和操作提示）
-cr tree show 'ns/def' -p "<path>"
+# 2. 执行修改（会显示 diff 和验证命令）
+cr tree replace 'ns/def' -p '<path>' --leaf -e '<value>'
 
-# 3. 执行修改（会显示 diff 和验证命令）
-cr tree replace 'ns/def' -p "<path>" --leaf -e '<value>'
-
-# 4. 增量触发更新（推荐）
+# 3. 增量更新（推荐）
 cr edit inc --changed ns/def
 # 等待 ~300ms 后检查
 cr query error
-
-# 5. 如果结果不符合预期，使用全量编译
-cr -1 js  # 或 cr -1（解释执行模式）
 ```
 
-**批量修改提示：** 命令会自动检测多匹配场景，显示从大到小的路径排序和重要警告。
+**新手提示：**
 
-**增量更新优势：** 快速反馈、保持 watcher 运行、精确控制变更范围（详见"增量触发更新"章节）
+- 不知道目标在哪？用 `search` 或 `search-expr` 快速找到所有匹配
+- 想了解代码结构？用 `tree show` 逐层探索
+- 需要批量重命名？搜索后按提示从大到小路径依次修改
+- 不确定修改是否正确？每步后用 `tree show` 验证
+
+### 5. Shell 特殊字符转义 ⭐⭐
+
+Calcit 函数名中的 `?`, `->`, `!` 等字符在 bash/zsh 中有特殊含义，需要用单引号包裹：
+
+```bash
+# ❌ 错误
+cr query def app.main/valid?
+cr eval '-> x (+ 1) (* 2)'
+
+# ✅ 正确
+cr query def 'app.main/valid?'
+cr eval 'thread-first x (+ 1) (* 2)'  # 用 thread-first 代替 ->
+```
+
+**建议：** 命令行中优先使用英文名称（`thread-first` 而非 `->`），更清晰且无需转义。
 
 ---
 
