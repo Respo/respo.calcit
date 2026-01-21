@@ -571,7 +571,10 @@
       :defs $ {}
         |=< $ %{} :CodeEntry (:doc "|insert a tiny space, horizontally or verticaly.\n\n- `8 nil` for horizontal width 8px,\n- `nil 8` for vertical height 8px.\n")
           :code $ quote
-            defn =< (w x) (comp-space w x)
+            defn =< (w x)
+              assert-type w $ :: :optional :number
+              assert-type x $ :: :optional :number
+              comp-space w x
           :examples $ []
             quote $ =< 8 nil
             quote $ =< nil 16
@@ -783,7 +786,9 @@
             quote $ >> states :task-a
         |a $ %{} :CodeEntry (:doc "|Creates HTML link element (anchor tag).\n\nParameters:\n  props - Attribute map, can include standard HTML attributes like href, target, class-name, etc.\n  & children - Variable arguments for child elements, typically link display text or other elements\n\nReturns:\n  Created link element component\n\nUsed to create hyperlinks, supports all standard HTML link attributes.")
           :code $ quote
-            defn a (props & children) (assert-type props :map) (create-element :a props & children)
+            defn a (props & children)
+              assert-type props $ :: :optional :map
+              create-element :a props & children
           :examples $ []
             quote $ a
               {} (:href |https://example.com) (:inner-text "|Visit Example")
@@ -802,7 +807,8 @@
                 {} $ :margin |0
         |button $ %{} :CodeEntry (:doc "|Renders a <button> element. Wrapper around create-element.")
           :code $ quote
-            defn button (props & children) (assert-type props :map)
+            defn button (props & children)
+              assert-type props $ :: :optional :map
               create-element :button props & $ map children confirm-child
           :examples $ []
             quote $ button
@@ -836,7 +842,8 @@
           :examples $ []
         |create-element $ %{} :CodeEntry (:doc "|create a virtual DOM element with tag name, properties and children. used internally by element macros like div, span, etc.")
           :code $ quote
-            defn create-element (tag-name props & children) (assert-type tag-name :keyword) (assert-type props :map)
+            defn create-element (tag-name props & children) (assert-type tag-name :keyword)
+              assert-type props $ :: :optional :map
               ; assert
                 str "|For rendering lists, please use list-> , got: " $ to-lispy-string children
                 and
@@ -863,7 +870,9 @@
               <> |Home
         |create-list-element $ %{} :CodeEntry (:doc "|Creates a virtual DOM element for list rendering. Arguments: tag-name, props, child-map (map of key -> child).")
           :code $ quote
-            defn create-list-element (tag-name props child-map) (assert-type tag-name :keyword) (assert-type props :map) (assert-type child-map :map)
+            defn create-list-element (tag-name props child-map) (assert-type tag-name :keyword)
+              assert-type props $ :: :optional :map
+              assert-type child-map :map
               let
                   attrs $ pick-attrs props
                   styles $ -> props (:style)
@@ -945,7 +954,9 @@
           :examples $ []
         |div $ %{} :CodeEntry (:doc "|create a div element with properties and children. first argument is a hashmap for properties like :class-name, :style, :on. rest arguments are children elements.")
           :code $ quote
-            defn div (props & children) (assert-type props :map) (create-element :div props & children)
+            defn div (props & children)
+              assert-type props $ :: :optional :map
+              create-element :div props & children
           :examples $ []
             quote $ div ({}) (<> |text)
             quote $ div
@@ -984,15 +995,21 @@
           :examples $ []
         |h1 $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn h1 (props & children) (assert-type props :map) (create-element :h1 props & children)
+            defn h1 (props & children)
+              assert-type props $ :: :optional :map
+              create-element :h1 props & children
           :examples $ []
         |h2 $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn h2 (props & children) (assert-type props :map) (create-element :h2 props & children)
+            defn h2 (props & children)
+              assert-type props $ :: :optional :map
+              create-element :h2 props & children
           :examples $ []
         |h3 $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn h3 (props & children) (assert-type props :map) (create-element :h3 props & children)
+            defn h3 (props & children)
+              assert-type props $ :: :optional :map
+              create-element :h3 props & children
           :examples $ []
         |h4 $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -1025,13 +1042,17 @@
           :examples $ []
         |input $ %{} :CodeEntry (:doc "|Creates HTML input element (input tag).\n\nParameters:\n  props - Attribute map, can include standard HTML attributes and event handlers like type, value, placeholder, on-input, etc.\n  & children - Variable arguments for child elements, usually empty since input is self-closing\n\nReturns:\n  Created input element component\n\nUsed to create various form input controls, supports text, password, number and other input types.")
           :code $ quote
-            defn input (props & children) (assert-type props :map) (create-element :input props & children)
+            defn input (props & children)
+              assert-type props $ :: :optional :map
+              create-element :input props & children
           :examples $ []
             quote $ input
               {} (:type |text) (:placeholder "|Enter your name")
         |li $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn li (props & children) (assert-type props :map) (create-element :li props & children)
+            defn li (props & children)
+              assert-type props $ :: :optional :map
+              create-element :li props & children
           :examples $ []
         |link $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -1039,7 +1060,10 @@
           :examples $ []
         |list-> $ %{} :CodeEntry (:doc "|Renders a list of items inside a <div>. Uses key reconciliation for efficient updates.")
           :code $ quote
-            defn list-> (props children) (create-list-element :div props children)
+            defn list-> (props children)
+              assert-type props $ :: :optional :map
+              assert-type children :map
+              create-list-element :div props children
           :examples $ []
             quote $ list-> ({})
               [] $ [] :a
@@ -1062,7 +1086,9 @@
             quote $ mount-app! mount-target (comp-app) *dispatch-fn
         |ol $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn ol (props & children) (assert-type props :map) (create-element :ol props & children)
+            defn ol (props & children)
+              assert-type props $ :: :optional :map
+              create-element :ol props & children
           :examples $ []
         |option $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -1070,11 +1096,15 @@
           :examples $ []
         |p $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn p (props & children) (assert-type props :map) (create-element :p props & children)
+            defn p (props & children)
+              assert-type props $ :: :optional :map
+              create-element :p props & children
           :examples $ []
         |pre $ %{} :CodeEntry (:doc "|Renders a <pre> element. Wrapper around create-element.")
           :code $ quote
-            defn pre (props & children) (assert-type props :map) (create-element :pre props & children)
+            defn pre (props & children)
+              assert-type props $ :: :optional :map
+              create-element :pre props & children
           :examples $ []
             quote $ pre
               {} $ :style
@@ -1124,11 +1154,15 @@
           :examples $ []
         |select $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn select (props & children) (assert-type props :map) (create-element :select props & children)
+            defn select (props & children)
+              assert-type props $ :: :optional :map
+              create-element :select props & children
           :examples $ []
         |span $ %{} :CodeEntry (:doc "|create a span element with properties and children. first argument is a hashmap for properties, rest arguments are children elements.")
           :code $ quote
-            defn span (props & children) (assert-type props :map) (create-element :span props & children)
+            defn span (props & children)
+              assert-type props $ :: :optional :map
+              create-element :span props & children
           :examples $ []
             quote $ span ({}) (<> |text)
             quote $ span
@@ -1149,7 +1183,8 @@
               {} $ :innerHTML "|body { margin: 0; padding: 0; }"
         |textarea $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn textarea (props & children) (assert-type props :map)
+            defn textarea (props & children)
+              assert-type props $ :: :optional :map
               create-element :textarea props & $ map children confirm-child
           :examples $ []
         |title $ %{} :CodeEntry (:doc |)
@@ -1158,7 +1193,9 @@
           :examples $ []
         |ul $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn ul (props & children) (assert-type props :map) (create-element :ul props & children)
+            defn ul (props & children)
+              assert-type props $ :: :optional :map
+              create-element :ul props & children
           :examples $ []
       :ns $ %{} :CodeEntry (:doc "|provide core APIs for Respo, many of them are elements. if expected element is not defined yet, use `create-element :tag-name ...` to use it dynamically.\n")
         :code $ quote

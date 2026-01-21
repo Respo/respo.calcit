@@ -1,9 +1,9 @@
 {
   "dependencies": {
-    "@calcit/procs": "0.10.10"
+    "@calcit/procs": "0.10.11"
   },
   "scripts": {
-    "test": "cr --once --emit-js --init-fn=respo.test.main/main! && node test.mjs"
+    "test": "cr --once --init-fn 'respo.test.main/main!' js && node test.mjs"
   },
   "devDependencies": {
     "bottom-tip": "^0.1.5",
