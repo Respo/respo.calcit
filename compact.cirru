@@ -1,6 +1,6 @@
 
 {} (:about "|file is generated - never edit directly; learn cr edit/tree workflows before changing") (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.26)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.27)
     :modules $ [] |memof/ |lilac/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -711,14 +711,11 @@
               assert "\"element cannot be nil" $ some? element
               assert "\"coord cannot be nil" $ some? coord
               let
-                  target-element $ let
+                  target-element $ loop
                       m $ get-markup-at element coord
-                    apply-args
-                        get-markup-at element coord
-                      fn (m)
-                        if (component? m)
-                          recur $ :tree m
-                          , m
+                    if (component? m)
+                      recur $ :tree m
+                      , m
                   element-exists? $ some? target-element
                 ; println "|target element:" $ to-lispy-string event-name
                 if
@@ -1437,20 +1434,21 @@
                   size $ count child-keys
                   last-pos $ dec size
                 if (> size 1)
-                  apply-args (0 1)
-                    fn (p q)
-                      if
-                        &= (nth child-keys p) (nth child-keys q)
-                        do
-                          eprintln "\"duplicated key" $ nth child-keys p
-                          , true
-                        if (&< q last-pos)
-                          recur p $ inc q
-                          let
-                              p-next $ inc p
-                            if (&< p-next last-pos)
-                              recur p-next $ inc p-next
-                              , false
+                  loop
+                      p 0
+                      q 1
+                    if
+                      &= (nth child-keys p) (nth child-keys q)
+                      do
+                        eprintln "\"duplicated key" $ nth child-keys p
+                        , true
+                      if (&< q last-pos)
+                        recur p $ inc q
+                        let
+                            p-next $ inc p
+                          if (&< p-next last-pos)
+                            recur p-next $ inc p-next
+                            , false
           :examples $ []
         |find-children-diffs $ %{} :CodeEntry (:doc "|Compares lists of child elements to find structural differences.")
           :code $ quote
@@ -1525,7 +1523,8 @@
                           first-new-entry $ first new-children
                           new-n-coord $ conj n-coord index
                         ; println |index: xi yi
-                        if (&<= xi yi)
+                        if
+                          not $ &= 1 (&compare xi yi)
                           let
                               new-element $ val-of-first new-children
                               new-coord $ conj coord y1
@@ -1744,17 +1743,18 @@
         |style->string $ %{} :CodeEntry (:doc "|this functions is used inside DOM operations, inserting styles into a `<style>` element. to render to HTML, use `style->html` instead")
           :code $ quote
             defn style->string (styles) (assert-type styles :list)
-              apply-args ("\"" styles)
-                fn (acc xs)
-                  if (empty? xs) acc $ let
-                      entry $ first xs
-                      k $ first entry
-                    if (symbol? k)
-                      recur acc $ rest xs
-                      let
-                          style-name $ turn-string k
-                          v $ get-style-value (last entry) style-name
-                        recur (str acc style-name |: v |;) (rest xs)
+              loop
+                  acc "\""
+                  xs styles
+                if (empty? xs) acc $ let
+                    entry $ first xs
+                    k $ first entry
+                  if (symbol? k)
+                    recur acc $ rest xs
+                    let
+                        style-name $ turn-string k
+                        v $ get-style-value (last entry) style-name
+                      recur (str acc style-name |: v |;) (rest xs)
           :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
@@ -1782,17 +1782,16 @@
                               method (:args effect) ([] :mount target at-place?)
                     recur collect! next-coord n-coord (:tree tree) false
                 (element? tree)
-                  apply-args
-                      :children tree
-                      , 0
-                    fn (children idx)
-                      when
-                        not $ empty? children
-                        let
-                            pair $ first children
-                            k $ first pair
-                          collect-mounting collect! (conj coord k) (conj n-coord idx) (last pair) false
-                        recur (rest children) (inc idx)
+                  loop
+                      children $ :children tree
+                      idx 0
+                    when
+                      not $ empty? children
+                      let
+                          pair $ first children
+                          k $ first pair
+                        collect-mounting collect! (conj coord k) (conj n-coord idx) (last pair) false
+                      recur (rest children) (inc idx)
                 true $ js/console.warn "\"Unknown entry for mounting:" tree
           :examples $ []
         |collect-unmounting $ %{} :CodeEntry (:doc "|internal function to collect unmounting effects from component tree. recursively traverses the virtual DOM and collects effect:unmount callbacks.")
