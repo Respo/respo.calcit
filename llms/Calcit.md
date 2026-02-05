@@ -254,9 +254,13 @@ cr query modules
 - `cr tree replace` - 替换节点
 - `cr tree replace-leaf` - 查找并替换所有匹配的 leaf 节点（无需指定路径）
   - `--pattern <pattern>` - 要搜索的模式（精确匹配 leaf 节点）
-  - `--replacement <value>` - 替换值（默认作为 leaf 节点处理）
+  - 使用 `-e, -f, -j` 等通用参数提供替换内容
   - 自动遍历整个定义，一次性替换所有匹配项
-  - 示例：`cr tree replace-leaf 'ns/def' --pattern 'old-name' --replacement 'new-name'`
+  - 示例：`cr tree replace-leaf 'ns/def' --pattern 'old-name' -e 'new-name' --leaf`
+- `cr tree target-replace` - 基于内容的唯一替换（无需指定路径，更安全 ⭐⭐⭐）
+  - `--pattern <pattern>` - 要搜索的模式（精确匹配 leaf 节点）
+  - 使用 `-e, -f, -j` 等通用参数提供替换内容
+  - 逻辑：自动查找叶子节点，若唯一则替换；若不唯一则报错并列出所有位置及修改命令建议。
 - `cr tree delete` - 删除节点
 - `cr tree insert-before/after` - 插入相邻节点
 - `cr tree insert-child/append-child` - 插入子节点
@@ -267,7 +271,9 @@ cr query modules
 
 - `-e '<code>'` - 内联代码（自动识别 Cirru/JSON）
 - `--leaf` - 强制作为 leaf 节点（符号或字符串）
-- `-j '<json>'` / `-f <file>` / `-s` (stdin)
+- `-j '<json>'` / `-f <file>`
+
+多行或者带特殊符号的表达式, 一可以在 `.calcit-snippets/` 创建临时文件, 然后用 `cr cirru parse` 验证语法, 最后用 `-f <file>` 提交, 从而减少错误率. 复杂表达式建议分段, 然后搭配 `cr tree target-replace` 命令来完成多阶段提交.
 
 **推荐工作流（高效定位 ⭐⭐⭐）：**
 
@@ -298,10 +304,19 @@ cr tree replace namespace/def -p '3,2,5,2' --leaf -e 'new-name'
 # ... 继续按序修改
 
 # 或：一次性替换所有匹配项
-cr tree replace-leaf namespace/def --pattern 'old-name' --replacement 'new-name'
+cr tree replace-leaf namespace/def --pattern 'old-name' -e 'new-name' --leaf
 
 
-# ===== 方案 C：结构搜索（查找表达式） =====
+# ===== 方案 C：基于内容的半自动替换（最推荐 ⭐⭐⭐） =====
+
+# 1. 尝试基于叶子节点内容直接替换
+cr tree target-replace namespace/def --pattern 'old-symbol' -e 'new-symbol' --leaf
+
+# 2. 如果存在多个匹配，命令会报错并给出详细指引（包含具体路径的 replace 命令建议）
+# 如果确定要全部替换，可改用 tree replace-leaf
+
+
+# ===== 方案 D：结构搜索（查找表达式） =====
 
 # 1. 搜索包含特定模式的表达式
 cr query search-expr "fn (task)" -f namespace/def -l
@@ -348,13 +363,43 @@ cr tree replace namespace/def -p '3,2,2,5,2,4,1,2' -e 'let ((x 1)) (+ x task)'
   ```
   详细参数和示例使用 `cr tree <command> --help` 查看。
 
+### 复杂表达式分段组装策略 (Incremental Assembly) ⭐⭐⭐
+
+当需要构造非常复杂的嵌套结构（例如递归循环、多级 `let` 或 `if`）时，直接通过 `-e` 传入单行 Cirru 代码容易遇到 shell 转义、括号对齐或长度限制等问题。推荐使用**分段占位组装**策略：
+
+1. **确立骨架**：先替换目标节点为一个带有占位符的简单 JSON 结构。
+
+   ```bash
+   cr tree replace ns/def -p '4,0' -j '["let", [["x", "1"]], "BODY"]'
+   ```
+
+2. **定位占位符**：使用 `tree show` 确认占位符的具体路径。
+
+   ```bash
+   cr tree show ns/def -p '4,0'
+   # 输出显示 "BODY" 在索引 2，即路径 [4,0,2]
+   ```
+
+3. **填充内容**：针对占位符路径进行下一层的精细替换。
+
+   ```bash
+   cr tree replace ns/def -p '4,0,2' -j '["if", ["=", "x", "1"], "TRUE_BRANCH", "FALSE_BRANCH"]'
+   ```
+
+4. **递归迭代**：重复上述步骤直到所有占位符（`TRUE_BRANCH`, `FALSE_BRANCH` 等）都被替换为最终逻辑。
+
+**优势：**
+
+- **精确性**：使用 JSON 格式 (`-j`) 可以完全避免 Cirru 缩进或括号解析的歧义。
+- **低风险**：每次只修改一小部分，出错时容易通过 `tree show` 快速定位。
+- **绕过限制**：解决某些终端对超长命令行参数的限制。
+
 ### 代码编辑 (`cr edit`)
 
-直接编辑 compact.cirru 项目代码，支持三种输入方式：
+直接编辑 compact.cirru 项目代码，支持两种输入方式：
 
 - `--file <path>` 或 `-f <path>` - 从文件读取（默认 Cirru 格式，使用 `-J` 指定 JSON）
 - `--json <string>` 或 `-j <string>` - 内联 JSON 字符串
-- `--stdin` 或 `-s` - 从标准输入读取（默认 Cirru 格式，使用 `-J` 指定 JSON）
 
 额外支持“内联代码”参数：
 
@@ -363,7 +408,7 @@ cr tree replace namespace/def -p '3,2,2,5,2,4,1,2' -e 'let ((x 1)) (+ x task)'
   - 如果输入“看起来像 JSON”（例如 `-e '"abc"'`，或 `-e '["a"]'` 这类 `[...]` 且包含 `"`），则会按 JSON 解析。
   - ⚠️ 当输入看起来像 JSON 但 JSON 不合法时，会直接报错（不会回退当成 Cirru one-liner）。
 
-对 `--file/--stdin` 输入，还支持以下“格式开关”（与 `-J/--json-input` 类似）：
+对 `--file` 输入，还支持以下“格式开关”（与 `-J/--json-input` 类似）：
 
 - `--leaf`：把输入当成 **leaf 节点**，直接使用 Cirru 符号或 `|text` 字符串，无需 JSON 引号。
   - 传入符号：`-e 'my-symbol'`
@@ -375,17 +420,18 @@ cr tree replace namespace/def -p '3,2,2,5,2,4,1,2' -e 'let ((x 1)) (+ x task)'
 
 - **JSON（单行）**：优先用 `-j '<json>'` 或 `-e '<json>'`（不需要 `-J`）。
 - **Cirru 单行表达式**：用 `-e '<expr>'`（`-e` 默认按 one-liner 解析）。
-- **Cirru 多行缩进**：用 `-f file.cirru` 或 `-s`（stdin）。
-- `-J/--json-input` 主要用于 **file/stdin** 读入 JSON（如 `-f code.json -J` 或 `-s -J`）。
+- **Cirru 多行缩进**：用 `-f file.cirru`。
+- `-J/--json-input` 主要用于 **file** 读入 JSON（如 `-f code.json -J`）。
 
 补充：`-e/--code` 只有在 `[...]` 内部包含 `"` 时才会自动按 JSON 解析（例如 `-e '["a"]'`）。
 像 `-e '[]'` / `-e '[ ]'` 会默认按 Cirru one-liner 处理；如果你需要“空 JSON 数组”，用显式 JSON：`-j '[]'`。
 
-如果你想在命令行里明确“这段就是 JSON”，请用 `-j '<json>'`（`-J` 是给 file/stdin 用的）。
+如果你想在命令行里明确“这段就是 JSON”，请用 `-j '<json>'`（`-J` 是给 file 用的）。
 
 **定义操作：**
 
 - `cr edit def <namespace/definition>` - 添加新定义（若已存在会报错，需用 `cr tree replace` 修改）
+- `cr edit mv <source> <target>` - 移动定义到另一个命名空间或重命名
 - `cr edit rm-def <namespace/definition>` - 删除定义
 - `cr edit doc <namespace/definition> '<doc>'` - 更新定义的文档
 - `cr edit examples <namespace/definition>` - 设置定义的示例代码（批量替换）
@@ -413,6 +459,7 @@ cr tree replace namespace/def -p '3,2,2,5,2,4,1,2' -e 'let ((x 1)) (+ x task)'
   - `--added <namespace/definition>` - 标记新增的定义
   - `--changed <namespace/definition>` - 标记修改的定义
   - `--removed <namespace/definition>` - 标记删除的定义
+  - TIP: 使用 `cr edit mv` 移动定义后，需手动执行 `cr edit inc --removed <source> --added <target>` 以更新 watcher。
   - `--added-ns <namespace>` - 标记新增的命名空间
   - `--removed-ns <namespace>` - 标记删除的命名空间
   - `--ns-updated <namespace>` - 标记命名空间导入变更
@@ -523,6 +570,7 @@ let
 
 - **紧凑模式（推荐）**：紧跟在参数列表后的类型标签。
 - **正式模式**：使用 `hint-fn`（通常放在函数体开头）。
+  - 泛型变量：`hint-fn (:: :generics 'T 'S)`
 
 验证示例：
 
@@ -535,6 +583,10 @@ let
     get-name $ fn (user)
       hint-fn $ return-type :string
       |demo
+    ; 泛型声明示例
+    id $ fn (x)
+      hint-fn (:: :generics 'T)
+      x
   add 1 2
 ```
 
@@ -585,7 +637,7 @@ let
   println $ get-name (%{} User (:name |Bob))
 ```
 
-**验证方法**：运行 `cr --check-only` 开启静态分析。
+**验证类型：** 运行或者编译时会先完成校验.
 
 ### 其他易错点
 
@@ -685,9 +737,6 @@ cr -1              # 重新执行程序
 
 # 或重启监听模式（Ctrl+C 停止后重启）
 cr        # 或 cr js
-
-# CI/CD 或脚本验证（不启动 watcher）
-cr --check-only    # 仅语法检查
 ```
 
 **增量更新优势：** 快速反馈、精确控制变更范围、watcher 保持运行状态
@@ -732,6 +781,9 @@ cr tree replace 'app.core/multiply' -p '' -e 'defn multiply (x y z) (* x y z)'
 # 更新文档和示例
 cr edit doc 'app.core/multiply' '乘法函数，返回两个数的积'
 cr edit add-example 'app.core/multiply' -e 'multiply 5 6'
+
+# 移动或重构定义
+cr edit mv 'app.core/multiply' 'app.util/multiply-numbers'
 ````
 
 **修改定义工作流（命令会显示子节点索引和 Next steps）：**
@@ -853,7 +905,17 @@ send-to-component! $ :: :clipboard/read text
 - **`::` (tuple)**: 事件、模式匹配、不可变数据结构
 - **`[]` (vector)**: DOM 元素列表、动态集合
 
-### 4. 推荐工作流程
+### 4. 输入大小限制 ⭐⭐⭐
+
+为了保证稳定性和处理速度，CLI 对单次输入的大小有限制。如果超过限制，系统会提示建议分段提交。
+
+- **Cirru One-liner (`-e / --code`)**: 字数上限 **1000**。
+- **JSON 格式 (`-j / --json`, `-J`, `-e`)**: 字数上限 **2000**。
+
+**大资源处理建议：**
+如果需要修改复杂的长函数，不要尝试一次性替换整个定义。应先构建主体结构，使用占位符（如 `?PLACEHOLDER_FEATURE`, 注意避免重复），然后通过 `cr query target-replace` 进行精准的分段替换.
+
+### 5. 推荐工作流程
 
 **基本流程（search 快速定位 ⭐⭐⭐）：**
 
@@ -877,7 +939,7 @@ cr query error
 - 需要批量重命名？搜索后按提示从大到小路径依次修改
 - 不确定修改是否正确？每步后用 `tree show` 验证
 
-### 5. Shell 特殊字符转义 ⭐⭐
+### 6. Shell 特殊字符转义 ⭐⭐
 
 Calcit 函数名中的 `?`, `->`, `!` 等字符在 bash/zsh 中有特殊含义，需要用单引号包裹：
 
