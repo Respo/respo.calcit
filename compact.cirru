@@ -1,6 +1,6 @@
 
 {} (:about "|file is generated - never edit directly; learn cr edit/tree workflows before changing") (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.27)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.28)
     :modules $ [] |memof/ |lilac/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -889,7 +889,9 @@
           :code $ quote
             defn decorate-defcomp (c name)
               update c :tree $ fn (tree)
-                if (&record:matches? tree schema/Element)
+                if
+                  and (record? tree)
+                    = (&record:struct tree) schema/Element
                   update tree :attrs $ fn (attrs)
                     conj attrs $ [] :data-comp name
                   , tree
@@ -1884,7 +1886,7 @@
                             child $ last entry
                           element->string child
                     str |< tag-name
-                      if (blank? props-in-string) "\"" "| " |
+                      if (blank? props-in-string) | "| "
                       , props-in-string |>
                         either text-inside $ join-str children |
                         , |</ tag-name |>
@@ -2130,16 +2132,20 @@
     |respo.schema $ %{} :FileEntry
       :defs $ {}
         |Component $ %{} :CodeEntry (:doc |)
-          :code $ quote (defrecord Component :name :effects :listeners :tree)
+          :code $ quote
+            defstruct Component (:name :any) (:effects :any) (:listeners :any) (:tree :any)
           :examples $ []
         |Effect $ %{} :CodeEntry (:doc |)
-          :code $ quote (defrecord Effect :name :coord :args :method)
+          :code $ quote
+            defstruct Effect (:name :any) (:coord :any) (:args :any) (:method :any)
           :examples $ []
         |Element $ %{} :CodeEntry (:doc |)
-          :code $ quote (defrecord Element :name :coord :attrs :style :event :children)
+          :code $ quote
+            defstruct Element (:name :any) (:coord :any) (:attrs :any) (:style :any) (:event :any) (:children :any)
           :examples $ []
         |RespoListener $ %{} :CodeEntry (:doc |)
-          :code $ quote (defrecord RespoListener :name :handler)
+          :code $ quote
+            defstruct RespoListener (:name :any) (:handler :any)
           :examples $ []
         |cache-info $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -2329,7 +2335,9 @@
           :code $ quote
             defn component? (x)
               hint-fn $ return-type :bool
-              if (record? x) (&record:matches? schema/Component x) false
+              if (record? x)
+                = (&record:struct x) schema/Component
+                , false
           :examples $ []
             quote $ component?
               defcomp comp-demo () $ div ({})
@@ -2340,13 +2348,16 @@
           :code $ quote
             defn effect? (x)
               hint-fn $ return-type :bool
-              and (record? x) (&record:matches? schema/Effect x)
+              and (record? x)
+                = (&record:struct x) schema/Effect
           :examples $ []
         |element? $ %{} :CodeEntry (:doc "|check if value is a Respo element. returns true for element records, false otherwise.")
           :code $ quote
             defn element? (x)
               hint-fn $ return-type :bool
-              if (record? x) (&record:matches? schema/Element x) false
+              if (record? x)
+                = (&record:struct x) schema/Element
+                , false
           :examples $ []
             quote $ element?
               div $ {}
