@@ -28,7 +28,10 @@ In `package.cirru` and run `caps`:
 
 DOM syntax
 
-```cirru
+```cirru.no-run
+ns app.demo $ :require
+  respo.core :refer $ div
+
 div
   {}
     :class-name "|demo-container"
@@ -39,59 +42,77 @@ div
 
 Text Node:
 
-```cirru
-<> content
+```cirru.no-run
+ns app.demo $ :require
+  respo.core :refer $ <>
 
-; with styles
-<> content $ {}
-  :color :red
-  :font-size 14})
+let ((content "|content"))
+  <> content
+
+  ; with styles
+  <> content $ {}
+    :color :red
+    :font-size 14
 ```
 
 Component definition:
 
-```cirru
-defcomp comp-container (content)
-  div
-    {}
-      :class-name |demo-container
-      :style $ {} (:color :red)
-    <> content
+```cirru.no-run
+ns app.demo $ :require
+  respo.core :refer $ div <>
+
+let
+    comp-container $ fn (content)
+      div
+        {}
+          :class-name |demo-container
+          :style $ {} (:color :red)
+        <> content
+  comp-container "|demo"
 ```
 
 App initialization:
 
-```cirru
+```cirru.no-run
+ns app.demo $ :require
+  respo.core :refer $ render!
+
 ; initialize store and update store
-defatom *store $ {} (:point 0)
-  :states $ {}
-defn dispatch! (op)
-  reset! *store (updater @*store op)
+let
+    *store $ atom $ {} (:point 0) (:states {})
+    updater $ fn (store op)
+      tag-match op
+        (:TODO a b) store
+        _ store
+    dispatch! $ fn (op)
+      reset! *store $ updater @*store op
+    mount-point nil
+    comp-container $ fn (state) state
+  dispatch! $ [] :TODO 1 2
 
-; TODO
-defn updater (store op)
-  tag-match op
-    (:TODO a b) TODO
-    _ (do (eprintln "|Unknown op:" op) store)
-
-; render to the DOM
-render! mount-point (comp-container @*store) dispatch!
+  ; render to the DOM
+  render! mount-point (comp-container @*store) dispatch!
 ```
 
 Rerender on store changes:
 
-```cirru
-defn render-app! ()
-  render! mount-point (comp-container @*store) dispatch!
-
-add-watch *store :changes $ fn ()
-  render-app!
+```cirru.no-run
+let
+    *store $ atom $ {} (:point 0)
+    render-app! $ fn () nil
+  add-watch *store :changes $ fn ()
+    render-app!
 ```
 
 Reset virtual DOM caching during hot code swapping, and rerender:
 
-```cirru
-defn reload! ()
+```cirru.no-run
+ns app.demo $ :require
+  respo.core :refer $ clear-cache!
+
+let
+    *store $ atom $ {} (:point 0)
+    render-app! $ fn () nil
   remove-watch *store :changes
   add-watch *store :changes $ fn ()
     render-app!
@@ -101,30 +122,38 @@ defn reload! ()
 
 Adding effects to component:
 
-```cirru
-defeffect effect-a (text) (action parent-element at-place?)
-  println action
-  ; action could be :mount :update :amount
+```cirru.no-run
+ns app.demo $ :require
+  respo.core :refer $ div
 
-  when (= :mount action)
-    do nil
-
-defcomp comp-a (text)
-  []
-    effect-a text
-    div {}
+let
+    effect-a $ fn (text)
+      fn (action parent-element at-place?)
+        println action
+        ; action could be :mount :update :amount
+        when (= :mount action) nil
+    comp-a $ fn (text)
+      []
+        effect-a text
+        div {}
+  comp-a "|demo"
 ```
 
 Define a hooks plugin based on Calcit Record, better use a pure function:
 
-```cirru
-defn plugin-x (states options)
-  %::
-    %{} PluginX
-      :render $ fn (self) (nth self 1)
-      :show $ fn (self d! ? text)
-    , :plugin-name
-    div ({}) (<> "|Demo")
+```cirru.no-run
+ns app.demo $ :require
+  respo.core :refer $ div <>
+
+let
+    plugin-x $ fn (states options)
+      %::
+        %{} :PluginX
+          :render $ fn (self) (nth self 1)
+          :show $ fn (self d! ? text) nil
+        , :plugin-name
+        div {} (<> "|Demo")
+  plugin-x nil nil
 ```
 
 ### License
