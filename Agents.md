@@ -17,3 +17,19 @@
 - `--dep ~/.config/calcit/modules/memof/` 会按目录加载 `memof/compact.cirru`，避免 `memof.once/*` 相关解析失败。
 - 若代码块是“示意片段”而非可独立运行程序，优先标记为 `cirru.no-check`。
 - 若需要在单个代码块里串联多个表达式并共享中间值，使用 `let` 显式绑定；默认不会把前面表达式自动注册为全局定义。
+
+CLI 查询速查(面向 Agent):
+
+- 列出命名空间:
+  - `cr demos/compact.cirru query ns`
+- 查看核心 API:
+  - `cr demos/compact.cirru query defs respo.core`
+  - `cr demos/compact.cirru query peek respo.core/defcomp`
+  - `cr demos/compact.cirru query def respo.core/render!`
+  - `cr demos/compact.cirru query examples respo.core/defcomp`
+- 搜索功能与用法:
+  - `cr demos/compact.cirru query find render!`
+  - `cr demos/compact.cirru query usages respo.core/render!`
+  - `cr demos/compact.cirru query search render --filter respo.core`
+- 查看项目配置:
+  - `cr demos/compact.cirru query config`

@@ -28,25 +28,49 @@ In `package.cirru` and run `caps`:
 
 DOM syntax
 
-```cirru.no-run
+```cirru
 ns app.demo $ :require
   respo.core :refer $ div
 
-div
-  {}
-    :class-name "|demo-container"
-    :style $ {} (:color :red)
-    :on-click $ fn (event dispatch!)
-  div $ {}
+defn comp-demo (dispatch!)
+  div
+    {}
+      :class-name "|demo-container"
+      :style $ {} (:color :red)
+      :on-click $ fn (event d!)
+        d! :clicked
+    div $ {}
+```
+
+More examples adapted from `compact.cirru`:
+
+```cirru
+ns app.demo $ :require
+  respo.core :refer $ defcomp a <>
+
+defcomp comp-link (href text)
+  a
+    {} $ :href href
+    <> text
+```
+
+```cirru
+ns app.demo $ :require
+  respo.core :refer $ list-> div
+
+defn comp-list ()
+  list-> ({})
+    [] $ [] :a
+      div $ {}
 ```
 
 Text Node:
 
-```cirru.no-run
+```cirru
 ns app.demo $ :require
   respo.core :refer $ <>
 
-let ((content "|content"))
+defn comp-text (content)
   <> content
 
   ; with styles
@@ -57,7 +81,7 @@ let ((content "|content"))
 
 Component definition:
 
-```cirru.no-run
+```cirru
 ns app.demo $ :require
   respo.core :refer $ div <>
 
@@ -68,12 +92,11 @@ let
           :class-name |demo-container
           :style $ {} (:color :red)
         <> content
-  comp-container "|demo"
 ```
 
 App initialization:
 
-```cirru.no-run
+```cirru
 ns app.demo $ :require
   respo.core :refer $ render!
 
@@ -88,15 +111,16 @@ let
       reset! *store $ updater @*store op
     mount-point nil
     comp-container $ fn (state) state
-  dispatch! $ [] :TODO 1 2
+  dispatch! $ :: :TODO 1 2
 
   ; render to the DOM
-  render! mount-point (comp-container @*store) dispatch!
+  defn render-app! ()
+    render! mount-point (comp-container @*store) dispatch!
 ```
 
 Rerender on store changes:
 
-```cirru.no-run
+```cirru
 let
     *store $ atom $ {} (:point 0)
     render-app! $ fn () nil
@@ -106,13 +130,15 @@ let
 
 Reset virtual DOM caching during hot code swapping, and rerender:
 
-```cirru.no-run
+```cirru
 ns app.demo $ :require
   respo.core :refer $ clear-cache!
 
 let
     *store $ atom $ {} (:point 0)
     render-app! $ fn () nil
+  add-watch *store :changes $ fn ()
+    render-app!
   remove-watch *store :changes
   add-watch *store :changes $ fn ()
     render-app!
@@ -122,7 +148,7 @@ let
 
 Adding effects to component:
 
-```cirru.no-run
+```cirru
 ns app.demo $ :require
   respo.core :refer $ div
 
@@ -132,16 +158,15 @@ let
         println action
         ; action could be :mount :update :amount
         when (= :mount action) nil
-    comp-a $ fn (text)
-      []
-        effect-a text
-        div {}
-  comp-a "|demo"
+  defn comp-a (text)
+    []
+      effect-a text
+      div {}
 ```
 
 Define a hooks plugin based on Calcit Record, better use a pure function:
 
-```cirru.no-run
+```cirru
 ns app.demo $ :require
   respo.core :refer $ div <>
 
@@ -153,7 +178,6 @@ let
           :show $ fn (self d! ? text) nil
         , :plugin-name
         div {} (<> "|Demo")
-  plugin-x nil nil
 ```
 
 ### License
@@ -217,25 +241,6 @@ Core macros and functions for building applications:
 | `realize-ssr!`       | [docs/apis/realize-ssr\_.md](docs/apis/realize-ssr_.md)            | Server-side rendering          |
 | `list->`             | [docs/apis/list->.md](docs/apis/list->.md)                         | Create list containers         |
 
-### Using with Calcit CLI Tools
+### Agent Workflows
 
-To explore the codebase using `cr` commands:
-
-```bash
-# List all namespaces
-cr query ls-ns
-
-# Explore core APIs
-cr query read-ns respo.core
-cr query peek-def respo.core defcomp
-cr query read-def respo.core render!
-
-# Search for specific functionality
-cr query find-symbol render!
-cr query usages respo.core render!
-
-# Check project configuration
-cr query configs
-```
-
-For more CLI tool information, see [Agents.md](./Agents.md).
+Agent-oriented CLI workflows (query/check-md automation) are maintained in [Agents.md](./Agents.md).
