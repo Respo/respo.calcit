@@ -1,6 +1,6 @@
 
 {} (:about "|file is generated - never edit directly; learn cr edit/tree workflows before changing") (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.28)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.29)
     :modules $ [] |memof/ |lilac/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -631,10 +631,9 @@
                   tree @*global-element
                 traverse-and-call tree event-tuple dispatch!
           :examples $ []
-          :schema $ quote
-            {} (:kind :fn)
+          :schema $ :: :fn
+            {} (:return :tag)
               :args $ [] :tuple
-              :return :nil
         |traverse-and-call $ %{} :CodeEntry (:doc |) (:schema nil)
           :code $ quote
             defn traverse-and-call (element event-tuple dispatch!)
@@ -1247,10 +1246,9 @@
                       swap! *style-caches assoc style-name $ {} (:rules rules) (:el style-el)
                   , style-name
           :examples $ []
-          :schema $ quote
-            {} (:kind :fn)
+          :schema $ :: :fn
+            {} (:return :string)
               :args $ [] :string :map
-              :return :string
         |defstyle $ %{} :CodeEntry (:doc "|a macro for turning CSS rules into className, and only works for JavaScript.\n\nuse `defstyle` like:\n\n```cirru\ndefstyle style-demo $ {}\n  |& $ {} (:color :red)\n  \"|&:hover\" $ {}\n    :background-color :blue\n```\n\nwhere `&` refers to current element.\n\nIn the rules, it's nested hashmaps. `|&` and `|&:hover` are CSS queries. and in nested hashmaps there are CSS properties defined in calcit data.\n") (:schema nil)
           :code $ quote
             defmacro defstyle (style-name rules)
@@ -1342,10 +1340,9 @@
                 .to-list
                 .join-str $ str &newline &newline
           :examples $ []
-          :schema $ quote
-            {} (:kind :fn)
+          :schema $ :: :fn
+            {} (:return :string)
               :args $ [] :string :map
-              :return :string
       :ns $ %{} :CodeEntry (:doc |) (:schema nil)
         :code $ quote
           ns respo.css $ :require
@@ -2352,20 +2349,18 @@
             quote $ component?
               div $ {}
             quote $ component? nil
-          :schema $ quote
-            {} (:kind :fn)
+          :schema $ :: :fn
+            {} (:return :bool)
               :args $ [] :dynamic
-              :return :bool
         |effect? $ %{} :CodeEntry (:doc "|Checks if the given value is a Respo Effect record.")
           :code $ quote
             defn effect? (x)
               and (record? x)
                 = (&record:struct x) schema/Effect
           :examples $ []
-          :schema $ quote
-            {} (:kind :fn)
+          :schema $ :: :fn
+            {} (:return :bool)
               :args $ [] :dynamic
-              :return :bool
         |element? $ %{} :CodeEntry (:doc "|check if value is a Respo element. returns true for element records, false otherwise.")
           :code $ quote
             defn element? (x)
@@ -2378,20 +2373,18 @@
             quote $ element?
               span $ {} (:inner-text |text)
             quote $ element? nil
-          :schema $ quote
-            {} (:kind :fn)
+          :schema $ :: :fn
+            {} (:return :bool)
               :args $ [] :dynamic
-              :return :bool
         |listener? $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn listener? (item)
               and (record? item)
                 = :RespoListener $ &record:get-name item
           :examples $ []
-          :schema $ quote
-            {} (:kind :fn)
+          :schema $ :: :fn
+            {} (:return :bool)
               :args $ [] :dynamic
-              :return :bool
       :ns $ %{} :CodeEntry (:doc |) (:schema nil)
         :code $ quote
           ns respo.util.detect $ :require (respo.schema :as schema)
@@ -2467,10 +2460,9 @@
             quote $ dashed->camel |background-color
             quote $ dashed->camel |font-size
             quote $ dashed->camel |margin-top
-          :schema $ quote
-            {} (:kind :fn)
+          :schema $ :: :fn
+            {} (:return :string)
               :args $ [] :string
-              :return :string
         |dashed-letter-pattern $ %{} :CodeEntry (:doc "|Regex pattern for finding dashed-case letters (e.g. -a) to convert to camelCase.") (:schema nil)
           :code $ quote
             def dashed-letter-pattern $ new js/RegExp "\"-[a-z]" "\"g"
@@ -2501,10 +2493,9 @@
                 assoc :original-event event
                 assoc :event event
           :examples $ []
-          :schema $ quote
-            {} (:kind :fn)
+          :schema $ :: :fn
+            {} (:return :map)
               :args $ [] :dynamic
-              :return :map
         |event->prop $ %{} :CodeEntry (:doc "|Converts an event keyword (e.g. :click) to a prop name string (e.g. 'onclick').") (:schema nil)
           :code $ quote
             defn event->prop (x)
@@ -2551,10 +2542,9 @@
                 :alt? $ .-altKey event
                 :shift? $ .-shiftKey event
           :examples $ []
-          :schema $ quote
-            {} (:kind :fn)
+          :schema $ :: :fn
+            {} (:return :map)
               :args $ [] :dynamic
-              :return :map
         |mute-element $ %{} :CodeEntry (:doc |) (:schema nil)
           :code $ quote
             defn mute-element (element)
@@ -2659,19 +2649,17 @@
                           , v
                         , nil
           :examples $ []
-          :schema $ quote
-            {} (:kind :fn)
-              :args $ [] :map
-              :return :map
+          :schema $ :: :fn
+            {} (:return :map)
+              :args $ [] (:: :optional :map)
         |val-exists? $ %{} :CodeEntry (:doc "|Predicate to check if a key-value pair has a non-nil value.")
           :code $ quote
             defn val-exists? (pair)
               some? $ last pair
           :examples $ []
-          :schema $ quote
-            {} (:kind :fn)
+          :schema $ :: :fn
+            {} (:return :bool)
               :args $ [] :dynamic
-              :return :bool
         |val-of-first $ %{} :CodeEntry (:doc "|Extracts the value (second item) from the first entry of a list.") (:schema nil)
           :code $ quote
             defn val-of-first (x)
