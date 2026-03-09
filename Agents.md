@@ -1,3 +1,9 @@
+要求查看 Calcit 命令行工具的用法:
+
+```bash
+cr docs agents --full
+```
+
 一般开发者会运行:
 
 - `cr js` 默认单次编译 JavaScript
@@ -10,9 +16,7 @@
 - 仅在确有必要时使用 `hint-fn`，并优先采用 schema map 形式；避免旧 clause 写法。
 - 修改签名后，优先用 `cr js` 验证，确保不会因类型告警阻断编译。
 
-然后 GPT 调用 `cr` 命令增量编辑源码, 在 `cr edit inc` 运行时触发重新编译. 具体用法查看:
-
-- Read `llms/Calcit.md` for Calcit language tools.
+然后 GPT 调用 `cr` 命令增量编辑源码, 在 `cr edit inc` 运行时触发重新编译.
 
 文档示例校验建议:
 
