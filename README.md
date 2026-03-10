@@ -29,69 +29,116 @@ In `package.cirru` and run `caps`:
 DOM syntax
 
 ```cirru
-div
-  {}
-    :class-name "|demo-container"
-    :style $ {} (:color :red)
-    :on-click $ fn (event dispatch!)
-  div $ {}
+ns app.demo $ :require
+  respo.core :refer $ div
+
+defn comp-demo (dispatch!)
+  div
+    {}
+      :class-name "|demo-container"
+      :style $ {} (:color :red)
+      :on-click $ fn (event d!)
+        d! :clicked
+    div $ {}
+```
+
+More examples adapted from `compact.cirru`:
+
+```cirru
+ns app.demo $ :require
+  respo.core :refer $ defcomp a <>
+
+defcomp comp-link (href text)
+  a
+    {} $ :href href
+    <> text
+```
+
+```cirru
+ns app.demo $ :require
+  respo.core :refer $ list-> div
+
+defn comp-list ()
+  list-> ({})
+    [] $ [] :a
+      div $ {}
 ```
 
 Text Node:
 
 ```cirru
-<> content
+ns app.demo $ :require
+  respo.core :refer $ <>
 
-; with styles
-<> content $ {}
-  :color :red
-  :font-size 14})
+defn comp-text (content)
+  <> content
+
+  ; with styles
+  <> content $ {}
+    :color :red
+    :font-size 14
 ```
 
 Component definition:
 
 ```cirru
-defcomp comp-container (content)
-  div
-    {}
-      :class-name |demo-container
-      :style $ {} (:color :red)
-    <> content
+ns app.demo $ :require
+  respo.core :refer $ div <>
+
+let
+    comp-container $ fn (content)
+      div
+        {}
+          :class-name |demo-container
+          :style $ {} (:color :red)
+        <> content
 ```
 
 App initialization:
 
 ```cirru
+ns app.demo $ :require
+  respo.core :refer $ render!
+
 ; initialize store and update store
-defatom *store $ {} (:point 0)
-  :states $ {}
-defn dispatch! (op)
-  reset! *store (updater @*store op)
+let
+    *store $ atom $ {} (:point 0) (:states {})
+    updater $ fn (store op)
+      tag-match op
+        (:TODO a b) store
+        _ store
+    dispatch! $ fn (op)
+      reset! *store $ updater @*store op
+    mount-point nil
+    comp-container $ fn (state) state
+  dispatch! $ :: :TODO 1 2
 
-; TODO
-defn updater (store op)
-  tag-match op
-    (:TODO a b) TODO
-    _ (do (eprintln "|Unknown op:" op) store)
-
-; render to the DOM
-render! mount-point (comp-container @*store) dispatch!
+  ; render to the DOM
+  defn render-app! ()
+    render! mount-point (comp-container @*store) dispatch!
 ```
 
 Rerender on store changes:
 
 ```cirru
-defn render-app! ()
-  render! mount-point (comp-container @*store) dispatch!
-
-add-watch *store :changes $ fn ()
-  render-app!
+let
+    *store $ atom $ {} (:point 0)
+    render-app! $ fn () nil
+  add-watch *store :changes $ fn ()
+    render-app!
 ```
 
 Reset virtual DOM caching during hot code swapping, and rerender:
 
 ```cirru
-defn reload! ()
+ns app.demo $ :require
+  respo.core :refer $ clear-cache!
+
+let
+    *store $ atom $ {} (:point 0)
+    render-app! $ fn () nil
+  add-watch *store :changes $ fn ()
+    render-app!
   remove-watch *store :changes
   add-watch *store :changes $ fn ()
     render-app!
@@ -102,29 +149,35 @@ defn reload! ()
 Adding effects to component:
 
 ```cirru
-defeffect effect-a (text) (action parent-element at-place?)
-  println action
-  ; action could be :mount :update :amount
+ns app.demo $ :require
+  respo.core :refer $ div
 
-  when (= :mount action)
-    do nil
-
-defcomp comp-a (text)
-  []
-    effect-a text
-    div {}
+let
+    effect-a $ fn (text)
+      fn (action parent-element at-place?)
+        println action
+        ; action could be :mount :update :amount
+        when (= :mount action) nil
+  defn comp-a (text)
+    []
+      effect-a text
+      div {}
 ```
 
 Define a hooks plugin based on Calcit Record, better use a pure function:
 
 ```cirru
-defn plugin-x (states options)
-  %::
-    %{} PluginX
-      :render $ fn (self) (nth self 1)
-      :show $ fn (self d! ? text)
-    , :plugin-name
-    div ({}) (<> "|Demo")
+ns app.demo $ :require
+  respo.core :refer $ div <>
+
+let
+    plugin-x $ fn (states options)
+      %::
+        %{} :PluginX
+          :render $ fn (self) (nth self 1)
+          :show $ fn (self d! ? text) nil
+        , :plugin-name
+        div {} (<> "|Demo")
 ```
 
 ### License
@@ -188,25 +241,6 @@ Core macros and functions for building applications:
 | `realize-ssr!`       | [docs/apis/realize-ssr\_.md](docs/apis/realize-ssr_.md)            | Server-side rendering          |
 | `list->`             | [docs/apis/list->.md](docs/apis/list->.md)                         | Create list containers         |
 
-### Using with Calcit CLI Tools
+### Agent Workflows
 
-To explore the codebase using `cr` commands:
-
-```bash
-# List all namespaces
-cr query ls-ns
-
-# Explore core APIs
-cr query read-ns respo.core
-cr query peek-def respo.core defcomp
-cr query read-def respo.core render!
-
-# Search for specific functionality
-cr query find-symbol render!
-cr query usages respo.core render!
-
-# Check project configuration
-cr query configs
-```
-
-For more CLI tool information, see [Agents.md](./Agents.md).
+Agent-oriented CLI workflows (query/check-md automation) are maintained in [Agents.md](./Agents.md).
