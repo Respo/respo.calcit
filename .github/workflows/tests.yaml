@@ -29,12 +29,12 @@ jobs:
 
     - name: "test js"
       run: >
-        cr -1 --init-fn respo.test.main/main! js
+        cr --init-fn respo.test.main/main! js
         && node test.mjs
 
     - name: "build js"
       run: >
-        cr --once js
+        cr js
         && yarn vite build --base=./
 
     - name: Deploy to server
