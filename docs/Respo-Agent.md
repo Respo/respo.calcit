@@ -293,13 +293,13 @@ Use `search-expr` to find functional patterns (like state management or event ha
 
 ```bash
 # How is state being navigated?
-cr query search-expr '>> states' -l
+cr query search-expr '>> states'
 
 # Where are local state changes dispatched?
-cr query search-expr 'd! cursor' -l
+cr query search-expr 'd! cursor'
 
 # Find all component event handler signatures
-cr query search-expr 'fn (e d!)' -l
+cr query search-expr 'fn (e d!)'
 ```
 
 **Strategy:**

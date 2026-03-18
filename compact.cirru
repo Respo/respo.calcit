@@ -1,7 +1,7 @@
 
 {} (:about "|file is generated - never edit directly; learn cr edit/tree workflows before changing") (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.31)
-    :modules $ [] |memof/ |lilac/ |calcit-test/
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.32)
+    :modules $ [] |memof/ |calcit-test/
   :entries $ {}
   :files $ {}
     |respo.app.comp.container $ %{} :FileEntry
