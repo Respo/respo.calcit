@@ -134,7 +134,7 @@ For LLM Agents, **JSON inline (`-j`) is the most reliable method** for code gene
 
 - Function: `(defn f (x) x)` -> `["defn", "f", ["x"], "x"]`
 - Map: `{:a 1}` -> `["{}", [":a", "1"]]`
-- String: `"|hello"` -> `"|hello"` (in JSON string: `"\"|hello\""`)
+- String: `"|hello"` -> `"|hello"` (in JSON string: `"hello"`)
 - Keyword: `:key` -> `":key"`
 
 **Common Commands:**
@@ -142,7 +142,7 @@ For LLM Agents, **JSON inline (`-j`) is the most reliable method** for code gene
 ```bash
 # 1. Add/Update Definition (JSON)
 # (defn greet (name) (println "|Hello" name))
-cr edit def respo.demo/greet -j '["defn", "greet", ["name"], ["println", "\"|Hello\"", "name"]]'
+cr edit def respo.demo/greet -j '["defn", "greet", ["name"], ["println", "|Hello", "name"]]'
 
 # 2. Add Definition (Cirru One-liner - risky for complex code)
 cr edit def respo.demo/simple -e 'defn simple (x) (+ x 1)'
@@ -202,7 +202,7 @@ Define the component logic.
 
 ```bash
 # Cirru: (defcomp comp-x (data) (div {} (<> "Feature X")))
-cr edit def respo.app.feature-x/comp-x -j '["defcomp", "comp-x", ["data"], ["div", ["{}"], ["<>", "\"|Feature X\""]]]'
+cr edit def respo.app.feature-x/comp-x -j '["defcomp", "comp-x", ["data"], ["div", ["{}"], ["<>", "|Feature X"]]]'
 ```
 
 **Step 4: Verify**

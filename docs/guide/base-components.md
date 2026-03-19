@@ -35,8 +35,8 @@ It's tricky to listen to global events since Respo does not allow `useEffect` or
 respo.comp.global-keydown :refer $ comp-global-keydown
 
 comp-global-keydown
-  {} $ :disabled-commands (#{} "\"s" "\"p")
-  fn (e d!) (js/console.log "\"keydown" e)
+  {} $ :disabled-commands (#{} |s |p)
+  fn (e d!) (js/console.log |keydown e)
 ```
 
 Internally it listens events on `window` and dispatches events to a `<span/>` element.

@@ -61,7 +61,7 @@ define style:
 
 ```cirru
 defstyle style-input $ {}
-  "\"$0" $ {} (:font-size |16px)
+  |& $ {} (:font-size |16px)
     :line-height |24px
     :padding "|0px 8px"
     :outline :none
@@ -70,10 +70,10 @@ defstyle style-input $ {}
     :border :none
 ```
 
-`$0` will be replace by a string of `className`. So if you want to add rules for `:hover`, just write `$0:hover`.
+`&` will be replace by a string of `className`. So if you want to add rules for `:hover`, just write `&:hover`.
 
 ```cirru
-input $ {} (:placeholder "\"Text")
+input $ {} (:placeholder "|Text")
   :value $ :draft state
   :class-name style-input
   :style $ {}
