@@ -70,7 +70,90 @@ defstyle style-input $ {}
     :border :none
 ```
 
-`&` will be replace by a string of `className`. So if you want to add rules for `:hover`, just write `&:hover`.
+Use string selectors such as `|&`, `|&:hover`, or `|input&`. Avoid writing bare symbol `&` as the selector key in `defstyle`.
+
+#### When to use `defstyle`
+
+`defstyle` works best for static styles: fixed font sizes, colors, gaps, borders, paddings, hover rules, and reusable layout rules.
+Keep runtime-dependent values in `:style`, for example dynamic width, position, height, or values computed from state.
+
+```cirru
+defstyle style-card $ {}
+  |& $ {} (:padding |12px 16px)
+    :border-radius |12px
+    :background-color $ hsl 0 0 100
+
+div $ {}
+  :class-name style-card
+  :style $ {}
+    :width $ &max 200
+      + 24 $ text-width title 16 |BlinkMacSystemFont
+```
+
+#### Extract from `:style`
+
+When moving an inline style map into `defstyle`, keep the change mechanical:
+
+1. locate the target props node;
+2. extract only the static style map;
+3. wrap the extracted map with `defstyle` using `|&` as the selector key;
+4. replace the original `:style` usage with `:class-name`.
+
+```cirru
+div $ {}
+  :class-name $ str-spaced css/row style-preview-row
+```
+
+```cirru
+defstyle style-preview-row $ {}
+  |& $ {} (:gap |8px) (:flex-wrap :wrap)
+    :align-items :flex-start
+```
+
+Be careful with string values like `|4px 10px`, `|1px solid `, or long text literals. If the code is generated or transformed by CLI tools, prefer the exact serialized form that the tool prints, instead of hand-editing token boundaries.
+
+#### Calcit CLI workflow
+
+When the source is stored in `compact.cirru`, a stable workflow is:
+
+```bash
+# 1. locate the inline style leaf
+cr query search ':style' -f app.comp.container/comp-env-card
+
+# 2. inspect the surrounding props and find the actual style map path
+cr tree show app.comp.container/comp-env-card -p '3.2.4.2'
+
+# 3. extract the style map itself, not the :style leaf
+cr edit split-def app.comp.container/comp-env-card -p '3.2.4.2.1.2.1' -n style-env-card-preview
+```
+
+After extraction, the new definition is often still a raw map. Wrap it into a `defstyle` definition:
+
+```bash
+cr query def app.comp.container/style-env-card-preview
+```
+
+If the style contains tricky string values, prefer a snippet file instead of shell inline code:
+
+```bash
+cr edit def app.comp.container/style-env-card-preview --overwrite -f .calcit-snippets/style-env-card-preview.cirru
+```
+
+Then switch the original node from `:style` to `:class-name`:
+
+```bash
+cr tree replace app.comp.container/comp-env-card -p '3.2.4.2.1' -e '{}
+  :class-name $ str-spaced css/row-middle css/gap8 style-env-card-preview'
+```
+
+Validate the extraction after each batch:
+
+```bash
+cr query search ':style' -f app.comp.container/comp-env-card
+cr js
+```
+
+`|&` will be replace by a string of `className`. So if you want to add rules for `:hover`, use the string selector `|&:hover`.
 
 ```cirru
 input $ {} (:placeholder "|Text")
