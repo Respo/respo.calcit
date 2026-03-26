@@ -1,3 +1,16 @@
+---
+title: "Base components"
+scope: "module"
+kind: "guide"
+category: "ecosystem"
+aliases:
+  - "base components"
+  - "built-in components"
+entry_for:
+  - "component library"
+  - "respo components"
+---
+
 ## Base components
 
 **📚 Documentation Index**

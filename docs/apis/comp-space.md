@@ -1,3 +1,15 @@
+---
+title: "comp-space"
+scope: "module"
+kind: "reference"
+category: "reference"
+aliases:
+  - "respo.comp/comp-space"
+entry_for:
+  - "spacing component"
+  - "horizontal space"
+---
+
 ## `comp-space`
 
 This is the component to add spaces.

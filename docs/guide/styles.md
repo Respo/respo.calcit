@@ -1,4 +1,30 @@
+---
+title: "Styles"
+scope: "module"
+kind: "guide"
+category: "ecosystem"
+aliases:
+  - "styles"
+  - "defstyle"
+  - "respo.css/defstyle"
+  - "defstyle guide"
+  - "class-name"
+  - ":class-name"
+  - "inline style"
+  - "style map"
+entry_for:
+  - "defstyle"
+  - "css"
+  - "style map"
+  - "static styles"
+  - "style extraction"
+---
+
 ## Styles
+
+## defstyle
+
+Use `defstyle` for static reusable styles, and combine it with `:class-name` on elements.
 
 **📚 Documentation Index**
 

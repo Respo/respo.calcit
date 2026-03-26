@@ -1,3 +1,15 @@
+---
+title: "create-element"
+scope: "module"
+kind: "reference"
+category: "reference"
+aliases:
+  - "respo.core/create-element"
+entry_for:
+  - "virtual dom element"
+  - "create vnode"
+---
+
 ## `create-element`
 
 **📚 Documentation Index**

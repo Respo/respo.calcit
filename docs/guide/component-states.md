@@ -1,4 +1,26 @@
+---
+title: "Component States"
+scope: "module"
+kind: "guide"
+category: "ecosystem"
+aliases:
+  - "component states"
+  - "state tree"
+  - "local states"
+  - "state cursor"
+  - ">> states"
+entry_for:
+  - "local state"
+  - "state cursor"
+  - "pick-states"
+  - "hot swapping states"
+---
+
 ## Component States
+
+## Local state and state cursor
+
+Interactive components usually pass `states` downward and branch it with `>>` to keep local state isolated.
 
 **📚 Documentation Index**
 

@@ -1,3 +1,15 @@
+---
+title: "make-string"
+scope: "module"
+kind: "reference"
+category: "reference"
+aliases:
+  - "respo.core/make-string"
+entry_for:
+  - "stringify html"
+  - "ssr markup"
+---
+
 ## `make-string`
 
 Generate HTML from a virtual DOM. Stringified HTML contains a lot of markups, such as `:data-coord`:

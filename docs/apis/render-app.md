@@ -1,3 +1,15 @@
+---
+title: "render-app"
+scope: "module"
+kind: "reference"
+category: "reference"
+aliases:
+  - "respo.core/render-app"
+entry_for:
+  - "render virtual dom"
+  - "cached render"
+---
+
 ## `render-app`
 
 This function renders virtual DOM markups into virtual DOM data:

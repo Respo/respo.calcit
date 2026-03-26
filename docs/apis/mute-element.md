@@ -1,3 +1,15 @@
+---
+title: "mute-element"
+scope: "module"
+kind: "reference"
+category: "reference"
+aliases:
+  - "respo.core/mute-element"
+entry_for:
+  - "remove events"
+  - "mute vnode"
+---
+
 ## `mute-element`
 
 This function removes events from a virtual DOM tree:

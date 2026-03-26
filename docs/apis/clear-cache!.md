@@ -1,3 +1,16 @@
+---
+title: "clear-cache!"
+scope: "module"
+kind: "reference"
+category: "reference"
+aliases:
+  - "respo.core/clear-cache!"
+  - "clear cache"
+entry_for:
+  - "hot reload"
+  - "clear render cache"
+---
+
 ## `clear-cache!`
 
 **📚 Documentation Index**

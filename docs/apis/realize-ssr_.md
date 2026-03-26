@@ -1,3 +1,16 @@
+---
+title: "realize-ssr!"
+scope: "module"
+kind: "reference"
+category: "reference"
+aliases:
+  - "realize-ssr_"
+  - "respo.core/realize-ssr!"
+entry_for:
+  - "progressive ssr"
+  - "hydrate ssr"
+---
+
 ## `realize-ssr!`
 
 This one is complicated. I wrote [a long post before trying to explain this new feature][progressive].

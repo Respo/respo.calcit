@@ -1,3 +1,17 @@
+---
+title: "Respo Development Guide for LLM Agents"
+scope: "module"
+kind: "agent"
+category: "docs"
+aliases:
+  - "Respo-Agent"
+  - "Respo Agent"
+  - "agent guide"
+entry_for:
+  - "docs agents"
+  - "llm agent"
+---
+
 # Respo Development Guide for LLM Agents
 
 **🤖 This guide is specifically designed for LLM agents to develop, debug, and maintain Respo applications.**

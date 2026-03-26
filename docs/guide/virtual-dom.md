@@ -1,3 +1,16 @@
+---
+title: "Virtual DOM"
+scope: "module"
+kind: "guide"
+category: "ecosystem"
+aliases:
+  - "virtual dom"
+  - "vdom"
+entry_for:
+  - "element tree"
+  - "virtual nodes"
+---
+
 ## Virtual DOM
 
 **📚 Documentation Index**

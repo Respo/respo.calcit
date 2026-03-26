@@ -1,3 +1,15 @@
+---
+title: "div"
+scope: "module"
+kind: "reference"
+category: "reference"
+aliases:
+  - "respo.core/div"
+entry_for:
+  - "div element"
+  - "dom macro"
+---
+
 ## `div`
 
 **📚 Documentation Index**

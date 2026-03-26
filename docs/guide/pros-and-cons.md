@@ -1,3 +1,16 @@
+---
+title: "Pros and Cons"
+scope: "module"
+kind: "guide"
+category: "intro"
+aliases:
+  - "pros and cons"
+  - "tradeoffs"
+entry_for:
+  - "why choose respo"
+  - "limitations"
+---
+
 ## Pros and Cons
 
 **📚 Documentation Index**

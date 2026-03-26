@@ -1,4 +1,28 @@
+---
+title: ">>"
+scope: "module"
+kind: "reference"
+category: "reference"
+aliases:
+  - "pick-states"
+  - "respo.core/>>"
+  - ">>"
+  - "states cursor"
+  - "state cursor"
+  - "local state"
+  - ">> states"
+entry_for:
+  - "state cursor"
+  - "branch states"
+  - "local states"
+  - "cursor path"
+---
+
 ## `>>`
+
+## State cursor
+
+`>>` creates a state cursor for a nested branch so a child component can manage its own local state.
 
 Creating a branch of states, as well as a new cursor:
 

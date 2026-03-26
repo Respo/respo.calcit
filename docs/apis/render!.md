@@ -1,3 +1,18 @@
+---
+title: "render!"
+scope: "module"
+kind: "reference"
+category: "reference"
+aliases:
+  - "respo.core/render!"
+  - "rerender app"
+  - "mount app"
+entry_for:
+  - "render app"
+  - "mount pointer"
+  - "update dom"
+---
+
 ## `render!`
 
 **📚 Documentation Index**

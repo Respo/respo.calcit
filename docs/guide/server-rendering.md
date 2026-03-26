@@ -1,3 +1,20 @@
+---
+title: "Server Rendering"
+scope: "module"
+kind: "guide"
+category: "ecosystem"
+aliases:
+  - "server rendering"
+  - "SSR"
+  - "server side rendering"
+  - "ssr"
+entry_for:
+  - "make-string"
+  - "realize-ssr!"
+  - "first screen html"
+  - "hydrate app"
+---
+
 For more details please read <https://github.com/Respo/ssr-stages>
 
 ### Rendering assumptions

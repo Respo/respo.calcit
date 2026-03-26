@@ -1,3 +1,19 @@
+---
+title: "DOM properties"
+scope: "module"
+kind: "guide"
+category: "ecosystem"
+aliases:
+  - "dom properties"
+  - "props mapping"
+  - "dom props"
+  - ":class-name"
+entry_for:
+  - "class-name"
+  - "property naming"
+  - "dom attributes"
+---
+
 ## DOM properties
 
 **📚 Documentation Index**
