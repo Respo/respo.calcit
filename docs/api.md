@@ -1,3 +1,20 @@
+---
+title: "Respo API"
+scope: "module"
+kind: "overview"
+category: "reference"
+aliases:
+  - "API"
+  - "API Overview"
+  - "respo api"
+  - "api docs"
+  - "respo.core"
+entry_for:
+  - "api reference"
+  - "respo.core"
+  - "component api"
+---
+
 ## Respo API
 
 **📚 Documentation Index**

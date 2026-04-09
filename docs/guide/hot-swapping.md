@@ -1,3 +1,16 @@
+---
+title: "Hot swapping"
+scope: "module"
+kind: "guide"
+category: "ecosystem"
+aliases:
+  - "hot swapping"
+  - "hot reload"
+entry_for:
+  - "clear-cache!"
+  - "reload components"
+---
+
 ## Hot swapping
 
 **📚 Documentation Index**

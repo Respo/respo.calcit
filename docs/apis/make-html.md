@@ -1,3 +1,15 @@
+---
+title: "make-html"
+scope: "module"
+kind: "reference"
+category: "reference"
+aliases:
+  - "respo.core/make-html"
+entry_for:
+  - "html output"
+  - "template engine"
+---
+
 ## `make-html`
 
 Generate HTML from virtual DOM:

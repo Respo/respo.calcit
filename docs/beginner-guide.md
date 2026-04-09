@@ -1,3 +1,17 @@
+---
+title: "Respo Beginner Guide"
+scope: "module"
+kind: "guide"
+category: "intro"
+aliases:
+  - "beginner guide"
+  - "getting started"
+  - "quick start"
+entry_for:
+  - "start respo"
+  - "learn respo"
+---
+
 ## Respo Beginner Guide
 
 **📚 Documentation Index**

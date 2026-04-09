@@ -1,3 +1,16 @@
+---
+title: "Why Respo"
+scope: "module"
+kind: "guide"
+category: "intro"
+aliases:
+  - "why respo"
+  - "introduction"
+entry_for:
+  - "what is respo"
+  - "respo overview"
+---
+
 ## Why Respo
 
 **📚 Documentation Index**

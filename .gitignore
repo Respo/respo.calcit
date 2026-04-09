@@ -11,3 +11,5 @@ tmp/
 draft/
 
 .yarn/*.gz
+
+.calcit-snippets/

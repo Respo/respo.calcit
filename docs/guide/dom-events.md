@@ -1,3 +1,16 @@
+---
+title: "DOM events"
+scope: "module"
+kind: "guide"
+category: "ecosystem"
+aliases:
+  - "dom events"
+  - "event handling"
+entry_for:
+  - "input events"
+  - "event props"
+---
+
 ## DOM events
 
 **📚 Documentation Index**

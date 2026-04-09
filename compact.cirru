@@ -1,7 +1,7 @@
 
 {} (:about "|file is generated - never edit directly; learn cr edit/tree workflows before changing") (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.30)
-    :modules $ [] |memof/ |lilac/ |calcit-test/
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.33)
+    :modules $ [] |memof/ |calcit-test/
   :entries $ {}
   :files $ {}
     |respo.app.comp.container $ %{} :FileEntry
@@ -25,15 +25,15 @@
         |style-global $ %{} :CodeEntry (:doc |) (:schema :string)
           :code $ quote
             defstyle style-global $ {}
-              "\"&" $ {} (:font-family |Avenir,Verdana)
-              "\"&" $ {} ('contained "\"@media only screen and (max-width: 600px)")
+              |& $ {} (:font-family |Avenir,Verdana)
+              |& $ {} ('contained "|@media only screen and (max-width: 600px)")
                 :background-color $ hsl 0 0 90
           :examples $ []
-        |style-states $ %{} :CodeEntry (:doc |) (:schema nil)
+        |style-states $ %{} :CodeEntry (:doc |) (:schema :map)
           :code $ quote
             def style-states $ {} (:padding 8)
           :examples $ []
-      :ns $ %{} :CodeEntry (:doc |) (:schema :unit)
+      :ns $ %{} :NsEntry (:doc |)
         :code $ quote
           ns respo.app.comp.container $ :require
             respo.core :refer $ defcomp div span <> >> a
@@ -42,7 +42,6 @@
             respo.app.comp.todolist :refer $ comp-todolist
             respo.comp.space :refer $ =<
             respo.comp.inspect :refer $ highlight-defcomp
-        :examples $ []
     |respo.app.comp.task $ %{} :FileEntry
       :defs $ {}
         |comp-task $ %{} :CodeEntry (:doc |)
@@ -85,17 +84,20 @@
           :schema $ :: :fn
             {} (:return 'respo.schema/Component)
               :args $ [] :dynamic :dynamic
-        |effect-log $ %{} :CodeEntry (:doc |) (:schema nil)
+        |effect-log $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defeffect effect-log (task) (action parent at-place?) (; js/console.log "\"Task effect" action at-place?)
+            defeffect effect-log (task) (action parent at-place?) (; js/console.log "|Task effect" action at-place?)
               case-default action nil
                 :mount $ let
                     x0 $ js/Math.random
-                  ; println "\"Stored" x0
+                  ; println |Stored x0
                   , nil
-                :update (; println "\"read") nil
-                :unmount (; println "\"read") nil
+                :update (; println |read) nil
+                :unmount (; println |read) nil
           :examples $ []
+          :schema $ :: :fn
+            {} (:return 'respo.schema/Effect)
+              :args $ [] :dynamic
         |style-done $ %{} :CodeEntry (:doc |) (:schema :string)
           :code $ quote
             defstyle style-done $ {}
@@ -104,9 +106,9 @@
         |style-task $ %{} :CodeEntry (:doc |) (:schema :string)
           :code $ quote
             defstyle style-task $ {}
-              "\"&" $ {} (:display :flex) (:padding "|4px 0px")
+              |& $ {} (:display :flex) (:padding "|4px 0px")
           :examples $ []
-      :ns $ %{} :CodeEntry (:doc |) (:schema :unit)
+      :ns $ %{} :NsEntry (:doc |)
         :code $ quote
           ns respo.app.comp.task $ :require
             respo.core :refer $ defcomp div input span button <> defeffect
@@ -115,7 +117,6 @@
             respo.comp.inspect :refer $ comp-inspect
             respo.app.style.widget :as widget
             respo.css :refer $ defstyle
-        :examples $ []
     |respo.app.comp.todolist $ %{} :FileEntry
       :defs $ {}
         |comp-todolist $ %{} :CodeEntry (:doc |)
@@ -125,13 +126,14 @@
                   cursor $ either (:cursor states) ([])
                   state $ either (:data states)
                     {} (:draft |) (:locked? false) (:message "|Press Ctrl+M to change message")
-                [] (on-keydown cursor state) (effect-focus)
+                [] (on-keydown cursor state) (effect-focus |#draft-input)
                   div
                     {} (:class-name style-todo-root) (:data-name |todolist)
                     comp-inspect |States state $ {} (:left |80px)
                     div
                       {} $ :style style-panel
                       input $ {} (:placeholder |Text)
+                        :id |draft-input
                         :value $ :draft state
                         :class-name widget/style-input
                         :style $ {}
@@ -194,11 +196,18 @@
           :schema $ :: :fn
             {} (:return 'respo.schema/Component)
               :args $ [] :dynamic :dynamic
-        |effect-focus $ %{} :CodeEntry (:doc |) (:schema nil)
+        |effect-focus $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defeffect effect-focus () $ action parent at-place?
+            defeffect effect-focus (pattern) (action parent at-place?)
+              when (= action :mount)
+                if-let
+                  target $ js/document.querySelector pattern
+                  .!select target
           :examples $ []
-        |make-keydown-listener $ %{} :CodeEntry (:doc "|DEPRECATED: Factory function approach for creating listeners. This was an experimental approach that did not work due to Record serialization issues. Use on-keydown function instead.") (:schema nil)
+          :schema $ :: :fn
+            {} (:return 'respo.schema/Effect)
+              :args $ [] :string
+        |make-keydown-listener $ %{} :CodeEntry (:doc "|DEPRECATED: Factory function approach for creating listeners. This was an experimental approach that did not work due to Record serialization issues. Use on-keydown function instead.")
           :code $ quote
             defn make-keydown-listener (cursor state)
               %{} respo.schema/RespoListener (:name :on-keydown)
@@ -215,16 +224,25 @@
                           fn () $ dispatch! cursor (assoc state :message "|Press Ctrl+M to change message")
                           , 2000
           :examples $ []
-        |number-order $ %{} :CodeEntry (:doc |) (:schema nil)
+          :schema $ :: :fn
+            {} (:return 'respo.schema/RespoListener)
+              :args $ [] :list :map
+        |number-order $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn number-order (a b)
               if (&< a b) -1 $ if (&> a b) 1 0
           :examples $ []
-        |on-focus $ %{} :CodeEntry (:doc |) (:schema nil)
+          :schema $ :: :fn
+            {} (:return :number)
+              :args $ [] :number :number
+        |on-focus $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-focus (e dispatch!) (println "|Just focused~")
           :examples $ []
-        |on-keydown $ %{} :CodeEntry (:doc "|Creates a keyboard listener for Ctrl+M shortcut. This function demonstrates how to create component-local listeners that can access component state through closures. Returns a RespoListener that updates the message state when Ctrl+M is pressed.") (:schema nil)
+          :schema $ :: :fn
+            {} (:return :unit)
+              :args $ [] :dynamic :fn
+        |on-keydown $ %{} :CodeEntry (:doc "|Creates a keyboard listener for Ctrl+M shortcut. This function demonstrates how to create component-local listeners that can access component state through closures. Returns a RespoListener that updates the message state when Ctrl+M is pressed.")
           :code $ quote
             defn on-keydown (cursor state)
               %{} respo.schema/RespoListener (:name :on-keydown)
@@ -243,41 +261,47 @@
                           , 2000
           :examples $ []
             quote $ on-keydown cursor state
-        |on-test $ %{} :CodeEntry (:doc |) (:schema nil)
+          :schema $ :: :fn
+            {} (:return 'respo.schema/RespoListener)
+              :args $ [] :list :map
+        |on-test $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-test (e dispatch!) (println "|trigger test!")
               try-test! dispatch! $ []
           :examples $ []
+          :schema $ :: :fn
+            {} (:return :unit)
+              :args $ [] :dynamic :fn
         |style-bold! $ %{} :CodeEntry (:doc |) (:schema :string)
           :code $ quote
             defstyle style-bold! $ {}
-              "\"&" $ {} (:font-weight "\"bold !important")
+              |& $ {} (:font-weight "|bold !important")
           :examples $ []
-        |style-list $ %{} :CodeEntry (:doc |) (:schema nil)
+        |style-list $ %{} :CodeEntry (:doc |) (:schema :map)
           :code $ quote
             def style-list $ {} (:color :black)
               :background-color $ hsl 120 20 98
           :examples $ []
-        |style-panel $ %{} :CodeEntry (:doc |) (:schema nil)
+        |style-panel $ %{} :CodeEntry (:doc |) (:schema :map)
           :code $ quote
             def style-panel $ {} (:display :flex) (:margin-bottom 4)
           :examples $ []
         |style-todo-root $ %{} :CodeEntry (:doc |) (:schema :string)
           :code $ quote
             defstyle style-todo-root $ {}
-              "\"&" $ {} (:color :black)
+              |& $ {} (:color :black)
                 :background-color $ hsl 120 20 98
                 :line-height |24px
-                "\"font-size" 16
+                |font-size 16
                 :padding 10
                 :font-family "|\"微软雅黑\", Verdana"
           :examples $ []
         |style-toolbar $ %{} :CodeEntry (:doc |) (:schema :string)
           :code $ quote
             defstyle style-toolbar $ {}
-              "\"&" $ {} (:display :flex) (:flex-direction :row) (:justify-content :start) (:padding "\"4px 0") (:white-space :nowrap)
+              |& $ {} (:display :flex) (:flex-direction :row) (:justify-content :start) (:padding "|4px 0") (:white-space :nowrap)
           :examples $ []
-        |try-test! $ %{} :CodeEntry (:doc |) (:schema nil)
+        |try-test! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn try-test! (dispatch! acc)
               let
@@ -308,7 +332,10 @@
                       , 0
                     println |result: $ sort acc number-order
           :examples $ []
-      :ns $ %{} :CodeEntry (:doc |) (:schema :unit)
+          :schema $ :: :fn
+            {} (:return :unit)
+              :args $ [] :fn (:: :list :number)
+      :ns $ %{} :NsEntry (:doc |)
         :code $ quote
           ns respo.app.comp.todolist $ :require
             respo.core :refer $ defcomp div span input <> list-> defeffect >> a
@@ -322,7 +349,6 @@
             respo.app.style.widget :as widget
             memof.once :refer $ memof1-call-by
             respo.css :refer $ defstyle
-        :examples $ []
     |respo.app.comp.wrap $ %{} :FileEntry
       :defs $ {}
         |comp-wrap $ %{} :CodeEntry (:doc |)
@@ -333,11 +359,10 @@
           :schema $ :: :fn
             {} (:return 'respo.schema/Component)
               :args $ [] :dynamic
-      :ns $ %{} :CodeEntry (:doc |) (:schema :unit)
+      :ns $ %{} :NsEntry (:doc |)
         :code $ quote
           ns respo.app.comp.wrap $ :require
             respo.core :refer $ defcomp div
-        :examples $ []
     |respo.app.comp.zero $ %{} :FileEntry
       :defs $ {}
         |comp-zero $ %{} :CodeEntry (:doc |)
@@ -348,17 +373,16 @@
           :schema $ :: :fn
             {} (:return 'respo.schema/Component)
               :args $ []
-      :ns $ %{} :CodeEntry (:doc |) (:schema :unit)
+      :ns $ %{} :NsEntry (:doc |)
         :code $ quote
           ns respo.app.comp.zero $ :require
             respo.core :refer $ defcomp div
-        :examples $ []
     |respo.app.core $ %{} :FileEntry
       :defs $ {}
-        |*store $ %{} :CodeEntry (:doc "|Global state storage Atom for the Respo application.\n\nThis is an atom containing all application state data, initialized with the structure defined by schema/store.\nIn Respo applications, all component states are stored in this global store and updated through the dispatch mechanism.") (:schema nil)
+        |*store $ %{} :CodeEntry (:doc "|Global state storage Atom for the Respo application.\n\nThis is an atom containing all application state data, initialized with the structure defined by schema/store.\nIn Respo applications, all component states are stored in this global store and updated through the dispatch mechanism.") (:schema :ref)
           :code $ quote (defatom *store schema/store)
           :examples $ []
-        |dispatch! $ %{} :CodeEntry (:doc |) (:schema nil)
+        |dispatch! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn dispatch! (op ? op-data)
               if dev? $ js/console.log op op-data
@@ -366,21 +390,33 @@
                   store $ updater @*store op (generate-id!)
                 reset! *store store
           :examples $ []
-        |handle-ssr! $ %{} :CodeEntry (:doc |) (:schema nil)
+          :schema $ :: :fn
+            {} (:return :unit)
+              :args $ [] :dynamic (:: :optional :dynamic)
+        |handle-ssr! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn handle-ssr! (mount-target)
               realize-ssr! mount-target (comp-container @*store) dispatch!
           :examples $ []
-        |new-fn $ %{} :CodeEntry (:doc |) (:schema nil)
+          :schema $ :: :fn
+            {} (:return :unit)
+              :args $ [] :dynamic
+        |new-fn $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn new-fn () $ println |hello
           :examples $ []
-        |render-app! $ %{} :CodeEntry (:doc |) (:schema nil)
+          :schema $ :: :fn
+            {} (:return :unit)
+              :args $ []
+        |render-app! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn render-app! (mount-target)
               render! mount-target (comp-container @*store) dispatch!
           :examples $ []
-      :ns $ %{} :CodeEntry (:doc |) (:schema :unit)
+          :schema $ :: :fn
+            {} (:return :unit)
+              :args $ [] :dynamic
+      :ns $ %{} :NsEntry (:doc |)
         :code $ quote
           ns respo.app.core $ :require
             respo.app.comp.container :refer $ comp-container
@@ -388,55 +424,52 @@
             respo.schema :refer $ dev?
             respo.app.schema :as schema
             respo.app.updater :refer $ updater
-        :examples $ []
     |respo.app.schema $ %{} :FileEntry
       :defs $ {}
-        |store $ %{} :CodeEntry (:doc |) (:schema nil)
+        |store $ %{} :CodeEntry (:doc |) (:schema :map)
           :code $ quote
             def store $ {}
               :tasks $ []
               :states $ {}
               :cursor $ []
           :examples $ []
-        |task $ %{} :CodeEntry (:doc |) (:schema nil)
+        |task $ %{} :CodeEntry (:doc |) (:schema :map)
           :code $ quote
             def task $ {} (:id nil) (:text |) (:done? false)
           :examples $ []
-      :ns $ %{} :CodeEntry (:doc |) (:schema :unit)
+      :ns $ %{} :NsEntry (:doc |)
         :code $ quote (ns respo.app.schema)
-        :examples $ []
     |respo.app.style.widget $ %{} :FileEntry
       :defs $ {}
-        |button $ %{} :CodeEntry (:doc |) (:schema nil)
+        |button $ %{} :CodeEntry (:doc |) (:schema :map)
           :code $ quote
-            def button $ {} (:display :inline-block) (:padding "\"0 6px 0 6px") (:font-family |Avenir,Verdana) (:cursor :pointer)
+            def button $ {} (:display :inline-block) (:padding "|0 6px 0 6px") (:font-family |Avenir,Verdana) (:cursor :pointer)
               :background-color $ hsl 0 80 70.9
               :color $ hsl 0 0 100
               :height 28
-              :line-height "\"28px"
-              :transition-duration "\"200ms"
+              :line-height |28px
+              :transition-duration |200ms
           :examples $ []
         |style-button $ %{} :CodeEntry (:doc |) (:schema :string)
           :code $ quote
             defstyle style-button $ {} (:& button)
-              "\"&:hover" $ {} (:transform "\"scale(1.04)")
+              |&:hover $ {} (:transform "|scale(1.04)")
           :examples $ []
         |style-input $ %{} :CodeEntry (:doc |) (:schema :string)
           :code $ quote
             defstyle style-input $ {}
-              "\"&" $ {} (:font-size |16px) (:line-height |24px) (:padding "|0px 8px") (:outline :none) (:min-width |300px)
+              |& $ {} (:font-size |16px) (:line-height |24px) (:padding "|0px 8px") (:outline :none) (:min-width |300px)
                 :background-color $ hsl 0 0 94
                 :border :none
           :examples $ []
-      :ns $ %{} :CodeEntry (:doc |) (:schema :unit)
+      :ns $ %{} :NsEntry (:doc |)
         :code $ quote
           ns respo.app.style.widget $ :require
             respo.util.format :refer $ hsl
             respo.css :refer $ defstyle
-        :examples $ []
     |respo.app.updater $ %{} :FileEntry
       :defs $ {}
-        |updater $ %{} :CodeEntry (:doc |) (:schema nil)
+        |updater $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn updater (store op op-id) (; println store op)
               tag-match op
@@ -473,19 +506,21 @@
                           = (:id task) task-id
                           update task :done? not
                           , task
-                _ $ do (eprintln "\"Unknown op:" op) store
+                _ $ do (eprintln "|Unknown op:" op) store
           :examples $ []
-      :ns $ %{} :CodeEntry (:doc |) (:schema :unit)
+          :schema $ :: :fn
+            {} (:return :map)
+              :args $ [] :map :dynamic :dynamic
+      :ns $ %{} :NsEntry (:doc |)
         :code $ quote
           ns respo.app.updater $ :require
             respo.cursor :refer $ update-states update-states-kv update-states-merge
-        :examples $ []
     |respo.comp.global-keydown $ %{} :FileEntry
       :defs $ {}
         |comp-global-keydown $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defcomp comp-global-keydown (options on-event) (; "\"dirty solution: proxy window keydown event to a `<span/>`, comes with some restrictions. however Respo does not allow effects to modify states.")
-              [] (effect-listen-keyboard options "\"keydown")
+            defcomp comp-global-keydown (options on-event) (; "|dirty solution: proxy window keydown event to a `<span/>`, comes with some restrictions. however Respo does not allow effects to modify states.")
+              [] (effect-listen-keyboard options |keydown)
                 span $ {}
                   :on-keydown $ fn (e d!) (on-event e d!)
           :examples $ []
@@ -494,25 +529,25 @@
               :args $ [] :dynamic :dynamic
         |comp-global-keyup $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defcomp comp-global-keyup (options on-event) (; "\"dirty solution: proxy window keydown event to a `<span/>`, comes with some restrictions. however Respo does not allow effects to modify states.")
-              [] (effect-listen-keyboard options "\"keyup")
+            defcomp comp-global-keyup (options on-event) (; "|dirty solution: proxy window keydown event to a `<span/>`, comes with some restrictions. however Respo does not allow effects to modify states.")
+              [] (effect-listen-keyboard options |keyup)
                 span $ {}
                   :on-keyup $ fn (e d!) (on-event e d!)
           :examples $ []
           :schema $ :: :fn
             {} (:return 'respo.schema/Component)
               :args $ [] :dynamic :dynamic
-        |dirty-field $ %{} :CodeEntry (:doc "|Constant string key for the global keyboard listener.") (:schema nil)
-          :code $ quote (def dirty-field "\"_global_listener")
+        |dirty-field $ %{} :CodeEntry (:doc "|Constant string key for the global keyboard listener.") (:schema :string)
+          :code $ quote (def dirty-field |_global_listener)
           :examples $ []
-        |effect-listen-keyboard $ %{} :CodeEntry (:doc "|Effect for listening to global keyboard events on the window object.") (:schema nil)
+        |effect-listen-keyboard $ %{} :CodeEntry (:doc "|Effect for listening to global keyboard events on the window object.")
           :code $ quote
             defeffect effect-listen-keyboard (options event-name) (action el at?)
               cond
                   or (= action :mount) (= action :update)
                   let
-                      disabled-commands $ noted "\"copied event does not support `event.preventDefault()`, so we need to pass a set of configs"
-                        either (:disabled-commands options) (#{} "\"p" "\"s")
+                      disabled-commands $ noted "|copied event does not support `event.preventDefault()`, so we need to pass a set of configs"
+                        either (:disabled-commands options) (#{} |p |s)
                       handler $ fn (event)
                         if
                           and
@@ -532,11 +567,13 @@
                     js-delete el dirty-field
                 true nil
           :examples $ []
-      :ns $ %{} :CodeEntry (:doc |) (:schema :unit)
+          :schema $ :: :fn
+            {} (:return 'respo.schema/Effect)
+              :args $ [] :dynamic :string
+      :ns $ %{} :NsEntry (:doc |)
         :code $ quote
           ns respo.comp.global-keydown $ :require
             respo.core :refer $ defcomp defeffect <> >> div button textarea span input a list->
-        :examples $ []
     |respo.comp.inspect $ %{} :FileEntry
       :defs $ {}
         |comp-inspect $ %{} :CodeEntry (:doc "|put a label in tag with absolute position, click it to print data.\n\n3 parameters are,\n- `tip` a string of comment,\n- `data` Calcit data to inspect, which will be printed in Console,\n- `style` string of className, or hashmap of styles")
@@ -576,21 +613,20 @@
         |highlight-defcomp $ %{} :CodeEntry (:doc |) (:schema :string)
           :code $ quote
             defstyle highlight-defcomp $ {}
-              "\"& *" $ {}
-                :outline $ str "\"1px dashed " (hsl 200 40 50 0.5)
+              "|& *" $ {}
+                :outline $ str "|1px dashed " (hsl 200 40 50 0.5)
           :examples $ []
         |style-data $ %{} :CodeEntry (:doc |) (:schema :string)
           :code $ quote
             defstyle style-data $ {}
-              "\"&" $ {} (:position :absolute) (:background-color "\"hsl(240,100%,0%)") (:color :white) (:opacity 0.2) (:font-size |12px) (:font-family |Avenir,Verdana) (:line-height "\"1.4em") (:padding "|2px 6px") (:border-radius |4px) (:max-width 160) (:max-height 32) (:white-space :normal) (:text-overflow :ellipsis) (:cursor :default)
+              |& $ {} (:position :absolute) (:background-color "|hsl(240,100%,0%)") (:color :white) (:opacity 0.2) (:font-size |12px) (:font-family |Avenir,Verdana) (:line-height |1.4em) (:padding "|2px 6px") (:border-radius |4px) (:max-width 160) (:max-height 32) (:white-space :normal) (:text-overflow :ellipsis) (:cursor :default)
           :examples $ []
-      :ns $ %{} :CodeEntry (:doc |) (:schema :unit)
+      :ns $ %{} :NsEntry (:doc |)
         :code $ quote
           ns respo.comp.inspect $ :require
             respo.core :refer $ defcomp pre <>
             respo.css :refer $ defstyle
             respo.util.format :refer $ hsl
-        :examples $ []
     |respo.comp.space $ %{} :FileEntry
       :defs $ {}
         |=< $ %{} :CodeEntry (:doc "|insert a tiny space, horizontally or verticaly.\n\n- `8 nil` for horizontal width 8px,\n- `nil 8` for vertical height 8px.\n")
@@ -619,15 +655,14 @@
             defstyle style-space $ {}
               :& $ {} (:height 1) (:width 1) (:display :inline-block)
           :examples $ []
-      :ns $ %{} :CodeEntry (:doc |) (:schema :unit)
+      :ns $ %{} :NsEntry (:doc |)
         :code $ quote
           ns respo.comp.space $ :require
             respo.core :refer $ div defcomp
             respo.css :refer $ defstyle
-        :examples $ []
     |respo.controller.client $ %{} :FileEntry
       :defs $ {}
-        |activate-instance! $ %{} :CodeEntry (:doc "|Initializes the application by mounting the root element to the DOM.") (:schema nil)
+        |activate-instance! $ %{} :CodeEntry (:doc "|Initializes the application by mounting the root element to the DOM.")
           :code $ quote
             defn activate-instance! (entire-dom mount-point deliver-event)
               let
@@ -635,7 +670,10 @@
                 set! (.-innerHTML mount-point) |
                 .!appendChild mount-point $ make-element entire-dom listener-builder ([])
           :examples $ []
-        |build-listener $ %{} :CodeEntry (:doc "|Creates a DOM event listener that converts events and dispatches them to Respo.") (:schema nil)
+          :schema $ :: :fn
+            {} (:return :unit)
+              :args $ [] 'respo.schema/Component :dynamic :fn
+        |build-listener $ %{} :CodeEntry (:doc "|Creates a DOM event listener that converts events and dispatches them to Respo.")
           :code $ quote
             defn build-listener (event-name deliver-event)
               fn (event coord)
@@ -643,13 +681,19 @@
                     simple-event $ event->edn event
                   deliver-event coord event-name simple-event
           :examples $ []
-        |patch-instance! $ %{} :CodeEntry (:doc "|Applies collected changes to the DOM and updates event listeners.") (:schema nil)
+          :schema $ :: :fn
+            {} (:return :fn)
+              :args $ [] :dynamic :fn
+        |patch-instance! $ %{} :CodeEntry (:doc "|Applies collected changes to the DOM and updates event listeners.")
           :code $ quote
             defn patch-instance! (changes mount-point deliver-event)
               let
                   listener-builder $ fn (event-name) (build-listener event-name deliver-event)
                 apply-dom-changes changes mount-point listener-builder
           :examples $ []
+          :schema $ :: :fn
+            {} (:return :unit)
+              :args $ [] :list :dynamic :fn
         |send-to-component! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn send-to-component! (event-tuple) (assert-type event-tuple :tuple)
@@ -661,7 +705,7 @@
           :schema $ :: :fn
             {} (:return :tag)
               :args $ [] :tuple
-        |traverse-and-call $ %{} :CodeEntry (:doc |) (:schema nil)
+        |traverse-and-call $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn traverse-and-call (element event-tuple dispatch!)
               when (some? element)
@@ -681,7 +725,10 @@
                           child $ get pair 1
                         traverse-and-call child event-tuple dispatch!
           :examples $ []
-        |wrap-dispatch $ %{} :CodeEntry (:doc "|Wraps a raw dispatch function to automatically handle different operation types (list, tag, or direct).") (:schema nil)
+          :schema $ :: :fn
+            {} (:return :unit)
+              :args $ [] :dynamic :tuple :fn
+        |wrap-dispatch $ %{} :CodeEntry (:doc "|Wraps a raw dispatch function to automatically handle different operation types (list, tag, or direct).")
           :code $ quote
             defn wrap-dispatch (*dispatch-fn)
               fn (op ? data)
@@ -693,7 +740,10 @@
                       dispatch! $ :: op data
                       dispatch! op
           :examples $ []
-      :ns $ %{} :CodeEntry (:doc |) (:schema :unit)
+          :schema $ :: :fn
+            {} (:return :fn)
+              :args $ [] :ref
+      :ns $ %{} :NsEntry (:doc |)
         :code $ quote
           ns respo.controller.client $ :require
             respo.render.patch :refer $ apply-dom-changes
@@ -702,24 +752,26 @@
             respo.core :refer $ *dispatch-fn *global-element
             respo.util.detect :refer $ component? element?
             respo.controller.resolve :refer $ extract-listeners
-        :examples $ []
     |respo.controller.resolve $ %{} :FileEntry
       :defs $ {}
-        |build-deliver-event $ %{} :CodeEntry (:doc "|Creates a function to dispatch events from the DOM to Respo's event handling system.") (:schema nil)
+        |build-deliver-event $ %{} :CodeEntry (:doc "|Creates a function to dispatch events from the DOM to Respo's event handling system.")
           :code $ quote
             defn build-deliver-event (*global-element *dispatch-fn)
-              fn (coord event-name simple-event) (; echo "\"event coord" coord)
+              fn (coord event-name simple-event) (; echo "|event coord" coord)
                 let
                     target-element $ find-event-target @*global-element coord event-name
                     target-listener $ if (some? target-element)
                       get (:event target-element) event-name
-                      do (js/console.warn "\"found no element" coord event-name) nil
+                      do (js/console.warn "|found no element" coord event-name) nil
                     dispatch-wrap $ wrap-dispatch *dispatch-fn
                   if (some? target-listener)
                     do (; println "|listener found:" coord event-name) (target-listener simple-event dispatch-wrap)
                     ; println "|found no listener:" coord event-name
           :examples $ []
-        |extract-listeners $ %{} :CodeEntry (:doc |) (:schema nil)
+          :schema $ :: :fn
+            {} (:return :fn)
+              :args $ [] :ref :ref
+        |extract-listeners $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn extract-listeners (component-result)
               if (list? component-result)
@@ -734,11 +786,14 @@
                   :listeners $ []
                   :element component-result
           :examples $ []
-        |find-event-target $ %{} :CodeEntry (:doc "|Traverses the virtual DOM to find the element that should handle a specific event.") (:schema nil)
+          :schema $ :: :fn
+            {} (:return :map)
+              :args $ [] :dynamic
+        |find-event-target $ %{} :CodeEntry (:doc "|Traverses the virtual DOM to find the element that should handle a specific event.")
           :code $ quote
-            defn find-event-target (element coord event-name) (; echo "\"looking for" coord event-name)
-              assert "\"element cannot be nil" $ some? element
-              assert "\"coord cannot be nil" $ some? coord
+            defn find-event-target (element coord event-name) (; echo "|looking for" coord event-name)
+              assert "|element cannot be nil" $ some? element
+              assert "|coord cannot be nil" $ some? coord
               let
                   target-element $ loop
                       m $ get-markup-at element coord
@@ -757,7 +812,10 @@
                         , event-name
                       , nil
           :examples $ []
-        |get-markup-at $ %{} :CodeEntry (:doc "|Retrieves the virtual DOM element at the specified coordinate.") (:schema nil)
+          :schema $ :: :fn
+            {} (:return :dynamic)
+              :args $ [] :dynamic :list :dynamic
+        |get-markup-at $ %{} :CodeEntry (:doc "|Retrieves the virtual DOM element at the specified coordinate.")
           :code $ quote
             defn get-markup-at (markup coord)
               ; println |markup: $ to-lispy-string coord
@@ -775,23 +833,25 @@
                         raise $ str "|child not found:" coord
                           map (:children markup) first
           :examples $ []
-      :ns $ %{} :CodeEntry (:doc |) (:schema :unit)
+          :schema $ :: :fn
+            {} (:return :dynamic)
+              :args $ [] :dynamic :list
+      :ns $ %{} :NsEntry (:doc |)
         :code $ quote
           ns respo.controller.resolve $ :require
             respo.util.detect :refer $ component? element? listener?
             respo.controller.client :refer $ wrap-dispatch
-        :examples $ []
     |respo.core $ %{} :FileEntry
       :defs $ {}
-        |*changes-logger $ %{} :CodeEntry (:doc "|Atom to hold a logging function for observing changes during rerenders. Function signature: (old-tree new-tree changes).") (:schema nil)
+        |*changes-logger $ %{} :CodeEntry (:doc "|Atom to hold a logging function for observing changes during rerenders. Function signature: (old-tree new-tree changes).") (:schema :ref)
           :code $ quote (defatom *changes-logger nil)
           :examples $ []
             quote $ reset! *changes-logger
               fn (old new changes) (println changes)
-        |*dispatch-fn $ %{} :CodeEntry (:doc "|internal atom storing the dispatch function. used to handle events and state updates throughout the application.") (:schema nil)
+        |*dispatch-fn $ %{} :CodeEntry (:doc "|internal atom storing the dispatch function. used to handle events and state updates throughout the application.") (:schema :ref)
           :code $ quote (defatom *dispatch-fn nil)
           :examples $ []
-        |*global-element $ %{} :CodeEntry (:doc "|internal atom storing the current virtual DOM tree. used by render! to track and update the application state.") (:schema nil)
+        |*global-element $ %{} :CodeEntry (:doc "|internal atom storing the current virtual DOM tree. used by render! to track and update the application state.") (:schema :ref)
           :code $ quote (defatom *global-element nil)
           :examples $ []
         |<> $ %{} :CodeEntry (:doc "|create a text node using span element. first argument is the text content. optional second argument is style (hashmap) or class-name (string).")
@@ -827,11 +887,14 @@
           :schema $ :: :fn
             {} (:rest :dynamic) (:return :tag)
               :args $ [] (:: :optional :map)
-        |blockquote $ %{} :CodeEntry (:doc |) (:schema nil)
+        |blockquote $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn blockquote (props & children) (create-element :blockquote props & children)
           :examples $ []
-        |body $ %{} :CodeEntry (:doc "|create a body element with properties and children. first argument is a hashmap for properties, rest arguments are children elements.") (:schema nil)
+          :schema $ :: :fn
+            {} (:rest :dynamic) (:return :tag)
+              :args $ [] (:: :optional :map)
+        |body $ %{} :CodeEntry (:doc "|create a body element with properties and children. first argument is a hashmap for properties, rest arguments are children elements.")
           :code $ quote
             defn body (props & children) (create-element :body props & children)
           :examples $ []
@@ -840,6 +903,9 @@
             quote $ body
               {} $ :style
                 {} $ :margin |0
+          :schema $ :: :fn
+            {} (:rest :dynamic) (:return :tag)
+              :args $ [] (:: :optional :map)
         |button $ %{} :CodeEntry (:doc "|Renders a <button> element. Wrapper around create-element.")
           :code $ quote
             defn button (props & children)
@@ -854,31 +920,43 @@
           :schema $ :: :fn
             {} (:rest :dynamic) (:return :tag)
               :args $ [] (:: :optional :map)
-        |clear-cache! $ %{} :CodeEntry (:doc |) (:schema nil)
+        |clear-cache! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn clear-cache! () $ reset-memof1-caches!
           :examples $ []
-        |code $ %{} :CodeEntry (:doc |) (:schema nil)
+          :schema $ :: :fn
+            {} (:return :unit)
+              :args $ []
+        |code $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn code (props & children) (assert-type props :map) (create-element :code props & children)
           :examples $ []
-        |confirm-child $ %{} :CodeEntry (:doc "|Validates if the item is a valid Respo node (element, component, or nil). Returns the item.") (:schema nil)
+          :schema $ :: :fn
+            {} (:rest :dynamic) (:return :tag)
+              :args $ [] :map
+        |confirm-child $ %{} :CodeEntry (:doc "|Validates if the item is a valid Respo node (element, component, or nil). Returns the item.")
           :code $ quote
             defn confirm-child (x)
-              assert "\"Invalid data in elements tree: " $ or (nil? x) (element? x) (component? x)
+              assert "|Invalid data in elements tree: " $ or (nil? x) (element? x) (component? x)
               , x
           :examples $ []
-        |confirm-child-pair $ %{} :CodeEntry (:doc |) (:schema nil)
+          :schema $ :: :fn
+            {} (:return :dynamic)
+              :args $ [] :dynamic
+        |confirm-child-pair $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn confirm-child-pair (pair)
-              assert "\"expected pair" $ and (list? pair)
+              assert "|expected pair" $ and (list? pair)
                 &= 2 $ count pair
               &let
                 x $ nth pair 1
-                assert "\"Invalid data in elements tree: " $ or (nil? x) (element? x) (component? x)
+                assert "|Invalid data in elements tree: " $ or (nil? x) (element? x) (component? x)
               , pair
           :examples $ []
-        |create-element $ %{} :CodeEntry (:doc "|create a virtual DOM element with tag name, properties and children. used internally by element macros like div, span, etc.") (:schema nil)
+          :schema $ :: :fn
+            {} (:return :dynamic)
+              :args $ [] :dynamic
+        |create-element $ %{} :CodeEntry (:doc "|create a virtual DOM element with tag name, properties and children. used internally by element macros like div, span, etc.")
           :code $ quote
             defn create-element (tag-name props & children) (assert-type tag-name :keyword)
               assert-type props $ :: :optional :map
@@ -906,7 +984,10 @@
             quote $ create-element :a
               {} $ :href |/home
               <> |Home
-        |create-list-element $ %{} :CodeEntry (:doc "|Creates a virtual DOM element for list rendering. Arguments: tag-name, props, child-map (map of key -> child).") (:schema nil)
+          :schema $ :: :fn
+            {} (:rest :dynamic) (:return 'respo.schema/Element)
+              :args $ [] :tag (:: :optional :map)
+        |create-list-element $ %{} :CodeEntry (:doc "|Creates a virtual DOM element for list rendering. Arguments: tag-name, props, child-map (map of key -> child).")
           :code $ quote
             defn create-list-element (tag-name props child-map) (assert-type tag-name :keyword)
               assert-type props $ :: :optional :map
@@ -926,7 +1007,10 @@
               {} $ :class-name |list
               [] $ [] :item-1
                 span $ {}
-        |decorate-defcomp $ %{} :CodeEntry (:doc "|detect root element under component and add `data-defcomp` mark") (:schema nil)
+          :schema $ :: :fn
+            {} (:return 'respo.schema/Element)
+              :args $ [] :tag (:: :optional :map) :map
+        |decorate-defcomp $ %{} :CodeEntry (:doc "|detect root element under component and add `data-defcomp` mark")
           :code $ quote
             defn decorate-defcomp (c name)
               update c :tree $ fn (tree)
@@ -937,12 +1021,15 @@
                     conj attrs $ [] :data-comp name
                   , tree
           :examples $ []
+          :schema $ :: :fn
+            {} (:return 'respo.schema/Component)
+              :args $ [] 'respo.schema/Component :string
         |defcomp $ %{} :CodeEntry (:doc "|Respo component can be plain functions. However `defcomp` is provided as a macro to transform effects into component effects, and it returns component instead of element.\n\nparameters are:\n\n- component name\n- a list of params\n- spreading argument of body, last item used as returned value") (:schema nil)
           :code $ quote
             defmacro defcomp (comp-name params & body)
-              assert "\"expected symbol of comp-name" $ symbol? comp-name
-              assert "\"expected list for params" $ list? params
-              assert "\"some component retured" $ &> (count body) 0
+              assert "|expected symbol of comp-name" $ symbol? comp-name
+              assert "|expected list for params" $ list? params
+              assert "|some component retured" $ &> (count body) 0
               quasiquote $ defn ~comp-name (~ params)
                 decorate-defcomp
                   extract-effects-list $ %{} schema/Component
@@ -966,11 +1053,11 @@
         |defeffect $ %{} :CodeEntry (:doc "|a macro for defining a effect. if returns an function.\n\nparameters:\n\n- effect name\n- list of arguments\n- list of effect lifecycle arguments\n  - action name\n  - element that take place\n  - boolean if happen at current element\n- spreading arguments of body\n") (:schema nil)
           :code $ quote
             defmacro defeffect (effect-name args params & body)
-              assert "\"args in symbol" $ and (list? args) (every? args symbol?)
-              assert "\"params like [action el at-place?]" $ and (list? params) (every? params symbol?)
+              assert "|args in symbol" $ and (list? args) (every? args symbol?)
+              assert "|params like [action el at-place?]" $ and (list? params) (every? params symbol?)
               let
-                  args-var $ gensym "\"args"
-                  params-var $ gensym "\"params"
+                  args-var $ gensym |args
+                  params-var $ gensym |params
                 quasiquote $ defn ~effect-name ~args
                   %{} schema/Effect
                     :name $ ~ (turn-tag effect-name)
@@ -978,18 +1065,19 @@
                     :args $ [] ~@args
                     :method $ fn (~args-var ~params-var)
                       let[] ~args ~args-var $ let[] ~params ~params-var
-                        ~@ $ if (empty? body)
-                          quasiquote $ println "\"WARNING:" ~effect-name "\"lack code for handling effects!"
-                          , body
+                        ~ $ if (empty? body)
+                          quasiquote $ do
+                            println $ str-spaced |WARNING: ~effect-name "|lack code for handling effects!"
+                          quasiquote $ do ~@body
           :examples $ []
             quote $ defeffect log-message [message] [action el at-place?]
               if (= action :mount) (js/console.log message)
         |defplugin $ %{} :CodeEntry (:doc |) (:schema nil)
           :code $ quote
             defmacro defplugin (x params & body)
-              assert "\"expected symbol" $ symbol? x
-              assert "\"expected params" $ list? params
-              assert "\"expected some result" $ > (count body) 0
+              assert "|expected symbol" $ symbol? x
+              assert "|expected params" $ list? params
+              assert "|expected some result" $ > (count body) 0
               quasiquote $ defn ~x ~params ~@body
           :examples $ []
         |div $ %{} :CodeEntry (:doc "|create a div element with properties and children. first argument is a hashmap for properties like :class-name, :style, :on. rest arguments are children elements.")
@@ -1013,11 +1101,11 @@
           :schema $ :: :fn
             {} (:rest :dynamic) (:return :tag)
               :args $ [] (:: :optional :map)
-        |element-type $ %{} :CodeEntry (:doc |) (:schema nil)
+        |element-type $ %{} :CodeEntry (:doc |) (:schema :dynamic)
           :code $ quote
             def element-type $ if (exists? js/Element) js/Element js/Error
           :examples $ []
-        |extract-effects-list $ %{} :CodeEntry (:doc |) (:schema nil)
+        |extract-effects-list $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn extract-effects-list (markup)
               &let
@@ -1036,6 +1124,9 @@
                       -> markup (assoc :tree node-tree) (assoc :effects effects-list) (assoc :listeners listeners-list)
                   true markup
           :examples $ []
+          :schema $ :: :fn
+            {} (:return 'respo.schema/Component)
+              :args $ [] 'respo.schema/Component
         |h1 $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn h1 (props & children)
@@ -1063,35 +1154,56 @@
           :schema $ :: :fn
             {} (:rest :dynamic) (:return :tag)
               :args $ [] (:: :optional :map)
-        |h4 $ %{} :CodeEntry (:doc |) (:schema nil)
+        |h4 $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn h4 (props & children) (create-element :h4 props & children)
           :examples $ []
-        |h5 $ %{} :CodeEntry (:doc |) (:schema nil)
+          :schema $ :: :fn
+            {} (:rest :dynamic) (:return :tag)
+              :args $ [] (:: :optional :map)
+        |h5 $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn h5 (props & children) (create-element :h5 props & children)
           :examples $ []
-        |h6 $ %{} :CodeEntry (:doc |) (:schema nil)
+          :schema $ :: :fn
+            {} (:rest :dynamic) (:return :tag)
+              :args $ [] (:: :optional :map)
+        |h6 $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn h6 (props & children) (create-element :h6 props & children)
           :examples $ []
-        |head $ %{} :CodeEntry (:doc |) (:schema nil)
+          :schema $ :: :fn
+            {} (:rest :dynamic) (:return :tag)
+              :args $ [] (:: :optional :map)
+        |head $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn head (props & children) (create-element :head props & children)
           :examples $ []
-        |hr $ %{} :CodeEntry (:doc |) (:schema nil)
+          :schema $ :: :fn
+            {} (:rest :dynamic) (:return :tag)
+              :args $ [] (:: :optional :map)
+        |hr $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn hr (props) (create-element :hr props)
           :examples $ []
-        |html $ %{} :CodeEntry (:doc |) (:schema nil)
+          :schema $ :: :fn
+            {} (:return :tag)
+              :args $ [] (:: :optional :map)
+        |html $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn html (props & children)
               create-element :html props & $ map children confirm-child
           :examples $ []
-        |img $ %{} :CodeEntry (:doc |) (:schema nil)
+          :schema $ :: :fn
+            {} (:rest :dynamic) (:return :tag)
+              :args $ [] (:: :optional :map)
+        |img $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn img (props & children) (create-element :img props & children)
           :examples $ []
+          :schema $ :: :fn
+            {} (:rest :dynamic) (:return :tag)
+              :args $ [] (:: :optional :map)
         |input $ %{} :CodeEntry (:doc "|Creates HTML input element (input tag).\n\nParameters:\n  props - Attribute map, can include standard HTML attributes and event handlers like type, value, placeholder, on-input, etc.\n  & children - Variable arguments for child elements, usually empty since input is self-closing\n\nReturns:\n  Created input element component\n\nUsed to create various form input controls, supports text, password, number and other input types.")
           :code $ quote
             defn input (props & children)
@@ -1112,10 +1224,13 @@
           :schema $ :: :fn
             {} (:rest :dynamic) (:return :tag)
               :args $ [] (:: :optional :map)
-        |link $ %{} :CodeEntry (:doc |) (:schema nil)
+        |link $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn link (props & children) (create-element :link props & children)
           :examples $ []
+          :schema $ :: :fn
+            {} (:rest :dynamic) (:return :tag)
+              :args $ [] (:: :optional :map)
         |list-> $ %{} :CodeEntry (:doc "|Renders a list of items inside a <div>. Uses key reconciliation for efficient updates.")
           :code $ quote
             defn list-> (props children)
@@ -1129,7 +1244,7 @@
           :schema $ :: :fn
             {} (:return :tag)
               :args $ [] (:: :optional :map) :map
-        |mount-app! $ %{} :CodeEntry (:doc "|Mounts the Respo application to the DOM. Initializes the global element and event listeners.") (:schema nil)
+        |mount-app! $ %{} :CodeEntry (:doc "|Mounts the Respo application to the DOM. Initializes the global element and event listeners.")
           :code $ quote
             defn mount-app! (target element *dispatch-fn)
               ; assert "|1st argument should be an element" $ or (nil? target) (instance? element-type target)
@@ -1145,6 +1260,9 @@
                 reset! *global-element element
           :examples $ []
             quote $ mount-app! mount-target (comp-app) *dispatch-fn
+          :schema $ :: :fn
+            {} (:return :unit)
+              :args $ [] :dynamic 'respo.schema/Component :ref
         |ol $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn ol (props & children)
@@ -1154,10 +1272,13 @@
           :schema $ :: :fn
             {} (:rest :dynamic) (:return :tag)
               :args $ [] (:: :optional :map)
-        |option $ %{} :CodeEntry (:doc |) (:schema nil)
+        |option $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn option (props & children) (create-element :option props & children)
           :examples $ []
+          :schema $ :: :fn
+            {} (:rest :dynamic) (:return :tag)
+              :args $ [] (:: :optional :map)
         |p $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn p (props & children)
@@ -1180,7 +1301,7 @@
           :schema $ :: :fn
             {} (:rest :dynamic) (:return :tag)
               :args $ [] (:: :optional :map)
-        |realize-ssr! $ %{} :CodeEntry (:doc |) (:schema nil)
+        |realize-ssr! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn realize-ssr! (target element dispatch!)
               assert (instance? element-type target) "|1st argument should be an element"
@@ -1191,19 +1312,25 @@
                   collect! $ fn (op coord n-coord v)
                     swap! *changes conj $ [] op coord n-coord v
                   deliver-event $ build-deliver-event *global-element dispatch!
-                if (nil? app-element) (raise "\"Detected no element from SSR!")
+                if (nil? app-element) (raise "|Detected no element from SSR!")
                 compare-to-dom! (purify-element element) app-element
                 collect-mounting collect! ([]) ([]) element true
                 patch-instance! @*changes target deliver-event
                 reset! *global-element $ mute-element element
           :examples $ []
-        |render! $ %{} :CodeEntry (:doc "|sync virtual DOM to real DOM. newly creating for the first time, and diff/patch for reset of calls:\n\ntakes arguments:\n- `target`, the mount point,\n- `markup` which is the virtual DOM,\n- `dispatch!` the dispatcher function for handling actions.") (:schema nil)
+          :schema $ :: :fn
+            {} (:return :unit)
+              :args $ [] :dynamic 'respo.schema/Component :fn
+        |render! $ %{} :CodeEntry (:doc "|sync virtual DOM to real DOM. newly creating for the first time, and diff/patch for reset of calls:\n\ntakes arguments:\n- `target`, the mount point,\n- `markup` which is the virtual DOM,\n- `dispatch!` the dispatcher function for handling actions.")
           :code $ quote
             defn render! (target markup dispatch!) (assert-type dispatch! :fn) (reset! *dispatch-fn dispatch!)
               if (some? @*global-element) (rerender-app! target markup *dispatch-fn) (mount-app! target markup *dispatch-fn)
           :examples $ []
             quote $ render! mount-target (comp-container @*store) dispatch!
-        |rerender-app! $ %{} :CodeEntry (:doc "|Diffs the new element against the global element and patches the DOM. Used internally by render!.") (:schema nil)
+          :schema $ :: :fn
+            {} (:return :unit)
+              :args $ [] :dynamic 'respo.schema/Component :fn
+        |rerender-app! $ %{} :CodeEntry (:doc "|Diffs the new element against the global element and patches the DOM. Used internally by render!.")
           :code $ quote
             defn rerender-app! (target element *dispatch-fn)
               let
@@ -1218,10 +1345,16 @@
                 reset! *global-element element
           :examples $ []
             quote $ rerender-app! mount-target (comp-demo) *dispatch-fn
-        |script $ %{} :CodeEntry (:doc |) (:schema nil)
+          :schema $ :: :fn
+            {} (:return :unit)
+              :args $ [] :dynamic 'respo.schema/Component :ref
+        |script $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn script (props & children) (create-element :script props & children)
           :examples $ []
+          :schema $ :: :fn
+            {} (:rest :dynamic) (:return :tag)
+              :args $ [] (:: :optional :map)
         |select $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn select (props & children)
@@ -1245,16 +1378,22 @@
           :schema $ :: :fn
             {} (:rest :dynamic) (:return :tag)
               :args $ [] (:: :optional :map)
-        |strong $ %{} :CodeEntry (:doc |) (:schema nil)
+        |strong $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn strong (props & children) (create-element :strong props & children)
           :examples $ []
-        |style $ %{} :CodeEntry (:doc "|Creates HTML style element for defining CSS styles.\n\nParameters:\n  props - Attribute map, can include standard HTML attributes for style elements\n  & children - Variable arguments for child elements, typically CSS style content\n\nReturns:\n  Created style element component\n\nUsed to dynamically define CSS styles within components, supports nested and dynamic style generation.") (:schema nil)
+          :schema $ :: :fn
+            {} (:rest :dynamic) (:return :tag)
+              :args $ [] (:: :optional :map)
+        |style $ %{} :CodeEntry (:doc "|Creates HTML style element for defining CSS styles.\n\nParameters:\n  props - Attribute map, can include standard HTML attributes for style elements\n  & children - Variable arguments for child elements, typically CSS style content\n\nReturns:\n  Created style element component\n\nUsed to dynamically define CSS styles within components, supports nested and dynamic style generation.")
           :code $ quote
             defn style (props & children) (create-element :style props & children)
           :examples $ []
             quote $ style
               {} $ :innerHTML "|body { margin: 0; padding: 0; }"
+          :schema $ :: :fn
+            {} (:rest :dynamic) (:return :tag)
+              :args $ [] (:: :optional :map)
         |textarea $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn textarea (props & children)
@@ -1264,10 +1403,13 @@
           :schema $ :: :fn
             {} (:rest :dynamic) (:return :tag)
               :args $ [] (:: :optional :map)
-        |title $ %{} :CodeEntry (:doc |) (:schema nil)
+        |title $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn title (props & children) (create-element :title props & children)
           :examples $ []
+          :schema $ :: :fn
+            {} (:rest :dynamic) (:return :tag)
+              :args $ [] (:: :optional :map)
         |ul $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn ul (props & children)
@@ -1277,7 +1419,7 @@
           :schema $ :: :fn
             {} (:rest :dynamic) (:return :tag)
               :args $ [] (:: :optional :map)
-      :ns $ %{} :CodeEntry (:doc "|provide core APIs for Respo, many of them are elements. if expected element is not defined yet, use `create-element :tag-name ...` to use it dynamically.\n") (:schema :unit)
+      :ns $ %{} :NsEntry (:doc "|provide core APIs for Respo, many of them are elements. if expected element is not defined yet, use `create-element :tag-name ...` to use it dynamically.\n")
         :code $ quote
           ns respo.core $ :require
             respo.controller.resolve :refer $ build-deliver-event
@@ -1290,21 +1432,20 @@
             respo.util.dom :refer $ compare-to-dom!
             memof.once :refer $ reset-memof1-caches!
             respo.util.detect :refer $ component? element? effect? listener?
-        :examples $ []
     |respo.css $ %{} :FileEntry
       :defs $ {}
-        |*style-caches $ %{} :CodeEntry (:doc "|Atom for caching style information.") (:schema nil)
+        |*style-caches $ %{} :CodeEntry (:doc "|Atom for caching style information.") (:schema :ref)
           :code $ quote
             defatom *style-caches $ {}
           :examples $ []
-        |*style-list-in-nodejs $ %{} :CodeEntry (:doc |) (:schema nil)
+        |*style-list-in-nodejs $ %{} :CodeEntry (:doc |) (:schema :ref)
           :code $ quote
             defatom *style-list-in-nodejs $ []
           :examples $ []
         |create-style! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn create-style! (style-name rules) (assert-type style-name :string)
-              assert "\"expected rules in map" $ map? rules
+              assert "|expected rules in map" $ map? rules
               if (contains? @*style-caches style-name)
                 if
                   = rules $ get-in @*style-caches ([] style-name :rules)
@@ -1318,7 +1459,7 @@
                     css-block $ render-css-block style-name rules
                   if nodejs? (swap! *style-list-in-nodejs conj css-block)
                     let
-                        style-el $ js/document.createElement "\"style"
+                        style-el $ js/document.createElement |style
                       set! (.-innerHTML style-el) css-block
                       set! (.-id style-el) style-name
                       js/document.head.appendChild style-el
@@ -1331,10 +1472,10 @@
         |defstyle $ %{} :CodeEntry (:doc "|a macro for turning CSS rules into className, and only works for JavaScript.\n\nuse `defstyle` like:\n\n```cirru\ndefstyle style-demo $ {}\n  |& $ {} (:color :red)\n  \"|&:hover\" $ {}\n    :background-color :blue\n```\n\nwhere `&` refers to current element.\n\nIn the rules, it's nested hashmaps. `|&` and `|&:hover` are CSS queries. and in nested hashmaps there are CSS properties defined in calcit data.\n")
           :code $ quote
             defmacro defstyle (style-name rules)
-              assert "\"expected symbol of style-name" $ symbol? style-name
+              assert "|expected symbol of style-name" $ symbol? style-name
               if-let
                 query0 $ &list:nth rules 1
-                assert "\"expected rule 0 to be hashmap or symbol, use `defstyle` like:\n\n```cirru\ndefstyle style-demo $ {}\n  |& $ {}\n    :color :red\n```\n\nwhere `&` refers to current element.\n" $ if-let
+                assert "|expected rule 0 to be hashmap or symbol, use `defstyle` like:\n\n```cirru\ndefstyle style-demo $ {}\n  |& $ {}\n    :color :red\n```\n\nwhere `&` refers to current element.\n" $ if-let
                   rule0 $ &list:nth query0 1
                   or (symbol? rule0)
                     and (list? rule0)
@@ -1343,7 +1484,7 @@
                         or (&= '{} h) (&= 'merge h)
               if-let
                 query1 $ &list:nth rules 2
-                assert "\"expected rule 1 to be hashmap or symbol, use `defstyle` like:\n\n```cirru\ndefstyle style-demo $ {}\n  |& $ {} (:color :red)\n  \"|&:hover\" $ {}\n    :background-color :blue\n```\n\nwhere `&` refers to current element" $ if-let
+                assert "|expected rule 1 to be hashmap or symbol, use `defstyle` like:\n\n```cirru\ndefstyle style-demo $ {}\n  |& $ {} (:color :red)\n  \"|&:hover\" $ {}\n    :background-color :blue\n```\n\nwhere `&` refers to current element" $ if-let
                   rule1 $ &list:nth query1 1
                   or (symbol? rule1)
                     and (list? rule1)
@@ -1352,12 +1493,12 @@
                         or (&= '{} h) (&= 'merge h)
               let
                   style-name-str $ str
-                    -> (turn-string style-name) (&str:replace "\"!" "\"_EX_") (&str:replace "\"?" "\"_QU_")
-                    , "\"__"
+                    -> (turn-string style-name) (&str:replace |! |_EX_) (&str:replace |? |_QU_)
+                    , |__
                       ->
                         :ns $ &extract-code-into-edn style-name
                         turn-string
-                        &str:replace "\"." "\"_"
+                        &str:replace |. |_
                 quasiquote $ def ~style-name (create-style! ~style-name-str ~rules)
           :examples $ []
             quote $ defstyle style-button
@@ -1400,7 +1541,7 @@
             {} $ :args ([] :symbol :map)
         |nodejs? $ %{} :CodeEntry (:doc |) (:schema :bool)
           :code $ quote
-            def nodejs? $ and (exists? js/process) (= js/process.release.name "\"node")
+            def nodejs? $ and (exists? js/process) (= js/process.release.name |node)
           :examples $ []
         |render-css-block $ %{} :CodeEntry (:doc "|Generates a CSS string block from a map of style rules.")
           :code $ quote
@@ -1410,61 +1551,68 @@
                   let
                       k $ turn-string (nth pair 0)
                       v $ nth pair 1
-                    assert "\"expected rule name in string" $ string? k
-                    assert "\"expected rule styles in map" $ map? v
+                    assert "|expected rule name in string" $ string? k
+                    assert "|expected rule styles in map" $ map? v
                     let
-                        class-rule $ str "\"." style-name
-                        rule-name $ -> k (.!replace "\"$0" class-rule) (.!replace "\"&" class-rule)
+                        class-rule $ str |. style-name
+                        rule-name $ -> k (.!replace |$0 class-rule) (.!replace |& class-rule)
                         contained $ get v 'contained
                         css-line $ style->string (.to-list v)
-                      if (some? contained) (str contained "\" {" &newline rule-name "\" {" &newline css-line &newline "\"}" &newline "\"}") (str rule-name "\" {" &newline css-line &newline "\"}")
+                      if (some? contained) (str contained "| {" &newline rule-name "| {" &newline css-line &newline |} &newline |}) (str rule-name "| {" &newline css-line &newline |})
                 .to-list
                 .join-str $ str &newline &newline
           :examples $ []
           :schema $ :: :fn
             {} (:return :string)
               :args $ [] :string :map
-      :ns $ %{} :CodeEntry (:doc |) (:schema :unit)
+      :ns $ %{} :NsEntry (:doc |)
         :code $ quote
           ns respo.css $ :require
             respo.render.dom :refer $ style->string
-        :examples $ []
     |respo.cursor $ %{} :FileEntry
       :defs $ {}
-        |update-states $ %{} :CodeEntry (:doc |) (:schema nil)
+        |update-states $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn update-states (store cursor new-state) (assert-type store :map) (assert-type cursor :list)
               assoc-in store
                 concat ([] :states) cursor $ [] :data
                 , new-state
           :examples $ []
-        |update-states-kv $ %{} :CodeEntry (:doc "|a quick dirty trick to partially update component state.\n\nnotice: need to handle empty state manually.") (:schema nil)
+          :schema $ :: :fn
+            {} (:return :map)
+              :args $ [] :map :list :dynamic
+        |update-states-kv $ %{} :CodeEntry (:doc "|a quick dirty trick to partially update component state.\n\nnotice: need to handle empty state manually.")
           :code $ quote
             defn update-states-kv (store cursor k v) (assert-type store :map) (assert-type cursor :list)
               update-in store
                 concat ([] :states) cursor $ [] :data
                 fn (s)
                   if (map? s) (assoc s k v)
-                    do (js/console.warn "\":states-kv expected hashmap, got:" s) s
+                    do (js/console.warn "|:states-kv expected hashmap, got:" s) s
           :examples $ []
-        |update-states-merge $ %{} :CodeEntry (:doc |) (:schema nil)
+          :schema $ :: :fn
+            {} (:return :map)
+              :args $ [] :map :list :dynamic :dynamic
+        |update-states-merge $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn update-states-merge (store cursor state0 changes) (assert-type store :map) (assert-type cursor :list) (assert-type state0 :map) (assert-type changes :map)
               update-in store
                 concat ([] :states) cursor $ [] :data
                 fn (s)
                   if (nil? s)
-                    noted "\"merge base initial state" $ merge state0 changes
+                    noted "|merge base initial state" $ merge state0 changes
                     if (map? s)
-                      noted "\"merge base latest state" $ merge s changes
-                      do (js/console.warn "\"unknown data to merge:" s) s
+                      noted "|merge base latest state" $ merge s changes
+                      do (js/console.warn "|unknown data to merge:" s) s
           :examples $ []
-      :ns $ %{} :CodeEntry (:doc |) (:schema :unit)
+          :schema $ :: :fn
+            {} (:return :map)
+              :args $ [] :map :list :map :map
+      :ns $ %{} :NsEntry (:doc |)
         :code $ quote (ns respo.cursor)
-        :examples $ []
     |respo.main $ %{} :FileEntry
       :defs $ {}
-        |main! $ %{} :CodeEntry (:doc |) (:schema nil)
+        |main! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn main! () (; handle-ssr! mount-target) (load-console-formatter!)
               if-let
@@ -1482,38 +1630,46 @@
                         :meta $ .-metaKey event
                   send-to-component! event-tuple
               add-watch *store :rerender $ fn (store prev) (render-app! mount-target)
-              ; reset! *changes-logger $ fn (old-tree new-tree changes) (js/console.log "\"Patch" changes)
+              ; reset! *changes-logger $ fn (old-tree new-tree changes) (js/console.log |Patch changes)
               println |Loaded. $ js/performance.now
               set! js/window.onbeforeunload $ fn (event) (save-store!)
           :examples $ []
-        |mount-target $ %{} :CodeEntry (:doc "|Default DOM element selector (.app) for mounting the application.") (:schema nil)
+          :schema $ :: :fn
+            {} (:return :unit)
+              :args $ []
+        |mount-target $ %{} :CodeEntry (:doc "|Default DOM element selector (.app) for mounting the application.") (:schema :dynamic)
           :code $ quote
             def mount-target $ if (exists? js/document) (js/document.querySelector |.app) nil
           :examples $ []
-        |reload! $ %{} :CodeEntry (:doc |) (:schema nil)
+        |reload! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn reload () $ if (nil? build-errors)
               do (remove-watch *store :rerender) (clear-cache!) (render-app! mount-target)
                 add-watch *store :rerender $ fn (store prev) (render-app! mount-target)
-                hud! "\"ok~" "\"Ok"
+                hud! |ok~ |Ok
                 js/console.log "|code updated."
-              hud! "\"error" build-errors
+              hud! |error build-errors
           :examples $ []
-        |save-store! $ %{} :CodeEntry (:doc |) (:schema nil)
+          :schema $ :: :fn
+            {} (:return :unit)
+              :args $ []
+        |save-store! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn save-store! () $ js/window.localStorage.setItem |respo.calcit
               format-cirru-edn $ :tasks @*store
           :examples $ []
-      :ns $ %{} :CodeEntry (:doc |) (:schema :unit)
+          :schema $ :: :fn
+            {} (:return :unit)
+              :args $ []
+      :ns $ %{} :NsEntry (:doc |)
         :code $ quote
           ns respo.main $ :require
             respo.core :refer $ *changes-logger clear-cache!
             respo.app.core :refer $ render-app! *store
             respo.app.core :refer $ handle-ssr!
-            "\"./calcit.build-errors" :default build-errors
-            "\"bottom-tip" :default hud!
+            |./calcit.build-errors :default build-errors
+            |bottom-tip :default hud!
             respo.controller.client :refer $ send-to-component!
-        :examples $ []
     |respo.render.diff $ %{} :FileEntry
       :defs $ {}
         |detect-keys-dup $ %{} :CodeEntry (:doc "|Checks for duplicate keys in a list of children. Useful for development mode warnings.") (:schema nil)
@@ -1529,7 +1685,7 @@
                     if
                       &= (nth child-keys p) (nth child-keys q)
                       do
-                        eprintln "\"duplicated key" $ nth child-keys p
+                        eprintln "|duplicated key" $ nth child-keys p
                         , true
                       if (&< q last-pos)
                         recur p $ inc q
@@ -1577,8 +1733,8 @@
                       y1-existed? $ any? old-keys match-y1
                       old-follows $ rest old-children
                       new-follows $ rest new-children
-                    if (nil? y1) (js/console.warn "\"nil key is bad in Respo")
-                    ; println "\"compare:" x1 new-keys x1-remains? y1 y1-existed? old-keys
+                    if (nil? y1) (js/console.warn "|nil key is bad in Respo")
+                    ; println |compare: x1 new-keys x1-remains? y1 y1-existed? old-keys
                     cond
                         &= x1 y1
                         let
@@ -1627,7 +1783,7 @@
           :examples $ []
         |find-element-diffs $ %{} :CodeEntry (:doc "|Core algorithm to find differences between old and new virtual DOM trees. `collect!` is a callback for effects.") (:schema nil)
           :code $ quote
-            defn find-element-diffs (collect! coord n-coord old-tree new-tree) (; js/console.log "|element diffing:" n-coord old-tree new-tree) (; echo "\"element coord" coord)
+            defn find-element-diffs (collect! coord n-coord old-tree new-tree) (; js/console.log "|element diffing:" n-coord old-tree new-tree) (; echo "|element coord" coord)
               cond
                   identical? old-tree new-tree
                   , nil
@@ -1684,9 +1840,9 @@
                           new-children $ &record:get new-tree :children
                         if
                           and dev? $ detect-keys-dup (map new-children first)
-                          js/console.error "\"Parent that has dups" new-tree
+                          js/console.error "|Parent that has dups" new-tree
                         find-children-diffs collect! coord n-coord 0 old-children new-children
-                true $ js/console.warn "\"Diffing unknown params" old-tree new-tree
+                true $ js/console.warn "|Diffing unknown params" old-tree new-tree
           :examples $ []
         |find-props-diffs $ %{} :CodeEntry (:doc "|Compares old and new properties maps to identify additions, removals, and updates.") (:schema nil)
           :code $ quote
@@ -1717,7 +1873,7 @@
                       old-follows $ rest old-props
                       new-follows $ rest new-props
                     ; js/console.log old-k new-k old-v new-v
-                    case-default (&compare old-k new-k) (eprintln "\"[Respo] unknown compare result for props keys")
+                    case-default (&compare old-k new-k) (eprintln "|[Respo] unknown compare result for props keys")
                       -1 $ do
                         collect! $ :: :rm-prop coord n-coord old-k
                         recur collect! coord n-coord old-follows new-props
@@ -1757,7 +1913,7 @@
                       new-follows $ rest new-style
                     case-default
                       &compare (first old-entry) (first new-entry)
-                      eprintln "\"[Respo] unknown compare result for style keys"
+                      eprintln "|[Respo] unknown compare result for style keys"
                       -1 $ do
                         collect! $ :: :rm-style c-coord coord (first old-entry)
                         recur collect! c-coord coord old-follows new-style
@@ -1770,7 +1926,7 @@
                           collect! $ :: :replace-style c-coord coord new-entry
                         recur collect! c-coord coord old-follows new-follows
           :examples $ []
-      :ns $ %{} :CodeEntry (:doc |) (:schema :unit)
+      :ns $ %{} :NsEntry (:doc |)
         :code $ quote
           ns respo.render.diff $ :require
             respo.util.format :refer $ purify-element
@@ -1778,13 +1934,12 @@
             respo.render.effect :refer $ collect-mounting collect-updating collect-unmounting
             respo.util.list :refer $ val-of-first
             respo.schema :refer $ dev?
-        :examples $ []
     |respo.render.dom $ %{} :FileEntry
       :defs $ {}
         |make-element $ %{} :CodeEntry (:doc "|internal function to create a DOM element from a virtual element. handles properties, styles, events, and recursively creates child elements.") (:schema nil)
           :code $ quote
             defn make-element (virtual-element listener-builder coord)
-              assert "\"coord is required" $ some? coord
+              assert "|coord is required" $ some? coord
               if (component? virtual-element)
                 make-element (&record:get virtual-element :tree) listener-builder $ conj coord (&record:get virtual-element :name)
                 let
@@ -1796,17 +1951,17 @@
                     element $ js/document.createElement tag-name
                     child-elements $ -> children
                       map $ fn (pair)
-                        assert "\"expect pair of key/element" $ and (list? pair)
+                        assert "|expect pair of key/element" $ and (list? pair)
                           &= 2 $ count pair
                         let[] (k child) pair
-                          when (nil? k) (js/console.warn "\"nil key is bad for Respo")
+                          when (nil? k) (js/console.warn "|nil key is bad for Respo")
                           when (some? child)
                             make-element child listener-builder $ conj coord k
                   each attrs $ fn (entry)
                     let
                         prop-str $ turn-string (first entry)
                         v $ last entry
-                      if (.!startsWith prop-str "\"data-")
+                      if (.!startsWith prop-str |data-)
                         -> element .-dataset $ js-set (.!slice prop-str 5) v
                         let
                             k $ dashed->camel prop-str
@@ -1833,7 +1988,7 @@
           :code $ quote
             defn style->string (styles) (assert-type styles :list)
               loop
-                  acc "\""
+                  acc |
                   xs styles
                 if (empty? xs) acc $ let
                     entry $ first xs
@@ -1845,12 +2000,11 @@
                         v $ get-style-value (last entry) style-name
                       recur (str acc style-name |: v |;) (rest xs)
           :examples $ []
-      :ns $ %{} :CodeEntry (:doc |) (:schema :unit)
+      :ns $ %{} :NsEntry (:doc |)
         :code $ quote
           ns respo.render.dom $ :require
             respo.util.format :refer $ dashed->camel event->prop get-style-value
             respo.util.detect :refer $ component?
-        :examples $ []
     |respo.render.effect $ %{} :FileEntry
       :defs $ {}
         |collect-mounting $ %{} :CodeEntry (:doc "|internal function to collect mounting effects from component tree. recursively traverses the virtual DOM and collects effect:mount callbacks.") (:schema nil)
@@ -1881,7 +2035,7 @@
                           k $ first pair
                         collect-mounting collect! (conj coord k) (conj n-coord idx) (last pair) false
                       recur (rest children) (inc idx)
-                true $ js/console.warn "\"Unknown entry for mounting:" tree
+                true $ js/console.warn "|Unknown entry for mounting:" tree
           :examples $ []
         |collect-unmounting $ %{} :CodeEntry (:doc "|internal function to collect unmounting effects from component tree. recursively traverses the virtual DOM and collects effect:unmount callbacks.") (:schema nil)
           :code $ quote
@@ -1911,18 +2065,18 @@
                           k $ first pair
                         collect-unmounting collect! (conj coord k) (conj n-coord idx) (last pair) false
                       recur (rest children) (inc idx)
-                true $ js/console.warn "\"Unknown entry for unmounting:" tree
+                true $ js/console.warn "|Unknown entry for unmounting:" tree
           :examples $ []
         |collect-updating $ %{} :CodeEntry (:doc "|Compares effects between component updates and collects effect actions if arguments change.") (:schema nil)
           :code $ quote
             defn collect-updating (collect! action coord n-coord old-tree new-tree)
-              assert "\"expects component" $ component? new-tree
+              assert "|expects component" $ component? new-tree
               let
                   effects $ :effects new-tree
                   next-coord $ conj coord (:name new-tree)
                 when
                   not $ empty? effects
-                  ; js/console.log "\"collect update" n-coord $ :effects new-tree
+                  ; js/console.log "|collect update" n-coord $ :effects new-tree
                   &doseq
                     idx $ range (count effects)
                     let
@@ -1938,12 +2092,11 @@
                             fn (target)
                               method (:args new-effect) ([] action target)
           :examples $ []
-      :ns $ %{} :CodeEntry (:doc |) (:schema :unit)
+      :ns $ %{} :NsEntry (:doc |)
         :code $ quote
           ns respo.render.effect $ :require (respo.schema.op :as op)
             respo.util.detect :refer $ component? element? =seq
             respo.util.list :refer $ val-of-first
-        :examples $ []
     |respo.render.html $ %{} :FileEntry
       :defs $ {}
         |element->string $ %{} :CodeEntry (:doc "|which is actually `element->html`") (:schema nil)
@@ -1999,7 +2152,7 @@
         |escape-html $ %{} :CodeEntry (:doc |) (:schema nil)
           :code $ quote
             defn escape-html (text)
-              if (nil? text) "\"" $ -> text (.replace "|\"" |&quot;) (.replace |< |&lt;) (.replace |> |&gt;) (.replace &newline "\"&#13;&#10;")
+              if (nil? text) | $ -> text (.replace "|\"" |&quot;) (.replace |< |&lt;) (.replace |> |&gt;) (.replace &newline |&#13;&#10;)
           :examples $ []
         |make-string $ %{} :CodeEntry (:doc |) (:schema nil)
           :code $ quote
@@ -2022,7 +2175,7 @@
           :examples $ []
         |self-closing $ %{} :CodeEntry (:doc |) (:schema nil)
           :code $ quote
-            def self-closing $ #{} "\"area" "\"base" "\"br" "\"col" "\"embed" "\"hr" "\"img" "\"input" "\"link" "\"meta" "\"param" "\"source" "\"track" "\"wbr"
+            def self-closing $ #{} |area |base |br |col |embed |hr |img |input |link |meta |param |source |track |wbr
           :examples $ []
         |style->html $ %{} :CodeEntry (:doc "|this function is intended for HTML rendering since it escaped characters.") (:schema nil)
           :code $ quote
@@ -2036,12 +2189,11 @@
                     str style-name |: (escape-html v) |;
                 join-str |
           :examples $ []
-      :ns $ %{} :CodeEntry (:doc |) (:schema :unit)
+      :ns $ %{} :NsEntry (:doc |)
         :code $ quote
           ns respo.render.html $ :require
             respo.util.format :refer $ prop->attr purify-element mute-element text->html get-style-value dashed->camel
             respo.util.detect :refer $ component? element?
-        :examples $ []
     |respo.render.patch $ %{} :FileEntry
       :defs $ {}
         |add-element $ %{} :CodeEntry (:doc "|Inserts a new DOM element before a target element.") (:schema nil)
@@ -2066,7 +2218,7 @@
             defn add-prop (target p prop-value)
               let
                   prop-str $ turn-string p
-                if (.!startsWith prop-str "\"data-")
+                if (.!startsWith prop-str |data-)
                   -> target .-dataset $ js-set (.!slice prop-str 5) prop-value
                   let
                       prop-name $ dashed->camel prop-str
@@ -2143,7 +2295,7 @@
             defn replace-prop (target p prop-value)
               let
                   prop-str $ turn-string p
-                if (.!startsWith prop-str "\"data-")
+                if (.!startsWith prop-str |data-)
                   let
                       name $ .!slice prop-str 5
                     if
@@ -2183,16 +2335,16 @@
               case-default op
                 let
                     prop-str $ turn-string op
-                  if (.!startsWith prop-str "\"data-")
+                  if (.!startsWith prop-str |data-)
                     -> target .-dataset $ js-delete (.!slice prop-str 5)
                     let
                         k $ dashed->camel prop-str
                         ; ks $ prop->attr prop-str
                       aset target k nil
-                :class-name $ .!removeAttribute target "\"class"
-                :href $ .!removeAttribute target "\"href"
-                :inner-text $ set! (.-innerText target) "\""
-                :innerHTML $ set! (.-innerHTML target) "\""
+                :class-name $ .!removeAttribute target |class
+                :href $ .!removeAttribute target |href
+                :inner-text $ set! (.-innerText target) |
+                :innerHTML $ set! (.-innerHTML target) |
                 :checked $ set! (.-checked target) false
                 :disabled $ set! (.-disabled target) false
                 :selected $ set! (.-selected target) false
@@ -2207,15 +2359,14 @@
         |run-effect $ %{} :CodeEntry (:doc "|Runs side effect functions.\n\nParameters:\n  target - Target DOM element or component instance, nil if target not found\n  method - Method function to execute on the target\n  coord - Coordinate information for identifying location in console warnings\n\nFunctionality:\n  If target exists, calls method function on target; if target is nil, outputs warning to console.\n  Mainly used to execute various side effects during rendering patch process, such as event listening, DOM operations, etc.") (:schema nil)
           :code $ quote
             defn run-effect (target method coord)
-              if (some? target) (method target) (js/console.warn "\"Unknown effects target:" coord)
+              if (some? target) (method target) (js/console.warn "|Unknown effects target:" coord)
           :examples $ []
-      :ns $ %{} :CodeEntry (:doc |) (:schema :unit)
+      :ns $ %{} :NsEntry (:doc |)
         :code $ quote
           ns respo.render.patch $ :require
             respo.util.format :refer $ dashed->camel event->prop get-style-value prop->attr
             respo.render.dom :refer $ make-element style->string
             respo.schema.op :as op
-        :examples $ []
     |respo.schema $ %{} :FileEntry
       :defs $ {}
         |Component $ %{} :CodeEntry (:doc |) (:schema nil)
@@ -2234,15 +2385,15 @@
           :code $ quote
             defstruct RespoListener (:name :any) (:handler :any)
           :examples $ []
-        |cache-info $ %{} :CodeEntry (:doc |) (:schema nil)
+        |cache-info $ %{} :CodeEntry (:doc |) (:schema :map)
           :code $ quote
             def cache-info $ {} (:value nil) (:initial-loop nil) (:last-hit nil) (:hit-times 0)
           :examples $ []
-        |dev? $ %{} :CodeEntry (:doc "|Boolean flag indicating if the application is running in development mode.") (:schema nil)
+        |dev? $ %{} :CodeEntry (:doc "|Boolean flag indicating if the application is running in development mode.") (:schema :bool)
           :code $ quote
-            def dev? $ &= "\"dev" (get-env "\"mode" "\"release")
+            def dev? $ &= |dev (get-env |mode |release)
           :examples $ []
-        |effect $ %{} :CodeEntry (:doc |) (:schema nil)
+        |effect $ %{} :CodeEntry (:doc |) (:schema :map)
           :code $ quote
             def effect $ {} (:name nil) (:respo-node :effect)
               :coord $ []
@@ -2250,14 +2401,12 @@
               :method $ fn (props args)
                 ; args $ [] action parent at-place?
           :examples $ []
-      :ns $ %{} :CodeEntry (:doc |) (:schema :unit)
+      :ns $ %{} :NsEntry (:doc |)
         :code $ quote (ns respo.schema)
-        :examples $ []
     |respo.schema.listener $ %{} :FileEntry
       :defs $ {}
-      :ns $ %{} :CodeEntry (:doc |) (:schema :unit)
+      :ns $ %{} :NsEntry (:doc |)
         :code $ quote (ns respo.schema.listener)
-        :examples $ []
     |respo.test.comp.task $ %{} :FileEntry
       :defs $ {}
         |comp-task $ %{} :CodeEntry (:doc |)
@@ -2270,12 +2419,11 @@
           :schema $ :: :fn
             {} (:return 'respo.schema/Component)
               :args $ [] :dynamic
-      :ns $ %{} :CodeEntry (:doc |) (:schema :unit)
+      :ns $ %{} :NsEntry (:doc |)
         :code $ quote
           ns respo.test.comp.task $ :require
             respo.util.format :refer $ hsl
             respo.core :refer $ defcomp div span
-        :examples $ []
     |respo.test.comp.todolist $ %{} :FileEntry
       :defs $ {}
         |comp-todolist $ %{} :CodeEntry (:doc |)
@@ -2291,16 +2439,16 @@
           :schema $ :: :fn
             {} (:return 'respo.schema/Component)
               :args $ [] :dynamic
-        |style-todolist $ %{} :CodeEntry (:doc |) (:schema nil)
+        |style-todolist $ %{} :CodeEntry (:doc |) (:schema :map)
           :code $ quote
             def style-todolist $ {} (:color :blue) (:font-family "|\"微软雅黑\", Verdana")
           :examples $ []
-      :ns $ %{} :CodeEntry (:doc |) (:schema :unit)
+      :ns $ %{} :NsEntry (:doc |)
         :code $ quote
           ns respo.test.comp.todolist $ :require
             respo.test.comp.task :refer $ comp-task
             respo.core :refer $ defcomp div list->
-        :examples $ []
+            respo.test.comp.todolist :refer $ comp-todolist
     |respo.test.html $ %{} :FileEntry
       :defs $ {}
         |html-quote-test $ %{} :CodeEntry (:doc |) (:schema nil)
@@ -2323,14 +2471,17 @@
           :code $ quote
             deftest nil-prop-test $ let
                 piece $ script
-                  {} (:src "\"a.js") (:defer nil)
+                  {} (:src |a.js) (:defer nil)
               testing "|test generate script with nil" $ is
                 = "|<script src=\"a.js\"></script>" $ make-string piece
           :examples $ []
-        |run-tests $ %{} :CodeEntry (:doc |) (:schema nil)
+        |run-tests $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn run-tests () (html-quote-test) (nil-prop-test) (simple-html-test) (textarea-test)
           :examples $ []
+          :schema $ :: :fn
+            {} (:return :unit)
+              :args $ []
         |simple-html-test $ %{} :CodeEntry (:doc |) (:schema nil)
           :code $ quote
             deftest simple-html-test $ let
@@ -2358,29 +2509,35 @@
               testing "|test generated HTML from component" $ is
                 = "|<textarea value=\"a&#13;&#10;b&#13;&#10;c&#13;&#10;&quot;&#13;&#10;d\">a&#13;&#10;b&#13;&#10;c&#13;&#10;&quot;&#13;&#10;d</textarea>" $ make-string piece
           :examples $ []
-        |todolist-store $ %{} :CodeEntry (:doc |) (:schema nil)
+        |todolist-store $ %{} :CodeEntry (:doc |) (:schema :list)
           :code $ quote
             def todolist-store $ []
               {} (:id 101) (:text |101)
               {} (:id 102) (:text |102)
           :examples $ []
-      :ns $ %{} :CodeEntry (:doc |) (:schema :unit)
+      :ns $ %{} :NsEntry (:doc |)
         :code $ quote
           ns respo.test.html $ :require
             calcit-test.core :refer $ deftest is testing
             respo.core :refer $ html head title script div link textarea body
             respo.render.html :refer $ make-string
-        :examples $ []
+            respo.test.comp.todolist :refer $ comp-todolist
     |respo.test.main $ %{} :FileEntry
       :defs $ {}
-        |main! $ %{} :CodeEntry (:doc |) (:schema nil)
+        |main! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn main! () (html/run-tests) (test-pick-attrs) (test-pick-event)
           :examples $ []
-        |reload! $ %{} :CodeEntry (:doc |) (:schema nil)
+          :schema $ :: :fn
+            {} (:return :unit)
+              :args $ []
+        |reload! $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn reload! () $ println "\"reload."
+            defn reload! () $ println |reload.
           :examples $ []
+          :schema $ :: :fn
+            {} (:return :unit)
+              :args $ []
         |test-pick-attrs $ %{} :CodeEntry (:doc |) (:schema nil)
           :code $ quote
             deftest test-pick-attrs $ is
@@ -2402,15 +2559,14 @@
                     :on $ {} (:input f)
                   {} (:click f) (:input f)
           :examples $ []
-      :ns $ %{} :CodeEntry (:doc |) (:schema :unit)
+      :ns $ %{} :NsEntry (:doc |)
         :code $ quote
           ns respo.test.main $ :require (respo.test.html :as html)
             calcit-test.core :refer $ deftest testing is
             respo.util.list :refer $ pick-attrs pick-event
-        :examples $ []
     |respo.util.detect $ %{} :FileEntry
       :defs $ {}
-        |=seq $ %{} :CodeEntry (:doc "|Recursively checks if two sequences are equal.") (:schema nil)
+        |=seq $ %{} :CodeEntry (:doc "|Recursively checks if two sequences are equal.")
           :code $ quote
             defn =seq (xs ys)
               let
@@ -2424,6 +2580,9 @@
                     recur (rest xs) (rest ys)
                   true false
           :examples $ []
+          :schema $ :: :fn
+            {} (:return :bool)
+              :args $ [] :list :list
         |component? $ %{} :CodeEntry (:doc "|check if value is a Respo component. returns true for component records, false otherwise.")
           :code $ quote
             defn component? (x)
@@ -2472,23 +2631,22 @@
           :schema $ :: :fn
             {} (:return :bool)
               :args $ [] :dynamic
-      :ns $ %{} :CodeEntry (:doc |) (:schema :unit)
+      :ns $ %{} :NsEntry (:doc |)
         :code $ quote
           ns respo.util.detect $ :require (respo.schema :as schema)
-        :examples $ []
     |respo.util.dom $ %{} :FileEntry
       :defs $ {}
         |compare-to-dom! $ %{} :CodeEntry (:doc |) (:schema nil)
           :code $ quote
             defn compare-to-dom! (vdom element)
-              ; println "\"compare" (:name vdom)
+              ; println |compare (:name vdom)
                 map :name $ vals (:children vdom)
               ; js/console.log element
               let
                   virtual-name $ turn-string (:name vdom)
                   real-name $ .!toLowerCase (.-tagName element)
                 when (not= virtual-name real-name)
-                  js/console.warn "\"SSR checking: tag names do not match:"
+                  js/console.warn "|SSR checking: tag names do not match:"
                     to-lispy-string $ dissoc vdom :children
                     , element
               if
@@ -2501,10 +2659,10 @@
                   if (some? maybe-html)
                     when
                       = maybe-html $ .-innerHTML element
-                      js/console.warn "\"SSR checking: noticed dom containing innerHTML:" element
-                    do (js/console.error "\"SSR checking: children sizes do not match!")
-                      js/console.log "\"virtual:" $ -> vdom :children (map last) (map :name) to-lispy-string
-                      js/console.log "\"real:" $ .-children element
+                      js/console.warn "|SSR checking: noticed dom containing innerHTML:" element
+                    do (js/console.error "|SSR checking: children sizes do not match!")
+                      js/console.log |virtual: $ -> vdom :children (map last) (map :name) to-lispy-string
+                      js/console.log |real: $ .-children element
                 let
                     real-children $ .-children element
                   loop
@@ -2515,14 +2673,14 @@
                       compare-to-dom! (val-of-first other-children) (aget real-children acc)
                       recur (inc acc) (rest other-children)
           :examples $ []
-        |shared-canvas-context $ %{} :CodeEntry (:doc "|Shared Canvas 2D context for measuring text width or other canvas operations.") (:schema nil)
+        |shared-canvas-context $ %{} :CodeEntry (:doc "|Shared Canvas 2D context for measuring text width or other canvas operations.") (:schema :dynamic)
           :code $ quote
             def shared-canvas-context $ if
               and (exists? js/window) (exists? js/document)
               .!getContext (js/document.createElement |canvas) |2d
               , nil
           :examples $ []
-        |text-width $ %{} :CodeEntry (:doc |) (:schema nil)
+        |text-width $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn text-width (content font-size font-family) (assert-type content :string) (assert-type font-size :number) (assert-type font-family :string)
               if (some? shared-canvas-context)
@@ -2531,11 +2689,13 @@
                   .-width $ .!measureText shared-canvas-context content
                 , nil
           :examples $ []
-      :ns $ %{} :CodeEntry (:doc |) (:schema :unit)
+          :schema $ :: :fn
+            {} (:return :dynamic)
+              :args $ [] :string :number :string
+      :ns $ %{} :NsEntry (:doc |)
         :code $ quote
           ns respo.util.dom $ :require
             respo.util.list :refer $ val-of-first
-        :examples $ []
     |respo.util.format $ %{} :FileEntry
       :defs $ {}
         |dashed->camel $ %{} :CodeEntry (:doc "|convert dashed-case CSS property names to camelCase. e.g. \"background-color\" -> \"backgroundColor\".")
@@ -2550,51 +2710,57 @@
           :schema $ :: :fn
             {} (:return :string)
               :args $ [] :string
-        |dashed-letter-pattern $ %{} :CodeEntry (:doc "|Regex pattern for finding dashed-case letters (e.g. -a) to convert to camelCase.") (:schema nil)
+        |dashed-letter-pattern $ %{} :CodeEntry (:doc "|Regex pattern for finding dashed-case letters (e.g. -a) to convert to camelCase.") (:schema :dynamic)
           :code $ quote
-            def dashed-letter-pattern $ new js/RegExp "\"-[a-z]" "\"g"
+            def dashed-letter-pattern $ new js/RegExp |-[a-z] |g
           :examples $ []
         |event->edn $ %{} :CodeEntry (:doc "|Converts a native DOM event into a Respo EDN event structure.")
           :code $ quote
-            defn event->edn (event) (; js/console.log "\"simplify event:" event)
+            defn event->edn (event) (; js/console.log "|simplify event:" event)
               ->
                 case-default (.-type event)
                   {}
                     :type $ .-type event
                     :msg $ str "|Unhandled event: " (.-type event)
-                  "\"click" $ {} (:type :click)
-                  "\"keydown" $ merge (map-keyboard-event event)
+                  |click $ {} (:type :click)
+                  |keydown $ merge (map-keyboard-event event)
                     {} (:type :keydown)
                       :key-code $ .-keyCode event
                       :keycode $ .-keyCode event
-                  "\"keypress" $ merge (map-keyboard-event event)
+                  |keypress $ merge (map-keyboard-event event)
                     {} $ :type :keypress
-                  "\"keyup" $ merge (map-keyboard-event event)
+                  |keyup $ merge (map-keyboard-event event)
                     {} $ :type :keyup
-                  "\"input" $ {} (:type :input)
-                    :value $ aget (.-target event) "\"value"
-                    :checked $ -> event .-target .-checked
-                  "\"change" $ {} (:type :change)
+                  |input $ {} (:type :input)
                     :value $ aget (.-target event) |value
-                  "\"focus" $ {} (:type :focus)
+                    :checked $ -> event .-target .-checked
+                  |change $ {} (:type :change)
+                    :value $ aget (.-target event) |value
+                  |focus $ {} (:type :focus)
                 assoc :original-event event
                 assoc :event event
           :examples $ []
           :schema $ :: :fn
             {} (:return :map)
               :args $ [] :dynamic
-        |event->prop $ %{} :CodeEntry (:doc "|Converts an event keyword (e.g. :click) to a prop name string (e.g. 'onclick').") (:schema nil)
+        |event->prop $ %{} :CodeEntry (:doc "|Converts an event keyword (e.g. :click) to a prop name string (e.g. 'onclick').")
           :code $ quote
             defn event->prop (x)
               str |on $ turn-string x
           :examples $ []
             quote $ event->prop :click
-        |event->string $ %{} :CodeEntry (:doc |) (:schema nil)
+          :schema $ :: :fn
+            {} (:return :string)
+              :args $ [] :dynamic
+        |event->string $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn event->string (x)
               &str:slice (turn-string x) 3
           :examples $ []
-        |get-style-value $ %{} :CodeEntry (:doc "|Formats a style value for a given property. Adds 'px' to numbers if the property expects units.") (:schema nil)
+          :schema $ :: :fn
+            {} (:return :string)
+              :args $ [] :dynamic
+        |get-style-value $ %{} :CodeEntry (:doc "|Formats a style value for a given property. Adds 'px' to numbers if the property expects units.")
           :code $ quote
             defn get-style-value (x prop)
               cond
@@ -2602,22 +2768,28 @@
                   , x
                 (tag? x) (turn-string x)
                 (number? x)
-                  if (contains? unitless-props prop) (str x) (str x "\"px")
+                  if (contains? unitless-props prop) (str x) (str x |px)
                 (nil? x) nil
                 true $ str x
           :examples $ []
             quote $ get-style-value 10 :width
             quote $ get-style-value 1 :opacity
-        |hsl $ %{} :CodeEntry (:doc "|Generates HSL color string. Arguments: h, s (percent), l (percent), optional alpha (0-1).") (:schema nil)
+          :schema $ :: :fn
+            {} (:return :dynamic)
+              :args $ [] :dynamic :dynamic
+        |hsl $ %{} :CodeEntry (:doc "|Generates HSL color string. Arguments: h, s (percent), l (percent), optional alpha (0-1).")
           :code $ quote
             defn hsl (h s l ? arg) (assert-type h :number) (assert-type s :number) (assert-type l :number)
               hint-fn $ {} (:return :string)
               let
                   a $ either arg 1
-                str "\"hsl(" h "\"," s "\"%," l "\"%," a "\")"
+                str "|hsl(" h |, s |%, l |%, a "|)"
           :examples $ []
             quote $ hsl 200 80 50
             quote $ hsl 0 100 50 0.5
+          :schema $ :: :fn
+            {} (:return :string)
+              :args $ [] :number :number :number :dynamic
         |map-keyboard-event $ %{} :CodeEntry (:doc "|Extracts key information from a JavaScript KeyboardEvent.")
           :code $ quote
             defn map-keyboard-event (event)
@@ -2632,7 +2804,7 @@
           :schema $ :: :fn
             {} (:return :map)
               :args $ [] :dynamic
-        |mute-element $ %{} :CodeEntry (:doc |) (:schema nil)
+        |mute-element $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn mute-element (element)
               if (component? element) (update element :tree mute-element)
@@ -2644,13 +2816,19 @@
                         [] (first entry)
                           mute-element $ last entry
           :examples $ []
-        |prop->attr $ %{} :CodeEntry (:doc |) (:schema nil)
+          :schema $ :: :fn
+            {} (:return :dynamic)
+              :args $ [] :dynamic
+        |prop->attr $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn prop->attr (x)
-              when (includes? x "\"?") (println "\"[Respo] warning: property includes `?` in" x)
+              when (includes? x |?) (println "|[Respo] warning: property includes `?` in" x)
               case-default x x (|class-name |class) (|tab-index |tabindex) (|read-only |readonly)
           :examples $ []
-        |purify-element $ %{} :CodeEntry (:doc |) (:schema nil)
+          :schema $ :: :fn
+            {} (:return :string)
+              :args $ [] :string
+        |purify-element $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn purify-element (markup)
               cond
@@ -2659,7 +2837,7 @@
                 (component? markup)
                   purify-element $ &let
                     t $ :tree markup
-                    when (nil? t) (raise "\"tree is empty")
+                    when (nil? t) (raise "|tree is empty")
                     , t
                 (element? markup)
                   -> markup (update :event purify-events)
@@ -2670,9 +2848,12 @@
                               k $ first pair
                               child $ last pair
                             [] k $ purify-element child
-                true $ do (js/console.warn "\"Unknown markup during purify:" markup) nil
+                true $ do (js/console.warn "|Unknown markup during purify:" markup) nil
           :examples $ []
-        |purify-events $ %{} :CodeEntry (:doc |) (:schema nil)
+          :schema $ :: :fn
+            {} (:return :dynamic)
+              :args $ [] :dynamic
+        |purify-events $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn purify-events (events)
               reduce events ([])
@@ -2682,25 +2863,30 @@
                     conj acc $ first pair
                     , acc
           :examples $ []
-        |text->html $ %{} :CodeEntry (:doc |) (:schema nil)
+          :schema $ :: :fn
+            {} (:return :list)
+              :args $ [] :map
+        |text->html $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn text->html (x)
               if (some? x)
                 -> (str x) (.replace |> |&gt;) (.replace |< |&lt;)
                 , nil
           :examples $ []
-        |unitless-props $ %{} :CodeEntry (:doc "|gemini suggested from popular libs\n") (:schema nil)
+          :schema $ :: :fn
+            {} (:return :dynamic)
+              :args $ [] :dynamic
+        |unitless-props $ %{} :CodeEntry (:doc "|gemini suggested from popular libs\n") (:schema :map)
           :code $ quote
             def unitless-props $ {} (|animationDelay true) (|animationDuration true) (|animationIterationCount true) (|aspectRatio true) (|borderImageOutset true) (|borderImageSlice true) (|borderImageWidth true) (|boxFlex true) (|boxFlexGroup true) (|boxOrdinalGroup true) (|columnCount true) (|columns true) (|fillOpacity true) (|flex true) (|flexGrow true) (|flexNegative true) (|flexPositive true) (|flexShrink true) (|floodOpacity true) (|fontSizeAdjust true) (|fontWeight true) (|gridArea true) (|gridColumn true) (|gridColumnEnd true) (|gridColumnSpan true) (|gridColumnStart true) (|gridRow true) (|gridRowEnd true) (|gridRowSpan true) (|gridRowStart true) (|lineClamp true) (|lineHeight true) (|opacity true) (|order true) (|orphans true) (|stopOpacity true) (|strokeDasharray true) (|strokeDashoffset true) (|strokeMiterlimit true) (|strokeOpacity true) (|strokeWidth true) (|tabSize true) (|transitionDelay true) (|transitionDuration true) (|widows true) (|zIndex true) (|zoom true)
           :examples $ []
-      :ns $ %{} :CodeEntry (:doc |) (:schema :unit)
+      :ns $ %{} :NsEntry (:doc |)
         :code $ quote
           ns respo.util.format $ :require
             respo.util.detect :refer $ component? element?
-        :examples $ []
     |respo.util.list $ %{} :FileEntry
       :defs $ {}
-        |map-with-idx $ %{} :CodeEntry (:doc |) (:schema nil)
+        |map-with-idx $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn map-with-idx (xs f)
               assert (fn? f) "|expects function"
@@ -2708,7 +2894,10 @@
               map-indexed xs $ fn (idx x)
                 [] idx $ f x
           :examples $ []
-        |pick-attrs $ %{} :CodeEntry (:doc "|Extracts HTML attributes from a properties map, filtering out internal keys like :on, :event, :style.") (:schema nil)
+          :schema $ :: :fn
+            {} (:return :list)
+              :args $ [] :list :fn
+        |pick-attrs $ %{} :CodeEntry (:doc "|Extracts HTML attributes from a properties map, filtering out internal keys like :on, :event, :style.")
           :code $ quote
             defn pick-attrs (props)
               if (nil? props) ([])
@@ -2717,10 +2906,13 @@
                     let
                         k $ nth pair 0
                         v $ nth pair 1
-                      not $ starts-with? (turn-string k) "\"on-"
+                      not $ starts-with? (turn-string k) |on-
                   sort $ fn (x y)
                     &compare (nth x 0) (nth y 0)
           :examples $ []
+          :schema $ :: :fn
+            {} (:return :list)
+              :args $ [] (:: :optional :map)
         |pick-event $ %{} :CodeEntry (:doc "|Extracts event listeners from a properties map. Handles both :on map and on-* keys.")
           :code $ quote
             defn pick-event (props)
@@ -2747,7 +2939,7 @@
           :schema $ :: :fn
             {} (:return :bool)
               :args $ [] :dynamic
-        |val-of-first $ %{} :CodeEntry (:doc "|Extracts the value (second item) from the first entry of a list.") (:schema nil)
+        |val-of-first $ %{} :CodeEntry (:doc "|Extracts the value (second item) from the first entry of a list.")
           :code $ quote
             defn val-of-first (x)
               last $ first x
@@ -2755,8 +2947,10 @@
             quote $ val-of-first
                 [] :a 1
                 [] :b 2
-      :ns $ %{} :CodeEntry (:doc |) (:schema :unit)
+          :schema $ :: :fn
+            {} (:return :dynamic)
+              :args $ [] :list
+      :ns $ %{} :NsEntry (:doc |)
         :code $ quote
           ns respo.util.list $ :require
             respo.util.detect :refer $ component? element?
-        :examples $ []

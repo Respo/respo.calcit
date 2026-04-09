@@ -1,3 +1,15 @@
+---
+title: "defeffect"
+scope: "module"
+kind: "reference"
+category: "reference"
+aliases:
+  - "respo.core/defeffect"
+entry_for:
+  - "define effect"
+  - "effect hook"
+---
+
 ## `defeffect`
 
 **📚 Documentation Index**

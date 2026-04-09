@@ -1,3 +1,17 @@
+---
+title: "Respo Development Guide for LLM Agents"
+scope: "module"
+kind: "agent"
+category: "docs"
+aliases:
+  - "Respo-Agent"
+  - "Respo Agent"
+  - "agent guide"
+entry_for:
+  - "docs agents"
+  - "llm agent"
+---
+
 # Respo Development Guide for LLM Agents
 
 **🤖 This guide is specifically designed for LLM agents to develop, debug, and maintain Respo applications.**
@@ -134,7 +148,7 @@ For LLM Agents, **JSON inline (`-j`) is the most reliable method** for code gene
 
 - Function: `(defn f (x) x)` -> `["defn", "f", ["x"], "x"]`
 - Map: `{:a 1}` -> `["{}", [":a", "1"]]`
-- String: `"|hello"` -> `"|hello"` (in JSON string: `"\"|hello\""`)
+- String: `"|hello"` -> `"|hello"` (in JSON string: `"hello"`)
 - Keyword: `:key` -> `":key"`
 
 **Common Commands:**
@@ -142,7 +156,7 @@ For LLM Agents, **JSON inline (`-j`) is the most reliable method** for code gene
 ```bash
 # 1. Add/Update Definition (JSON)
 # (defn greet (name) (println "|Hello" name))
-cr edit def respo.demo/greet -j '["defn", "greet", ["name"], ["println", "\"|Hello\"", "name"]]'
+cr edit def respo.demo/greet -j '["defn", "greet", ["name"], ["println", "|Hello", "name"]]'
 
 # 2. Add Definition (Cirru One-liner - risky for complex code)
 cr edit def respo.demo/simple -e 'defn simple (x) (+ x 1)'
@@ -202,7 +216,7 @@ Define the component logic.
 
 ```bash
 # Cirru: (defcomp comp-x (data) (div {} (<> "Feature X")))
-cr edit def respo.app.feature-x/comp-x -j '["defcomp", "comp-x", ["data"], ["div", ["{}"], ["<>", "\"|Feature X\""]]]'
+cr edit def respo.app.feature-x/comp-x -j '["defcomp", "comp-x", ["data"], ["div", ["{}"], ["<>", "|Feature X"]]]'
 ```
 
 **Step 4: Verify**
@@ -293,13 +307,13 @@ Use `search-expr` to find functional patterns (like state management or event ha
 
 ```bash
 # How is state being navigated?
-cr query search-expr '>> states' -l
+cr query search-expr '>> states'
 
 # Where are local state changes dispatched?
-cr query search-expr 'd! cursor' -l
+cr query search-expr 'd! cursor'
 
 # Find all component event handler signatures
-cr query search-expr 'fn (e d!)' -l
+cr query search-expr 'fn (e d!)'
 ```
 
 **Strategy:**

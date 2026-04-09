@@ -1,13 +1,13 @@
 {
   "dependencies": {
-    "@calcit/procs": "0.12.9"
+    "@calcit/procs": "0.12.14"
   },
   "scripts": {
     "test": "cr --init-fn 'respo.test.main/main!' js && node test.mjs"
   },
   "devDependencies": {
     "bottom-tip": "^0.1.5",
-    "vite": "^8.0.0"
+    "vite": "^8.0.3"
   },
   "packageManager": "yarn@4.12.0"
 }

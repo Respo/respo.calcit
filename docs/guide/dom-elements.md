@@ -1,3 +1,16 @@
+---
+title: "DOM elements"
+scope: "module"
+kind: "guide"
+category: "ecosystem"
+aliases:
+  - "dom elements"
+  - "html elements"
+entry_for:
+  - "element syntax"
+  - "create dom"
+---
+
 ## DOM elements
 
 **📚 Documentation Index**

@@ -1,3 +1,15 @@
+---
+title: "comp-inspect"
+scope: "module"
+kind: "reference"
+category: "reference"
+aliases:
+  - "respo.comp/comp-inspect"
+entry_for:
+  - "inspect component"
+  - "debug value"
+---
+
 ## `comp-inspect`
 
 This component is similiar to `comp-text`, it shows data in string with styles.

@@ -1,3 +1,16 @@
+---
+title: "Render list"
+scope: "module"
+kind: "guide"
+category: "ecosystem"
+aliases:
+  - "render list"
+  - "list rendering"
+entry_for:
+  - "list->"
+  - "keyed list"
+---
+
 ## Render list
 
 **📚 Documentation Index**

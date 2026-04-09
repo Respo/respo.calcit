@@ -1,4 +1,26 @@
+---
+title: "defcomp"
+scope: "module"
+kind: "reference"
+category: "reference"
+aliases:
+  - "defcomp"
+  - "respo.core/defcomp"
+  - "defcomp macro"
+  - "component definition"
+  - "component component"
+entry_for:
+  - "defcomp"
+  - "define component"
+  - "component macro"
+  - "props component"
+---
+
 ## `defcomp`
+
+## Define a component
+
+Use `defcomp` to declare a reusable component that receives props and renders virtual DOM.
 
 **📚 Documentation Index**
 
