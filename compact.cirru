@@ -2135,7 +2135,7 @@
           :examples $ []
           :schema $ :: :fn
             {} (:return :string)
-              :args $ [] :dynamic
+              :args $ [] 'respo.schema/Element
         |entry->html $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn entry->html (entry)
@@ -2172,7 +2172,7 @@
           :examples $ []
           :schema $ :: :fn
             {} (:return :string)
-              :args $ [] :dynamic
+              :args $ [] 'respo.schema/Component
         |props->html $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn props->html (props)
@@ -2532,6 +2532,16 @@
               testing "|test generated HTML from component" $ is
                 = (slurp |test/examples/demo.html) (make-string todo-demo)
           :examples $ []
+        |map-to-record-test $ %{} :CodeEntry (:doc |) (:schema :dynamic)
+          :code $ quote
+            defn map-to-record-test () $ testing "|test map-to-record rewrite for element->string"
+              is $ = "|<div class=\"test\"></div>"
+                element->string $ {} (:name :div) (:coord nil)
+                  :attrs $ [] ([] :class-name |test)
+                  :style $ []
+                  :event $ {}
+                  :children $ []
+          :examples $ []
         |nil-prop-test $ %{} :CodeEntry (:doc |) (:schema :dynamic)
           :code $ quote
             deftest nil-prop-test $ let
@@ -2542,7 +2552,7 @@
           :examples $ []
         |run-tests $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn run-tests () (html-quote-test) (nil-prop-test) (simple-html-test) (textarea-test)
+            defn run-tests () (html-quote-test) (nil-prop-test) (simple-html-test) (textarea-test) (map-to-record-test)
           :examples $ []
           :schema $ :: :fn
             {} (:return :unit)
@@ -2585,7 +2595,7 @@
           ns respo.test.html $ :require
             calcit-test.core :refer $ deftest is testing
             respo.core :refer $ html head title script div link textarea body
-            respo.render.html :refer $ make-string
+            respo.render.html :refer $ make-string element->string
             respo.test.comp.todolist :refer $ comp-todolist
     |respo.test.main $ %{} :FileEntry
       :defs $ {}
