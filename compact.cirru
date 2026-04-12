@@ -2463,55 +2463,13 @@
               :data-comp $ :: :optional :string
               :selected $ :: :optional :bool
               :target $ :: :optional :string
-              :on-click $ :: :optional
-                :: :fn $ {}
-                  :args $ [] (' respo.schema/RespoEvent)
-                    :: :fn $ {}
-                      :args $ [] :dynamic (:: :optional :dynamic)
-                      :return :unit
-                  :return :unit
-              :on-input $ :: :optional
-                :: :fn $ {}
-                  :args $ [] (' respo.schema/RespoEvent)
-                    :: :fn $ {}
-                      :args $ [] :dynamic (:: :optional :dynamic)
-                      :return :unit
-                  :return :unit
-              :on-focus $ :: :optional
-                :: :fn $ {}
-                  :args $ [] (' respo.schema/RespoEvent)
-                    :: :fn $ {}
-                      :args $ [] :dynamic (:: :optional :dynamic)
-                      :return :unit
-                  :return :unit
-              :on-blur $ :: :optional
-                :: :fn $ {}
-                  :args $ [] (' respo.schema/RespoEvent)
-                    :: :fn $ {}
-                      :args $ [] :dynamic (:: :optional :dynamic)
-                      :return :unit
-                  :return :unit
-              :on-keydown $ :: :optional
-                :: :fn $ {}
-                  :args $ [] (' respo.schema/RespoEvent)
-                    :: :fn $ {}
-                      :args $ [] :dynamic (:: :optional :dynamic)
-                      :return :unit
-                  :return :unit
-              :on-keyup $ :: :optional
-                :: :fn $ {}
-                  :args $ [] (' respo.schema/RespoEvent)
-                    :: :fn $ {}
-                      :args $ [] :dynamic (:: :optional :dynamic)
-                      :return :unit
-                  :return :unit
-              :on-change $ :: :optional
-                :: :fn $ {}
-                  :args $ [] (' respo.schema/RespoEvent)
-                    :: :fn $ {}
-                      :args $ [] :dynamic (:: :optional :dynamic)
-                      :return :unit
-                  :return :unit
+              :on-click $ :: :optional 'respo.schema/EventHandler
+              :on-input $ :: :optional 'respo.schema/EventHandler
+              :on-focus $ :: :optional 'respo.schema/EventHandler
+              :on-blur $ :: :optional 'respo.schema/EventHandler
+              :on-keydown $ :: :optional 'respo.schema/EventHandler
+              :on-keyup $ :: :optional 'respo.schema/EventHandler
+              :on-change $ :: :optional 'respo.schema/EventHandler
               :on $ :: :optional :map
           :examples $ []
         |Effect $ %{} :CodeEntry (:doc |) (:schema :dynamic)
@@ -2522,6 +2480,14 @@
           :code $ quote
             defstruct Element (:name :any) (:coord :any) (:attrs :any) (:style :any) (:event :any) (:children :any)
           :examples $ []
+        |EventHandler $ %{} :CodeEntry (:doc |)
+          :code $ quote (def EventHandler nil)
+          :examples $ []
+          :schema $ :: :fn
+            {} (:return :unit)
+              :args $ [] 'respo.schema/RespoEvent
+                :: :fn $ {} (:return :unit)
+                  :args $ [] :tuple
         |RespoEvent $ %{} :CodeEntry (:doc |) (:schema :dynamic)
           :code $ quote
             defstruct RespoEvent (:type :tag)
