@@ -1602,7 +1602,7 @@
       :defs $ {}
         |main! $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn main! () (bind-type :dispatch-op Op) (; handle-ssr! mount-target) (load-console-formatter!)
+            defn main! () (deftype-slot :dispatch-op) (bind-type :dispatch-op Op) (; handle-ssr! mount-target) (load-console-formatter!)
               if-let
                 raw $ js/window.localStorage.getItem |respo.calcit
                 swap! *store assoc :tasks $ parse-cirru-edn raw
