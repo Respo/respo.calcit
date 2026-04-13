@@ -391,7 +391,7 @@
           :examples $ []
           :schema $ :: :fn
             {} (:return :unit)
-              :args $ [] :tuple (:: :optional :dynamic)
+              :args $ [] 'respo.app.schema/Op (:: :optional :dynamic)
         |handle-ssr! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn handle-ssr! (mount-target)
@@ -425,6 +425,10 @@
             respo.app.updater :refer $ updater
     |respo.app.schema $ %{} :FileEntry
       :defs $ {}
+        |Op $ %{} :CodeEntry (:doc |) (:schema :dynamic)
+          :code $ quote
+            defenum Op (:states :list :dynamic) (:states-kv :list :dynamic :dynamic) (:states-merge :list :map :map) (:add :string) (:remove :string) (:clear) (:update :string :string) (:hit-first :dynamic) (:toggle :string)
+          :examples $ []
         |store $ %{} :CodeEntry (:doc |) (:schema :map)
           :code $ quote
             def store $ {}
@@ -509,7 +513,7 @@
           :examples $ []
           :schema $ :: :fn
             {} (:return :map)
-              :args $ [] :map :tuple :string
+              :args $ [] :map 'respo.app.schema/Op :string
       :ns $ %{} :NsEntry (:doc |)
         :code $ quote
           ns respo.app.updater $ :require
