@@ -1,6 +1,6 @@
 
 {} (:about "|Machine-generated snapshot. AI AGENTS: never edit this file directly — changes will be overwritten on recompile. Inspect via `cr query`; modify via `cr edit` / `cr tree`. MANDATORY first step: run `cr docs agents --full`.") (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.34)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.35)
     :modules $ [] |memof/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -58,7 +58,7 @@
                       :style $ {}
                         :background-color $ if (:done? task) (hsl 200 20 80) (hsl 200 80 70)
                       :on-click $ fn (e d!)
-                        d! $ %:: Op :toggle (:id task)
+                        d! $ :: :toggle (:id task)
                     =< 8 0
                     input $ {}
                       :value $ :text task
@@ -254,10 +254,10 @@
                         = |m $ :key info
                         :ctrl info
                       do
-                        dispatch! $ :: :states cursor (assoc state :message "|Message changed by Ctrl+M!")
+                        dispatch! $ %:: Op :states cursor (assoc state :message "|Message changed by Ctrl+M!")
                         js/window.setTimeout
                           fn () $ dispatch!
-                            :: :states cursor $ assoc state :message "|Press Ctrl+M to change message"
+                            %:: Op :states cursor $ assoc state :message "|Press Ctrl+M to change message"
                           , 2000
           :examples $ []
             quote $ on-keydown cursor state
@@ -306,21 +306,21 @@
             defn try-test! (dispatch! acc)
               let
                   started $ js/Date.now
-                dispatch! $ :: :clear
+                dispatch! $ %:: Op :clear
                 loop
                     x 20
-                  dispatch! :add |empty
+                  dispatch! $ %:: Op :add |empty
                   if (> x 0)
                     recur $ dec x
                 loop
                     x 20
-                  dispatch! $ : hit-first (js/Math.random)
+                  dispatch! $ %:: Op :hit-first (js/Math.random)
                   if (> x 0)
                     recur $ dec x
-                dispatch! $ :: :clear
+                dispatch! $ %:: Op :clear
                 loop
                     x 10
-                  dispatch! :add "|only 10 items"
+                  dispatch! $ %:: Op :add "|only 10 items"
                   if (> x 0)
                     recur $ dec x
                 let
@@ -1602,7 +1602,7 @@
       :defs $ {}
         |main! $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn main! () (deftype-slot :dispatch-op) (bind-type :dispatch-op Op) (; handle-ssr! mount-target) (load-console-formatter!)
+            defn main! () (bind-type :dispatch-op Op) (; handle-ssr! mount-target) (load-console-formatter!)
               if-let
                 raw $ js/window.localStorage.getItem |respo.calcit
                 swap! *store assoc :tasks $ parse-cirru-edn raw
