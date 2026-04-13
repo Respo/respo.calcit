@@ -58,7 +58,7 @@
                       :style $ {}
                         :background-color $ if (:done? task) (hsl 200 20 80) (hsl 200 80 70)
                       :on-click $ fn (e d!)
-                        d! $ : toggle (:id task)
+                        d! $ %:: Op :toggle (:id task)
                     =< 8 0
                     input $ {}
                       :value $ :text task
@@ -67,7 +67,7 @@
                         let
                             task-id $ :id task
                             text $ :value e
-                          d! $ : update task-id text
+                          d! $ %:: Op :update task-id text
                     =< 8 0
                     input $ {} (:value state) (:class-name widget/style-input)
                       :on-input $ fn (e d!)
@@ -76,7 +76,7 @@
                     div
                       {} (:class-name widget/style-button)
                         :on-click $ fn (e d!)
-                          d! :remove $ :id task
+                          d! $ %:: Op :remove (:id task)
                       <> |Remove
                     =< 8 0
                     div ({}) (<> state)
@@ -117,6 +117,7 @@
             respo.comp.inspect :refer $ comp-inspect
             respo.app.style.widget :as widget
             respo.css :refer $ defstyle
+            respo.app.schema :refer $ Op
     |respo.app.comp.todolist $ %{} :FileEntry
       :defs $ {}
         |comp-todolist $ %{} :CodeEntry (:doc |)
@@ -139,20 +140,20 @@
                           :width $ &max 200
                             + 24 $ text-width (:draft state) 16 |BlinkMacSystemFont
                         :on-input $ fn (e d!)
-                          d! $ :: :states-merge cursor state
+                          d! $ %:: Op :states-merge cursor state
                             {} $ :draft (:value e)
                         :on-focus on-focus
                       =< 8 0
                       span
                         {} (:class-name widget/style-button)
                           :on-click $ fn (e d!)
-                            d! $ : add (:draft state)
+                            d! $ %:: Op :add (:draft state)
                             d! cursor $ assoc state :draft |
                         span $ {} (:on-click nil) (:inner-text |Add)
                       =< 8 0
                       span $ {} (:inner-text |Clear) (:class-name widget/style-button)
                         :on-click $ fn (e d!)
-                          d! $ :: :clear
+                          d! $ %:: Op :clear
                       =< 8 0
                       div ({})
                         div
@@ -174,7 +175,7 @@
                             :on-click $ if
                               not $ :locked? state
                               fn (e d!)
-                                d! $ : clear
+                                d! $ %:: Op :clear
                           <> |Clear2
                         =< 8 0
                         div
@@ -348,6 +349,7 @@
             respo.app.style.widget :as widget
             memof.once :refer $ memof1-call-by
             respo.css :refer $ defstyle
+            respo.app.schema :refer $ Op
     |respo.app.comp.wrap $ %{} :FileEntry
       :defs $ {}
         |comp-wrap $ %{} :CodeEntry (:doc |)
@@ -1600,7 +1602,7 @@
       :defs $ {}
         |main! $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn main! () (; handle-ssr! mount-target) (load-console-formatter!)
+            defn main! () (bind-type :dispatch-op Op) (; handle-ssr! mount-target) (load-console-formatter!)
               if-let
                 raw $ js/window.localStorage.getItem |respo.calcit
                 swap! *store assoc :tasks $ parse-cirru-edn raw
@@ -1656,6 +1658,7 @@
             |./calcit.build-errors :default build-errors
             |bottom-tip :default hud!
             respo.controller.client :refer $ send-to-component!
+            respo.app.schema :refer $ Op
     |respo.render.diff $ %{} :FileEntry
       :defs $ {}
         |detect-keys-dup $ %{} :CodeEntry (:doc "|Checks for duplicate keys in a list of children. Useful for development mode warnings.")
@@ -2449,6 +2452,9 @@
             respo.schema.op :as op
     |respo.schema $ %{} :FileEntry
       :defs $ {}
+        |*dispatch-op $ %{} :CodeEntry (:doc |) (:schema :dynamic)
+          :code $ quote (deftype-slot :dispatch-op)
+          :examples $ []
         |Component $ %{} :CodeEntry (:doc |) (:schema :dynamic)
           :code $ quote
             defstruct Component (:name :any) (:effects :any) (:listeners :any) (:tree :any)
@@ -2503,7 +2509,7 @@
             {} (:return :unit)
               :args $ [] 'respo.schema/RespoEvent
                 :: :fn $ {} (:return :unit)
-                  :args $ [] :tuple
+                  :args $ [] '*dispatch-op
         |RespoEvent $ %{} :CodeEntry (:doc |) (:schema :dynamic)
           :code $ quote
             defstruct RespoEvent (:type :tag)
