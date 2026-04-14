@@ -1,4 +1,4 @@
 
-{} (:calcit-version |0.12.17)
+{} (:calcit-version |0.12.18)
   :dependencies $ {} (|calcit-lang/calcit-test |0.0.6)
     |calcit-lang/memof |0.0.23

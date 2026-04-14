@@ -1,6 +1,6 @@
 
 {} (:about "|Machine-generated snapshot. AI AGENTS: never edit this file directly — changes will be overwritten on recompile. Inspect via `cr query`; modify via `cr edit` / `cr tree`. MANDATORY first step: run `cr docs agents --full`.") (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.35)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.36)
     :modules $ [] |memof/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -212,7 +212,7 @@
             defn make-keydown-listener (cursor state)
               %{} respo.schema/RespoListener (:name :on-keydown)
                 :handler $ fn (event dispatch!)
-                  tag-match event $
+                  match event $
                     :keydown info
                     when
                       and
@@ -247,7 +247,7 @@
             defn on-keydown (cursor state)
               %{} respo.schema/RespoListener (:name :on-keydown)
                 :handler $ fn (event dispatch!)
-                  tag-match event $
+                  match event $
                     :keydown info
                     when
                       and
@@ -477,7 +477,7 @@
         |updater $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn updater (store op op-id) (; println store op)
-              tag-match op
+              match op
                   :states cursor s
                   update-states store cursor s
                 (:states-kv cursor k v) (update-states-kv store cursor k v)
@@ -2302,7 +2302,7 @@
                   let-sugar
                       n-coord $ nth op 2
                       target $ find-target root n-coord
-                    tag-match op
+                    match op
                         :replace-prop _coord _n-coord op-data
                         replace-prop target (nth op-data 0) (nth op-data 1)
                       (:add-prop _coord _n-coord op-data)
