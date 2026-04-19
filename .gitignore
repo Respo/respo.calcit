@@ -13,3 +13,5 @@ draft/
 .yarn/*.gz
 
 .calcit-snippets/
+
+.DS_Store

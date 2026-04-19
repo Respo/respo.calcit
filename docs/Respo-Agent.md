@@ -369,13 +369,13 @@ cr --check-only
 cr js --check-only
 
 # Run the app once to test
-cr -1
+cr
 
 # Compile to JavaScript once
-cr -1 js
+cr js
 
 # Watch mode (will call reload! on code changes)
-cr
+cr -w
 ```
 
 ### Step 4: Debug Issues
@@ -941,10 +941,10 @@ cr --check-only
 cr js --check-only
 
 # Run application once
-cr -1
+cr
 
 # Compile to JS once
-cr -1 js
+cr js
 ```
 
 ### Test-driven development
@@ -955,7 +955,7 @@ cr query defs respo.test.main
 cr query def respo.test.main/test-fn
 
 # Run tests
-cr -1  ; (if init-fn runs tests)
+cr  ; (if init-fn runs tests)
 ```
 
 ### Error diagnosis
@@ -1000,7 +1000,7 @@ cr query ns namespace-name  # Check imports
    ```bash
    cr tree show namespace/def -p "modified-path"  # Confirm change
    cr --check-only  # Check syntax
-   cr -1  # Test run
+   cr # Test run
    ```
 
 5. **Use peek before def** to reduce token consumption
@@ -1070,7 +1070,7 @@ cr edit rm-def ns/def
 # Validation
 cr --check-only                          # Check syntax
 cr query error                           # View errors
-cr -1                                    # Test run
+cr                                       # Test run
 ```
 
 ### File Paths in Documentation
