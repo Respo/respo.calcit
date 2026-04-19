@@ -1,6 +1,6 @@
 
 {} (:about "|Machine-generated snapshot. AI AGENTS: never edit this file directly — changes will be overwritten on recompile. Inspect via `cr query`; modify via `cr edit` / `cr tree`. MANDATORY first step: run `cr docs agents --full`.") (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.36)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.37)
     :modules $ [] |memof/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -1977,13 +1977,15 @@
                         v $ last entry
                       aset (.-style element) k $ get-style-value v k
                   &doseq (entry events)
-                    let
-                        event-name $ first entry
-                        name-in-string $ event->prop event-name
-                      aset element name-in-string $ fn (event)
-                          listener-builder event-name
-                          , event coord
-                        .!stopPropagation event
+                    when
+                      some? $ last entry
+                      let
+                          event-name $ first entry
+                          name-in-string $ event->prop event-name
+                        aset element name-in-string $ fn (event)
+                            listener-builder event-name
+                            , event coord
+                          .!stopPropagation event
                   each child-elements $ fn (child-element)
                     if (some? child-element) (.!appendChild element child-element)
                   , element
@@ -3082,7 +3084,9 @@
                   -> props $ map-kv
                     fn (k v)
                       if
-                        starts-with? (turn-string k) |on-
+                        and
+                          starts-with? (turn-string k) |on-
+                          some? v
                         []
                           turn-tag $ &str:slice (turn-string k) 3
                           , v
