@@ -1,6 +1,6 @@
 
 {} (:about "|Machine-generated snapshot. AI AGENTS: never edit this file directly — changes will be overwritten on recompile. Inspect via `cr query`; modify via `cr edit` / `cr tree`. MANDATORY first step: run `cr docs agents --full`.") (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.38)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.39)
     :modules $ [] |memof/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -2479,6 +2479,7 @@
               :checked $ :: :optional :bool
               :spell-check $ :: :optional :bool
               :spellcheck $ :: :optional :bool
+              :autofocus $ :: :optional :bool
               :tab-index $ :: :optional :number
               :read-only $ :: :optional :bool
               :data-name $ :: :optional :string
