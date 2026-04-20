@@ -1,6 +1,6 @@
 
 {} (:about "|Machine-generated snapshot. AI AGENTS: never edit this file directly — changes will be overwritten on recompile. Inspect via `cr query`; modify via `cr edit` / `cr tree`. MANDATORY first step: run `cr docs agents --full`.") (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.37)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.38)
     :modules $ [] |memof/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -2478,6 +2478,7 @@
               :disabled $ :: :optional :bool
               :checked $ :: :optional :bool
               :spell-check $ :: :optional :bool
+              :spellcheck $ :: :optional :bool
               :tab-index $ :: :optional :number
               :read-only $ :: :optional :bool
               :data-name $ :: :optional :string
@@ -2862,8 +2863,9 @@
         |dashed->camel $ %{} :CodeEntry (:doc "|convert dashed-case CSS property names to camelCase. e.g. \"background-color\" -> \"backgroundColor\".")
           :code $ quote
             defn dashed->camel (x)
-              .!replace x dashed-letter-pattern $ fn (cc pos prop)
-                .!toUpperCase $ aget cc 1
+              if (= x |spell-check) |spellcheck $ .!replace x dashed-letter-pattern
+                fn (cc pos prop)
+                  .!toUpperCase $ aget cc 1
           :examples $ []
             quote $ dashed->camel |background-color
             quote $ dashed->camel |font-size
@@ -2984,7 +2986,7 @@
           :code $ quote
             defn prop->attr (x)
               when (includes? x |?) (println "|[Respo] warning: property includes `?` in" x)
-              case-default x x (|class-name |class) (|tab-index |tabindex) (|read-only |readonly)
+              case-default x x (|class-name |class) (|tab-index |tabindex) (|read-only |readonly) (|spell-check |spellcheck)
           :examples $ []
           :schema $ :: :fn
             {} (:return :string)
