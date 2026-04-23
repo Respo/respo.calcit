@@ -369,13 +369,13 @@ cr --check-only
 cr js --check-only
 
 # Run the app once to test
-cr -1
+cr
 
 # Compile to JavaScript once
-cr -1 js
+cr js
 
 # Watch mode (will call reload! on code changes)
-cr
+cr -w
 ```
 
 ### Step 4: Debug Issues
@@ -667,6 +667,88 @@ js/window.setTimeout
 ; - Testing component event handlers
 ```
 
+### 7. Type Slot — Typed Dispatch with Enum Validation
+
+**Type slots** allow the compiler to know the concrete type of `dispatch!` (typically the app-level `Op` enum) inside event handler closures. This enables:
+
+- **Auto-rewrite**: `:: :variant` shorthand automatically rewrites to `%:: Op :variant` at compile time.
+- **Variant validation**: invalid variants like `:: :typo` produce a compile-time warning (codegen blocked).
+- **Type checking**: the `d!` parameter inside `fn (e d!)` gets a typed signature.
+
+#### Setup in `main!`
+
+Declare the type slot once at the application entry point, binding it to your `Op` enum:
+
+```cirru
+; respo.main/main!
+defn main! ()
+  bind-type :dispatch-op respo.app.schema/Op
+  render-app! mount-point
+```
+
+`bind-type` does not require a prior `deftype-slot` call — it auto-registers the slot on first use. Using it a second time with the same slot name is an error.
+
+#### Schema on `dispatch!` / `d!`
+
+Functions that accept a dispatch callback should annotate its argument with `*dispatch-op`:
+
+```cirru
+; respo.app.core/dispatch!
+defn dispatch! (op ? op-data)
+  ...
+schema $ :: :fn
+  {} (:return :unit)
+    :args $ [] 'respo.app.schema/Op (:: :optional :dynamic)
+
+; Event handler parameter uses type slot reference
+defn on-keydown (cursor state)
+  %{} respo.schema/RespoListener (:name :on-keydown)
+    :handler $ fn (event dispatch!)  ; dispatch! typed via *dispatch-op slot
+      ...
+schema $ :: :fn
+  {} (:return 'respo.schema/RespoListener)
+    :args $ [] :list :map
+; (handler schema uses 'respo.schema/EventHandler which takes Fn(*dispatch-op -> unit))
+```
+
+#### Usage in Components — Short Syntax
+
+Inside event handlers of DOM props (e.g., `:on-click`), write dispatch calls using the `::` shorthand. The compiler resolves the type slot and rewrites automatically:
+
+```cirru
+; Short form (compiler rewrites to %:: Op :toggle (:id task))
+button $ {}
+  :on-click $ fn (e d!)
+    d! $ :: :toggle (:id task)
+
+; Also works for multi-arg variants
+input $ {}
+  :on-input $ fn (e d!)
+    let
+        text $ :value e
+      d! $ :: :update task-id text
+```
+
+The auto-rewrite uses the `Op` enum type resolved from `*dispatch-op`. If you write an invalid variant, the compiler warns and blocks codegen:
+
+```
+[Warn] Enum `Op` does not have variant `:toogle`. Available variants: ["add", "clear", "toggle", ...]
+```
+
+#### How It Works (for debugging)
+
+1. `bind-type :dispatch-op Op` stores `TypeRef("respo.app.schema/Op")` in the type slot at preprocess time.
+2. When a function parameter has schema `Fn(*dispatch-op → unit)` (the EventHandler's second arg), `*dispatch-op` is resolved to the bound `Op` type and injected into the closure's scope as the type of `d!`.
+3. When `d! $ :: :variant ...` is preprocessed, the compiler sees `d!` has type `Fn(Op → unit)`, resolves `Op`, and rewrites `:: :variant` → `%:: Op :variant`.
+4. The variant name is validated against the enum definition.
+
+#### Common Pitfalls
+
+- `bind-type` must be called **before** preprocessing components that use it (i.e., early in `main!`).
+- Writing `%:: Op :variant` manually still works and is equivalent.
+- Type-slot-based shorthand only activates when `d!` has an inferred `Fn` type with a TypeSlot argument — if the schema is missing, the rewrite is silently skipped (no error, just no auto-rewrite).
+- The test entry point (`respo.test.main/main!`) does not call `bind-type`, so type-slot rewrites are inactive during tests. This is expected — test components use direct `%:: Op :variant` calls.
+
 ---
 
 ## Debugging Common Issues
@@ -859,10 +941,10 @@ cr --check-only
 cr js --check-only
 
 # Run application once
-cr -1
+cr
 
 # Compile to JS once
-cr -1 js
+cr js
 ```
 
 ### Test-driven development
@@ -873,7 +955,7 @@ cr query defs respo.test.main
 cr query def respo.test.main/test-fn
 
 # Run tests
-cr -1  ; (if init-fn runs tests)
+cr  ; (if init-fn runs tests)
 ```
 
 ### Error diagnosis
@@ -918,7 +1000,7 @@ cr query ns namespace-name  # Check imports
    ```bash
    cr tree show namespace/def -p "modified-path"  # Confirm change
    cr --check-only  # Check syntax
-   cr -1  # Test run
+   cr # Test run
    ```
 
 5. **Use peek before def** to reduce token consumption
@@ -988,7 +1070,7 @@ cr edit rm-def ns/def
 # Validation
 cr --check-only                          # Check syntax
 cr query error                           # View errors
-cr -1                                    # Test run
+cr                                       # Test run
 ```
 
 ### File Paths in Documentation
