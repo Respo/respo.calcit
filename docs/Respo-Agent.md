@@ -118,16 +118,16 @@ cr tree show respo.app.updater/updater -p "" -d 1    # View root level
 
 # Step 3: Dive deeper into specific indices
 cr tree show respo.app.updater/updater -p "2" -d 1   # Check 3rd element
-cr tree show respo.app.updater/updater -p "2,1" -d 1 # Check 2nd child of 3rd element
+cr tree show respo.app.updater/updater -p "2.1" -d 1 # Check 2nd child of 3rd element
 
 # Step 4: Confirm target location before editing
-cr tree show respo.app.updater/updater -p "2,1,0"    # Final confirmation
+cr tree show respo.app.updater/updater -p "2.1.0"    # Final confirmation
 
 # Step 5: Use tree commands for surgical modifications
 # JSON inline (recommended)
-cr tree replace respo.app.updater/updater -p "2,1,0" -j '"new-value"'
+cr tree replace respo.app.updater/updater -p "2.1.0" -j '"new-value"'
 # Or from stdin
-echo '"new-value"' | cr tree replace respo.app.updater/updater -p "2,1,0" -s -J
+echo '"new-value"' | cr tree replace respo.app.updater/updater -p "2.1.0" -s -J
 ```
 
 echo '["defn", "hello", [], ["println", "|Hello"]]' | cr edit def respo.app.core/hello -s -J
@@ -347,16 +347,16 @@ cr query def namespace/function-name
 cr tree show namespace/function-name -p "" -d 1
 
 # 3. Navigate to target position
-cr tree show namespace/function-name -p "2,1" -d 1
+cr tree show namespace/function-name -p "2.1" -d 1
 
 # 4. Make the change (JSON inline recommended)
-cr tree replace namespace/function-name -p "2,1,0" -j '["new", "code"]'
+cr tree replace namespace/function-name -p "2.1.0" -j '["new", "code"]'
 
 # Or from stdin (JSON format)
-echo '["new", "code"]' | cr tree replace namespace/function-name -p "2,1,0" -s -J
+echo '["new", "code"]' | cr tree replace namespace/function-name -p "2.1.0" -s -J
 
 # 5. Verify
-cr tree show namespace/function-name -p "2,1"
+cr tree show namespace/function-name -p "2.1"
 ```
 
 ### Step 3: Test and Validate
@@ -886,22 +886,22 @@ defn reload! ()
    ```bash
    cr tree show namespace-name/def-name -p "" -d 2  # Overview
    cr tree show namespace-name/def-name -p "2" -d 2  # Check section
-   cr tree show namespace-name/def-name -p "2,1" -d 2  # Precise location
+   cr tree show namespace-name/def-name -p "2.1" -d 2  # Precise location
    ```
 
 3. **Make surgical change**
 
 ```bash
 # JSON inline (recommended)
-cr tree replace namespace-name/def-name -p "2,1,0" -j '"new-value"'
+cr tree replace namespace-name/def-name -p "2.1.0" -j '"new-value"'
 
 # Or from stdin (JSON format)
-echo '"new-value"' | cr tree replace namespace-name/def-name -p "2,1,0" -s -J
+echo '"new-value"' | cr tree replace namespace-name/def-name -p "2.1.0" -s -J
 ```
 
 4. **Verify immediately**
    ```bash
-   cr tree show namespace-name/def-name -p "2,1"  # Confirm change
+   cr tree show namespace-name/def-name -p "2.1"  # Confirm change
    cr --check-only  # Verify syntax
    ```
 
@@ -909,22 +909,22 @@ echo '"new-value"' | cr tree replace namespace-name/def-name -p "2,1,0" -s -J
 
 ```bash
 # Replace a value (JSON inline)
-cr tree replace ns/def -p "2,1,0" -j '"new-value"'
+cr tree replace ns/def -p "2.1.0" -j '"new-value"'
 
 # Insert before a position (JSON)
-cr tree insert-before ns/def -p "2,1" -j '["new", "element"]'
+cr tree insert-before ns/def -p "2.1" -j '["new", "element"]'
 
 # Insert after a position (JSON)
-cr tree insert-after ns/def -p "2,1" -j '["new", "element"]'
+cr tree insert-after ns/def -p "2.1" -j '["new", "element"]'
 
 # Delete a node
-cr tree delete ns/def -p "2,1,0"
+cr tree delete ns/def -p "2.1.0"
 
 # Insert as child (first child)
-cr tree insert-child ns/def -p "2,1" -j '"child-value"'
+cr tree insert-child ns/def -p "2.1" -j '"child-value"'
 
 # Append as child (last child, from stdin)
-echo '"child-value"' | cr tree append-child ns/def -p "2,1" -s -J
+echo '"child-value"' | cr tree append-child ns/def -p "2.1" -s -J
 ```
 
 ---
@@ -1020,9 +1020,9 @@ cr query defs respo.app.updater               # Quick list
 cr query def respo.app.updater/updater        # Full JSON AST
 
 # Use -d flag to limit JSON depth
-cr tree show ns/def -p "2,1" -d 1            # Shallow
-cr tree show ns/def -p "2,1" -d 3            # Medium
-cr tree show ns/def -p "2,1"                 # Full (default)
+cr tree show ns/def -p "2.1" -d 1            # Shallow
+cr tree show ns/def -p "2.1" -d 3            # Medium
+cr tree show ns/def -p "2.1"                 # Full (default)
 
 # Search before diving deep
 cr query find my-function                     # Find location first
@@ -1059,12 +1059,12 @@ cr query usages respo.core/render!       # Find usages
 
 # Navigation (precise editing)
 cr tree show ns/def -p "" -d 1           # View structure
-cr tree show ns/def -p "2,1" -d 1        # Drill down
-cr tree show ns/def -p "2,1,0"           # Confirm target
+cr tree show ns/def -p "2.1" -d 1        # Drill down
+cr tree show ns/def -p "2.1.0"           # Confirm target
 
 # Modification (careful!)
 cr edit def ns/def -j '["defn", "func", [], "body"]'
-cr tree replace ns/def -p "2,1,0" -j '"value"'
+cr tree replace ns/def -p "2.1.0" -j '"value"'
 cr edit rm-def ns/def
 
 # Validation
