@@ -1,6 +1,6 @@
 
-{} (:about "|Machine-generated snapshot. AI AGENTS: never edit this file directly — changes will be overwritten on recompile. Inspect via `cr query`; modify via `cr edit` / `cr tree`. MANDATORY first step: run `cr docs agents --full`.") (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.39)
+{} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `cr query` to inspect and `cr edit`/`cr tree` to modify. Run `cr docs agents --full` first. Manual edits must follow format and schema conventions, then run `cr edit format`.") (:package |respo)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.40)
     :modules $ [] |memof/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -1244,13 +1244,13 @@
               ; assert "|2nd argument should be a component" $ component? element
               let
                   deliver-event $ build-deliver-event *global-element *dispatch-fn
-                  *changes $ atom ([])
-                  collect! $ fn (op) (swap! *changes conj op)
+                  changes $ &buf-list:new
+                  collect! $ fn (op) (&buf-list:push changes op)
                 ; println "|mount app"
                 activate-instance! element target deliver-event
                 collect-mounting collect! ([]) ([]) element true
-                patch-instance! @*changes target deliver-event
                 reset! *global-element element
+                patch-instance! (&buf-list:to-list changes) target deliver-event
           :examples $ []
             quote $ mount-app! mount-target (comp-app) *dispatch-fn
           :schema $ :: :fn
@@ -1297,15 +1297,15 @@
               assert (component? element) "|2nd argument should be a component"
               let
                   app-element $ .-firstElementChild target
-                  *changes $ atom ([])
+                  changes $ &buf-list:new
                   collect! $ fn (op coord n-coord v)
-                    swap! *changes conj $ [] op coord n-coord v
+                    &buf-list:push changes $ [] op coord n-coord v
                   deliver-event $ build-deliver-event *global-element dispatch!
                 if (nil? app-element) (raise "|Detected no element from SSR!")
                 compare-to-dom! (purify-element element) app-element
                 collect-mounting collect! ([]) ([]) element true
-                patch-instance! @*changes target deliver-event
                 reset! *global-element $ mute-element element
+                patch-instance! (&buf-list:to-list changes) target deliver-event
           :examples $ []
           :schema $ :: :fn
             {} (:return :unit)
@@ -1328,14 +1328,15 @@
             defn rerender-app! (target element *dispatch-fn)
               let
                   deliver-event $ build-deliver-event *global-element *dispatch-fn
-                  *changes $ atom ([])
-                  collect! $ fn (op) (swap! *changes conj op)
+                  changes $ &buf-list:new
+                  collect! $ fn (op) (&buf-list:push changes op)
                 ; println @*global-element
                 find-element-diffs collect! ([]) ([]) @*global-element element
-                if-let (logger @*changes-logger) (logger @*global-element element @*changes)
+                if-let (logger @*changes-logger)
+                  logger @*global-element element $ &buf-list:to-list changes
                 ; js/console.log |Changes: @*changes
-                patch-instance! @*changes target deliver-event
                 reset! *global-element element
+                patch-instance! (&buf-list:to-list changes) target deliver-event
           :examples $ []
             quote $ rerender-app! mount-target (comp-demo) *dispatch-fn
           :schema $ :: :fn
