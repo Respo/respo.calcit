@@ -1079,12 +1079,12 @@ When referring to files from within `docs/`:
 
 - `./` - same directory
 - `../` - parent (docs/ to root)
-- `../../` - grandparent (docs/apis/ to root)
+- `../../` - grandparent (for example from `docs/guide/` back to project root)
 
-Example from `docs/apis/defcomp.md`:
+Example from `docs/guide/server-rendering.md`:
 
 ```markdown
-- [Back to README](../../README.md)
-- [API Overview](../api.md)
-- [Another API](./render!.md)
+- [← Back to README](../../README.md)
+- [Beginner Guide](../beginner-guide.md)
+- [API Reference](../api.md)
 ```

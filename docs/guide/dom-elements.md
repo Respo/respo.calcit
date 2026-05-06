@@ -20,7 +20,7 @@ entry_for:
 - [API Reference](../api.md)
 - [All Guides](./): [Why Respo](./why-respo.md) | [Base Components](./base-components.md) | [Virtual DOM](./virtual-dom.md) | [Component States](./component-states.md)
 
-An element is defined with [`create-element`](../apis/create-element.md) like:
+An element is defined with `respo.core/create-element` like:
 
 ```cirru
 defmacro a (props & children)
@@ -75,4 +75,4 @@ a body br button canvas code div footer
   ul
 ```
 
-Some are not, but you can create them very quickly with [`create-element`](../apis/create-element.md).
+Some are not, but you can create them very quickly with `respo.core/create-element`. For details, run `cr query def respo.core/create-element`.

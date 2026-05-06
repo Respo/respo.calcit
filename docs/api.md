@@ -25,42 +25,51 @@ entry_for:
 - [Guide Topics](guide/)
 - [CLI Tools Reference](../Agents.md)
 
+Detailed API descriptions now live in source doc strings inside `compact.cirru`.
+Use Calcit CLI to inspect them:
+
+```bash
+cr query def respo.core/defcomp
+cr query def respo.core/render!
+cr query def respo.render.html/make-string
+```
+
+`cr query examples <ns/def>` is also useful when an API has runnable examples.
+
 ### User APIs
 
-| Namespace            | Function                                   |
-| -------------------- | ------------------------------------------ |
-| `respo.core`         | [`defcomp`](apis/defcomp.md)               |
-|                      | [`div`](apis/div.md)                       |
-|                      | [`<>`](apis/expand-tag.md)                 |
-|                      | [`defeffect`](apis/defeffect.md)           |
-|                      | [`create-element`](apis/create-element.md) |
-|                      | [`render!`](apis/render_.md)               |
-|                      | [`clear-cache!`](apis/clear-cache_.md)     |
-|                      | [`realize-ssr!`](apis/realize-ssr_.md)     |
-|                      | [`list->`](apis/list-_.md)                 |
-|                      | [`>>`](apis/pick-states.md)                |
-| `respo.comp.space`   | [`comp-space` or `=<`](apis/comp-space.md) |
-| `respo.comp.inspect` | [`comp-inspect`](apis/comp-inspect.md)     |
-| `respo.render.html`  | [`make-string`](apis/make-string.md)       |
+| Namespace            | Function          |
+| -------------------- | ----------------- |
+| `respo.core`         | `defcomp`         |
+|                      | `div`             |
+|                      | `<>`              |
+|                      | `defeffect`       |
+|                      | `create-element`  |
+|                      | `render!`         |
+|                      | `clear-cache!`    |
+|                      | `realize-ssr!`    |
+|                      | `list->`          |
+|                      | `>>`              |
+| `respo.comp.space`   | `comp-space` `=<` |
+| `respo.comp.inspect` | `comp-inspect`    |
+| `respo.render.html`  | `make-string`     |
 
 ### Lower level APIs
 
-Normally you don't need low level APIs, and the basic APIs are enough for building a apps.
+Normally you do not need these lower level APIs for everyday component work, but they are useful for understanding the rendering pipeline.
 
-I documented the APIs that can be useful.
-It's possible to discover new features we have't noticed yet.
+| Namespace                 | Function             |
+| ------------------------- | -------------------- |
+| `respo.util.format`       | `purify-element`     |
+|                           | `mute-element`       |
+| `respo.util.list`         | `map-val`            |
+|                           | `map-with-idx`       |
+| `respo.render.diff`       | `find-element-diffs` |
+| `respo.render.patch`      | `apply-dom-changes`  |
+| `respo.controller.client` | `activate-instance!` |
+|                           | `patch-instance!`    |
 
-| Namespace                 | Function                                           |
-| ------------------------- | -------------------------------------------------- |
-| `respo.render.expand`     | [`render-app`](apis/render-app.md)                 |
-| `respo.util.format`       | [`purify-element`](apis/purify-element.md)         |
-|                           | [`mute-element`](apis/mute-element.md)             |
-| `respo.util.list`         | [`map-val`](#map-val)                              |
-|                           | [`map-with-idx`](#map-with-idx)                    |
-| `respo.render.diff`       | [`find-element-diffs`](apis/find-element-diffs.md) |
-| `respo.render.patch`      | [`apply-dom-changes`](apis/apply-dom-changes.md)   |
-| `respo.controller.client` | [`activate-instance!`](apis/activate-instance.md)  |
-|                           | [`patch-instance!`](apis/patch-instance.md)        |
+Legacy standalone API pages were merged into source doc strings. Older names such as `make-html` and `render-app` are no longer separate API pages.
 
 ### APIs
 
