@@ -213,33 +213,40 @@ This index helps LLM tools automatically fetch and reference documentation using
 | Server Rendering | [docs/guide/server-rendering.md](docs/guide/server-rendering.md) | SSR capabilities                   |
 | Pros and Cons    | [docs/guide/pros-and-cons.md](docs/guide/pros-and-cons.md)       | Framework comparison               |
 
-### API Reference (see `docs/apis/`)
+### API Reference
 
-Core macros and functions for building applications:
+Core API descriptions are now stored in source doc strings inside `compact.cirru`.
+Use `docs/api.md` for the overview, or inspect a definition directly with Calcit CLI:
 
-| API                  | Path                                                               | Purpose                        |
-| -------------------- | ------------------------------------------------------------------ | ------------------------------ |
-| `defcomp`            | [docs/apis/defcomp.md](docs/apis/defcomp.md)                       | Define components with macro   |
-| `defeffect`          | [docs/apis/defeffect.md](docs/apis/defeffect.md)                   | Define lifecycle effects       |
-| `div`                | [docs/apis/div.md](docs/apis/div.md)                               | Create div elements            |
-| `create-element`     | [docs/apis/create-element.md](docs/apis/create-element.md)         | Dynamically create elements    |
-| `render!`            | [docs/apis/render!.md](docs/apis/render!.md)                       | Sync virtual DOM to real DOM   |
-| `render-app`         | [docs/apis/render-app.md](docs/apis/render-app.md)                 | Application rendering          |
-| `expand-tag`         | [docs/apis/expand-tag.md](docs/apis/expand-tag.md)                 | Expand tag shortcuts           |
-| `comp-space`         | [docs/apis/comp-space.md](docs/apis/comp-space.md)                 | Spacing component              |
-| `comp-inspect`       | [docs/apis/comp-inspect.md](docs/apis/comp-inspect.md)             | Inspection/debugging component |
-| `clear-cache!`       | [docs/apis/clear-cache!.md](docs/apis/clear-cache!.md)             | Clear memoization cache        |
-| `patch-instance!`    | [docs/apis/patch-instance.md](docs/apis/patch-instance.md)         | Patch DOM instances            |
-| `activate-instance`  | [docs/apis/activate-instance.md](docs/apis/activate-instance.md)   | Activate DOM instances         |
-| `pick-states`        | [docs/apis/pick-states.md](docs/apis/pick-states.md)               | Extract component states       |
-| `purify-element`     | [docs/apis/purify-element.md](docs/apis/purify-element.md)         | Clean element markup           |
-| `mute-element`       | [docs/apis/mute-element.md](docs/apis/mute-element.md)             | Silence element output         |
-| `make-html`          | [docs/apis/make-html.md](docs/apis/make-html.md)                   | Generate HTML                  |
-| `make-string`        | [docs/apis/make-string.md](docs/apis/make-string.md)               | Serialize to string            |
-| `find-element-diffs` | [docs/apis/find-element-diffs.md](docs/apis/find-element-diffs.md) | Find DOM differences           |
-| `apply-dom-changes`  | [docs/apis/apply-dom-changes.md](docs/apis/apply-dom-changes.md)   | Apply DOM patches              |
-| `realize-ssr!`       | [docs/apis/realize-ssr\_.md](docs/apis/realize-ssr_.md)            | Server-side rendering          |
-| `list->`             | [docs/apis/list->.md](docs/apis/list->.md)                         | Create list containers         |
+```bash
+cr query def respo.core/defcomp
+cr query def respo.core/render!
+cr query def respo.render.html/make-string
+```
+
+| API                  | Namespace                        | Purpose                        |
+| -------------------- | -------------------------------- | ------------------------------ |
+| `defcomp`            | `respo.core/defcomp`             | Define components with macro   |
+| `defeffect`          | `respo.core/defeffect`           | Define lifecycle effects       |
+| `div`                | `respo.core/div`                 | Create div elements            |
+| `create-element`     | `respo.core/create-element`      | Dynamically create elements    |
+| `render!`            | `respo.core/render!`             | Sync virtual DOM to real DOM   |
+| `<>`                 | `respo.core/<>`                  | Create text nodes              |
+| `comp-space`         | `respo.comp.space/comp-space`    | Spacing component              |
+| `comp-inspect`       | `respo.comp.inspect/comp-inspect`| Inspection/debugging component |
+| `clear-cache!`       | `respo.core/clear-cache!`        | Clear memoization cache        |
+| `patch-instance!`    | `respo.controller.client/patch-instance!` | Patch DOM instances    |
+| `activate-instance!` | `respo.controller.client/activate-instance!` | Activate DOM instances |
+| `>>`                 | `respo.core/>>`                  | Create state cursors           |
+| `purify-element`     | `respo.util.format/purify-element` | Clean element markup         |
+| `mute-element`       | `respo.util.format/mute-element` | Silence element output         |
+| `make-string`        | `respo.render.html/make-string`  | Serialize to string            |
+| `find-element-diffs` | `respo.render.diff/find-element-diffs` | Find DOM differences     |
+| `apply-dom-changes`  | `respo.render.patch/apply-dom-changes` | Apply DOM patches        |
+| `realize-ssr!`       | `respo.core/realize-ssr!`        | Server-side rendering          |
+| `list->`             | `respo.core/list->`              | Create list containers         |
+
+Legacy page names such as `make-html` and `render-app` were removed during the migration to source doc strings.
 
 ### Agent Workflows
 

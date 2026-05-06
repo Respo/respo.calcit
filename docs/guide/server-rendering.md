@@ -51,11 +51,10 @@ And note that the HTML transferred over the network does not bind events, and we
 
 Virtual DOM can be rendered on a server, use it like in JavaScript.
 
-[`make-string`](../apis/make-string.md) is the function to render HTML. [`realize-ssr!`](../apis/realize-ssr_.md) is also useful to make first screen look smoother, make sure it's called before `render!`.
+`respo.render.html/make-string` is the function to render HTML. `respo.core/realize-ssr!` is also useful to make first screen look smoother; make sure it is called before `respo.core/render!`.
 
-Notice that when rendering on server, events are not bound,
-internally we use [`mute-element`](../apis/mute-element.md) to remove events before rendering.
-Without [`realize-ssr!`](../apis/realize-ssr_.md), [`render!`](../apis/render_.md) function will remove existing DOM and mount the whole tree.
+Notice that when rendering on server, events are not bound, and internally Respo uses `respo.util.format/mute-element` to remove events before rendering.
+Without `respo.core/realize-ssr!`, `respo.core/render!` will remove existing DOM and mount the whole tree.
 
 ### `realize-ssr!` solution
 
