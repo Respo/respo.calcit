@@ -1,6 +1,6 @@
 
 {} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `cr query` to inspect and `cr edit`/`cr tree` to modify. Run `cr docs agents --full` first. Manual edits must follow format and schema conventions, then run `cr edit format`.") (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.43)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.44)
     :modules $ [] |memof/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -1791,7 +1791,7 @@
                         find-element-diffs collect! next-coord n-coord (:tree old-tree) (:tree new-tree)
                         collect-updating collect! :update coord n-coord old-tree new-tree
                       do (collect-unmounting collect! coord n-coord old-tree true)
-                        find-element-diffs collect! next-coord n-coord (:tree old-tree) (:tree new-tree)
+                        collect! $ :: :replace-element coord n-coord new-tree
                         collect-mounting collect! coord n-coord new-tree true
                 (and (component? old-tree) (element? new-tree))
                   do
