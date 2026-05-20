@@ -2498,6 +2498,7 @@
               :defer $ :: :optional :bool
               :on $ :: :optional :map
               :alt $ :: :optional :string
+              :draggable $ :: :optional :bool
           :examples $ []
         |Effect $ %{} :CodeEntry (:doc |) (:schema :dynamic)
           :code $ quote
