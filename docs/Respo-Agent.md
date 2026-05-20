@@ -185,12 +185,12 @@ cr cirru parse -O 'defn f (x) (+ x 1)'
 
 ```bash
 # Get project configuration (init-fn, reload-fn, version)
-cr query config
+cr config show
 
 # Set project configuration
-cr edit config version "0.16.22"
-cr edit config init-fn "respo.main/main!"
-cr edit config reload-fn "respo.main/reload!"
+cr config version "0.16.22"
+cr config init-fn "respo.main/main!"
+cr config reload-fn "respo.main/reload!"
 ```
 
 ### 5. Workflow: Building From Scratch
