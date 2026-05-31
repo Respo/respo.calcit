@@ -25,7 +25,7 @@ jobs:
       - uses: calcit-lang/setup-cr@0.0.8
 
       - name: "load deps"
-        run: caps --ci && yarn
+        run: caps --ci && yarn install --immutable
 
       - name: "test js"
         run: >

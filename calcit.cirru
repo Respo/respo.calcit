@@ -1,6 +1,6 @@
 
 {} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `cr query` to inspect and `cr edit`/`cr tree` to modify. Run `cr docs agents --full` first. Manual edits must follow format and schema conventions, then run `cr edit format`.") (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.44)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.46)
     :modules $ [] |memof/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -83,7 +83,7 @@
           :examples $ []
           :schema $ :: :fn
             {} (:return 'respo.schema/Component)
-              :args $ [] :dynamic :dynamic
+              :args $ [] :dynamic 'respo.app.schema/Task
         |effect-log $ %{} :CodeEntry (:doc |)
           :code $ quote
             defeffect effect-log (task) (action parent at-place?) (; js/console.log "|Task effect" action at-place?)
@@ -126,7 +126,9 @@
               let
                   cursor $ either (:cursor states) ([])
                   state $ either (:data states)
-                    {} (:draft |) (:locked? false) (:message "|Press Ctrl+M to change message")
+                    %{} respo.app.schema/TodoState (:draft |) (:locked? false) (:message "|Press Ctrl+M to change message")
+                assert-type state 'respo.app.schema/TodoState
+                assert-type tasks $ :: :list 'respo.app.schema/Task
                 [] (on-keydown cursor state) (effect-focus |#draft-input)
                   div
                     {} (:class-name style-todo-root) (:data-name |todolist)
@@ -195,7 +197,7 @@
           :examples $ []
           :schema $ :: :fn
             {} (:return 'respo.schema/Component)
-              :args $ [] :dynamic :dynamic
+              :args $ [] :dynamic (:: :list 'respo.app.schema/Task)
         |effect-focus $ %{} :CodeEntry (:doc |)
           :code $ quote
             defeffect effect-focus (pattern) (action parent at-place?)
@@ -431,16 +433,31 @@
           :code $ quote
             defenum Op (:states :list :dynamic) (:states-kv :list :dynamic :dynamic) (:states-merge :list :map :map) (:add :string) (:remove :string) (:clear) (:update :string :string) (:hit-first :dynamic) (:toggle :string)
           :examples $ []
+        |Store $ %{} :CodeEntry (:doc |) (:schema :dynamic)
+          :code $ quote
+            defstruct Store
+              :tasks $ :: :list 'respo.app.schema/Task
+              :states :map
+              :cursor $ :: :list :dynamic
+          :examples $ []
+        |Task $ %{} :CodeEntry (:doc |) (:schema :dynamic)
+          :code $ quote
+            defstruct Task (:id :string) (:text :string) (:done? :bool)
+          :examples $ []
+        |TodoState $ %{} :CodeEntry (:doc |) (:schema :dynamic)
+          :code $ quote
+            defstruct TodoState (:draft :string) (:locked? :bool) (:message :string)
+          :examples $ []
         |store $ %{} :CodeEntry (:doc |) (:schema :map)
           :code $ quote
-            def store $ {}
+            def store $ %{} Store
               :tasks $ []
               :states $ {}
               :cursor $ []
           :examples $ []
         |task $ %{} :CodeEntry (:doc |) (:schema :map)
           :code $ quote
-            def task $ {} (:id nil) (:text |) (:done? false)
+            def task $ %{} Task (:id |) (:text |) (:done? false)
           :examples $ []
       :ns $ %{} :NsEntry (:doc |)
         :code $ quote (ns respo.app.schema)
@@ -476,14 +493,15 @@
       :defs $ {}
         |updater $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn updater (store op op-id) (; println store op)
+            defn updater (store op op-id) (; println store op) (assert-type store 'respo.app.schema/Store)
               match op
                 (:states cursor s) (update-states store cursor s)
                 (:states-kv cursor k v) (update-states-kv store cursor k v)
                 (:states-merge cursor s o) (update-states-merge store cursor s o)
                 (:add text)
                   update store :tasks $ fn (tasks)
-                    conj tasks $ {} (:text text) (:id op-id) (:done? false)
+                    assert-type tasks $ :: :list 'respo.app.schema/Task
+                    conj tasks $ %{} respo.app.schema/Task (:text text) (:id op-id) (:done? false)
                 (:remove task-id)
                   update store :tasks $ fn (tasks)
                     -> tasks $ filter
@@ -504,8 +522,9 @@
                     fn (task) (assoc task :text rd)
                 (:toggle task-id)
                   update store :tasks $ fn (tasks)
+                    assert-type tasks $ :: :list 'respo.app.schema/Task
                     -> tasks $ map
-                      fn (task)
+                      fn (task) (assert-type task 'respo.app.schema/Task)
                         if
                           = (:id task) task-id
                           update task :done? not
@@ -513,8 +532,8 @@
                 _ $ do (eprintln "|Unknown op:" op) store
           :examples $ []
           :schema $ :: :fn
-            {} (:return :map)
-              :args $ [] :map 'respo.app.schema/Op :string
+            {} (:return 'respo.app.schema/Store)
+              :args $ [] 'respo.app.schema/Store 'respo.app.schema/Op :string
       :ns $ %{} :NsEntry (:doc |)
         :code $ quote
           ns respo.app.updater $ :require
