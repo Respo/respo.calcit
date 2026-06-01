@@ -67,6 +67,7 @@
                         let
                             task-id $ :id task
                             text $ str (:value e)
+                          assert-type text :string
                           d! $ %:: Op :update task-id text
                     =< 8 0
                     input $ {} (:value state) (:class-name widget/style-input)
