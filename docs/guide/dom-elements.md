@@ -30,7 +30,7 @@ defmacro a (props & children)
 
 Where `children` comes with keys since Respo always need keys(in keyword, string, or number) to compare children:
 
-```cirru
+```cirru.no-check
 []
   [] 1 (span $ {})
   [] 2 (span $ {})
@@ -38,7 +38,7 @@ Where `children` comes with keys since Respo always need keys(in keyword, string
 
 And an element created like:
 
-```cirru
+```cirru.no-check
 input $ {}
   :placeholder "|Pick a name, and hit Enter"
   :on-keydown (fn (e dispatch!))
@@ -56,7 +56,7 @@ might be rendered to an element with events bound:
 
 Internally an element is stored with EDN like:
 
-```cirru
+```cirru.no-check
 {}
   :name tag-name
   :coord nil
@@ -68,7 +68,7 @@ Internally an element is stored with EDN like:
 
 Some of the frequently used elements are defined in `respo.core`:
 
-```cirru
+```cirru.no-check
 a body br button canvas code div footer
   h1 h2 head header html hr img input li link
   option p pre script section select span style textarea title

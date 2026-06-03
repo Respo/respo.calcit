@@ -66,7 +66,7 @@
                       :on-input $ fn (e d!)
                         let
                             task-id $ :id task
-                            text $ :value e
+                            text $ str (:value e)
                           d! $ %:: Op :update task-id text
                     =< 8 0
                     input $ {} (:value state) (:class-name widget/style-input)

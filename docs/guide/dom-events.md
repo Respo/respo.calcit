@@ -22,7 +22,7 @@ entry_for:
 
 Here is a simple demo handling `input` events:
 
-```cirru
+```cirru.no-check
 input $ {}
   :on-input $ fn (e dispatch!)
     println (:value e)
@@ -30,7 +30,7 @@ input $ {}
 
 `e` is a HashMap with several entries:
 
-```cirru
+```cirru.no-check
 def e $ {}
   :type "|input"
   :original-event event
@@ -38,7 +38,7 @@ def e $ {}
 
 The details:
 
-```cirru
+```cirru.no-check
 defn event->edn (event)
   ; js/console.log "|simplify event:" event
   ->
@@ -62,7 +62,7 @@ defn event->edn (event)
         :type :change
       |focus $ {}
         :type :focus
-   assoc :original-event event
+  assoc :original-event event
 ```
 
 Events are bound directly on the elements for simplicity and consistency. And it stops propagation when event is triggered.

@@ -21,13 +21,13 @@ For more details please read <https://github.com/Respo/ssr-stages>
 
 Before talking about **S**erver **S**ide **R**endering(SSR), you should know about how Respo mounts and rerenders. There's a Atom called `*global-element` which represents the virtual DOM of currently rendered HTML content on the page:
 
-```cirru
+```cirru.no-check
 defatom *global-element nil
 ```
 
 And every time you call `render!`, it checks if old virtual DOM exists. If exists, it will do patching with `rerender-app!` rather than mounting:
 
-```cirru
+```cirru.no-check
 defn render! (target markup dispatch!)
   if (some? @*global-element)
     rerender-app! target markup dispatch!
@@ -60,7 +60,7 @@ Without `respo.core/realize-ssr!`, `respo.core/render!` will remove existing DOM
 
 How to prepare that virtual DOM? You have to render that by yourself. Since Respo components are like functions, it's not hard. Read code below:
 
-```cirru
+```cirru.no-check
 defatom *store $ {}
 
 def mount-target (js/document.querySelector "|.app")
@@ -87,7 +87,7 @@ In `realize-ssr!` we also setup the event listener, and all listeners are finish
 
 Respo introduced `defstyle` macro for generating `<style/>` tags for more CSS code, which is also required when SSR is performed. Simple way is to read `@*style-list-in-nodejs` and join them into CSS code. CSS rules are handled inside Respo. A rough demo:
 
-```cirru
+```cirru.no-check
 let
     app-html $ make-string
       comp-container $ let

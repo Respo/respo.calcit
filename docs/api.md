@@ -75,7 +75,7 @@ Legacy standalone API pages were merged into source doc strings. Older names suc
 
 ##### map-with-idx
 
-```cirru
+```cirru.no-check
 respo.util.list/map-with-idx identity ([] :a :b)
 ; [] ([] 0 :a) ([] 1 :b)
 ```

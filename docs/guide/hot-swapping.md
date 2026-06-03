@@ -22,7 +22,7 @@ entry_for:
 
 Hot swapping is done by the compiler. What you need to do is to call `respo.core/clear-cache!` before re-rendering happens:
 
-```cirru
+```cirru.no-check
 defn reload! ()
   ; "clear component caches"
   clear-cache!
@@ -35,7 +35,7 @@ If you don't, in the next rendering phase old element tree would be used if no a
 
 In Respo, you are asked to define `*store` explicitly. They the global states of data. As an Atom, the value inside is immutable, but the reference is mutable. During hot swapping, variables defined with `defatom` will be retained. As a result, component states are persistent even code is swapped:
 
-```cirru
+```cirru.no-check
 defatom *store $ atom
   or
     let

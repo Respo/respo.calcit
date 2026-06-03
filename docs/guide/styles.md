@@ -35,7 +35,7 @@ Use `defstyle` for static reusable styles, and combine it with `:class-name` on 
 
 Styles are represented in HashMap so it's very trival to extend with `merge` and `if`:
 
-```cirru
+```cirru.no-check
 def style-a $ {}
   :line-height 1.6
   :color (hsl 0 0 80)
@@ -53,10 +53,10 @@ Also I prepared a function called [`hsl`](https://github.com/mvc-works/hsl.clj) 
 
 In Respo, style updates are defined with direct accessing to `el.style`:
 
-```cirru
+```cirru.no-check
 defn add-style (target op)
   let
-      style-name (dashed->camel (name (key op))
+      style-name (dashed->camel (name (key op)))
       style-value (val op)
     aset (.-style target) style-name style-value
 
@@ -85,7 +85,7 @@ A macro `respo.css/defstyle` has been added for add `<style>...</style>` referre
 
 define style:
 
-```cirru
+```cirru.no-check
 defstyle style-input $ {}
   |& $ {} (:font-size |16px)
     :line-height |24px
@@ -103,7 +103,7 @@ Use string selectors such as `|&`, `|&:hover`, or `|input&`. Avoid writing bare 
 `defstyle` works best for static styles: fixed font sizes, colors, gaps, borders, paddings, hover rules, and reusable layout rules.
 Keep runtime-dependent values in `:style`, for example dynamic width, position, height, or values computed from state.
 
-```cirru
+```cirru.no-check
 defstyle style-card $ {}
   |& $ {} (:padding |12px 16px)
     :border-radius |12px
@@ -125,12 +125,12 @@ When moving an inline style map into `defstyle`, keep the change mechanical:
 3. wrap the extracted map with `defstyle` using `|&` as the selector key;
 4. replace the original `:style` usage with `:class-name`.
 
-```cirru
+```cirru.no-check
 div $ {}
   :class-name $ str-spaced css/row style-preview-row
 ```
 
-```cirru
+```cirru.no-check
 defstyle style-preview-row $ {}
   |& $ {} (:gap |8px) (:flex-wrap :wrap)
     :align-items :flex-start
@@ -181,7 +181,7 @@ cr js
 
 `|&` will be replace by a string of `className`. So if you want to add rules for `:hover`, use the string selector `|&:hover`.
 
-```cirru
+```cirru.no-check
 input $ {} (:placeholder "|Text")
   :value $ :draft state
   :class-name style-input

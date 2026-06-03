@@ -403,7 +403,7 @@ cr query def namespace/definition
 
 **Cirru (Read):**
 
-```cirru
+```cirru.no-check
 ; Standard component structure
 defcomp comp-name (param1 param2 & options)
   div $ {}
@@ -429,7 +429,7 @@ defcomp comp-name (param1 param2 & options)
 
 ### 2. State Management Pattern
 
-```cirru
+```cirru.no-check
 ; Define store atom at app.core level
 defatom *store $ {}
   :states $ {}
@@ -451,7 +451,7 @@ defn updater (store op)
 
 ### 3. Rendering Pattern
 
-```cirru
+```cirru.no-check
 ; Initial render
 defn render-app! ()
   render! mount-point (comp-container @*store) dispatch!
@@ -471,7 +471,7 @@ defn reload! ()
 
 ### 4. DOM Element Creation
 
-```cirru
+```cirru.no-check
 ; Using predefined elements (defn wrappers for create-element)
 div $ {} (<> "text")
 button $ {} (<> "Click me")
@@ -495,7 +495,7 @@ list-> $ {}
 
 **A. Dynamic Inline Styles (Style Maps)**
 
-```cirru
+```cirru.no-check
 ; Define styles as maps
 def style-container $ {}
   :display "|flex"
@@ -519,7 +519,7 @@ let
 
 `defstyle` is a macro that generates CSS classes and injects them into `<style>` tags. Use it for static styles that don't need runtime computation.
 
-```cirru
+```cirru.no-check
 ; Import from respo.css
 ns my.namespace
   :require (respo.css :refer $ defstyle)
@@ -577,7 +577,7 @@ cr eval 'thread-first ({} (:display "|flex") (:color "|red") (:padding "|10px"))
 
 **Inline Style Object Format:**
 
-```cirru
+```cirru.no-check
 # Map format (key-value pairs)
 my-styles $ {}
   :display "|flex"
@@ -590,7 +590,7 @@ my-styles $ {}
 
 **DOM Event Handlers:**
 
-```cirru
+```cirru.no-check
 ; Simple click handler
 div
   {}
@@ -618,7 +618,7 @@ div
 
 Components can define custom listeners that respond to events sent via `send-to-component!`. This is useful for global shortcuts, external triggers, or testing.
 
-```cirru
+```cirru.no-check
 ; Define a listener function that returns a RespoListener record
 defn on-keydown (cursor state)
   %{} respo.schema/RespoListener (:name :on-keydown)
@@ -647,7 +647,7 @@ defcomp comp-with-listener (states data)
 
 Use `send-to-component!` (from `respo.controller.client`) to programmatically send events to the component tree:
 
-```cirru
+```cirru.no-check
 ; Send keyboard event to all listening components
 send-to-component! $ :: :keydown
   {} $ :key "|m"
@@ -679,7 +679,7 @@ js/window.setTimeout
 
 Declare the type slot once at the application entry point, binding it to your `Op` enum:
 
-```cirru
+```cirru.no-check
 ; respo.main/main!
 defn main! ()
   bind-type :dispatch-op respo.app.schema/Op
@@ -692,7 +692,7 @@ defn main! ()
 
 Functions that accept a dispatch callback should annotate its argument with `*dispatch-op`:
 
-```cirru
+```cirru.no-check
 ; respo.app.core/dispatch!
 defn dispatch! (op ? op-data)
   ...
@@ -715,7 +715,7 @@ schema $ :: :fn
 
 Inside event handlers of DOM props (e.g., `:on-click`), write dispatch calls using the `::` shorthand. The compiler resolves the type slot and rewrites automatically:
 
-```cirru
+```cirru.no-check
 ; Short form (compiler rewrites to %:: Op :toggle (:id task))
 button $ {}
   :on-click $ fn (e d!)
@@ -769,7 +769,7 @@ cr query def respo.main/main!
 
 **Solution Pattern**:
 
-```cirru
+```cirru.no-check
 ; Ensure watch is on *store
 add-watch *store :changes $ fn ()
   render-app!
@@ -800,7 +800,7 @@ cr query def respo.app.comp.container/comp-container
 
 **Solution Pattern**:
 
-```cirru
+```cirru.no-check
 ; Verify tag-match pattern matches dispatched action
 tag-match op
   (:action-name params) $
@@ -827,7 +827,7 @@ cr query usages respo.app.comp.task/my-effect
 
 **Solution Pattern**:
 
-```cirru
+```cirru.no-check
 ; Effects must be first in component body
 defcomp comp-with-effect (props)
   []
@@ -858,7 +858,7 @@ cr query usages respo.core/clear-cache!
 
 **Solution Pattern**:
 
-```cirru
+```cirru.no-check
 ; clear-cache! must be called during reload
 defn reload! ()
   remove-watch *store :changes

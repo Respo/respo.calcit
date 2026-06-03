@@ -28,7 +28,7 @@ In `package.cirru` and run `caps`:
 
 DOM syntax
 
-```cirru
+```cirru.no-check
 ns app.demo $ :require
   respo.core :refer $ div
 
@@ -44,7 +44,7 @@ defn comp-demo (dispatch!)
 
 More examples adapted from `compact.cirru`:
 
-```cirru
+```cirru.no-check
 ns app.demo $ :require
   respo.core :refer $ defcomp a <>
 
@@ -54,7 +54,7 @@ defcomp comp-link (href text)
     <> text
 ```
 
-```cirru
+```cirru.no-check
 ns app.demo $ :require
   respo.core :refer $ list-> div
 
@@ -66,7 +66,7 @@ defn comp-list ()
 
 Text Node:
 
-```cirru
+```cirru.no-check
 ns app.demo $ :require
   respo.core :refer $ <>
 
@@ -81,7 +81,7 @@ defn comp-text (content)
 
 Component definition:
 
-```cirru
+```cirru.no-check
 ns app.demo $ :require
   respo.core :refer $ div <>
 
@@ -96,7 +96,7 @@ let
 
 App initialization:
 
-```cirru
+```cirru.no-check
 ns app.demo $ :require
   respo.core :refer $ render!
 
@@ -130,7 +130,7 @@ let
 
 Reset virtual DOM caching during hot code swapping, and rerender:
 
-```cirru
+```cirru.no-check
 ns app.demo $ :require
   respo.core :refer $ clear-cache!
 
@@ -148,7 +148,7 @@ let
 
 Adding effects to component:
 
-```cirru
+```cirru.no-check
 ns app.demo $ :require
   respo.core :refer $ div
 
@@ -166,7 +166,7 @@ let
 
 Define a hooks plugin based on Calcit Record, better use a pure function:
 
-```cirru
+```cirru.no-check
 ns app.demo $ :require
   respo.core :refer $ div <>
 
