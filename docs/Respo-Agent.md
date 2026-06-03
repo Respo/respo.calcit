@@ -403,12 +403,14 @@ cr query def namespace/definition
 
 **Cirru (Read):**
 
-```cirru.no-check
-; Standard component structure
-defcomp comp-name (param1 param2 & options)
+```cirru.no-run
+ns app.demo
+  :require
+    respo.core :refer $ defcomp div <>
+
+defcomp comp-name (param1 param2)
   div $ {}
     :class-name "|component-name"
-    :style $ comp-style
   <> "|Content"
 ```
 
@@ -495,19 +497,21 @@ list-> $ {}
 
 **A. Dynamic Inline Styles (Style Maps)**
 
-```cirru.no-check
-; Define styles as maps
+```cirru.no-run
+ns app.demo
+
 def style-container $ {}
   :display "|flex"
   :padding "|10px"
   :background-color "|#f0f0f0"
 
-; Conditional styles
 defn style-for-state (state)
   if (= state :active)
     assoc style-container :background-color "|#3388ff"
     style-container
+```
 
+```cirru.no-check
 ; Merge styles
 let
   base $ {} (:color "|black")
@@ -519,12 +523,11 @@ let
 
 `defstyle` is a macro that generates CSS classes and injects them into `<style>` tags. Use it for static styles that don't need runtime computation.
 
-```cirru.no-check
-; Import from respo.css
+```cirru.no-run
 ns my.namespace
-  :require (respo.css :refer $ defstyle)
+  :require
+    respo.css :refer $ defstyle
 
-; Basic usage: & refers to current element
 defstyle style-button $ {}
   |& $ {} (:padding "|8px 16px") (:border-radius "|4px")
     :background-color $ hsl 200 80 50

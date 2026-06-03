@@ -85,14 +85,18 @@ A macro `respo.css/defstyle` has been added for add `<style>...</style>` referre
 
 define style:
 
-```cirru.no-check
+```cirru.no-run
+ns app.demo
+  :require
+    respo.css :refer $ defstyle
+
 defstyle style-input $ {}
   |& $ {} (:font-size |16px)
     :line-height |24px
     :padding "|0px 8px"
     :outline :none
     :min-width |300px
-    :background-color $ hsl 0 0 94
+    :background-color "|#f0f0f0"
     :border :none
 ```
 

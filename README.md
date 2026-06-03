@@ -28,7 +28,7 @@ In `package.cirru` and run `caps`:
 
 DOM syntax
 
-```cirru.no-check
+```cirru.no-run
 ns app.demo $ :require
   respo.core :refer $ div
 
@@ -37,14 +37,14 @@ defn comp-demo (dispatch!)
     {}
       :class-name "|demo-container"
       :style $ {} (:color :red)
-      :on-click $ fn (event d!)
-        d! :clicked
+      :on-click $ fn (event dispatch!)
+        dispatch! :clicked
     div $ {}
 ```
 
 More examples adapted from `compact.cirru`:
 
-```cirru.no-check
+```cirru.no-run
 ns app.demo $ :require
   respo.core :refer $ defcomp a <>
 
@@ -66,7 +66,7 @@ defn comp-list ()
 
 Text Node:
 
-```cirru.no-check
+```cirru.no-run
 ns app.demo $ :require
   respo.core :refer $ <>
 
@@ -81,7 +81,7 @@ defn comp-text (content)
 
 Component definition:
 
-```cirru.no-check
+```cirru.no-run
 ns app.demo $ :require
   respo.core :refer $ div <>
 
@@ -96,7 +96,7 @@ let
 
 App initialization:
 
-```cirru.no-check
+```cirru.no-run
 ns app.demo $ :require
   respo.core :refer $ render!
 
@@ -130,7 +130,7 @@ let
 
 Reset virtual DOM caching during hot code swapping, and rerender:
 
-```cirru.no-check
+```cirru.no-run
 ns app.demo $ :require
   respo.core :refer $ clear-cache!
 
@@ -148,7 +148,7 @@ let
 
 Adding effects to component:
 
-```cirru.no-check
+```cirru.no-run
 ns app.demo $ :require
   respo.core :refer $ div
 
@@ -166,7 +166,7 @@ let
 
 Define a hooks plugin based on Calcit Record, better use a pure function:
 
-```cirru.no-check
+```cirru.no-run
 ns app.demo $ :require
   respo.core :refer $ div <>
 

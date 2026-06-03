@@ -30,10 +30,12 @@ input $ {}
 
 `e` is a HashMap with several entries:
 
-```cirru.no-check
+```cirru.no-run
+ns app.demo
+
 def e $ {}
   :type "|input"
-  :original-event event
+  :original-event nil
 ```
 
 The details:

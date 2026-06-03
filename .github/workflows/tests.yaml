@@ -32,6 +32,9 @@ jobs:
           cr --init-fn respo.test.main/main! js
           && node test.mjs
 
+      - name: "check docs markdown"
+        run: bash scripts/check-docs-md.sh
+
       - name: "build js"
         run: >
           cr js

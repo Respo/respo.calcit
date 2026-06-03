@@ -33,7 +33,9 @@ Interactive components usually pass `states` downward and branch it with `>>` to
 Unlike React, states in Respo is maintained manually for stablility during hot code swapping.
 At first, states is a HashMap inside the store:
 
-```cirru.no-check
+```cirru.no-run
+ns app.demo
+
 defatom *store {}
   :states $ {}
 ```
@@ -101,7 +103,11 @@ Then you call `(>> states "task-1-id")` and you get new `states` for child "task
 For state inside each component, it's `nil` at first.
 You want to have an initial state, use `or` to provide one.
 
-```cirru.no-check
+```cirru.no-run
+ns app.demo
+  :require
+    respo.core :refer $ defcomp div
+
 defcomp comp-task (states)
   let
       cursor (:cursor states)
@@ -115,7 +121,11 @@ After there's data in states, you get data that was set.
 
 Then you want to update component state
 
-```cirru.no-check
+```cirru.no-run
+ns app.demo
+  :require
+    respo.core :refer $ defcomp div
+
 defcomp comp-task (states)
   let
       cursor (:cursor states)
