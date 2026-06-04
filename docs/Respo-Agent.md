@@ -523,7 +523,7 @@ let
 
 `defstyle` is a macro that generates CSS classes and injects them into `<style>` tags. Use it for static styles that don't need runtime computation.
 
-```cirru.no-run
+```cirru.no-check
 ns my.namespace
   :require
     respo.css :refer $ defstyle
