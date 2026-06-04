@@ -30,12 +30,14 @@ input $ {}
 
 `e` is a HashMap with several entries:
 
-```cirru.no-run
-ns app.demo
+```cirru
+; ns app.demo
 
-def e $ {}
-  :type "|input"
-  :original-event nil
+let
+    e $ {}
+      :type "|input"
+      :original-event nil
+  :type e
 ```
 
 The details:

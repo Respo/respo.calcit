@@ -38,7 +38,7 @@ Styles are represented in HashMap so it's very trival to extend with `merge` and
 ```cirru.no-check
 def style-a $ {}
   :line-height 1.6
-  :color (hsl 0 0 80)
+  :color (respo.util.format/hsl 0 0 80)
 
 def style-b $ merge style-a
   {}
@@ -86,11 +86,11 @@ A macro `respo.css/defstyle` has been added for add `<style>...</style>` referre
 define style:
 
 ```cirru.no-run
-ns app.demo
+; ns app.demo
   :require
     respo.css :refer $ defstyle
 
-defstyle style-input $ {}
+respo.css/defstyle style-input $ {}
   |& $ {} (:font-size |16px)
     :line-height |24px
     :padding "|0px 8px"
@@ -111,7 +111,7 @@ Keep runtime-dependent values in `:style`, for example dynamic width, position, 
 defstyle style-card $ {}
   |& $ {} (:padding |12px 16px)
     :border-radius |12px
-    :background-color $ hsl 0 0 100
+    :background-color $ respo.util.format/hsl 0 0 100
 
 div $ {}
   :class-name style-card

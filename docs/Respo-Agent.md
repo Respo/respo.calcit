@@ -404,14 +404,15 @@ cr query def namespace/definition
 **Cirru (Read):**
 
 ```cirru.no-run
-ns app.demo
+; ns app.demo
   :require
     respo.core :refer $ defcomp div <>
 
-defcomp comp-name (param1 param2)
-  div $ {}
-    :class-name "|component-name"
-  <> "|Content"
+let
+    comp-name $ fn (param1 param2)
+      respo.core/div
+        {} $ :class-name "|component-name"
+        respo.core/<> "|Content"
 ```
 
 **JSON AST (Write - for `cr edit`):**
@@ -498,17 +499,18 @@ list-> $ {}
 **A. Dynamic Inline Styles (Style Maps)**
 
 ```cirru.no-run
-ns app.demo
+; ns app.demo
 
-def style-container $ {}
-  :display "|flex"
-  :padding "|10px"
-  :background-color "|#f0f0f0"
-
-defn style-for-state (state)
-  if (= state :active)
-    assoc style-container :background-color "|#3388ff"
-    style-container
+let
+    style-container $ {}
+      :display "|flex"
+      :padding "|10px"
+      :background-color "|#f0f0f0"
+    style-for-state $ fn (state)
+      if (= state :active)
+        assoc style-container :background-color "|#3388ff"
+        , style-container
+  style-for-state :active
 ```
 
 ```cirru.no-check
@@ -523,36 +525,29 @@ let
 
 `defstyle` is a macro that generates CSS classes and injects them into `<style>` tags. Use it for static styles that don't need runtime computation.
 
-```cirru.no-check
-ns my.namespace
+```cirru.no-run
+; ns my.namespace
   :require
     respo.css :refer $ defstyle
 
-defstyle style-button $ {}
-  |& $ {} (:padding "|8px 16px") (:border-radius "|4px")
-    :background-color $ hsl 200 80 50
-    :color "|white"
-
-; Pseudo-classes: :hover, :focus, :active, etc.
-defstyle style-link $ {}
-  |& $ {} (:color "|blue") (:text-decoration :none)
-  |&:hover $ {} (:text-decoration :underline)
-
-; Pseudo-elements: ::before, ::after
-defstyle style-text $ {}
-  |& $ {} (:font-size "|14px") (:line-height "|1.6")
-  |&::before $ {} (:content "|\"→ \"")
-
-; Media queries using 'contained
-defstyle style-responsive $ {}
-  |& $ {} (:font-family "|Avenir,Verdana")
-  |& $ {} ('contained "|@media only screen and (max-width: 600px)")
-    :background-color $ hsl 0 0 90
-
-; Usage in component (returns className string)
-div
-  {} $ :class-name style-button
-  <> "|Click Me"
+let
+    style-button $ respo.css/defstyle style-button $ {}
+      |& $ {} (:padding "|8px 16px") (:border-radius "|4px")
+        :background-color $ respo.util.format/hsl 200 80 50
+        :color "|white"
+    style-link $ respo.css/defstyle style-link $ {}
+      |& $ {} (:color "|blue") (:text-decoration :none)
+      |&:hover $ {} (:text-decoration :underline)
+    style-text $ respo.css/defstyle style-text $ {}
+      |& $ {} (:font-size "|14px") (:line-height "|1.6")
+      |&::before $ {} (:content "|\"→ \"")
+    style-responsive $ respo.css/defstyle style-responsive $ {}
+      |& $ {} (:font-family "|Avenir,Verdana")
+      |& $ {} ('contained "|@media only screen and (max-width: 600px)")
+        :background-color $ respo.util.format/hsl 0 0 90
+  respo.core/div
+    {} $ :class-name style-button
+    respo.core/<> "|Click Me"
 ```
 
 **Key Points:**

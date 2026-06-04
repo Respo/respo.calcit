@@ -33,11 +33,13 @@ Interactive components usually pass `states` downward and branch it with `>>` to
 Unlike React, states in Respo is maintained manually for stablility during hot code swapping.
 At first, states is a HashMap inside the store:
 
-```cirru.no-run
-ns app.demo
+```cirru
+; ns app.demo
 
-defatom *store {}
-  :states $ {}
+let
+    *store $ atom $ {}
+      :states $ {}
+  :states @*store
 ```
 
 By design, if states is added, you would a tree:
@@ -104,7 +106,7 @@ For state inside each component, it's `nil` at first.
 You want to have an initial state, use `or` to provide one.
 
 ```cirru.no-run
-ns app.demo
+; ns app.demo
   :require
     respo.core :refer $ defcomp div
 
@@ -113,7 +115,7 @@ defcomp comp-task (states)
       cursor (:cursor states)
       state $ or (:data states) $ {}
         :draft "|empty"
-    div $ {}
+    respo.core/div $ {}
 ```
 
 By accessing `(:data states)`, you get `nil`, so `&{} :draft "|empty"` is used.
@@ -122,7 +124,7 @@ After there's data in states, you get data that was set.
 Then you want to update component state
 
 ```cirru.no-run
-ns app.demo
+; ns app.demo
   :require
     respo.core :refer $ defcomp div
 
@@ -131,7 +133,7 @@ defcomp comp-task (states)
       cursor (:cursor states)
       state $ or (:data states) $ {}
         :draft "|empty"
-    div $ {}
+    respo.core/div $ {}
       :on-click $ fn (e dispatch!)
         dispatch! cursor (assoc state :draft "|New state")
 ```

@@ -53,7 +53,7 @@ where `div` is a macro for creating virtual element for `<div>`.
 The full code looks like:
 
 ```cirru.no-run
-ns respo.comp.space
+; ns respo.comp.space
   :require
     respo.core :refer $ defcomp div
 
@@ -68,7 +68,7 @@ defn compute (w h)
     assoc style-space :height h
 
 defcomp comp-space (w h)
-  div $ {}
+  respo.core/div $ {}
     :style (compute w h)
 ```
 

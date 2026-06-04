@@ -29,52 +29,57 @@ In `package.cirru` and run `caps`:
 DOM syntax
 
 ```cirru.no-run
-ns app.demo $ :require
+; ns app.demo $ :require
   respo.core :refer $ div
 
-defn comp-demo (dispatch!)
-  div
-    {}
-      :class-name "|demo-container"
-      :style $ {} (:color :red)
-      :on-click $ fn (event dispatch!)
-        dispatch! :clicked
-    div $ {}
+let
+    comp-demo $ fn (dispatch!)
+      respo.core/div
+        {}
+          :class-name "|demo-container"
+          :style $ {} (:color :red)
+          :on-click $ fn (event dispatch!)
+            dispatch! :clicked
+          respo.core/div $ {}
 ```
 
 More examples adapted from `compact.cirru`:
 
 ```cirru.no-run
-ns app.demo $ :require
+; ns app.demo $ :require
   respo.core :refer $ defcomp a <>
 
-defcomp comp-link (href text)
-  a
-    {} $ :href href
-    <> text
+let
+    comp-link $ fn (href text)
+      respo.core/a
+        {} $ :href href
+        respo.core/<> text
 ```
 
-```cirru.no-check
-ns app.demo $ :require
+```cirru.no-run
+; ns app.demo $ :require
   respo.core :refer $ list-> div
 
-defn comp-list ()
-  list-> ({})
-    [] $ [] :a
-      div $ {}
+let
+    comp-list $ fn ()
+      respo.core/list->
+        {}
+        []
+          [] :a $ respo.core/div {}
 ```
 
 Text Node:
 
 ```cirru.no-run
-ns app.demo $ :require
+; ns app.demo $ :require
   respo.core :refer $ <>
 
-defn comp-text (content)
-  <> content
+let
+    comp-text $ fn (content)
+      respo.core/<> content
 
   ; with styles
-  <> content $ {}
+  respo.core/<> "|demo" $ {}
     :color :red
     :font-size 14
 ```
@@ -82,22 +87,22 @@ defn comp-text (content)
 Component definition:
 
 ```cirru.no-run
-ns app.demo $ :require
+; ns app.demo $ :require
   respo.core :refer $ div <>
 
 let
     comp-container $ fn (content)
-      div
+      respo.core/div
         {}
           :class-name |demo-container
           :style $ {} (:color :red)
-        <> content
+        respo.core/<> content
 ```
 
 App initialization:
 
 ```cirru.no-run
-ns app.demo $ :require
+; ns app.demo $ :require
   respo.core :refer $ render!
 
 ; initialize store and update store
@@ -115,7 +120,7 @@ let
 
   ; render to the DOM
   defn render-app! ()
-    render! mount-point (comp-container @*store) dispatch!
+    respo.core/render! mount-point (comp-container @*store) dispatch!
 ```
 
 Rerender on store changes:
@@ -131,7 +136,7 @@ let
 Reset virtual DOM caching during hot code swapping, and rerender:
 
 ```cirru.no-run
-ns app.demo $ :require
+; ns app.demo $ :require
   respo.core :refer $ clear-cache!
 
 let
@@ -142,14 +147,14 @@ let
   remove-watch *store :changes
   add-watch *store :changes $ fn ()
     render-app!
-  clear-cache!
+  respo.core/clear-cache!
   render-app!
 ```
 
 Adding effects to component:
 
 ```cirru.no-run
-ns app.demo $ :require
+; ns app.demo $ :require
   respo.core :refer $ div
 
 let
@@ -158,16 +163,16 @@ let
         println action
         ; action could be :mount :update :amount
         when (= :mount action) nil
-  defn comp-a (text)
-    []
-      effect-a text
-      div {}
+    comp-a $ fn (text)
+      []
+        effect-a text
+        respo.core/div {}
 ```
 
 Define a hooks plugin based on Calcit Record, better use a pure function:
 
 ```cirru.no-run
-ns app.demo $ :require
+; ns app.demo $ :require
   respo.core :refer $ div <>
 
 let
@@ -177,7 +182,7 @@ let
           :render $ fn (self) (nth self 1)
           :show $ fn (self d! ? text) nil
         , :plugin-name
-        div {} (<> "|Demo")
+        respo.core/div {} (respo.core/<> "|Demo")
 ```
 
 ### License
