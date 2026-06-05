@@ -110,12 +110,14 @@ You want to have an initial state, use `or` to provide one.
   :require
     respo.core :refer $ defcomp div
 
-defcomp comp-task (states)
-  let
-      cursor (:cursor states)
-      state $ or (:data states) $ {}
-        :draft "|empty"
-    respo.core/div $ {}
+let
+    comp-task $ fn (states)
+      let
+          cursor (:cursor states)
+          state $ or (:data states) $ {}
+            :draft "|empty"
+        respo.core/div $ {}
+  , comp-task
 ```
 
 By accessing `(:data states)`, you get `nil`, so `&{} :draft "|empty"` is used.
@@ -128,14 +130,17 @@ Then you want to update component state
   :require
     respo.core :refer $ defcomp div
 
-defcomp comp-task (states)
-  let
-      cursor (:cursor states)
-      state $ or (:data states) $ {}
-        :draft "|empty"
-    respo.core/div $ {}
-      :on-click $ fn (e dispatch!)
-        dispatch! cursor (assoc state :draft "|New state")
+let
+    comp-task $ fn (states)
+      let
+          cursor (:cursor states)
+          state $ or (:data states) $ {}
+            :draft "|empty"
+        respo.core/div
+          {}
+            :on-click $ fn (e dispatch!)
+              dispatch! cursor (assoc state :draft "|New state")
+  , comp-task
 ```
 
 So `(dispatch! cursor state)` sends the new state.

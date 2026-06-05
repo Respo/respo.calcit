@@ -40,7 +40,7 @@ let
           :style $ {} (:color :red)
           :on-click $ fn (event dispatch!)
             dispatch! :clicked
-          respo.core/div $ {}
+        respo.core/div $ {}
 ```
 
 More examples adapted from `compact.cirru`:
@@ -64,8 +64,8 @@ let
     comp-list $ fn ()
       respo.core/list->
         {}
-        []
-          [] :a $ respo.core/div {}
+        {}
+          :a $ respo.core/div {}
 ```
 
 Text Node:

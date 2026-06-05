@@ -57,19 +57,19 @@ The full code looks like:
   :require
     respo.core :refer $ defcomp div
 
-def style-space $ {}
-  :width "|1px"
-  :display "|inline-block"
-  :height "|1px"
-
-defn compute (w h)
-  if (some? w)
-    assoc style-space :width w
-    assoc style-space :height h
-
-defcomp comp-space (w h)
-  respo.core/div $ {}
-    :style (compute w h)
+let
+    style-space $ {}
+      :width "|1px"
+      :display "|inline-block"
+      :height "|1px"
+    compute $ fn (w h)
+      if (some? w)
+        assoc style-space :width w
+        assoc style-space :height h
+    comp-space $ fn (w h)
+      respo.core/div $ {}
+        :style (compute w h)
+  , comp-space
 ```
 
 Internally, `defcomp` will expand the expression to:
