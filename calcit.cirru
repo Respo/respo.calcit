@@ -1,6 +1,6 @@
 
 {} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `cr query` to inspect and `cr edit`/`cr tree` to modify. Run `cr docs agents --full` first. Manual edits must follow format and schema conventions, then run `cr edit format`.") (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.46)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.47)
     :modules $ [] |memof/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -2502,6 +2502,11 @@
               :read-only $ :: :optional :bool
               :data-name $ :: :optional :string
               :data-comp $ :: :optional :string
+              :role $ :: :optional :string
+              :aria-label $ :: :optional :string
+              :aria-labelledby $ :: :optional :string
+              :aria-describedby $ :: :optional :string
+              :aria-hidden $ :: :optional :bool
               :selected $ :: :optional :bool
               :target $ :: :optional :string
               :on-click $ :: :optional 'respo.schema/EventHandler
