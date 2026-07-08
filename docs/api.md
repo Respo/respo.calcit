@@ -25,7 +25,7 @@ entry_for:
 - [Guide Topics](guide/)
 - [CLI Tools Reference](../Agents.md)
 
-Detailed API descriptions now live in source doc strings inside `compact.cirru`.
+Detailed API descriptions now live in source doc strings inside `calcit.cirru`.
 Use Calcit CLI to inspect them:
 
 ```bash

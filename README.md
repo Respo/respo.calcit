@@ -43,7 +43,7 @@ let
         respo.core/div $ {}
 ```
 
-More examples adapted from `compact.cirru`:
+More examples adapted from `calcit.cirru`:
 
 ```cirru.no-run
 ; ns app.demo $ :require
@@ -220,7 +220,7 @@ This index helps LLM tools automatically fetch and reference documentation using
 
 ### API Reference
 
-Core API descriptions are now stored in source doc strings inside `compact.cirru`.
+Core API descriptions are now stored in source doc strings inside `calcit.cirru`.
 Use `docs/api.md` for the overview, or inspect a definition directly with Calcit CLI:
 
 ```bash

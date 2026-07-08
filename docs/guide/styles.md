@@ -144,7 +144,7 @@ Be careful with string values like `|4px 10px`, `|1px solid `, or long text lite
 
 #### Calcit CLI workflow
 
-When the source is stored in `compact.cirru`, a stable workflow is:
+When the source is stored in `calcit.cirru`, a stable workflow is:
 
 ```bash
 # 1. locate the inline style leaf

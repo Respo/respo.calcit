@@ -29,7 +29,7 @@ entry_for:
 
 The Respo project is a virtual DOM library written in Calcit-js, containing:
 
-- **Main codebase**: `compact.cirru` (2314 lines) - serialized source code
+- **Main codebase**: `calcit.cirru` (2314 lines) - serialized source code
 - **Compiled source**: `calcit.cirru` (13806 lines) - full AST representation
 - **Namespaces**: 33 total namespaces organized by functionality
 - **Version**: 0.16.21
@@ -124,13 +124,12 @@ cr tree show respo.app.updater/updater -p "2.1" -d 1 # Check 2nd child of 3rd el
 cr tree show respo.app.updater/updater -p "2.1.0"    # Final confirmation
 
 # Step 5: Use tree commands for surgical modifications
-# JSON inline (recommended)
-cr tree replace respo.app.updater/updater -p "2.1.0" -j '"new-value"'
-# Or from stdin
-echo '"new-value"' | cr tree replace respo.app.updater/updater -p "2.1.0" -s -J
-```
-
-echo '["defn", "hello", [], ["println", "|Hello"]]' | cr edit def respo.app.core/hello -s -J
+# Inline JSON (auto-detected)
+cr tree replace respo.app.updater/updater -p "2.1.0" --code '["fn", ["x"], "x"]'
+# Or from stdin (heredoc recommended)
+cr tree replace respo.app.updater/updater -p "2.1.0" << 'END'
+["defn", "hello", [], ["println", "|Hello"]]
+END
 
 ### 3. Code Modification (Agent Optimized)
 
@@ -139,10 +138,9 @@ For LLM Agents, **JSON inline (`-j`) is the most reliable method** for code gene
 
 **Input Modes:**
 
-- `-j '<json>'`: **Recommended.** Inline JSON string. Escape quotes carefully.
-- `-e '<text>'`: Inline Cirru one-liner. Good for short, simple expressions.
-- `-f <file>` / `-s`: Read from file/stdin (defaults to Cirru).
-- `-J`: Combine with `-f`/`-s` to indicate JSON input.
+- `--code '<text>'`: Inline text (auto-detects JSON vs Cirru).
+- `--file <path>`: Read from file (auto-detects JSON vs Cirru).
+- **stdin** (heredoc): Pipe or redirect input; auto-detects JSON vs Cirru. Recommended for multi-line code.
 
 **JSON AST Structure Guide:**
 
@@ -353,7 +351,7 @@ cr tree show namespace/function-name -p "2.1" -d 1
 cr tree replace namespace/function-name -p "2.1.0" -j '["new", "code"]'
 
 # Or from stdin (JSON format)
-echo '["new", "code"]' | cr tree replace namespace/function-name -p "2.1.0" -s -J
+echo '["new", "code"]' | cr tree replace namespace/function-name -p "2.1.0" 
 
 # 5. Verify
 cr tree show namespace/function-name -p "2.1"
@@ -894,7 +892,7 @@ defn reload! ()
 cr tree replace namespace-name/def-name -p "2.1.0" -j '"new-value"'
 
 # Or from stdin (JSON format)
-echo '"new-value"' | cr tree replace namespace-name/def-name -p "2.1.0" -s -J
+echo '"new-value"' | cr tree replace namespace-name/def-name -p "2.1.0" 
 ```
 
 4. **Verify immediately**
@@ -922,7 +920,7 @@ cr tree delete ns/def -p "2.1.0"
 cr tree insert-child ns/def -p "2.1" -j '"child-value"'
 
 # Append as child (last child, from stdin)
-echo '"child-value"' | cr tree append-child ns/def -p "2.1" -s -J
+echo '"child-value"' | cr tree append-child ns/def -p "2.1" 
 ```
 
 ---
@@ -979,7 +977,7 @@ cr query ns namespace-name  # Check imports
 
 ### ⚠️ Critical Rules
 
-1. **NEVER directly edit `calcit.cirru` or `compact.cirru`** with text editors
+1. **NEVER directly edit `calcit.cirru`** with text editors
    - Use `cr edit` commands instead
    - These are serialized AST structures, not human-readable code
 

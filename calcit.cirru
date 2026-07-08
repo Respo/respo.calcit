@@ -1,6 +1,6 @@
 
 {} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `cr query` to inspect and `cr edit`/`cr tree` to modify. Run `cr docs agents --full` first. Manual edits must follow format and schema conventions, then run `cr edit format`.") (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.47)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.48)
     :modules $ [] |memof/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -617,6 +617,7 @@
           :schema $ :: :fn
             {} (:return 'respo.schema/Component)
               :args $ [] :dynamic :dynamic :dynamic
+              :features $ #{} :js-ffi
         |grab-info $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn grab-info (data)
@@ -700,6 +701,7 @@
           :schema $ :: :fn
             {} (:return :unit)
               :args $ [] 'respo.schema/Component :dynamic :fn
+              :features $ #{} :js-ffi
         |build-listener $ %{} :CodeEntry (:doc "|Creates a DOM event listener that converts events and dispatches them to Respo.")
           :code $ quote
             defn build-listener (event-name deliver-event)
@@ -1477,6 +1479,7 @@
           :schema $ :: :fn
             {} (:return :string)
               :args $ [] :string :map
+              :features $ #{} :js-ffi
         |defstyle $ %{} :CodeEntry (:doc "|a macro for turning CSS rules into className, and only works for JavaScript.\n\nuse `defstyle` like:\n\n```cirru\ndefstyle style-demo $ {}\n  |& $ {} (:color :red)\n  \"|&:hover\" $ {}\n    :background-color :blue\n```\n\nwhere `&` refers to current element.\n\nIn the rules, it's nested hashmaps. `|&` and `|&:hover` are CSS queries. and in nested hashmaps there are CSS properties defined in calcit data.\n")
           :code $ quote
             defmacro defstyle (style-name rules)
@@ -1547,10 +1550,14 @@
                 |&::before $ {} (:content "|\"→ \"")
           :schema $ :: :macro
             {} $ :args ([] :symbol :map)
-        |nodejs? $ %{} :CodeEntry (:doc |) (:schema :bool)
+        |nodejs? $ %{} :CodeEntry (:doc |)
           :code $ quote
             def nodejs? $ and (exists? js/process) (= js/process.release.name |node)
           :examples $ []
+          :schema $ :: :fn
+            {} (:return :bool)
+              :args $ []
+              :features $ #{} :js-ffi
         |render-css-block $ %{} :CodeEntry (:doc "|Generates a CSS string block from a map of style rules.")
           :code $ quote
             defn render-css-block (style-name rules)
@@ -1645,10 +1652,15 @@
           :schema $ :: :fn
             {} (:return :unit)
               :args $ []
-        |mount-target $ %{} :CodeEntry (:doc "|Default DOM element selector (.app) for mounting the application.") (:schema :dynamic)
+              :features $ #{} :js-ffi
+        |mount-target $ %{} :CodeEntry (:doc "|Default DOM element selector (.app) for mounting the application.")
           :code $ quote
             def mount-target $ if (exists? js/document) (js/document.querySelector |.app) nil
           :examples $ []
+          :schema $ :: :fn
+            {} (:return :dynamic)
+              :args $ []
+              :features $ #{} :js-ffi
         |reload! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn reload () $ if (nil? build-errors)
@@ -2012,6 +2024,7 @@
           :schema $ :: :fn
             {} (:return :dynamic)
               :args $ [] :dynamic :fn :list
+              :features $ #{} :js-ffi
         |style->string $ %{} :CodeEntry (:doc "|this functions is used inside DOM operations, inserting styles into a `<style>` element. to render to HTML, use `style->html` instead")
           :code $ quote
             defn style->string (styles)
@@ -2277,6 +2290,7 @@
           :schema $ :: :fn
             {} (:return :unit)
               :args $ [] :dynamic :tag :fn :list
+              :features $ #{} :js-ffi
         |add-prop $ %{} :CodeEntry (:doc "|Adds or updates a property on a DOM element. Handles data attributes and style strings.")
           :code $ quote
             defn add-prop (target p prop-value)
@@ -2292,6 +2306,7 @@
           :schema $ :: :fn
             {} (:return :unit)
               :args $ [] :dynamic :tag :dynamic
+              :features $ #{} :js-ffi
         |add-style $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn add-style (target p v)
@@ -2303,6 +2318,7 @@
           :schema $ :: :fn
             {} (:return :unit)
               :args $ [] :dynamic :tag :dynamic
+              :features $ #{} :js-ffi
         |append-element $ %{} :CodeEntry (:doc "|Appends a new DOM element to the target container.")
           :code $ quote
             defn append-element (target op listener-builder coord)
@@ -2361,6 +2377,7 @@
           :schema $ :: :fn
             {} (:return :dynamic)
               :args $ [] :dynamic (:: :list :number)
+              :features $ #{} :js-ffi
         |replace-element $ %{} :CodeEntry (:doc "|Replaces a DOM element with a new one created from an operation.")
           :code $ quote
             defn replace-element (target op listener-builder coord)
@@ -2394,6 +2411,7 @@
           :schema $ :: :fn
             {} (:return :unit)
               :args $ [] :dynamic :tag :dynamic
+              :features $ #{} :js-ffi
         |replace-style $ %{} :CodeEntry (:doc "|Updates a single style property on a DOM element.")
           :code $ quote
             defn replace-style (target p v)
@@ -2405,6 +2423,7 @@
           :schema $ :: :fn
             {} (:return :unit)
               :args $ [] :dynamic :tag :dynamic
+              :features $ #{} :js-ffi
         |rm-element $ %{} :CodeEntry (:doc "|Removes the DOM element from the document.")
           :code $ quote
             defn rm-element (target op)
@@ -2423,6 +2442,7 @@
           :schema $ :: :fn
             {} (:return :unit)
               :args $ [] :dynamic :tag
+              :features $ #{} :js-ffi
         |rm-prop $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn rm-prop (target op)
@@ -2446,6 +2466,7 @@
           :schema $ :: :fn
             {} (:return :unit)
               :args $ [] :dynamic :tag
+              :features $ #{} :js-ffi
         |rm-style $ %{} :CodeEntry (:doc "|Removes a style property from a DOM element.")
           :code $ quote
             defn rm-style (target op)
@@ -2456,6 +2477,7 @@
           :schema $ :: :fn
             {} (:return :unit)
               :args $ [] :dynamic :tag
+              :features $ #{} :js-ffi
         |run-effect $ %{} :CodeEntry (:doc "|Runs side effect functions.\n\nParameters:\n  target - Target DOM element or component instance, nil if target not found\n  method - Method function to execute on the target\n  coord - Coordinate information for identifying location in console warnings\n\nFunctionality:\n  If target exists, calls method function on target; if target is nil, outputs warning to console.\n  Mainly used to execute various side effects during rendering patch process, such as event listening, DOM operations, etc.")
           :code $ quote
             defn run-effect (target method coord)
@@ -2863,13 +2885,17 @@
           :schema $ :: :fn
             {} (:return :unit)
               :args $ [] :dynamic :dynamic
-        |shared-canvas-context $ %{} :CodeEntry (:doc "|Shared Canvas 2D context for measuring text width or other canvas operations.") (:schema :dynamic)
+        |shared-canvas-context $ %{} :CodeEntry (:doc "|Shared Canvas 2D context for measuring text width or other canvas operations.")
           :code $ quote
             def shared-canvas-context $ if
               and (exists? js/window) (exists? js/document)
               .!getContext (js/document.createElement |canvas) |2d
               , nil
           :examples $ []
+          :schema $ :: :fn
+            {} (:return :dynamic)
+              :args $ [] :string
+              :features $ #{} :js-ffi
         |text-width $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn text-width (content font-size font-family)
@@ -2882,6 +2908,7 @@
           :schema $ :: :fn
             {} (:return :number)
               :args $ [] :string :number :string
+              :features $ #{} :js-ffi
       :ns $ %{} :NsEntry (:doc |)
         :code $ quote
           ns respo.util.dom $ :require
@@ -2901,10 +2928,15 @@
           :schema $ :: :fn
             {} (:return :string)
               :args $ [] :string
-        |dashed-letter-pattern $ %{} :CodeEntry (:doc "|Regex pattern for finding dashed-case letters (e.g. -a) to convert to camelCase.") (:schema :dynamic)
+              :features $ #{} :js-ffi
+        |dashed-letter-pattern $ %{} :CodeEntry (:doc "|Regex pattern for finding dashed-case letters (e.g. -a) to convert to camelCase.")
           :code $ quote
             def dashed-letter-pattern $ new js/RegExp |-[a-z] |g
           :examples $ []
+          :schema $ :: :fn
+            {} (:return :dynamic)
+              :args $ []
+              :features $ #{} :js-ffi
         |event->edn $ %{} :CodeEntry (:doc "|Converts a native DOM event into a Respo EDN event structure.")
           :code $ quote
             defn event->edn (event) (; js/console.log "|simplify event:" event)
@@ -2934,6 +2966,7 @@
           :schema $ :: :fn
             {} (:return :map)
               :args $ [] :dynamic
+              :features $ #{} :js-ffi
         |event->prop $ %{} :CodeEntry (:doc "|Converts an event keyword (e.g. :click) to a prop name string (e.g. 'onclick').")
           :code $ quote
             defn event->prop (x)
