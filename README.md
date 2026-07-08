@@ -229,27 +229,27 @@ cr query def respo.core/render!
 cr query def respo.render.html/make-string
 ```
 
-| API                  | Namespace                        | Purpose                        |
-| -------------------- | -------------------------------- | ------------------------------ |
-| `defcomp`            | `respo.core/defcomp`             | Define components with macro   |
-| `defeffect`          | `respo.core/defeffect`           | Define lifecycle effects       |
-| `div`                | `respo.core/div`                 | Create div elements            |
-| `create-element`     | `respo.core/create-element`      | Dynamically create elements    |
-| `render!`            | `respo.core/render!`             | Sync virtual DOM to real DOM   |
-| `<>`                 | `respo.core/<>`                  | Create text nodes              |
-| `comp-space`         | `respo.comp.space/comp-space`    | Spacing component              |
-| `comp-inspect`       | `respo.comp.inspect/comp-inspect`| Inspection/debugging component |
-| `clear-cache!`       | `respo.core/clear-cache!`        | Clear memoization cache        |
-| `patch-instance!`    | `respo.controller.client/patch-instance!` | Patch DOM instances    |
-| `activate-instance!` | `respo.controller.client/activate-instance!` | Activate DOM instances |
-| `>>`                 | `respo.core/>>`                  | Create state cursors           |
-| `purify-element`     | `respo.util.format/purify-element` | Clean element markup         |
-| `mute-element`       | `respo.util.format/mute-element` | Silence element output         |
-| `make-string`        | `respo.render.html/make-string`  | Serialize to string            |
-| `find-element-diffs` | `respo.render.diff/find-element-diffs` | Find DOM differences     |
-| `apply-dom-changes`  | `respo.render.patch/apply-dom-changes` | Apply DOM patches        |
-| `realize-ssr!`       | `respo.core/realize-ssr!`        | Server-side rendering          |
-| `list->`             | `respo.core/list->`              | Create list containers         |
+| API                  | Namespace                                    | Purpose                        |
+| -------------------- | -------------------------------------------- | ------------------------------ |
+| `defcomp`            | `respo.core/defcomp`                         | Define components with macro   |
+| `defeffect`          | `respo.core/defeffect`                       | Define lifecycle effects       |
+| `div`                | `respo.core/div`                             | Create div elements            |
+| `create-element`     | `respo.core/create-element`                  | Dynamically create elements    |
+| `render!`            | `respo.core/render!`                         | Sync virtual DOM to real DOM   |
+| `<>`                 | `respo.core/<>`                              | Create text nodes              |
+| `comp-space`         | `respo.comp.space/comp-space`                | Spacing component              |
+| `comp-inspect`       | `respo.comp.inspect/comp-inspect`            | Inspection/debugging component |
+| `clear-cache!`       | `respo.core/clear-cache!`                    | Clear memoization cache        |
+| `patch-instance!`    | `respo.controller.client/patch-instance!`    | Patch DOM instances            |
+| `activate-instance!` | `respo.controller.client/activate-instance!` | Activate DOM instances         |
+| `>>`                 | `respo.core/>>`                              | Create state cursors           |
+| `purify-element`     | `respo.util.format/purify-element`           | Clean element markup           |
+| `mute-element`       | `respo.util.format/mute-element`             | Silence element output         |
+| `make-string`        | `respo.render.html/make-string`              | Serialize to string            |
+| `find-element-diffs` | `respo.render.diff/find-element-diffs`       | Find DOM differences           |
+| `apply-dom-changes`  | `respo.render.patch/apply-dom-changes`       | Apply DOM patches              |
+| `realize-ssr!`       | `respo.core/realize-ssr!`                    | Server-side rendering          |
+| `list->`             | `respo.core/list->`                          | Create list containers         |
 
 Legacy page names such as `make-html` and `render-app` were removed during the migration to source doc strings.
 
