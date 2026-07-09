@@ -41,7 +41,7 @@ TOTAL_BLOCKS=0
 while IFS= read -r file; do
   TOTAL=$((TOTAL + 1))
   echo "check-md: $file"
-  cmd=("${CR_CMD[@]}" "$ENTRY" docs check-md -d "$ENTRY")
+  cmd=("${CR_CMD[@]}" "$ENTRY" docs check-md --dep "$ENTRY")
   if [ "${#EXTRA_DEP_ARGS[@]}" -gt 0 ]; then
     cmd+=("${EXTRA_DEP_ARGS[@]}")
   fi
