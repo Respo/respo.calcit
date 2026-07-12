@@ -1,6 +1,6 @@
 
 {} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `cr query` to inspect and `cr edit`/`cr tree` to modify. Run `cr docs agents --full` first. Manual edits must follow format and schema conventions, then run `cr edit format`.") (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.48)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.49)
     :modules $ [] |memof/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -1128,10 +1128,14 @@
           :schema $ :: :fn
             {} (:rest :dynamic) (:return 'respo.schema/Element)
               :args $ [] (:: :optional 'respo.schema/DomProps)
-        |element-type $ %{} :CodeEntry (:doc |) (:schema :dynamic)
+        |element-type $ %{} :CodeEntry (:doc |)
           :code $ quote
             def element-type $ if (exists? js/Element) js/Element js/Error
           :examples $ []
+          :schema $ :: :fn
+            {} (:return :dynamic)
+              :args $ []
+              :features $ #{} :js-ffi
         |extract-effects-list $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn extract-effects-list (markup)
@@ -1333,6 +1337,7 @@
               :args $ [] :dynamic 'respo.schema/Component
                 :: :fn $ {} (:return :unit)
                   :args $ [] :tuple
+              :features $ #{} :js-ffi
         |render! $ %{} :CodeEntry (:doc "|Synchronize a component tree to a mount target.\n\nThe first call mounts the app. Later calls diff against `*global-element` and patch the existing DOM. `dispatch!` is stored internally and used by generated event listeners to deliver action tuples.")
           :code $ quote
             defn render! (target markup dispatch!) (reset! *dispatch-fn dispatch!)
@@ -2885,6 +2890,7 @@
           :schema $ :: :fn
             {} (:return :unit)
               :args $ [] :dynamic :dynamic
+              :features $ #{} :js-ffi
         |shared-canvas-context $ %{} :CodeEntry (:doc "|Shared Canvas 2D context for measuring text width or other canvas operations.")
           :code $ quote
             def shared-canvas-context $ if
