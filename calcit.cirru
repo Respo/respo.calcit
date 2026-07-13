@@ -1,6 +1,6 @@
 
 {} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `cr query` to inspect and `cr edit`/`cr tree` to modify. Run `cr docs agents --full` first. Manual edits must follow format and schema conventions, then run `cr edit format`.") (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.49)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.50)
     :modules $ [] |memof/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -592,8 +592,9 @@
                 true nil
           :examples $ []
           :schema $ :: :fn
-            {} (:return 'respo.schema/Effect)
-              :args $ [] :dynamic :string
+            {} (:return :dynamic)
+              :args $ [] :dynamic :dynamic
+              :features $ #{} :js-ffi
       :ns $ %{} :NsEntry (:doc |)
         :code $ quote
           ns respo.comp.global-keydown $ :require
