@@ -575,7 +575,6 @@
           :schema $ :: :fn
             {} (:return 'respo.schema/Effect)
               :args $ [] :dynamic :string
-              :features $ #{} :js-ffi
       :ns $ %{} :NsEntry (:doc |)
         :code $ quote
           ns respo.comp.global-keydown $ :require
@@ -2246,7 +2245,6 @@
           :examples $ []
           :schema $ :: :fn
             {} (:return :unit)
-              :features $ #{} :js-ffi
               :args $ [] :dynamic :dynamic :fn :list
         |add-event $ %{} :CodeEntry (:doc "|Attaches an event listener to a DOM element.")
           :code $ quote
@@ -2296,7 +2294,6 @@
           :examples $ []
           :schema $ :: :fn
             {} (:return :unit)
-              :features $ #{} :js-ffi
               :args $ [] :dynamic :dynamic :fn :list
         |apply-dom-changes $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -2332,7 +2329,6 @@
           :examples $ []
           :schema $ :: :fn
             {} (:return :unit)
-              :features $ #{} :js-ffi
               :args $ [] :list :dynamic :fn
         |find-target $ %{} :CodeEntry (:doc "|Locates a DOM node by traversing children using a coordinate path.")
           :code $ quote
@@ -2357,7 +2353,6 @@
           :examples $ []
           :schema $ :: :fn
             {} (:return :unit)
-              :features $ #{} :js-ffi
               :args $ [] :dynamic :dynamic :fn :list
         |replace-prop $ %{} :CodeEntry (:doc "|Updates a property on a DOM element. Handles data attributes and special cases like 'value'.")
           :code $ quote
@@ -2399,7 +2394,6 @@
           :examples $ []
           :schema $ :: :fn
             {} (:return :unit)
-              :features $ #{} :js-ffi
               :args $ [] :dynamic :dynamic
         |rm-event $ %{} :CodeEntry (:doc "|Removes an event listener from a DOM element by setting it to nil.")
           :code $ quote
@@ -2973,7 +2967,6 @@
           :examples $ []
           :schema $ :: :fn
             {} (:return :map)
-              :features $ #{} :js-ffi
               :args $ [] :dynamic
         |mute-element $ %{} :CodeEntry (:doc |)
           :code $ quote
