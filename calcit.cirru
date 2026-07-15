@@ -1,6 +1,6 @@
 
 {} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `cr query` to inspect and `cr edit`/`cr tree` to modify. Run `cr docs agents --full` first. Manual edits must follow format and schema conventions, then run `cr edit format`.") (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.50)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.51)
     :modules $ [] |memof/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -2552,6 +2552,10 @@
               :on $ :: :optional :map
               :alt $ :: :optional :string
               :draggable $ :: :optional :bool
+              :content $ :: :optional :string
+              :charset $ :: :optional :string
+              :multiple $ :: :optional :bool
+              :accept $ :: :optional :string
           :examples $ []
         |Effect $ %{} :CodeEntry (:doc |) (:schema :dynamic)
           :code $ quote
