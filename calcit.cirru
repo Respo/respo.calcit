@@ -1490,6 +1490,7 @@
           :code $ quote
             defmacro defstyle (style-name rules)
               assert "|expected symbol of style-name" $ symbol? style-name
+              warn-style-literals rules
               if-let
                 query0 $ &list:nth rules 1
                 assert "|expected rule 0 to be hashmap or symbol, use `defstyle` like:\n\n```cirru\ndefstyle style-demo $ {}\n  |& $ {}\n    :color :red\n```\n\nwhere `&` refers to current element.\n" $ if-let
@@ -1586,6 +1587,24 @@
           :schema $ :: :fn
             {} (:return :string)
               :args $ [] :string :map
+        |warn-style-literals $ %{} :CodeEntry (:doc |) (:schema :dynamic)
+          :code $ quote
+            defn warn-style-literals (x)
+              if (list? x)
+                if
+                  &= '{} $ &list:nth x 0
+                  loop
+                      pairs $ rest x
+                    if (empty? pairs) nil $ let
+                        pair $ first pairs
+                        value $ &list:nth pair 1
+                      when
+                        some? $ &list:nth pair 2
+                        println "|[Respo] defstyle warning: CSS value has extra tokens. In Cirru, an unquoted multi-word CSS value is parsed as multiple AST nodes; use a quoted string such as |0 auto or |1px solid ... ."
+                      warn-style-literals value
+                      recur $ rest pairs
+                  , nil
+          :examples $ []
       :ns $ %{} :NsEntry (:doc |)
         :code $ quote
           ns respo.css $ :require
