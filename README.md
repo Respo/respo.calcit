@@ -65,7 +65,7 @@ let
       respo.core/list->
         {}
         {}
-          :a $ respo.core/div {}
+          :a $ respo.core/div ({})
 ```
 
 Text Node:
@@ -103,7 +103,7 @@ App initialization:
 
 ```cirru.no-run
 ; ns app.demo $ :require
-  respo.core :refer $ render!
+  respo.core :refer $ render-with!
 
 ; initialize store and update store
 let
@@ -118,9 +118,11 @@ let
     comp-container $ fn (state) state
   dispatch! $ :: :TODO 1 2
 
-  ; render to the DOM
+  ; build the tree inside a managed memo frame, then render to the DOM
   defn render-app! ()
-    respo.core/render! mount-point (comp-container @*store) dispatch!
+    respo.core/render-with! mount-point
+      fn () $ comp-container @*store
+      , dispatch!
 ```
 
 Rerender on store changes:
@@ -132,6 +134,25 @@ let
   add-watch *store :changes $ fn ()
     render-app!
 ```
+
+Memoize keyed list components inside the tree built by `render-with!`:
+
+```cirru.no-check
+; ns app.demo $ :require
+  respo.core :refer $ list-> memo-comp-by >>
+
+list->
+  {} (:class-name |task-list)
+  -> tasks .to-list .reverse $ map
+    fn (task)
+      let
+          task-id $ :id task
+        [] task-id $ memo-comp-by task-id comp-task (>> states task-id) task
+```
+
+`memo-comp-by` matches the component function, key, and complete argument list. Each
+`render-with!` call records active keys and prunes entries that disappeared from the
+latest tree. Passing `nil` as the key bypasses caching.
 
 Reset virtual DOM caching during hot code swapping, and rerender:
 
@@ -166,7 +187,7 @@ let
     comp-a $ fn (text)
       []
         effect-a text
-        respo.core/div {}
+        respo.core/div ({})
 ```
 
 Define a hooks plugin based on Calcit Record, better use a pure function:
@@ -182,7 +203,7 @@ let
           :render $ fn (self) (nth self 1)
           :show $ fn (self d! ? text) nil
         , :plugin-name
-        respo.core/div {} (respo.core/<> "|Demo")
+        respo.core/div ({}) (respo.core/<> "|Demo")
 ```
 
 ### License
@@ -236,6 +257,8 @@ cr query def respo.render.html/make-string
 | `div`                | `respo.core/div`                             | Create div elements            |
 | `create-element`     | `respo.core/create-element`                  | Dynamically create elements    |
 | `render!`            | `respo.core/render!`                         | Sync virtual DOM to real DOM   |
+| `render-with!`       | `respo.core/render-with!`                    | Render with managed memo frame |
+| `memo-comp-by`       | `respo.core/memo-comp-by`                    | Memoize keyed components       |
 | `<>`                 | `respo.core/<>`                              | Create text nodes              |
 | `comp-space`         | `respo.comp.space/comp-space`                | Spacing component              |
 | `comp-inspect`       | `respo.comp.inspect/comp-inspect`            | Inspection/debugging component |

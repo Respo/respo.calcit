@@ -46,6 +46,8 @@ cr query def respo.render.html/make-string
 |                      | `defeffect`       |
 |                      | `create-element`  |
 |                      | `render!`         |
+|                      | `render-with!`    |
+|                      | `memo-comp-by`    |
 |                      | `clear-cache!`    |
 |                      | `realize-ssr!`    |
 |                      | `list->`          |

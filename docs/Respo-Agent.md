@@ -39,7 +39,7 @@ The Respo project is a virtual DOM library written in Calcit-js, containing:
 
 **User-facing APIs** (what you typically use):
 
-- `respo.core` - Core APIs: defcomp, div, render!, clear-cache!, etc.
+- `respo.core` - Core APIs: defcomp, div, render-with!, memo-comp-by, clear-cache!, etc.
 - `respo.comp.space` - Utility component comp-space (=<)
 - `respo.comp.inspect` - Debugging component comp-inspect
 - `respo.render.html` - HTML generation: make-string, make-html
@@ -214,7 +214,9 @@ defn updater (store op)
 ```cirru.no-check
 ; Initial render
 defn render-app! ()
-  render! mount-point (comp-container @*store) dispatch!
+  render-with! mount-point
+    fn () $ comp-container @*store
+    , dispatch!
 
 ; Watch for store changes
 add-watch *store :changes $ fn ()
@@ -250,6 +252,25 @@ list-> $ {}
     :b $ comp-item item-2
     :c $ comp-item item-3
 ```
+
+For keyed lists, call `memo-comp-by` while the tree builder passed to
+`render-with!` is running. It reuses the exact `Component` value when the component
+function, key, and all arguments are unchanged; this lets diffing stop immediately
+at that subtree. Keys not visited in the latest frame are pruned automatically.
+
+```cirru.no-check
+list->
+  {} (:class-name |task-list)
+  -> tasks .to-list .reverse $ map
+    fn (task)
+      let
+          task-id $ :id task
+        [] task-id $ memo-comp-by task-id comp-task (>> states task-id) task
+```
+
+Use stable domain IDs as keys. A `nil` key deliberately bypasses memoization. Call
+`clear-cache!` during hot reload to clear both managed component caches and legacy
+`memof` caches.
 
 ### 5. Styling Pattern
 
@@ -634,7 +655,7 @@ cr query ns namespace-name
 cr query peek '<namespace/def>'
 cr tree show '<namespace/def>' --path @  --depth 2
 cr tree show '<namespace/def>' --path @2 --depth 2
-cr tree replace '<namespace/def>' --path @2.1.0 --code '"new-value"'
+cr tree replace '<namespace/def>' --path @2.1.0 --code 'quote |new-value'
 cr tree show '<namespace/def>' --path @2.1  # 确认
 cr --check-only
 ```
@@ -699,7 +720,7 @@ cr query def 'respo.core/render!'
 cr query usages 'respo.core/render!'
 cr tree show 'ns/def' --path @2.1 --depth 1
 cr edit def 'ns/def' --code '["defn", "func", [], "body"]'
-cr tree replace 'ns/def' --path @2.1.0 --code '"value"'
+cr tree replace 'ns/def' --path @2.1.0 --code 'quote |value'
 cr --check-only
 ```
 

@@ -7,12 +7,12 @@ cr docs agents --full
 一般开发者会运行:
 
 - `cr js` 默认单次编译 JavaScript
-- `cr js --watch` 或 `cr js -w` 监听变更并持续编译
+- `cr js -w` 监听变更并持续编译
 - `yarn vite` 启动 Vite 开发服务器
 
 类型标注建议（schema-first）:
 
-- 优先使用 `cr edit schema <ns/def> -e '...'` 维护函数签名。
+- 优先使用 `cr edit schema <ns/def> --code 'quote $ :: :fn $ {} ...'` 维护函数签名；`quote` 是 CLI 传入一个 AST 节点时必需的代码数据边界，不会存入 schema payload。
 - 仅在确有必要时使用 `hint-fn`，并优先采用 schema map 形式；避免旧 clause 写法。
 - 修改签名后，优先用 `cr js` 验证，确保不会因类型告警阻断编译。
 
@@ -34,7 +34,7 @@ Respo 特有约束（不要上推到 Calcit 主程序）:
 - `defstyle`、`:class-name`、DOM props、样式字符串等约定，只放在 Respo 文档或 Agent 文件中说明，不要要求 Calcit CLI/Rust 主程序内置这些领域知识。
 - 编辑 `defstyle` 时，selector 使用字符串叶子，如 `|&`、`|&:hover`、`|input&`；不要写裸符号 `&`。
 - 样式值只要带空格或特殊字符，优先按字符串处理，并尽量复用 CLI 已输出的序列化形式。例如 `"|4px 10px"`、`"|1px solid "`、`"|calc(100vh - 76px)"`。
-- 遇到这类字符串，不要期待 Calcit 主程序理解它们的前端语义；应通过 Respo 文档里的工作流来规避误写：先 `cr query def` 看当前序列化，再用 `cr edit def --overwrite -f ...` 覆盖。
+- 遇到这类字符串，不要期待 Calcit 主程序理解它们的前端语义；应通过 Respo 文档里的工作流来规避误写：先 `cr query def` 看当前序列化，再用 `cr edit def --overwrite --file ...` 覆盖。
 - 相关细节统一收敛到 `docs/guide/styles.md`，Agent 文件只保留高频提醒，避免重复扩写。
 
 CLI 查询速查(面向 Agent):
@@ -49,6 +49,6 @@ CLI 查询速查(面向 Agent):
 - 搜索功能与用法:
   - `cr query find render!`
   - `cr query usages respo.core/render!`
-  - `cr query search render -f respo.core`
+  - `cr query search render --filter respo.core`
 - 查看项目配置:
   - `cr query config`
