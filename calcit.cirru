@@ -168,7 +168,7 @@
                         fn (task)
                           let
                               task-id $ :id task
-                            [] task-id $ memof1-call-by task-id comp-task (>> states task-id) task
+                            [] task-id $ memo-comp-by task-id comp-task (>> states task-id) task
                     if
                       > (count tasks) 0
                       div
@@ -341,7 +341,7 @@
       :ns $ %{} :NsEntry (:doc |)
         :code $ quote
           ns respo.app.comp.todolist $ :require
-            respo.core :refer $ defcomp div span input <> list-> defeffect >> a
+            respo.core :refer $ defcomp div span input <> list-> defeffect >> a memo-comp-by
             respo.util.format :refer $ hsl
             respo.app.comp.task :refer $ comp-task
             respo.comp.space :refer $ =<
@@ -350,7 +350,6 @@
             respo.app.comp.wrap :refer $ comp-wrap
             respo.util.dom :refer $ text-width
             respo.app.style.widget :as widget
-            memof.once :refer $ memof1-call-by
             respo.css :refer $ defstyle
             respo.app.schema :refer $ Op
     |respo.app.comp.wrap $ %{} :FileEntry
@@ -388,15 +387,15 @@
           :examples $ []
         |dispatch! $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn dispatch! (op ? op-data)
-              if dev? $ js/console.log op op-data
+            defn dispatch! (op)
+              if dev? $ js/console.log op
               let
                   store $ updater @*store op (generate-id!)
                 reset! *store store
           :examples $ []
           :schema $ :: :fn
             {} (:return :unit)
-              :args $ [] 'respo.app.schema/Op (:: :optional :dynamic)
+              :args $ [] 'respo.app.schema/Op
         |handle-ssr! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn handle-ssr! (mount-target)
@@ -415,7 +414,9 @@
         |render-app! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn render-app! (mount-target)
-              render! mount-target (comp-container @*store) dispatch!
+              render-with! mount-target
+                fn () $ comp-container @*store
+                , dispatch!
           :examples $ []
           :schema $ :: :fn
             {} (:return :unit)
@@ -424,7 +425,7 @@
         :code $ quote
           ns respo.app.core $ :require
             respo.app.comp.container :refer $ comp-container
-            respo.core :refer $ render! realize-ssr!
+            respo.core :refer $ render-with! realize-ssr!
             respo.schema :refer $ dev?
             respo.app.schema :as schema
             respo.app.updater :refer $ updater
@@ -951,7 +952,7 @@
               :args $ [] (:: :optional 'respo.schema/DomProps)
         |clear-cache! $ %{} :CodeEntry (:doc "|Clear memoized render caches used by Respo.\n\nThis is mainly useful during hot reloading or code swapping, where mounted DOM may stay in place but cached render results must be dropped before the next render.")
           :code $ quote
-            defn clear-cache! () $ reset-memof1-caches!
+            defn clear-cache! () (memo/reset-component-caches!) (reset-memof1-caches!)
           :examples $ []
           :schema $ :: :fn
             {} (:return :unit)
@@ -972,7 +973,7 @@
           :schema $ :: :fn
             {}
               :args $ [] :dynamic
-              :return $ :: :optional 'respo.schema/Element
+              :return $ :: :optional :record
         |confirm-child-pair $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn confirm-child-pair (pair)
@@ -984,9 +985,8 @@
               , pair
           :examples $ []
           :schema $ :: :fn
-            {}
-              :args $ [] :dynamic
-              :return $ :: :optional 'respo.schema/Element
+            {} (:return :list)
+              :args $ [] :list
         |create-element $ %{} :CodeEntry (:doc "|Low-level helper for creating a virtual DOM element.\n\nPass a tag name, an optional props map, and child nodes. Public helpers such as `div`, `span`, `button`, and `input` are thin wrappers around this function.")
           :code $ quote
             defn create-element (tag-name props & children)
@@ -996,7 +996,7 @@
                   &> (count children) 0
                   not $ any? list? children
               let
-                  props-map $ if (record? props) (&record:to-map props) props
+                  props-map $ normalize-dom-props props
                   attrs $ pick-attrs props-map
                   styles $ ->
                     either (get props-map :style) ({})
@@ -1022,7 +1022,7 @@
           :code $ quote
             defn create-list-element (tag-name props child-map)
               let
-                  props-map $ if (record? props) (&record:to-map props) props
+                  props-map $ normalize-dom-props props
                   attrs $ pick-attrs props-map
                   styles $ -> props-map (:style)
                     either $ {}
@@ -1100,7 +1100,7 @@
                             println $ str-spaced |WARNING: ~effect-name "|lack code for handling effects!"
                           quasiquote $ do ~@body
           :examples $ []
-            quote $ defeffect log-message [message] [action el at-place?]
+            quote $ defeffect log-message (message) (action el at-place?)
               if (= action :mount) (js/console.log message)
         |defplugin $ %{} :CodeEntry (:doc |) (:schema :dynamic)
           :code $ quote
@@ -1263,6 +1263,21 @@
           :schema $ :: :fn
             {} (:return 'respo.schema/Element)
               :args $ [] (:: :optional 'respo.schema/DomProps) :map
+        |memo-comp-by $ %{} :CodeEntry (:doc "|Memoize a component by key and its full argument list. Use it while building a tree inside render-with! so entries whose keys disappear are pruned after the frame. A nil key bypasses caching.")
+          :code $ quote
+            defn memo-comp-by (key f & args) (memo/memo-comp-by key f & args)
+          :examples $ []
+            quote $ memo-comp-by :demo
+              fn (label)
+                %{} schema/Component
+                  :effects $ []
+                  :name :memo-demo
+                  :listeners $ []
+                  :tree $ <> label
+              , |demo
+          :schema $ :: :fn
+            {} (:rest :any) (:return 'respo.schema/Component)
+              :args $ [] :any :fn
         |mount-app! $ %{} :CodeEntry (:doc "|Mounts the Respo application to the DOM. Initializes the global element and event listeners.")
           :code $ quote
             defn mount-app! (target element *dispatch-fn)
@@ -1281,7 +1296,23 @@
             quote $ mount-app! mount-target (comp-app) *dispatch-fn
           :schema $ :: :fn
             {} (:return :unit)
-              :args $ [] :dynamic 'respo.schema/Component (:: :ref :map)
+              :args $ [] :dynamic 'respo.schema/Component (:: :ref :fn)
+              :features $ #{} :js-ffi
+        |normalize-dom-props $ %{} :CodeEntry (:doc "|Normalize nil, map, or DomProps record input into a map. This isolates the intentionally dynamic public props boundary before typed DOM processing.")
+          :code $ quote
+            defn normalize-dom-props (props)
+              cond
+                  nil? props
+                  {}
+                (record? props) (&record:to-map props)
+                (map? props) props
+                true $ raise
+                  str |Expected_DOM_props_map_or_record,_got: $ type-of props
+          :examples $ []
+          :schema $ :: :fn
+            {}
+              :args $ [] :dynamic
+              :return $ :: :map :tag :dynamic
         |ol $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn ol (props & children) (create-element :ol props & children)
@@ -1335,9 +1366,7 @@
           :examples $ []
           :schema $ :: :fn
             {} (:return :unit)
-              :args $ [] :dynamic 'respo.schema/Component
-                :: :fn $ {} (:return :unit)
-                  :args $ [] :tuple
+              :args $ [] :dynamic 'respo.schema/Component :fn
               :features $ #{} :js-ffi
         |render! $ %{} :CodeEntry (:doc "|Synchronize a component tree to a mount target.\n\nThe first call mounts the app. Later calls diff against `*global-element` and patch the existing DOM. `dispatch!` is stored internally and used by generated event listeners to deliver action tuples.")
           :code $ quote
@@ -1347,28 +1376,45 @@
             quote $ render! mount-target (comp-container @*store) dispatch!
           :schema $ :: :fn
             {} (:return :unit)
-              :args $ [] :dynamic 'respo.schema/Component
-                :: :fn $ {} (:return :unit)
-                  :args $ [] :tuple
+              :args $ [] :dynamic 'respo.schema/Component :fn
+              :features $ #{} :js-ffi
+        |render-with! $ %{} :CodeEntry (:doc "|Build a Component tree inside a managed memo frame, prune inactive component keys, then render it. Pass a zero-argument tree builder so memo calls happen inside the frame.")
+          :code $ quote
+            defn render-with! (target render-tree dispatch!) (memo/begin-memo-frame!)
+              let
+                  element $ render-tree
+                memo/finish-memo-frame!
+                render! target element dispatch!
+          :examples $ []
+            quote $ render-with! mount-target
+              fn () $ comp-container @*store
+              , dispatch!
+          :schema $ :: :fn
+            {} (:return :unit)
+              :args $ [] :dynamic
+                :: :fn $ {} (:return 'respo.schema/Component)
+                  :args $ []
+                , :fn
+              :features $ #{} :js-ffi
         |rerender-app! $ %{} :CodeEntry (:doc "|Diffs the new element against the global element and patches the DOM. Used internally by render!.")
           :code $ quote
             defn rerender-app! (target element *dispatch-fn)
-              let
+              if (identical? @*global-element element) nil $ let
                   deliver-event $ build-deliver-event *global-element *dispatch-fn
                   changes $ &buf-list:new
                   collect! $ fn (op) (&buf-list:push changes op)
-                ; println @*global-element
                 find-element-diffs collect! ([]) ([]) @*global-element element
-                if-let (logger @*changes-logger)
-                  logger @*global-element element $ &buf-list:to-list changes
-                ; js/console.log |Changes: @*changes
-                reset! *global-element element
-                patch-instance! (&buf-list:to-list changes) target deliver-event
+                let
+                    changes-list $ &buf-list:to-list changes
+                  if-let (logger @*changes-logger) (logger @*global-element element changes-list)
+                  reset! *global-element element
+                  patch-instance! changes-list target deliver-event
           :examples $ []
             quote $ rerender-app! mount-target (comp-demo) *dispatch-fn
           :schema $ :: :fn
             {} (:return :unit)
-              :args $ [] :dynamic 'respo.schema/Component (:: :ref :map)
+              :args $ [] :dynamic 'respo.schema/Component (:: :ref :fn)
+              :features $ #{} :js-ffi
         |script $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn script (props & children) (create-element :script props & children)
@@ -1448,6 +1494,7 @@
             respo.util.dom :refer $ compare-to-dom!
             memof.once :refer $ reset-memof1-caches!
             respo.util.detect :refer $ component? element? effect? listener?
+            respo.memo :as memo
     |respo.css $ %{} :FileEntry
       :defs $ {}
         |*style-caches $ %{} :CodeEntry (:doc "|Atom for caching style information.") (:schema :ref)
@@ -1556,7 +1603,7 @@
                   :color $ hsl 0 0 20
                 |&::before $ {} (:content "|\"→ \"")
           :schema $ :: :macro
-            {} $ :args ([] :symbol :map)
+            {} $ :args ([] :symbol :list)
         |nodejs? $ %{} :CodeEntry (:doc |)
           :code $ quote
             def nodejs? $ and (exists? js/process) (= js/process.release.name |node)
@@ -1716,6 +1763,105 @@
             |bottom-tip :default hud!
             respo.controller.client :refer $ send-to-component!
             respo.app.schema :refer $ Op
+    |respo.memo $ %{} :FileEntry
+      :defs $ {}
+        |*component-caches $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defatom *component-caches $ {}
+          :examples $ []
+          :schema $ :: :ref
+            :: :map :fn $ :: :map :any 'respo.memo/MemoEntry
+        |*frame-component-caches $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defatom *frame-component-caches $ {}
+          :examples $ []
+          :schema $ :: :ref
+            :: :map :fn $ :: :map :any 'respo.memo/MemoEntry
+        |*memo-frame-active? $ %{} :CodeEntry (:doc |)
+          :code $ quote (defatom *memo-frame-active? false)
+          :examples $ []
+          :schema $ :: :ref :bool
+        |MemoEntry $ %{} :CodeEntry (:doc |) (:schema :dynamic)
+          :code $ quote
+            defstruct MemoEntry
+              :args $ :: :list :any
+              :value 'respo.schema/Component
+          :examples $ []
+        |begin-memo-frame! $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn begin-memo-frame! ()
+              reset! *frame-component-caches $ {}
+              reset! *memo-frame-active? true
+          :examples $ []
+          :schema $ :: :fn
+            {} (:return :unit)
+              :args $ []
+        |call-component $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn call-component (f args)
+              let
+                  value $ f & args
+                assert |memo-comp-by_expected_Component $ component? value
+                , value
+          :examples $ []
+          :schema $ :: :fn
+            {} (:return 'respo.schema/Component)
+              :args $ [] :fn (:: :list :any)
+        |component-cache-size $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn component-cache-size () $ reduce (&map:to-list @*component-caches) 0
+              fn (total pair)
+                + total $ count (last pair)
+          :examples $ []
+          :schema $ :: :fn
+            {} (:return :number)
+              :args $ []
+        |finish-memo-frame! $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn finish-memo-frame! ()
+              when @*memo-frame-active? $ reset! *component-caches @*frame-component-caches
+              reset! *memo-frame-active? false
+              reset! *frame-component-caches $ {}
+          :examples $ []
+          :schema $ :: :fn
+            {} (:return :unit)
+              :args $ []
+        |memo-comp-by $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn memo-comp-by (key f & args)
+              if (nil? key) (call-component f args)
+                let
+                    entry $ either
+                      get-in @*frame-component-caches $ [] f key
+                      get-in @*component-caches $ [] f key
+                    hit? $ and (some? entry)
+                      &= args $ :args entry
+                    resolved-entry $ if hit? entry
+                      %{} MemoEntry (:args args)
+                        :value $ call-component f args
+                  if @*memo-frame-active?
+                    swap! *frame-component-caches assoc-in ([] f key) resolved-entry
+                    when (not hit?)
+                      swap! *component-caches assoc-in ([] f key) resolved-entry
+                  :value resolved-entry
+          :examples $ []
+          :schema $ :: :fn
+            {} (:rest :any) (:return 'respo.schema/Component)
+              :args $ [] :any :fn
+        |reset-component-caches! $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn reset-component-caches! ()
+              reset! *component-caches $ {}
+              reset! *frame-component-caches $ {}
+              reset! *memo-frame-active? false
+          :examples $ []
+          :schema $ :: :fn
+            {} (:return :unit)
+              :args $ []
+      :ns $ %{} :NsEntry (:doc |)
+        :code $ quote
+          ns respo.memo $ :require
+            respo.util.detect :refer $ component?
     |respo.render.diff $ %{} :FileEntry
       :defs $ {}
         |detect-keys-dup $ %{} :CodeEntry (:doc "|Checks for duplicate keys in a list of children. Useful for development mode warnings.")
@@ -2266,7 +2412,7 @@
           :examples $ []
           :schema $ :: :fn
             {} (:return :string)
-              :args $ [] 'respo.schema/DomProps
+              :args $ [] (:: :map :tag :dynamic)
         |self-closing $ %{} :CodeEntry (:doc |) (:schema :dynamic)
           :code $ quote
             def self-closing $ #{} |area |base |br |col |embed |hr |img |input |link |meta |param |source |track |wbr
@@ -2285,7 +2431,7 @@
           :examples $ []
           :schema $ :: :fn
             {} (:return :string)
-              :args $ [] :map
+              :args $ [] (:: :list :list)
       :ns $ %{} :NsEntry (:doc |)
         :code $ quote
           ns respo.render.html $ :require
@@ -2524,7 +2670,10 @@
           :examples $ []
         |Component $ %{} :CodeEntry (:doc |) (:schema :dynamic)
           :code $ quote
-            defstruct Component (:name :any) (:effects :any) (:listeners :any) (:tree :any)
+            defstruct Component (:name :tag)
+              :effects $ :: :list 'respo.schema/Effect
+              :listeners $ :: :list 'respo.schema/RespoListener
+              :tree $ :: :optional :record
           :examples $ []
         |DomProps $ %{} :CodeEntry (:doc |) (:schema :dynamic)
           :code $ quote
@@ -2578,11 +2727,19 @@
           :examples $ []
         |Effect $ %{} :CodeEntry (:doc |) (:schema :dynamic)
           :code $ quote
-            defstruct Effect (:name :any) (:coord :any) (:args :any) (:method :any)
+            defstruct Effect (:name :tag)
+              :coord $ :: :list :dynamic
+              :args $ :: :list :dynamic
+              :method :fn
           :examples $ []
         |Element $ %{} :CodeEntry (:doc |) (:schema :dynamic)
           :code $ quote
-            defstruct Element (:name :any) (:coord :any) (:attrs :any) (:style :any) (:event :any) (:children :any)
+            defstruct Element (:name :tag)
+              :coord $ :: :optional (:: :list :dynamic)
+              :attrs $ :: :list (:: :list :dynamic)
+              :style $ :: :list (:: :list :dynamic)
+              :event $ :: :map :tag :dynamic
+              :children $ :: :list (:: :list :dynamic)
           :examples $ []
         |EventHandler $ %{} :CodeEntry (:doc |)
           :code $ quote (def EventHandler nil)
@@ -2611,7 +2768,7 @@
           :examples $ []
         |RespoListener $ %{} :CodeEntry (:doc |) (:schema :dynamic)
           :code $ quote
-            defstruct RespoListener (:name :any) (:handler :any)
+            defstruct RespoListener (:name :tag) (:handler :fn)
           :examples $ []
         |cache-info $ %{} :CodeEntry (:doc |) (:schema :map)
           :code $ quote
@@ -2764,7 +2921,7 @@
       :defs $ {}
         |main! $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn main! () (html/run-tests) (test-pick-attrs) (test-pick-event)
+            defn main! () (html/run-tests) (test-pick-attrs) (test-pick-event) (memo/run-tests)
           :examples $ []
           :schema $ :: :fn
             {} (:return :unit)
@@ -2802,6 +2959,79 @@
           ns respo.test.main $ :require (respo.test.html :as html)
             calcit-test.core :refer $ deftest testing is
             respo.util.list :refer $ pick-attrs pick-event
+            respo.test.memo :as memo
+    |respo.test.memo $ %{} :FileEntry
+      :defs $ {}
+        |*render-count $ %{} :CodeEntry (:doc |) (:schema :ref)
+          :code $ quote (defatom *render-count 0)
+          :examples $ []
+        |comp-counted $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defcomp comp-counted (value) (swap! *render-count inc)
+              div ({})
+                <> $ str value
+          :examples $ []
+          :schema $ :: :fn
+            {} (:return 'respo.schema/Component)
+              :args $ [] :number
+        |memo-bypass-test $ %{} :CodeEntry (:doc |) (:schema :dynamic)
+          :code $ quote
+            deftest memo-bypass-test $ testing |nil_key_bypasses_cache (reset-component-caches!) (reset! *render-count 0) (begin-memo-frame!) (memo-comp-by nil comp-counted 1) (memo-comp-by nil comp-counted 1) (finish-memo-frame!)
+              is $ = 2 @*render-count
+              is $ = 0 (component-cache-size)
+              reset-component-caches!
+          :examples $ []
+        |memo-hit-test $ %{} :CodeEntry (:doc |) (:schema :dynamic)
+          :code $ quote
+            deftest memo-hit-test $ testing |memo_hit_reuses_component_identity (reset-component-caches!) (reset! *render-count 0) (begin-memo-frame!)
+              let
+                  first-comp $ memo-comp-by :same comp-counted 1
+                  second-comp $ memo-comp-by :same comp-counted 1
+                is $ identical? first-comp second-comp
+                is $ = 1 @*render-count
+                finish-memo-frame!
+                is $ = 1 (component-cache-size)
+                reset-component-caches!
+          :examples $ []
+        |memo-invalidation-test $ %{} :CodeEntry (:doc |) (:schema :dynamic)
+          :code $ quote
+            deftest memo-invalidation-test $ testing |changed_args_recompute_same_key (reset-component-caches!) (reset! *render-count 0) (begin-memo-frame!)
+              let
+                  first-comp $ memo-comp-by :same comp-counted 1
+                  second-comp $ memo-comp-by :same comp-counted 2
+                is $ not (identical? first-comp second-comp)
+                is $ = 2 @*render-count
+                finish-memo-frame!
+                is $ = 1 (component-cache-size)
+                reset-component-caches!
+          :examples $ []
+        |memo-prune-test $ %{} :CodeEntry (:doc |) (:schema :dynamic)
+          :code $ quote
+            deftest memo-prune-test $ testing |memo_frame_prunes_inactive_keys (reset-component-caches!) (reset! *render-count 0) (begin-memo-frame!) (memo-comp-by :a comp-counted 1) (memo-comp-by :b comp-counted 2) (finish-memo-frame!)
+              is $ = 2 (component-cache-size)
+              begin-memo-frame!
+              memo-comp-by :b comp-counted 2
+              finish-memo-frame!
+              is $ = 1 (component-cache-size)
+              begin-memo-frame!
+              memo-comp-by :a comp-counted 1
+              finish-memo-frame!
+              is $ = 3 @*render-count
+              reset-component-caches!
+          :examples $ []
+        |run-tests $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn run-tests () (memo-hit-test) (memo-prune-test) (memo-invalidation-test) (memo-bypass-test)
+          :examples $ []
+          :schema $ :: :fn
+            {} (:return :unit)
+              :args $ []
+      :ns $ %{} :NsEntry (:doc |)
+        :code $ quote
+          ns respo.test.memo $ :require
+            calcit-test.core :refer $ deftest testing is
+            respo.core :refer $ defcomp div <> memo-comp-by
+            respo.memo :refer $ begin-memo-frame! finish-memo-frame! reset-component-caches! component-cache-size
     |respo.util.detect $ %{} :FileEntry
       :defs $ {}
         |=seq $ %{} :CodeEntry (:doc "|Recursively checks if two sequences are equal.")
@@ -3094,14 +3324,12 @@
                     when (nil? t) (raise "|tree is empty")
                     , t
                 (element? markup)
-                  -> markup (update :event purify-events)
-                    update :children $ fn (children)
-                      -> children $ map
-                        fn (pair)
-                          let
-                              k $ first pair
-                              child $ last pair
-                            [] k $ purify-element child
+                  -> (&record:to-map markup)
+                    assoc :event $ purify-events (:event markup)
+                    assoc :children $ -> (:children markup)
+                      map $ fn (pair)
+                        [] (first pair)
+                          purify-element $ last pair
                 true $ do (js/console.warn "|Unknown markup during purify:" markup) nil
           :examples $ []
           :schema $ :: :fn
@@ -3110,7 +3338,7 @@
         |purify-events $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn purify-events (events)
-              reduce events ([])
+              reduce (&map:to-list events) ([])
                 fn (acc pair)
                   if
                     some? $ last pair
@@ -3118,8 +3346,9 @@
                     , acc
           :examples $ []
           :schema $ :: :fn
-            {} (:return :list)
-              :args $ [] :map
+            {}
+              :args $ [] (:: :map :tag :dynamic)
+              :return $ :: :list :tag
         |text->html $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn text->html (x)
