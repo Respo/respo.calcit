@@ -1,6 +1,6 @@
 
 {} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `cr query` to inspect and `cr edit`/`cr tree` to modify. Run `cr docs agents --full` first. Manual edits must follow format and schema conventions, then run `cr edit format`.") (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.53)
+  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.54)
     :modules $ [] |memof/ |calcit-test/
   :entries $ {}
   :files $ {}
@@ -1357,7 +1357,7 @@
                   changes $ &buf-list:new
                   collect! $ fn (op coord n-coord v)
                     &buf-list:push changes $ [] op coord n-coord v
-                  deliver-event $ build-deliver-event *global-element dispatch!
+                  deliver-event $ build-deliver-event *global-element (atom dispatch!)
                 if (nil? app-element) (raise "|Detected no element from SSR!")
                 compare-to-dom! (purify-element element) app-element
                 collect-mounting collect! ([]) ([]) element true
