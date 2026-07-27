@@ -1357,7 +1357,7 @@
                   changes $ &buf-list:new
                   collect! $ fn (op coord n-coord v)
                     &buf-list:push changes $ [] op coord n-coord v
-                  deliver-event $ build-deliver-event *global-element dispatch!
+                  deliver-event $ build-deliver-event *global-element (atom dispatch!)
                 if (nil? app-element) (raise "|Detected no element from SSR!")
                 compare-to-dom! (purify-element element) app-element
                 collect-mounting collect! ([]) ([]) element true
