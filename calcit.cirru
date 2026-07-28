@@ -2044,7 +2044,7 @@
           :schema $ :: :fn
             {} (:return :unit)
               :args $ [] :fn :list (:: :list :number) :dynamic :dynamic
-        |find-props-diffs $ %{} :CodeEntry (:doc "|Compares old and new properties maps to identify additions, removals, and updates.")
+        |find-props-diffs $ %{} :CodeEntry (:doc "|Compares old and new sorted property lists to identify additions, removals, and updates.")
           :code $ quote
             defn find-props-diffs (collect! coord n-coord old-props new-props)
               ; js/console.log "|find props:" n-coord old-props new-props (count old-props) (count new-props)
@@ -2087,7 +2087,7 @@
           :examples $ []
           :schema $ :: :fn
             {} (:return :unit)
-              :args $ [] :fn :list :list :map :map
+              :args $ [] :fn :list :list :list :list
         |find-style-diffs $ %{} :CodeEntry (:doc "|Compares two style maps and collects effects for additions, removals, or updates.")
           :code $ quote
             defn find-style-diffs (collect! c-coord coord old-style new-style)
@@ -2920,7 +2920,7 @@
       :defs $ {}
         |main! $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn main! () (html/run-tests) (test-pick-attrs) (test-pick-event) (memo/run-tests)
+            defn main! () (html/run-tests) (test-pick-attrs) (test-pick-event) (memo/run-tests) (test-find-props-diffs)
           :examples $ []
           :schema $ :: :fn
             {} (:return :unit)
@@ -2932,6 +2932,19 @@
           :schema $ :: :fn
             {} (:return :unit)
               :args $ []
+        |test-find-props-diffs $ %{} :CodeEntry (:doc |) (:schema :dynamic)
+          :code $ quote
+            deftest test-find-props-diffs $ testing "|diff sorted prop lists without map specialization"
+              let
+                  effects $ atom ([])
+                  collect! $ fn (effect) (swap! effects conj effect)
+                  old-props $ [] ([] :class-name |old)
+                  new-props $ [] ([] :class-name |new)
+                find-props-diffs collect! ([]) ([]) old-props new-props
+                is $ = 1 (count @effects)
+                is $ = (first @effects)
+                  :: :replace-prop ([]) ([]) ([] :class-name |new)
+          :examples $ []
         |test-pick-attrs $ %{} :CodeEntry (:doc |) (:schema :dynamic)
           :code $ quote
             deftest test-pick-attrs $ is
@@ -2959,6 +2972,7 @@
             calcit-test.core :refer $ deftest testing is
             respo.util.list :refer $ pick-attrs pick-event
             respo.test.memo :as memo
+            respo.render.diff :refer $ find-props-diffs
     |respo.test.memo $ %{} :FileEntry
       :defs $ {}
         |*render-count $ %{} :CodeEntry (:doc |) (:schema :ref)
