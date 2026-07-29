@@ -29,7 +29,7 @@ entry_for:
 
 The Respo project is a virtual DOM library written in Calcit-js, containing:
 
-- **Main codebase**: `compact.cirru` (2314 lines) - serialized source code
+- **Main codebase**: `calcit.cirru` (2314 lines) - serialized source code
 - **Compiled source**: `calcit.cirru` (13806 lines) - full AST representation
 - **Namespaces**: 33 total namespaces organized by functionality
 - **Version**: 0.16.21
@@ -39,7 +39,7 @@ The Respo project is a virtual DOM library written in Calcit-js, containing:
 
 **User-facing APIs** (what you typically use):
 
-- `respo.core` - Core APIs: defcomp, div, render!, clear-cache!, etc.
+- `respo.core` - Core APIs: defcomp, div, render-with!, memo-comp-by, clear-cache!, etc.
 - `respo.comp.space` - Utility component comp-space (=<)
 - `respo.comp.inspect` - Debugging component comp-inspect
 - `respo.render.html` - HTML generation: make-string, make-html
@@ -74,325 +74,82 @@ The Respo project is a virtual DOM library written in Calcit-js, containing:
 
 ## Essential Calcit CLI Commands for Development
 
-### 1. Exploration and Discovery
+CLI 套件完整参考见 `cr docs agents --full`。以下只列出 Respo 开发中高频使用的命令。
+
+### 探索与定位
 
 ```bash
-# List all namespaces in the project
-cr query ns
-
-# Get details about a specific namespace (imports, definitions)
-cr query ns respo.core
-cr query ns respo.app.core
-
-# List all definitions in a namespace
-cr query defs respo.core
-cr query defs respo.app.updater
-
-# Quick peek at a definition (signature, parameters, docs)
-cr query peek respo.core/defcomp
-cr query peek respo.core/render!
-
-# Get complete definition as JSON syntax tree
-cr query def respo.core/render!
-cr query def respo.app.core/dispatch!
-
-# Search for a symbol across all namespaces
-cr query find render!
-cr query find *store
-
-# Find all usages of a specific definition
-cr query usages respo.core/render!
-cr query usages respo.app.core/dispatch!
+cr query ns                            # 列出命名空间
+cr query ns respo.core                 # 阅读命名空间详情
+cr query defs respo.core               # 列出定义
+cr query peek 'respo.core/render!'     # 轻量签名预览
+cr query def 'respo.core/render!'      # 完整定义
+cr query find render!                  # 全局搜索
+cr query usages 'respo.core/render!'   # 查找引用
 ```
 
-### 2. Precise Code Navigation (tree pattern)
-
-When you need to understand or modify specific parts of a definition:
+### 结构化编辑
 
 ```bash
-# Step 1: Read the complete definition first
-cr query def respo.app.updater/updater
+# 看结构
+cr tree show 'respo.app.updater/updater' --path  --depth 1
+cr tree show 'respo.app.updater/updater' --path @2 --depth 1
 
-# Step 2: Use tree show to examine the structure (limit depth to reduce output)
-cr tree show respo.app.updater/updater -p "" -d 1    # View root level
+# 改内容（--code 自动识别 JSON vs Cirru）
+cr tree replace 'respo.app.updater/updater' --path @2.1.0 --code '["fn", ["x"], "x"]'
 
-# Step 3: Dive deeper into specific indices
-cr tree show respo.app.updater/updater -p "2" -d 1   # Check 3rd element
-cr tree show respo.app.updater/updater -p "2,1" -d 1 # Check 2nd child of 3rd element
-
-# Step 4: Confirm target location before editing
-cr tree show respo.app.updater/updater -p "2,1,0"    # Final confirmation
-
-# Step 5: Use tree commands for surgical modifications
-# JSON inline (recommended)
-cr tree replace respo.app.updater/updater -p "2,1,0" -j '"new-value"'
-# Or from stdin
-echo '"new-value"' | cr tree replace respo.app.updater/updater -p "2,1,0" -s -J
+# 定义操作
+cr edit def 'respo.demo/greet' --code '["defn", "greet", ["name"], ["println", "|Hello", "name"]]'
+cr edit imports respo.demo --code '[["respo.core", ":refer", ["div", "span"]]]'
+cr edit rm-def 'respo.demo/old-fn'
 ```
 
-echo '["defn", "hello", [], ["println", "|Hello"]]' | cr edit def respo.app.core/hello -s -J
-
-### 3. Code Modification (Agent Optimized)
-
-**Best Practice: Use JSON AST**
-For LLM Agents, **JSON inline (`-j`) is the most reliable method** for code generation. It avoids whitespace/indentation ambiguity inherent in Cirru.
-
-**Input Modes:**
-
-- `-j '<json>'`: **Recommended.** Inline JSON string. Escape quotes carefully.
-- `-e '<text>'`: Inline Cirru one-liner. Good for short, simple expressions.
-- `-f <file>` / `-s`: Read from file/stdin (defaults to Cirru).
-- `-J`: Combine with `-f`/`-s` to indicate JSON input.
-
-**JSON AST Structure Guide:**
-
-- Function: `(defn f (x) x)` -> `["defn", "f", ["x"], "x"]`
-- Map: `{:a 1}` -> `["{}", [":a", "1"]]`
-- String: `"|hello"` -> `"|hello"` (in JSON string: `"hello"`)
-- Keyword: `:key` -> `":key"`
-
-**Common Commands:**
+### 项目配置
 
 ```bash
-# 1. Add/Update Definition (JSON)
-# (defn greet (name) (println "|Hello" name))
-cr edit def respo.demo/greet -j '["defn", "greet", ["name"], ["println", "|Hello", "name"]]'
-
-# 2. Add Definition (Cirru One-liner - risky for complex code)
-cr edit def respo.demo/simple -e 'defn simple (x) (+ x 1)'
-
-# 3. Update Imports (JSON)
-# (ns respo.demo (:require [respo.core :refer [div span]]))
-cr edit imports respo.demo -j '[["respo.core", ":refer", ["div", "span"]]]'
-
-# 4. Remove Definition
-cr edit rm-def respo.demo/old-fn
-
-# 5. Namespace Operations
-cr edit add-ns respo.new-feature
-cr edit rm-ns respo.deprecated
+cr config show
+cr config version "0.16.22"
+cr config init-fn "respo.main/main!"
 ```
 
-**💡 Pro Tip: Validation**
-If unsure about the JSON structure, generate it from Cirru first:
+### 架构探索
 
 ```bash
-cr cirru parse -O 'defn f (x) (+ x 1)'
-# Output: ["defn", "f", ["x"], ["+", "x", "1"]]
-```
+# 调用图分析
+cr analyze call-graph --root 'respo.app.core/render-app!' --ns-prefix respo.app. --max-depth 3
 
-### 4. Project Configuration
-
-```bash
-# Get project configuration (init-fn, reload-fn, version)
-cr query config
-
-# Set project configuration
-cr edit config version "0.16.22"
-cr edit config init-fn "respo.main/main!"
-cr edit config reload-fn "respo.main/reload!"
-```
-
-### 5. Workflow: Building From Scratch
-
-Follow this sequence to create a new feature cleanly:
-
-**Step 1: Create Namespace**
-
-```bash
-cr edit add-ns respo.app.feature-x
-```
-
-**Step 2: Add Imports**
-Define dependencies (e.g., `respo.core`).
-
-```bash
-# Cirru: (:require [respo.core :refer [defcomp div span]])
-cr edit imports respo.app.feature-x -j '[["respo.core", ":refer", ["defcomp", "div", "span"]]]'
-```
-
-**Step 3: Create Component**
-Define the component logic.
-
-```bash
-# Cirru: (defcomp comp-x (data) (div {} (<> "Feature X")))
-cr edit def respo.app.feature-x/comp-x -j '["defcomp", "comp-x", ["data"], ["div", ["{}"], ["<>", "|Feature X"]]]'
-```
-
-**Step 4: Verify**
-
-```bash
-cr query def respo.app.feature-x/comp-x
-cr --check-only
-```
-
-**Step 5: Integrate**
-Mount or use it in `respo.app.comp.container`.
-
-```bash
-# 1. Add import to container ns
-cr edit require respo.app.comp.container respo.app.feature-x
-
-# 2. Add usage (using surgical edit)
-# Find where to insert using `cr tree show ...`
-# cr tree insert-child ... -j '["respo.app.feature-x/comp-x", "data"]'
-```
-
-### 6. Documentation and Language
-
-```bash
-# Check for syntax errors and warnings
-cr --check-only
-cr js --check-only
-
-# Get language documentation
-cr docs api render!
-cr docs ref component
-cr docs list-api     # List all API docs
-cr docs list-guide   # List all guide docs
-
-# Parse Cirru code to JSON (for understanding syntax)
-cr cirru parse '(div {} (<> "hello"))'
-
-# Format JSON to Cirru code
-cr cirru format '["div", {}, ["<>", "hello"]]'
-
-# Parse EDN to JSON
-cr cirru parse-edn '{:a 1 :b [2 3]}'
-
-# Show Cirru syntax guide (read before generating Cirru)
-cr cirru show-guide
-```
-
-### 6. Library Management
-
-```bash
-# List official libraries
-cr libs
-
-# Search libraries by keyword
-cr libs search router
-
-# Read library README from GitHub
-cr libs readme respo
-
-# Install/update dependencies
-caps
-```
-
-### 7. Architectural Exploration (Structure & Patterns)
-
-To quickly understand a project's architecture, combine **Top-Down call graphs** with **Pattern-based structure search**.
-
-#### A. Top-Down: Call Graph Analysis
-
-Use `call-graph` to visualize the component tree and data flow starting from an entry point.
-
-```bash
-# Visualize the app structure from the render entry point
-cr analyze call-graph --root respo.app.core/render-app! --ns-prefix respo.app. --max-depth 3
-
-# This reveals the component hierarchy:
-# └── render-app!
-#     ├── comp-container
-#     │   ├── comp-todolist
-#     │   │   ├── comp-task
-#     │   │   └── comp-wrap
-#     └── dispatch! -> updater
-```
-
-#### B. Pattern-Based: Structure Search
-
-Use `search-expr` to find functional patterns (like state management or event handling) across the whole project.
-
-```bash
-# How is state being navigated?
+# 模式搜索
 cr query search-expr '>> states'
-
-# Where are local state changes dispatched?
 cr query search-expr 'd! cursor'
-
-# Find all component event handler signatures
 cr query search-expr 'fn (e d!)'
 ```
-
-**Strategy:**
-
-1. Use `call-graph` to find **WHO** calls **WHOM**.
-2. Use `search-expr` to find **HOW** certain features are implemented project-wide.
-3. Use `query usages` to find **WHERE** a specific function is integrated.
 
 ---
 
 ## Development Workflow for LLM Agents
 
-### Step 1: Understand the Problem
+CLI 命令的详细用法见 `cr docs agents --full`。以下是 Respo 开发常用的工作流模板：
 
 ```bash
-# Always start by exploring related code
-cr query ns respo.app.updater             # Understand state management
-cr query find my-function-name            # Find where it's defined/used
-cr query usages respo.core/render!        # See how render! is used
-```
+# 1. 探索
+cr query ns 'respo.app.updater'
+cr query usages 'respo.core/render!'
 
-### Step 2: Implement the Solution
+# 2. 定位 → 修改 → 验证
+cr tree show 'respo.app.updater/updater' --path  --depth 1
+cr tree replace 'namespace/function-name' --path @2.1.0 --code '["new", "code"]'
+cr tree show 'namespace/function-name' --path @2.1
 
-Use the **precise editing pattern** for complex changes:
-
-```bash
-# 1. Read the whole definition
-cr query def namespace/function-name
-
-# 2. Map out the structure with tree show
-cr tree show namespace/function-name -p "" -d 1
-
-# 3. Navigate to target position
-cr tree show namespace/function-name -p "2,1" -d 1
-
-# 4. Make the change (JSON inline recommended)
-cr tree replace namespace/function-name -p "2,1,0" -j '["new", "code"]'
-
-# Or from stdin (JSON format)
-echo '["new", "code"]' | cr tree replace namespace/function-name -p "2,1,0" -s -J
-
-# 5. Verify
-cr tree show namespace/function-name -p "2,1"
-```
-
-### Step 3: Test and Validate
-
-```bash
-# Check syntax without running
+# 3. 编译与运行
 cr --check-only
-
-# Compile to JavaScript and check for errors
 cr js --check-only
-
-# Run the app once to test
 cr
+cr --watch
 
-# Compile to JavaScript once
-cr js
-
-# Watch mode (will call reload! on code changes)
-cr -w
-```
-
-### Step 4: Debug Issues
-
-```bash
-# Check for error messages
+# 4. 排错
 cr query error
-
-# Read error stack traces
-cat .calcit-error.cirru  # (if it exists)
-
-# Search for the problematic code
 cr query find problem-symbol
-cr query usages namespace/definition
-
-# Review the definition in detail
-cr query def namespace/definition
+cr query def 'namespace/definition'
 ```
 
 ---
@@ -403,13 +160,16 @@ cr query def namespace/definition
 
 **Cirru (Read):**
 
-```cirru
-; Standard component structure
-defcomp comp-name (param1 param2 & options)
-  div $ {}
-    :class-name "|component-name"
-    :style $ comp-style
-  <> "|Content"
+```cirru.no-run
+; ns app.demo
+  :require
+    respo.core :refer $ defcomp div <>
+
+let
+    comp-name $ fn (param1 param2)
+      respo.core/div
+        {} $ :class-name "|component-name"
+        respo.core/<> "|Content"
 ```
 
 **JSON AST (Write - for `cr edit`):**
@@ -429,7 +189,7 @@ defcomp comp-name (param1 param2 & options)
 
 ### 2. State Management Pattern
 
-```cirru
+```cirru.no-check
 ; Define store atom at app.core level
 defatom *store $ {}
   :states $ {}
@@ -451,10 +211,12 @@ defn updater (store op)
 
 ### 3. Rendering Pattern
 
-```cirru
+```cirru.no-check
 ; Initial render
 defn render-app! ()
-  render! mount-point (comp-container @*store) dispatch!
+  render-with! mount-point
+    fn () $ comp-container @*store
+    , dispatch!
 
 ; Watch for store changes
 add-watch *store :changes $ fn ()
@@ -471,7 +233,7 @@ defn reload! ()
 
 ### 4. DOM Element Creation
 
-```cirru
+```cirru.no-check
 ; Using predefined elements (defn wrappers for create-element)
 div $ {} (<> "text")
 button $ {} (<> "Click me")
@@ -491,23 +253,45 @@ list-> $ {}
     :c $ comp-item item-3
 ```
 
+For keyed lists, call `memo-comp-by` while the tree builder passed to
+`render-with!` is running. It reuses the exact `Component` value when the component
+function, key, and all arguments are unchanged; this lets diffing stop immediately
+at that subtree. Keys not visited in the latest frame are pruned automatically.
+
+```cirru.no-check
+list->
+  {} (:class-name |task-list)
+  -> tasks .to-list .reverse $ map
+    fn (task)
+      let
+          task-id $ :id task
+        [] task-id $ memo-comp-by task-id comp-task (>> states task-id) task
+```
+
+Use stable domain IDs as keys. A `nil` key deliberately bypasses memoization. Call
+`clear-cache!` during hot reload to clear both managed component caches and legacy
+`memof` caches.
+
 ### 5. Styling Pattern
 
 **A. Dynamic Inline Styles (Style Maps)**
 
-```cirru
-; Define styles as maps
-def style-container $ {}
-  :display "|flex"
-  :padding "|10px"
-  :background-color "|#f0f0f0"
+```cirru.no-run
+; ns app.demo
 
-; Conditional styles
-defn style-for-state (state)
-  if (= state :active)
-    assoc style-container :background-color "|#3388ff"
-    style-container
+let
+    style-container $ {}
+      :display "|flex"
+      :padding "|10px"
+      :background-color "|#f0f0f0"
+    style-for-state $ fn (state)
+      if (= state :active)
+        assoc style-container :background-color "|#3388ff"
+        , style-container
+  style-for-state :active
+```
 
+```cirru.no-check
 ; Merge styles
 let
   base $ {} (:color "|black")
@@ -519,37 +303,29 @@ let
 
 `defstyle` is a macro that generates CSS classes and injects them into `<style>` tags. Use it for static styles that don't need runtime computation.
 
-```cirru
-; Import from respo.css
-ns my.namespace
-  :require (respo.css :refer $ defstyle)
+```cirru.no-run
+; ns my.namespace
+  :require
+    respo.css :refer $ defstyle
 
-; Basic usage: & refers to current element
-defstyle style-button $ {}
-  |& $ {} (:padding "|8px 16px") (:border-radius "|4px")
-    :background-color $ hsl 200 80 50
-    :color "|white"
-
-; Pseudo-classes: :hover, :focus, :active, etc.
-defstyle style-link $ {}
-  |& $ {} (:color "|blue") (:text-decoration :none)
-  |&:hover $ {} (:text-decoration :underline)
-
-; Pseudo-elements: ::before, ::after
-defstyle style-text $ {}
-  |& $ {} (:font-size "|14px") (:line-height "|1.6")
-  |&::before $ {} (:content "|\"→ \"")
-
-; Media queries using 'contained
-defstyle style-responsive $ {}
-  |& $ {} (:font-family "|Avenir,Verdana")
-  |& $ {} ('contained "|@media only screen and (max-width: 600px)")
-    :background-color $ hsl 0 0 90
-
-; Usage in component (returns className string)
-div
-  {} $ :class-name style-button
-  <> "|Click Me"
+let
+    style-button $ respo.css/defstyle style-button $ {}
+      |& $ {} (:padding "|8px 16px") (:border-radius "|4px")
+        :background-color $ respo.util.format/hsl 200 80 50
+        :color "|white"
+    style-link $ respo.css/defstyle style-link $ {}
+      |& $ {} (:color "|blue") (:text-decoration :none)
+      |&:hover $ {} (:text-decoration :underline)
+    style-text $ respo.css/defstyle style-text $ {}
+      |& $ {} (:font-size "|14px") (:line-height "|1.6")
+      |&::before $ {} (:content "|\"→ \"")
+    style-responsive $ respo.css/defstyle style-responsive $ {}
+      |& $ {} (:font-family "|Avenir,Verdana")
+      |& $ {} ('contained "|@media only screen and (max-width: 600px)")
+        :background-color $ respo.util.format/hsl 0 0 90
+  respo.core/div
+    {} $ :class-name style-button
+    respo.core/<> "|Click Me"
 ```
 
 **Key Points:**
@@ -577,7 +353,7 @@ cr eval 'thread-first ({} (:display "|flex") (:color "|red") (:padding "|10px"))
 
 **Inline Style Object Format:**
 
-```cirru
+```cirru.no-check
 # Map format (key-value pairs)
 my-styles $ {}
   :display "|flex"
@@ -590,7 +366,7 @@ my-styles $ {}
 
 **DOM Event Handlers:**
 
-```cirru
+```cirru.no-check
 ; Simple click handler
 div
   {}
@@ -618,7 +394,7 @@ div
 
 Components can define custom listeners that respond to events sent via `send-to-component!`. This is useful for global shortcuts, external triggers, or testing.
 
-```cirru
+```cirru.no-check
 ; Define a listener function that returns a RespoListener record
 defn on-keydown (cursor state)
   %{} respo.schema/RespoListener (:name :on-keydown)
@@ -647,7 +423,7 @@ defcomp comp-with-listener (states data)
 
 Use `send-to-component!` (from `respo.controller.client`) to programmatically send events to the component tree:
 
-```cirru
+```cirru.no-check
 ; Send keyboard event to all listening components
 send-to-component! $ :: :keydown
   {} $ :key "|m"
@@ -679,7 +455,7 @@ js/window.setTimeout
 
 Declare the type slot once at the application entry point, binding it to your `Op` enum:
 
-```cirru
+```cirru.no-check
 ; respo.main/main!
 defn main! ()
   bind-type :dispatch-op respo.app.schema/Op
@@ -692,7 +468,7 @@ defn main! ()
 
 Functions that accept a dispatch callback should annotate its argument with `*dispatch-op`:
 
-```cirru
+```cirru.no-check
 ; respo.app.core/dispatch!
 defn dispatch! (op ? op-data)
   ...
@@ -715,7 +491,7 @@ schema $ :: :fn
 
 Inside event handlers of DOM props (e.g., `:on-click`), write dispatch calls using the `::` shorthand. The compiler resolves the type slot and rewrites automatically:
 
-```cirru
+```cirru.no-check
 ; Short form (compiler rewrites to %:: Op :toggle (:id task))
 button $ {}
   :on-click $ fn (e d!)
@@ -760,16 +536,16 @@ The auto-rewrite uses the `Op` enum type resolved from `*dispatch-op`. If you wr
 ```bash
 # Check if render-app! is being called
 cr query find render-app!
-cr query usages respo.main/render-app!
+cr query usages 'respo.main/render-app!'
 
 # Verify store watcher is set up
-cr query def respo.app.core/dispatch!
-cr query def respo.main/main!
+cr query def 'respo.app.core/dispatch!'
+cr query def 'respo.main/main!'
 ```
 
 **Solution Pattern**:
 
-```cirru
+```cirru.no-check
 ; Ensure watch is on *store
 add-watch *store :changes $ fn ()
   render-app!
@@ -789,18 +565,18 @@ defn reload! ()
 
 ```bash
 # Check updater function logic
-cr query def respo.app.updater/updater
+cr query def 'respo.app.updater/updater'
 
 # Verify dispatch! is calling updater correctly
-cr query def respo.app.core/dispatch!
+cr query def 'respo.app.core/dispatch!'
 
 # Check the state path in component
-cr query def respo.app.comp.container/comp-container
+cr query def 'respo.app.comp.container/comp-container'
 ```
 
 **Solution Pattern**:
 
-```cirru
+```cirru.no-check
 ; Verify tag-match pattern matches dispatched action
 tag-match op
   (:action-name params) $
@@ -818,16 +594,16 @@ dispatch! [:action-name actual-value]
 
 ```bash
 # Check effect definition
-cr query def respo.core/defeffect  # macro documentation
+cr query def 'respo.core/defeffect'  # macro documentation
 
 # Find effect in component
 cr query find my-effect
-cr query usages respo.app.comp.task/my-effect
+cr query usages 'respo.app.comp.task/my-effect'
 ```
 
 **Solution Pattern**:
 
-```cirru
+```cirru.no-check
 ; Effects must be first in component body
 defcomp comp-with-effect (props)
   []
@@ -850,15 +626,15 @@ defeffect my-effect (initial-value)
 
 ```bash
 # Check reload! function
-cr query def respo.main/reload!
+cr query def 'respo.main/reload!'
 
 # Verify clear-cache! is called
-cr query usages respo.core/clear-cache!
+cr query usages 'respo.core/clear-cache!'
 ```
 
 **Solution Pattern**:
 
-```cirru
+```cirru.no-check
 ; clear-cache! must be called during reload
 defn reload! ()
   remove-watch *store :changes
@@ -872,107 +648,30 @@ defn reload! ()
 
 ## Modification Strategy: Safe Editing Guide
 
-### Before any edit, follow this checklist:
-
-1. **Understand the context**
-
-   ```bash
-   cr query ns namespace-name  # See imports and doc
-   cr query peek namespace-name/def-name  # See signature
-   ```
-
-2. **Map the exact location**
-
-   ```bash
-   cr tree show namespace-name/def-name -p "" -d 2  # Overview
-   cr tree show namespace-name/def-name -p "2" -d 2  # Check section
-   cr tree show namespace-name/def-name -p "2,1" -d 2  # Precise location
-   ```
-
-3. **Make surgical change**
+结构化编辑操作的完整参考见 `cr docs agents --full`。修改前先执行：
 
 ```bash
-# JSON inline (recommended)
-cr tree replace namespace-name/def-name -p "2,1,0" -j '"new-value"'
-
-# Or from stdin (JSON format)
-echo '"new-value"' | cr tree replace namespace-name/def-name -p "2,1,0" -s -J
-```
-
-4. **Verify immediately**
-   ```bash
-   cr tree show namespace-name/def-name -p "2,1"  # Confirm change
-   cr --check-only  # Verify syntax
-   ```
-
-### Common edit operations:
-
-```bash
-# Replace a value (JSON inline)
-cr tree replace ns/def -p "2,1,0" -j '"new-value"'
-
-# Insert before a position (JSON)
-cr tree insert-before ns/def -p "2,1" -j '["new", "element"]'
-
-# Insert after a position (JSON)
-cr tree insert-after ns/def -p "2,1" -j '["new", "element"]'
-
-# Delete a node
-cr tree delete ns/def -p "2,1,0"
-
-# Insert as child (first child)
-cr tree insert-child ns/def -p "2,1" -j '"child-value"'
-
-# Append as child (last child, from stdin)
-echo '"child-value"' | cr tree append-child ns/def -p "2,1" -s -J
+cr query ns namespace-name
+cr query peek '<namespace/def>'
+cr tree show '<namespace/def>' --path @  --depth 2
+cr tree show '<namespace/def>' --path @2 --depth 2
+cr tree replace '<namespace/def>' --path @2.1.0 --code 'quote |new-value'
+cr tree show '<namespace/def>' --path @2.1  # 确认
+cr --check-only
 ```
 
 ---
 
 ## Testing and Validation
 
-### Basic validation
+详见 `cr docs agents --full`。常用验证命令：
 
 ```bash
-# Syntax check only (no execution)
-cr --check-only
-
-# Check JavaScript compilation
-cr js --check-only
-
-# Run application once
-cr
-
-# Compile to JS once
-cr js
-```
-
-### Test-driven development
-
-```bash
-# Look at test files
-cr query defs respo.test.main
-cr query def respo.test.main/test-fn
-
-# Run tests
-cr  ; (if init-fn runs tests)
-```
-
-### Error diagnosis
-
-```bash
-# View error file
-cr query error
-cat .calcit-error.cirru
-
-# Search for the problematic definition
-cr query find problem-name
-
-# Check the full definition
-cr query def namespace/problem-name
-
-# Validate dependencies
-cr query ns namespace-name  # Check imports
+cr --check-only           # 语法检查
+cr js --check-only        # JS 编译检查
+cr                        # 运行
+cr query error            # 查看错误
+cr query def 'respo.test.main/test-fn'
 ```
 
 ---
@@ -981,52 +680,21 @@ cr query ns namespace-name  # Check imports
 
 ### ⚠️ Critical Rules
 
-1. **NEVER directly edit `calcit.cirru` or `compact.cirru`** with text editors
-   - Use `cr edit` commands instead
-   - These are serialized AST structures, not human-readable code
-
-2. **ALWAYS use relative paths for documentation links**
-   - Use `../` and `../../` for navigation
-   - This allows easy file discovery for LLM tools
-
-3. **ALWAYS check syntax before assuming it's correct**
-
-   ```bash
-   cr --check-only
-   ```
-
-4. **ALWAYS verify modifications work**
-
-   ```bash
-   cr tree show namespace/def -p "modified-path"  # Confirm change
-   cr --check-only  # Check syntax
-   cr # Test run
-   ```
-
-5. **Use peek before def** to reduce token consumption
-   ```bash
-   cr query peek ns/def  # Light summary
-   cr query def ns/def  # Full AST (use only if needed)
-   ```
+1. **NEVER directly edit `calcit.cirru`** — 使用 `cr edit` 命令操作 AST
+2. **ALWAYS use relative paths** for documentation links
+3. **运行 `cr --check-only` 验证语法**
+4. **修改后立即验证**：`cr tree show` + `cr --check-only`
+5. **优先 `cr query peek`** 看签名，需要时再用 `cr query def`
 
 ### 🎯 Optimization Tips for Token Usage
 
 ```bash
-# Fast exploration with limited output
-cr query peek respo.core/defcomp              # 5-10 lines
-cr query defs respo.app.updater               # Quick list
-
-# Slower but comprehensive
-cr query def respo.app.updater/updater        # Full JSON AST
-
-# Use -d flag to limit JSON depth
-cr tree show ns/def -p "2,1" -d 1            # Shallow
-cr tree show ns/def -p "2,1" -d 3            # Medium
-cr tree show ns/def -p "2,1"                 # Full (default)
-
-# Search before diving deep
-cr query find my-function                     # Find location first
-cr query usages ns/def                        # See usage patterns
+cr query peek 'respo.core/defcomp'              # 5-10 行签名
+cr query def 'respo.app.updater/updater'        # 完整 AST
+cr tree show 'ns/def' --path @2.1 --depth 1            # 浅层
+cr tree show 'ns/def' --path @2.1 --depth 3            # 中层
+cr query find my-function                       # 先搜再深入
+cr query usages 'ns/def'
 ```
 
 ### 📖 Documentation Strategy
@@ -1045,32 +713,15 @@ When stuck, use these resources in order:
 
 ## Quick Reference
 
-### Most Used Commands
+完整参考见 `cr docs agents --full`。Respo 常用命令：
 
 ```bash
-# Exploration (read-only, no changes)
-cr query ns                              # List namespaces
-cr query ns respo.core                   # Read namespace details
-cr query defs respo.app.core             # List definitions
-cr query peek respo.core/render!         # Quick peek
-cr query def respo.core/render!          # Full definition
-cr query find render!                    # Search globally
-cr query usages respo.core/render!       # Find usages
-
-# Navigation (precise editing)
-cr tree show ns/def -p "" -d 1           # View structure
-cr tree show ns/def -p "2,1" -d 1        # Drill down
-cr tree show ns/def -p "2,1,0"           # Confirm target
-
-# Modification (careful!)
-cr edit def ns/def -j '["defn", "func", [], "body"]'
-cr tree replace ns/def -p "2,1,0" -j '"value"'
-cr edit rm-def ns/def
-
-# Validation
-cr --check-only                          # Check syntax
-cr query error                           # View errors
-cr                                       # Test run
+cr query def 'respo.core/render!'
+cr query usages 'respo.core/render!'
+cr tree show 'ns/def' --path @2.1 --depth 1
+cr edit def 'ns/def' --code '["defn", "func", [], "body"]'
+cr tree replace 'ns/def' --path @2.1.0 --code 'quote |value'
+cr --check-only
 ```
 
 ### File Paths in Documentation
@@ -1079,12 +730,12 @@ When referring to files from within `docs/`:
 
 - `./` - same directory
 - `../` - parent (docs/ to root)
-- `../../` - grandparent (docs/apis/ to root)
+- `../../` - grandparent (for example from `docs/guide/` back to project root)
 
-Example from `docs/apis/defcomp.md`:
+Example from `docs/guide/server-rendering.md`:
 
 ```markdown
-- [Back to README](../../README.md)
-- [API Overview](../api.md)
-- [Another API](./render!.md)
+- [← Back to README](../../README.md)
+- [Beginner Guide](../beginner-guide.md)
+- [API Reference](../api.md)
 ```

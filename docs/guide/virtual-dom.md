@@ -22,7 +22,7 @@ entry_for:
 
 There are elements and components before they are actually rendered. After rendering, all elements have specific definitions:
 
-```cirru
+```cirru.no-check
 defrecord Element :name :coord :attrs :style :event :children
 
 defrecord Component :name :effects :tree
@@ -34,7 +34,7 @@ defrecord Effect :name :coord :args :method
 
 If you define component like this:
 
-```cirru
+```cirru.no-check
 div
   {}
     :style $ {}
@@ -71,7 +71,7 @@ you can [transform the virtual DOM][transform] in the runtime:
 
 [transform]: https://github.com/Respo/respo-border/blob/master/compiled/src/respo_border/transform/border.cljs
 
-```cirru
+```cirru.no-check
 defn interpose-borders (element border-style)
   if (contains? element :children)
     update element :children $ fn (children)

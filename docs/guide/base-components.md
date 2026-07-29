@@ -23,7 +23,7 @@ entry_for:
 
 There are some base components for building apps built inside Respo:
 
-```cirru
+```cirru.no-check
 respo.comp.space/comp-space
 respo.comp.space/=< ; "which is an alias for `comp-space`"
 respo.comp.inspect/comp-inspect
@@ -44,7 +44,7 @@ Respo components are pure, without side effects.
 
 It's tricky to listen to global events since Respo does not allow `useEffect` or `useMounted`. Respo added a component for listening to global keydowns:
 
-```cirru
+```cirru.no-check
 respo.comp.global-keydown :refer $ comp-global-keydown
 
 comp-global-keydown

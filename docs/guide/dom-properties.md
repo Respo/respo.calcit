@@ -36,7 +36,7 @@ Properties(except for `style` and `event`) are specified in `attrs` field. `styl
 
 The impelementation details is:
 
-```cirru
+```cirru.no-check
 defn replace-prop (target op)
   let
       prop-name (dashed->camel (name (key op)))

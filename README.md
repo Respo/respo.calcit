@@ -28,77 +28,82 @@ In `package.cirru` and run `caps`:
 
 DOM syntax
 
-```cirru
-ns app.demo $ :require
+```cirru.no-run
+; ns app.demo $ :require
   respo.core :refer $ div
 
-defn comp-demo (dispatch!)
-  div
-    {}
-      :class-name "|demo-container"
-      :style $ {} (:color :red)
-      :on-click $ fn (event d!)
-        d! :clicked
-    div $ {}
+let
+    comp-demo $ fn (dispatch!)
+      respo.core/div
+        {}
+          :class-name "|demo-container"
+          :style $ {} (:color :red)
+          :on-click $ fn (event dispatch!)
+            dispatch! :clicked
+        respo.core/div $ {}
 ```
 
-More examples adapted from `compact.cirru`:
+More examples adapted from `calcit.cirru`:
 
-```cirru
-ns app.demo $ :require
+```cirru.no-run
+; ns app.demo $ :require
   respo.core :refer $ defcomp a <>
 
-defcomp comp-link (href text)
-  a
-    {} $ :href href
-    <> text
+let
+    comp-link $ fn (href text)
+      respo.core/a
+        {} $ :href href
+        respo.core/<> text
 ```
 
-```cirru
-ns app.demo $ :require
+```cirru.no-run
+; ns app.demo $ :require
   respo.core :refer $ list-> div
 
-defn comp-list ()
-  list-> ({})
-    [] $ [] :a
-      div $ {}
+let
+    comp-list $ fn ()
+      respo.core/list->
+        {}
+        {}
+          :a $ respo.core/div ({})
 ```
 
 Text Node:
 
-```cirru
-ns app.demo $ :require
+```cirru.no-run
+; ns app.demo $ :require
   respo.core :refer $ <>
 
-defn comp-text (content)
-  <> content
+let
+    comp-text $ fn (content)
+      respo.core/<> content
 
   ; with styles
-  <> content $ {}
+  respo.core/<> "|demo" $ {}
     :color :red
     :font-size 14
 ```
 
 Component definition:
 
-```cirru
-ns app.demo $ :require
+```cirru.no-run
+; ns app.demo $ :require
   respo.core :refer $ div <>
 
 let
     comp-container $ fn (content)
-      div
+      respo.core/div
         {}
           :class-name |demo-container
           :style $ {} (:color :red)
-        <> content
+        respo.core/<> content
 ```
 
 App initialization:
 
-```cirru
-ns app.demo $ :require
-  respo.core :refer $ render!
+```cirru.no-run
+; ns app.demo $ :require
+  respo.core :refer $ render-with!
 
 ; initialize store and update store
 let
@@ -113,9 +118,11 @@ let
     comp-container $ fn (state) state
   dispatch! $ :: :TODO 1 2
 
-  ; render to the DOM
+  ; build the tree inside a managed memo frame, then render to the DOM
   defn render-app! ()
-    render! mount-point (comp-container @*store) dispatch!
+    respo.core/render-with! mount-point
+      fn () $ comp-container @*store
+      , dispatch!
 ```
 
 Rerender on store changes:
@@ -128,10 +135,29 @@ let
     render-app!
 ```
 
+Memoize keyed list components inside the tree built by `render-with!`:
+
+```cirru.no-check
+; ns app.demo $ :require
+  respo.core :refer $ list-> memo-comp-by >>
+
+list->
+  {} (:class-name |task-list)
+  -> tasks .to-list .reverse $ map
+    fn (task)
+      let
+          task-id $ :id task
+        [] task-id $ memo-comp-by task-id comp-task (>> states task-id) task
+```
+
+`memo-comp-by` matches the component function, key, and complete argument list. Each
+`render-with!` call records active keys and prunes entries that disappeared from the
+latest tree. Passing `nil` as the key bypasses caching.
+
 Reset virtual DOM caching during hot code swapping, and rerender:
 
-```cirru
-ns app.demo $ :require
+```cirru.no-run
+; ns app.demo $ :require
   respo.core :refer $ clear-cache!
 
 let
@@ -142,14 +168,14 @@ let
   remove-watch *store :changes
   add-watch *store :changes $ fn ()
     render-app!
-  clear-cache!
+  respo.core/clear-cache!
   render-app!
 ```
 
 Adding effects to component:
 
-```cirru
-ns app.demo $ :require
+```cirru.no-run
+; ns app.demo $ :require
   respo.core :refer $ div
 
 let
@@ -158,16 +184,16 @@ let
         println action
         ; action could be :mount :update :amount
         when (= :mount action) nil
-  defn comp-a (text)
-    []
-      effect-a text
-      div {}
+    comp-a $ fn (text)
+      []
+        effect-a text
+        respo.core/div ({})
 ```
 
 Define a hooks plugin based on Calcit Record, better use a pure function:
 
-```cirru
-ns app.demo $ :require
+```cirru.no-run
+; ns app.demo $ :require
   respo.core :refer $ div <>
 
 let
@@ -177,7 +203,7 @@ let
           :render $ fn (self) (nth self 1)
           :show $ fn (self d! ? text) nil
         , :plugin-name
-        div {} (<> "|Demo")
+        respo.core/div ({}) (respo.core/<> "|Demo")
 ```
 
 ### License
@@ -213,33 +239,42 @@ This index helps LLM tools automatically fetch and reference documentation using
 | Server Rendering | [docs/guide/server-rendering.md](docs/guide/server-rendering.md) | SSR capabilities                   |
 | Pros and Cons    | [docs/guide/pros-and-cons.md](docs/guide/pros-and-cons.md)       | Framework comparison               |
 
-### API Reference (see `docs/apis/`)
+### API Reference
 
-Core macros and functions for building applications:
+Core API descriptions are now stored in source doc strings inside `calcit.cirru`.
+Use `docs/api.md` for the overview, or inspect a definition directly with Calcit CLI:
 
-| API                  | Path                                                               | Purpose                        |
-| -------------------- | ------------------------------------------------------------------ | ------------------------------ |
-| `defcomp`            | [docs/apis/defcomp.md](docs/apis/defcomp.md)                       | Define components with macro   |
-| `defeffect`          | [docs/apis/defeffect.md](docs/apis/defeffect.md)                   | Define lifecycle effects       |
-| `div`                | [docs/apis/div.md](docs/apis/div.md)                               | Create div elements            |
-| `create-element`     | [docs/apis/create-element.md](docs/apis/create-element.md)         | Dynamically create elements    |
-| `render!`            | [docs/apis/render!.md](docs/apis/render!.md)                       | Sync virtual DOM to real DOM   |
-| `render-app`         | [docs/apis/render-app.md](docs/apis/render-app.md)                 | Application rendering          |
-| `expand-tag`         | [docs/apis/expand-tag.md](docs/apis/expand-tag.md)                 | Expand tag shortcuts           |
-| `comp-space`         | [docs/apis/comp-space.md](docs/apis/comp-space.md)                 | Spacing component              |
-| `comp-inspect`       | [docs/apis/comp-inspect.md](docs/apis/comp-inspect.md)             | Inspection/debugging component |
-| `clear-cache!`       | [docs/apis/clear-cache!.md](docs/apis/clear-cache!.md)             | Clear memoization cache        |
-| `patch-instance!`    | [docs/apis/patch-instance.md](docs/apis/patch-instance.md)         | Patch DOM instances            |
-| `activate-instance`  | [docs/apis/activate-instance.md](docs/apis/activate-instance.md)   | Activate DOM instances         |
-| `pick-states`        | [docs/apis/pick-states.md](docs/apis/pick-states.md)               | Extract component states       |
-| `purify-element`     | [docs/apis/purify-element.md](docs/apis/purify-element.md)         | Clean element markup           |
-| `mute-element`       | [docs/apis/mute-element.md](docs/apis/mute-element.md)             | Silence element output         |
-| `make-html`          | [docs/apis/make-html.md](docs/apis/make-html.md)                   | Generate HTML                  |
-| `make-string`        | [docs/apis/make-string.md](docs/apis/make-string.md)               | Serialize to string            |
-| `find-element-diffs` | [docs/apis/find-element-diffs.md](docs/apis/find-element-diffs.md) | Find DOM differences           |
-| `apply-dom-changes`  | [docs/apis/apply-dom-changes.md](docs/apis/apply-dom-changes.md)   | Apply DOM patches              |
-| `realize-ssr!`       | [docs/apis/realize-ssr\_.md](docs/apis/realize-ssr_.md)            | Server-side rendering          |
-| `list->`             | [docs/apis/list->.md](docs/apis/list->.md)                         | Create list containers         |
+```bash
+cr query def respo.core/defcomp
+cr query def respo.core/render!
+cr query def respo.render.html/make-string
+```
+
+| API                  | Namespace                                    | Purpose                        |
+| -------------------- | -------------------------------------------- | ------------------------------ |
+| `defcomp`            | `respo.core/defcomp`                         | Define components with macro   |
+| `defeffect`          | `respo.core/defeffect`                       | Define lifecycle effects       |
+| `div`                | `respo.core/div`                             | Create div elements            |
+| `create-element`     | `respo.core/create-element`                  | Dynamically create elements    |
+| `render!`            | `respo.core/render!`                         | Sync virtual DOM to real DOM   |
+| `render-with!`       | `respo.core/render-with!`                    | Render with managed memo frame |
+| `memo-comp-by`       | `respo.core/memo-comp-by`                    | Memoize keyed components       |
+| `<>`                 | `respo.core/<>`                              | Create text nodes              |
+| `comp-space`         | `respo.comp.space/comp-space`                | Spacing component              |
+| `comp-inspect`       | `respo.comp.inspect/comp-inspect`            | Inspection/debugging component |
+| `clear-cache!`       | `respo.core/clear-cache!`                    | Clear memoization cache        |
+| `patch-instance!`    | `respo.controller.client/patch-instance!`    | Patch DOM instances            |
+| `activate-instance!` | `respo.controller.client/activate-instance!` | Activate DOM instances         |
+| `>>`                 | `respo.core/>>`                              | Create state cursors           |
+| `purify-element`     | `respo.util.format/purify-element`           | Clean element markup           |
+| `mute-element`       | `respo.util.format/mute-element`             | Silence element output         |
+| `make-string`        | `respo.render.html/make-string`              | Serialize to string            |
+| `find-element-diffs` | `respo.render.diff/find-element-diffs`       | Find DOM differences           |
+| `apply-dom-changes`  | `respo.render.patch/apply-dom-changes`       | Apply DOM patches              |
+| `realize-ssr!`       | `respo.core/realize-ssr!`                    | Server-side rendering          |
+| `list->`             | `respo.core/list->`                          | Create list containers         |
+
+Legacy page names such as `make-html` and `render-app` were removed during the migration to source doc strings.
 
 ### Agent Workflows
 

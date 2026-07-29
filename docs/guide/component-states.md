@@ -34,13 +34,17 @@ Unlike React, states in Respo is maintained manually for stablility during hot c
 At first, states is a HashMap inside the store:
 
 ```cirru
-defatom *store {}
-  :states $ {}
+; ns app.demo
+
+let
+    *store $ atom $ {}
+      :states $ {}
+  :states @*store
 ```
 
 By design, if states is added, you would a tree:
 
-```cirru
+```cirru.no-check
 {}
   :states $ {}
     :data $ {}
@@ -66,7 +70,7 @@ You also notice that its structure is simpler than a DOM tree, it only contains 
 
 When you call `(>> states :todolist)`, you get new `states` variable for a child component:
 
-```cirru
+```cirru.no-check
 {}
   ; "generated cursor, nil at top level"
   :cursor $ [] :todolist
@@ -101,13 +105,19 @@ Then you call `(>> states "task-1-id")` and you get new `states` for child "task
 For state inside each component, it's `nil` at first.
 You want to have an initial state, use `or` to provide one.
 
-```cirru
-defcomp comp-task (states)
-  let
-      cursor (:cursor states)
-      state $ or (:data states) $ {}
-        :draft "|empty"
-    (div {}))
+```cirru.no-run
+; ns app.demo
+  :require
+    respo.core :refer $ defcomp div
+
+let
+    comp-task $ fn (states)
+      let
+          cursor (:cursor states)
+          state $ or (:data states) $ {}
+            :draft "|empty"
+        respo.core/div $ {}
+  , comp-task
 ```
 
 By accessing `(:data states)`, you get `nil`, so `&{} :draft "|empty"` is used.
@@ -115,15 +125,22 @@ After there's data in states, you get data that was set.
 
 Then you want to update component state
 
-```cirru
-defcomp comp-task (states)
-  let
-      cursor (:cursor states)
-      state $ or (:data states) $ {}
-        :draft "|empty"
-    div $ {}
-      :on-click $ fn (e dispatch!)
-        dispatch! cursor (assoc state :draft "|New state")
+```cirru.no-run
+; ns app.demo
+  :require
+    respo.core :refer $ defcomp div
+
+let
+    comp-task $ fn (states)
+      let
+          cursor (:cursor states)
+          state $ or (:data states) $ {}
+            :draft "|empty"
+        respo.core/div
+          {}
+            :on-click $ fn (e dispatch!)
+              dispatch! cursor (assoc state :draft "|New state")
+  , comp-task
 ```
 
 So `(dispatch! cursor state)` sends the new state.
@@ -132,7 +149,7 @@ The last step to to update global states with `respo.cursor/update-states`.
 Internally `(dispatch! cursor op-data)` will be transformed to `(dispatch! :states ([] cursor op-data))`.
 And then in `updater` you add:
 
-```cirru
+```cirru.no-check
 case-default op
   ; other actions
   do store
@@ -167,7 +184,7 @@ Call `(dispatch! cursor {:input "|New draft"})` and global store will become:
 
 In `comp-task` of "task-1", you also get `state` and `cursor`, so call `(dispatch! cursor {:draft "New text"})` you will get:
 
-```cirru
+```cirru.no-check
 {}
   :states $ {}
     :todolist $ {}

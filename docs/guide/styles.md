@@ -35,10 +35,10 @@ Use `defstyle` for static reusable styles, and combine it with `:class-name` on 
 
 Styles are represented in HashMap so it's very trival to extend with `merge` and `if`:
 
-```cirru
+```cirru.no-check
 def style-a $ {}
   :line-height 1.6
-  :color (hsl 0 0 80)
+  :color (respo.util.format/hsl 0 0 80)
 
 def style-b $ merge style-a
   {}
@@ -53,10 +53,10 @@ Also I prepared a function called [`hsl`](https://github.com/mvc-works/hsl.clj) 
 
 In Respo, style updates are defined with direct accessing to `el.style`:
 
-```cirru
+```cirru.no-check
 defn add-style (target op)
   let
-      style-name (dashed->camel (name (key op))
+      style-name (dashed->camel (name (key op)))
       style-value (val op)
     aset (.-style target) style-name style-value
 
@@ -85,14 +85,18 @@ A macro `respo.css/defstyle` has been added for add `<style>...</style>` referre
 
 define style:
 
-```cirru
-defstyle style-input $ {}
+```cirru.no-run
+; ns app.demo
+  :require
+    respo.css :refer $ defstyle
+
+respo.css/defstyle style-input $ {}
   |& $ {} (:font-size |16px)
     :line-height |24px
     :padding "|0px 8px"
     :outline :none
     :min-width |300px
-    :background-color $ hsl 0 0 94
+    :background-color "|#f0f0f0"
     :border :none
 ```
 
@@ -103,11 +107,11 @@ Use string selectors such as `|&`, `|&:hover`, or `|input&`. Avoid writing bare 
 `defstyle` works best for static styles: fixed font sizes, colors, gaps, borders, paddings, hover rules, and reusable layout rules.
 Keep runtime-dependent values in `:style`, for example dynamic width, position, height, or values computed from state.
 
-```cirru
+```cirru.no-check
 defstyle style-card $ {}
   |& $ {} (:padding |12px 16px)
     :border-radius |12px
-    :background-color $ hsl 0 0 100
+    :background-color $ respo.util.format/hsl 0 0 100
 
 div $ {}
   :class-name style-card
@@ -125,12 +129,12 @@ When moving an inline style map into `defstyle`, keep the change mechanical:
 3. wrap the extracted map with `defstyle` using `|&` as the selector key;
 4. replace the original `:style` usage with `:class-name`.
 
-```cirru
+```cirru.no-check
 div $ {}
   :class-name $ str-spaced css/row style-preview-row
 ```
 
-```cirru
+```cirru.no-check
 defstyle style-preview-row $ {}
   |& $ {} (:gap |8px) (:flex-wrap :wrap)
     :align-items :flex-start
@@ -140,17 +144,17 @@ Be careful with string values like `|4px 10px`, `|1px solid `, or long text lite
 
 #### Calcit CLI workflow
 
-When the source is stored in `compact.cirru`, a stable workflow is:
+When the source is stored in `calcit.cirru`, a stable workflow is:
 
 ```bash
 # 1. locate the inline style leaf
-cr query search ':style' -f app.comp.container/comp-env-card
+cr query search ':style' --filter app.comp.container/comp-env-card
 
 # 2. inspect the surrounding props and find the actual style map path
-cr tree show app.comp.container/comp-env-card -p '3.2.4.2'
+cr tree show app.comp.container/comp-env-card --path '3.2.4.2'
 
 # 3. extract the style map itself, not the :style leaf
-cr edit split-def app.comp.container/comp-env-card -p '3.2.4.2.1.2.1' -n style-env-card-preview
+cr edit split-def app.comp.container/comp-env-card --path '3.2.4.2.1.2.1' --name style-env-card-preview
 ```
 
 After extraction, the new definition is often still a raw map. Wrap it into a `defstyle` definition:
@@ -162,26 +166,26 @@ cr query def app.comp.container/style-env-card-preview
 If the style contains tricky string values, prefer a snippet file instead of shell inline code:
 
 ```bash
-cr edit def app.comp.container/style-env-card-preview --overwrite -f .calcit-snippets/style-env-card-preview.cirru
+cr edit def app.comp.container/style-env-card-preview --overwrite --file .calcit-snippets/style-env-card-preview.cirru
 ```
 
 Then switch the original node from `:style` to `:class-name`:
 
 ```bash
-cr tree replace app.comp.container/comp-env-card -p '3.2.4.2.1' -e '{}
+cr tree replace app.comp.container/comp-env-card --path '3.2.4.2.1' --code 'quote $ {}
   :class-name $ str-spaced css/row-middle css/gap8 style-env-card-preview'
 ```
 
 Validate the extraction after each batch:
 
 ```bash
-cr query search ':style' -f app.comp.container/comp-env-card
+cr query search ':style' --filter app.comp.container/comp-env-card
 cr js
 ```
 
 `|&` will be replace by a string of `className`. So if you want to add rules for `:hover`, use the string selector `|&:hover`.
 
-```cirru
+```cirru.no-check
 input $ {} (:placeholder "|Text")
   :value $ :draft state
   :class-name style-input

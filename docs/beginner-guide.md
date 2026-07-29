@@ -42,7 +42,7 @@ Besides experiences on Web apps, you also need to know:
 
 Components are defined with a macro called `defcomp`:
 
-```cirru
+```cirru.no-check
 defcomp comp-space (w h)
   div $ {}
     :style $ {}
@@ -52,24 +52,24 @@ where `div` is a macro for creating virtual element for `<div>`.
 
 The full code looks like:
 
-```cirru
-ns respo.comp.space
+```cirru.no-run
+; ns respo.comp.space
   :require
     respo.core :refer $ defcomp div
 
-def style-space $ {}
-  :width "|1px"
-  :display "|inline-block"
-  :height "|1px"
-
-defn compute (w h)
-  if (some? w)
-    assoc style-space :width w
-    assoc style-space :height h
-
-defcomp comp-space (w h)
-  div $ {}
-    :style (compute w h)
+let
+    style-space $ {}
+      :width "|1px"
+      :display "|inline-block"
+      :height "|1px"
+    compute $ fn (w h)
+      if (some? w)
+        assoc style-space :width w
+        assoc style-space :height h
+    comp-space $ fn (w h)
+      respo.core/div $ {}
+        :style (compute w h)
+  , comp-space
 ```
 
 Internally, `defcomp` will expand the expression to:
@@ -87,13 +87,13 @@ defn comp-space (w h)
 
 So `comp-space` is a function:
 
-```cirru
+```cirru.no-check
 comp-space nil 16
 ```
 
 DOM properties are divided into `style` `on`(events) and attributes. Specify them in HashMaps or nothing:
 
-```cirru
+```cirru.no-check
 input
   {}
     :style $ {}
@@ -108,13 +108,13 @@ input
 
 `<>` is a macro, like alias:
 
-```cirru
+```cirru.no-check
 <> text style
 ```
 
 expands to
 
-```cirru
+```cirru.no-check
 span $ {}
   :inner-text text
   :style style
@@ -122,13 +122,13 @@ span $ {}
 
 Being a multiple arity macro, it also supports:
 
-```cirru
+```cirru.no-check
 <> text
 ```
 
 `=<` is an alias for `comp-space`, just use it like that:
 
-```cirru
+```cirru.no-check
 =< 8 nil
 ; (comp-space 8 nil)
 ```
@@ -137,7 +137,7 @@ Being a multiple arity macro, it also supports:
 
 A component can also be created with states, it also need a `cursor` for updating states:
 
-```cirru
+```cirru.no-check
 defcomp comp-demo (states
   let
       ; "passing togather with states"
@@ -163,7 +163,7 @@ Component states are not saved inside components, but as a tree in the store. Su
 
 Use `respo.core/>>` to specify a new branch of the state tree:
 
-```cirru
+```cirru.no-check
 comp-demo (>> states :demo)
 ```
 
@@ -182,7 +182,7 @@ Actually it's still `{:states {}}`, but it's like we got `nil` when you look int
 
 You need to handle states operation in the store with function `respo.cursor/update-states`:
 
-```cirru
+```cirru.no-check
 defatom *store $ {}
   :states $ {}
 
@@ -196,7 +196,7 @@ defn updater (store op op-data)
 In order to render, you need to define `store` and `states`.
 Use Atoms here since they are the data sources that change over time:
 
-```cirru
+```cirru.no-check
 defatom *store $ {}
   :states $ {}
 
@@ -222,14 +222,14 @@ Note that you need to define `dispatch!` function by yourself.
 
 To define effects, use `defeffect`:
 
-```cirru
+```cirru.no-check
 defeffect effect-a (x y) (action el at-place?)
   println "|action" action el
 ```
 
 A vector is required to add effects into component:
 
-```cirru
+```cirru.no-check
 defcomp comp-a (a b)
   []
     effect-a a b
@@ -246,7 +246,7 @@ Dispatching actions is not allowed inside effects, which is unlike React.
 
 Better to render on page load and changes of data sources:
 
-```cirru
+```cirru.no-check
 defn main! ()
   render-app!
   add-watch global-store :rerender render-app!
@@ -256,7 +256,7 @@ set! (.-onload js/window) main!
 
 To cooperate with hot swapping:
 
-```cirru
+```cirru.no-check
 defn reload! ()
   clear-cache!
   render-app!
@@ -270,7 +270,7 @@ Caching is a mechanism to speed up virtual DOM rendering. It's invalidated after
 To make state update, you need to pass a function to `:on-input` field.
 This function will be called with parameters of `event`(wrapped in `:original-event` of `e`), `dispatch!`(function we defined before). And you also need a cursor:
 
-```cirru
+```cirru.no-check
 input $ {}
   :value (:text task)
   :style style-input
@@ -280,7 +280,7 @@ input $ {}
 
 To handle a global action, call `dispatch!` with an action type and a parameter:
 
-```cirru
+```cirru.no-check
 div
   {}
     :style style-button
@@ -295,7 +295,7 @@ div
 
 Reusing components is easy. They are wrapped functions that return components:
 
-```cirru
+```cirru.no-check
 div
   {}
     :style style-task

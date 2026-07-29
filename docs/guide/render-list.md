@@ -22,7 +22,7 @@ entry_for:
 
 To render a list, you need use `respo.core/list->` with children in `key/value` pairs:
 
-```cirru
+```cirru.no-check
 list->
   {}
     :style $ {}
@@ -33,13 +33,13 @@ list->
 
 If the tag is `:div`, you can omit that and just write:
 
-```cirru
+```cirru.no-check
 list-> props children
 ```
 
 It's common pattern to use `->` to transform the list:
 
-```cirru
+```cirru.no-check
 list->
   {}
     :class-name "|task-list"
