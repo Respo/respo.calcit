@@ -16,6 +16,12 @@ cr docs agents --full
 - 仅在确有必要时使用 `hint-fn`，并优先采用 schema map 形式；避免旧 clause 写法。
 - 修改签名后，优先用 `cr js` 验证，确保不会因类型告警阻断编译。
 
+Typed dispatch / type slot:
+
+- Respo 通过 `respo.schema/*dispatch-op` 为事件回调传递应用级 `Op` 类型。应用应使用 `cr config set-type-slot :dispatch-op app.schema/Op` 为每个 entry 单独绑定，不要在 `main!` 中写 `bind-type` 或依赖 `with-type-slot` wrapper。
+- 修改 `d! $ :: ...`、事件 handler schema 或 entry 配置前，优先复用模块指南：`cr docs search 'typed dispatch' --module respo.calcit`，再运行 `cr docs read type-slots.md --full --module respo.calcit`。
+- 命名 entry 不继承默认 `:configs.type-slots`；用 `cr config type-slots [--entry name]` 确认实际绑定，并以同一个 `--entry` 运行 `--check-only` / `js`。
+
 然后 GPT 调用 `cr` 命令增量编辑源码, 在 `cr edit inc` 运行时触发重新编译.
 
 文档示例校验建议:

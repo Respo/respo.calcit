@@ -2,6 +2,7 @@
 {} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `cr query` to inspect and `cr edit`/`cr tree` to modify. Run `cr docs agents --full` first. Manual edits must follow format and schema conventions, then run `cr edit format`.") (:package |respo)
   :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.57)
     :modules $ [] |memof/ |calcit-test/
+    :type-slots $ {} (:dispatch-op |respo.app.schema/Op)
   :entries $ {}
   :files $ {}
     |respo.app.comp.container $ %{} :FileEntry

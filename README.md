@@ -28,7 +28,7 @@ In `package.cirru` and run `caps`:
 
 DOM syntax
 
-```cirru.no-run
+```cirru.no-check
 ; ns app.demo $ :require
   respo.core :refer $ div
 
@@ -233,6 +233,7 @@ This index helps LLM tools automatically fetch and reference documentation using
 | Component States | [docs/guide/component-states.md](docs/guide/component-states.md) | Managing component state           |
 | DOM Properties   | [docs/guide/dom-properties.md](docs/guide/dom-properties.md)     | DOM property binding               |
 | DOM Events       | [docs/guide/dom-events.md](docs/guide/dom-events.md)             | Event handling in Respo            |
+| Typed Dispatch   | [docs/guide/type-slots.md](docs/guide/type-slots.md)             | Entry-level `Op` binding and checks |
 | Styles           | [docs/guide/styles.md](docs/guide/styles.md)                     | CSS and styling approach           |
 | Render Lists     | [docs/guide/render-list.md](docs/guide/render-list.md)           | Efficient list rendering           |
 | Hot Swapping     | [docs/guide/hot-swapping.md](docs/guide/hot-swapping.md)         | Hot code reloading setup           |
