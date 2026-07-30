@@ -1,9 +1,9 @@
 
-{} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `cr query` to inspect and `cr edit`/`cr tree` to modify. Run `cr docs agents --full` first. Manual edits must follow format and schema conventions, then run `cr edit format`.") (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.58)
-    :modules $ [] |memof/ |calcit-test/
-    :type-slots $ {} (:dispatch-op |respo.app.schema/Op)
+{} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `cr query` to inspect and `cr edit`/`cr tree` to modify. Run `cr docs agents --full` first. Manual edits must follow format and schema conventions, then run `cr edit format`.") (:package |respo) (:version |0.16.58)
   :entries $ {}
+    :default $ {} (:description |) (:init-fn 'respo.main/main!) (:mode :js) (:reload-fn 'respo.main/reload!)
+      :modules $ [] |memof/ |calcit-test/
+      :type-slots $ {} (:dispatch-op |respo.app.schema/Op)
   :files $ {}
     |respo.app.comp.container $ %{} :FileEntry
       :defs $ {}
