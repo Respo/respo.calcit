@@ -16,16 +16,19 @@ cr docs agents --full
 - 仅在确有必要时使用 `hint-fn`，并优先采用 schema map 形式；避免旧 clause 写法。
 - 修改签名后，优先用 `cr js` 验证，确保不会因类型告警阻断编译。
 
+Typed dispatch / type slot:
+
+- Respo 通过 `respo.schema/*dispatch-op` 为事件回调传递应用级 `Op` 类型。应用应使用 `cr config set-type-slot :dispatch-op app.schema/Op` 为每个 entry 单独绑定，不要在 `main!` 中写 `bind-type` 或依赖 `with-type-slot` wrapper。
+- 修改 `d! $ :: ...`、事件 handler schema 或 entry 配置前，优先复用模块指南：`cr docs search 'typed dispatch' --module respo.calcit`，再运行 `cr docs read type-slots.md --full --module respo.calcit`。
+- 命名 entry 不继承默认 `:configs.type-slots`；用 `cr config type-slots [--entry name]` 确认实际绑定，并以同一个 `--entry` 运行 `--check-only` / `js`。
+
 然后 GPT 调用 `cr` 命令增量编辑源码, 在 `cr edit inc` 运行时触发重新编译.
 
 文档示例校验建议:
 
 - 对 README/文档中的 Cirru 代码块，使用 `check-md` 并显式加载当前项目 `calcit.cirru` 作为依赖:
   - `cr calcit.cirru docs check-md README.md --dep ./`
-- 若 README 代码块用到 `respo.core/clear-cache!`（依赖 `memof.once`），校验时额外添加 `memof` 依赖:
-  - `cr calcit.cirru docs check-md README.md --dep ./ --dep ~/.config/calcit/modules/memof/`
 - `--dep ./` 会按目录加载 `./calcit.cirru`，用于在代码块中访问 `respo.core` 等命名空间函数。
-- `--dep ~/.config/calcit/modules/memof/` 会按目录加载 `memof/compact.cirru`，避免 `memof.once/*` 相关解析失败。
 - 若代码块是“示意片段”而非可独立运行程序，优先标记为 `cirru.no-check`。
 - 若需要在单个代码块里串联多个表达式并共享中间值，使用 `let` 显式绑定；默认不会把前面表达式自动注册为全局定义。
 

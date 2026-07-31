@@ -33,7 +33,7 @@ The Respo project is a virtual DOM library written in Calcit-js, containing:
 - **Compiled source**: `calcit.cirru` (13806 lines) - full AST representation
 - **Namespaces**: 33 total namespaces organized by functionality
 - **Version**: 0.16.21
-- **Dependencies**: memof (memoization), lilac (UI utilities), calcit-test (testing)
+- **Dependencies**: calcit-test (testing)
 
 ### Core Namespace Organization
 
@@ -269,8 +269,12 @@ list->
 ```
 
 Use stable domain IDs as keys. A `nil` key deliberately bypasses memoization. Call
-`clear-cache!` during hot reload to clear both managed component caches and legacy
-`memof` caches.
+`clear-cache!` during hot reload to clear Respo's managed component caches.
+
+Applications do not need `memof` for component memoization. For the complete
+`render-with!` setup, cache semantics, and migration rules for `memof1-call-by`,
+`memof1-call`, and `memof1-as`, see
+[Render list: memoization and memof migration](guide/render-list.md#memoizing-components).
 
 ### 5. Styling Pattern
 
@@ -445,85 +449,32 @@ js/window.setTimeout
 
 ### 7. Type Slot — Typed Dispatch with Enum Validation
 
-**Type slots** allow the compiler to know the concrete type of `dispatch!` (typically the app-level `Op` enum) inside event handler closures. This enables:
+**Type slots** let the application choose the concrete `Op` enum accepted by Respo's `dispatch!` callbacks without passing a generic through every component API. The canonical, reusable guide is [Typed dispatch with type slots](./guide/type-slots.md); when Respo is installed, reopen it with:
 
-- **Auto-rewrite**: `:: :variant` shorthand automatically rewrites to `%:: Op :variant` at compile time.
-- **Variant validation**: invalid variants like `:: :typo` produce a compile-time warning (codegen blocked).
-- **Type checking**: the `d!` parameter inside `fn (e d!)` gets a typed signature.
-
-#### Setup in `main!`
-
-Declare the type slot once at the application entry point, binding it to your `Op` enum:
-
-```cirru.no-check
-; respo.main/main!
-defn main! ()
-  bind-type :dispatch-op respo.app.schema/Op
-  render-app! mount-point
+```bash
+cr docs search 'typed dispatch' --module respo.calcit
+cr docs read type-slots.md --full --module respo.calcit
 ```
 
-`bind-type` does not require a prior `deftype-slot` call — it auto-registers the slot on first use. Using it a second time with the same slot name is an error.
+Bind the slot in the configuration for every entry that builds Respo components:
 
-#### Schema on `dispatch!` / `d!`
-
-Functions that accept a dispatch callback should annotate its argument with `*dispatch-op`:
-
-```cirru.no-check
-; respo.app.core/dispatch!
-defn dispatch! (op ? op-data)
-  ...
-schema $ :: :fn
-  {} (:return :unit)
-    :args $ [] 'respo.app.schema/Op (:: :optional :dynamic)
-
-; Event handler parameter uses type slot reference
-defn on-keydown (cursor state)
-  %{} respo.schema/RespoListener (:name :on-keydown)
-    :handler $ fn (event dispatch!)  ; dispatch! typed via *dispatch-op slot
-      ...
-schema $ :: :fn
-  {} (:return 'respo.schema/RespoListener)
-    :args $ [] :list :map
-; (handler schema uses 'respo.schema/EventHandler which takes Fn(*dispatch-op -> unit))
+```bash
+cr config set-type-slot :dispatch-op app.schema/Op
+cr config set-type-slot --entry test :dispatch-op app.test-schema/TestOp
+cr config type-slots
 ```
 
-#### Usage in Components — Short Syntax
+The path must be a full `namespace/definition`. Named entries are independent and do not inherit the default binding. No `bind-type` call or `with-type-slot` wrapper belongs in `main!`.
 
-Inside event handlers of DOM props (e.g., `:on-click`), write dispatch calls using the `::` shorthand. The compiler resolves the type slot and rewrites automatically:
+With the slot bound, Respo's `'*dispatch-op` callback schema types `d!`, and short dispatch tuples are validated against the configured enum:
 
 ```cirru.no-check
-; Short form (compiler rewrites to %:: Op :toggle (:id task))
 button $ {}
   :on-click $ fn (e d!)
     d! $ :: :toggle (:id task)
-
-; Also works for multi-arg variants
-input $ {}
-  :on-input $ fn (e d!)
-    let
-        text $ :value e
-      d! $ :: :update task-id text
 ```
 
-The auto-rewrite uses the `Op` enum type resolved from `*dispatch-op`. If you write an invalid variant, the compiler warns and blocks codegen:
-
-```
-[Warn] Enum `Op` does not have variant `:toogle`. Available variants: ["add", "clear", "toggle", ...]
-```
-
-#### How It Works (for debugging)
-
-1. `bind-type :dispatch-op Op` stores `TypeRef("respo.app.schema/Op")` in the type slot at preprocess time.
-2. When a function parameter has schema `Fn(*dispatch-op → unit)` (the EventHandler's second arg), `*dispatch-op` is resolved to the bound `Op` type and injected into the closure's scope as the type of `d!`.
-3. When `d! $ :: :variant ...` is preprocessed, the compiler sees `d!` has type `Fn(Op → unit)`, resolves `Op`, and rewrites `:: :variant` → `%:: Op :variant`.
-4. The variant name is validated against the enum definition.
-
-#### Common Pitfalls
-
-- `bind-type` must be called **before** preprocessing components that use it (i.e., early in `main!`).
-- Writing `%:: Op :variant` manually still works and is equivalent.
-- Type-slot-based shorthand only activates when `d!` has an inferred `Fn` type with a TypeSlot argument — if the schema is missing, the rewrite is silently skipped (no error, just no auto-rewrite).
-- The test entry point (`respo.test.main/main!`) does not call `bind-type`, so type-slot rewrites are inactive during tests. This is expected — test components use direct `%:: Op :variant` calls.
+The compiler resolves this like `%:: app.schema/Op :toggle ...` and checks the variant name, payload count, and payload types. If shorthand is not checked, inspect `cr config type-slots` and the callback schema; a dynamic callback provides no enum evidence.
 
 ---
 

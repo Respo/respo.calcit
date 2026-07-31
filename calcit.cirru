@@ -1,8 +1,9 @@
 
-{} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `cr query` to inspect and `cr edit`/`cr tree` to modify. Run `cr docs agents --full` first. Manual edits must follow format and schema conventions, then run `cr edit format`.") (:package |respo)
-  :configs $ {} (:init-fn |respo.main/main!) (:reload-fn |respo.main/reload!) (:version |0.16.56)
-    :modules $ [] |memof/ |calcit-test/
+{} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `cr query` to inspect and `cr edit`/`cr tree` to modify. Run `cr docs agents --full` first. Manual edits must follow format and schema conventions, then run `cr edit format`.") (:package |respo) (:version |0.16.59)
   :entries $ {}
+    :default $ {} (:description |) (:init-fn 'respo.main/main!) (:mode :js) (:reload-fn 'respo.main/reload!)
+      :modules $ [] |calcit-test/
+      :type-slots $ {} (:dispatch-op |respo.app.schema/Op)
   :files $ {}
     |respo.app.comp.container $ %{} :FileEntry
       :defs $ {}
@@ -952,7 +953,7 @@
               :args $ [] (:: :optional 'respo.schema/DomProps)
         |clear-cache! $ %{} :CodeEntry (:doc "|Clear memoized render caches used by Respo.\n\nThis is mainly useful during hot reloading or code swapping, where mounted DOM may stay in place but cached render results must be dropped before the next render.")
           :code $ quote
-            defn clear-cache! () (memo/reset-component-caches!) (reset-memof1-caches!)
+            defn clear-cache! () $ memo/reset-component-caches!
           :examples $ []
           :schema $ :: :fn
             {} (:return :unit)
@@ -1276,8 +1277,8 @@
                   :tree $ <> label
               , |demo
           :schema $ :: :fn
-            {} (:rest :any) (:return 'respo.schema/Component)
-              :args $ [] :any :fn
+            {} (:rest :dynamic) (:return 'respo.schema/Component)
+              :args $ [] :dynamic :fn
         |mount-app! $ %{} :CodeEntry (:doc "|Mounts the Respo application to the DOM. Initializes the global element and event listeners.")
           :code $ quote
             defn mount-app! (target element *dispatch-fn)
@@ -1492,7 +1493,6 @@
             respo.util.list :refer $ pick-attrs pick-event val-exists?
             respo.schema :as schema
             respo.util.dom :refer $ compare-to-dom!
-            memof.once :refer $ reset-memof1-caches!
             respo.util.detect :refer $ component? element? effect? listener?
             respo.memo :as memo
     |respo.css $ %{} :FileEntry
@@ -1688,13 +1688,14 @@
                 fn (s)
                   if (nil? s)
                     noted "|merge base initial state" $ merge state0 changes
-                    if (map? s)
+                    if
+                      or (map? s) (record? s)
                       noted "|merge base latest state" $ merge s changes
                       do (js/console.warn "|unknown data to merge:" s) s
           :examples $ []
           :schema $ :: :fn
             {} (:return :map)
-              :args $ [] :map :list :map :map
+              :args $ [] :map :list :dynamic :map
       :ns $ %{} :NsEntry (:doc |)
         :code $ quote (ns respo.cursor)
     |respo.main $ %{} :FileEntry
@@ -1770,13 +1771,13 @@
             defatom *component-caches $ {}
           :examples $ []
           :schema $ :: :ref
-            :: :map :fn $ :: :map :any 'respo.memo/MemoEntry
+            :: :map :fn $ :: :map :dynamic 'respo.memo/MemoEntry
         |*frame-component-caches $ %{} :CodeEntry (:doc |)
           :code $ quote
             defatom *frame-component-caches $ {}
           :examples $ []
           :schema $ :: :ref
-            :: :map :fn $ :: :map :any 'respo.memo/MemoEntry
+            :: :map :fn $ :: :map :dynamic 'respo.memo/MemoEntry
         |*memo-frame-active? $ %{} :CodeEntry (:doc |) (:schema :ref)
           :code $ quote (defatom *memo-frame-active? false)
           :examples $ []
@@ -1805,7 +1806,7 @@
           :examples $ []
           :schema $ :: :fn
             {} (:return 'respo.schema/Component)
-              :args $ [] :fn (:: :list :any)
+              :args $ [] :fn :list
         |component-cache-size $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn component-cache-size () $ reduce (&map:to-list @*component-caches) 0
@@ -1845,8 +1846,8 @@
                   :value resolved-entry
           :examples $ []
           :schema $ :: :fn
-            {} (:rest :any) (:return 'respo.schema/Component)
-              :args $ [] :any :fn
+            {} (:rest :dynamic) (:return 'respo.schema/Component)
+              :args $ [] :dynamic :fn
         |reset-component-caches! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn reset-component-caches! ()
@@ -1892,92 +1893,101 @@
         |find-children-diffs $ %{} :CodeEntry (:doc "|Compares lists of child elements to find structural differences.")
           :code $ quote
             defn find-children-diffs (collect! coord n-coord index old-children new-children) (; js/console.log "|diff children:" n-coord index old-children new-children)
-              let
-                  was-empty? $ empty? old-children
-                  now-empty? $ empty? new-children
-                cond
-                    and was-empty? now-empty?
-                    , nil
-                  (and was-empty? (not now-empty?))
-                    let
-                        pair $ first new-children
-                        k $ first pair
-                        element $ last pair
-                        new-coord $ conj coord k
-                      collect! $ :: :append-element new-coord n-coord element
-                      collect-mounting collect! coord (conj n-coord index) element true
-                      recur collect! coord n-coord (inc index) ([]) (rest new-children)
-                  (and (not was-empty?) now-empty?)
-                    let
-                        pair $ first old-children
-                        k $ first pair
-                        new-coord $ conj coord k
-                        new-n-coord $ conj n-coord index
-                      collect-unmounting collect! coord new-n-coord (last pair) true
-                      collect! $ :: :rm-element new-coord new-n-coord nil
-                      recur collect! coord n-coord index (rest old-children) ([])
-                  true $ let
-                      old-keys $ -> old-children (take 16) (map first)
-                      new-keys $ -> new-children (take 16) (map first)
-                      x1 $ first old-keys
-                      y1 $ first new-keys
-                      match-x1 $ fn (x) (= x x1)
-                      match-y1 $ fn (x) (= x y1)
-                      x1-remains? $ any? new-keys match-x1
-                      y1-existed? $ any? old-keys match-y1
-                      old-follows $ rest old-children
-                      new-follows $ rest new-children
-                    if (nil? y1) (js/console.warn "|nil key is bad in Respo")
-                    ; println |compare: x1 new-keys x1-remains? y1 y1-existed? old-keys
-                    cond
-                        &= x1 y1
-                        let
-                            old-element $ val-of-first old-children
-                            new-element $ val-of-first new-children
-                          find-element-diffs collect! (conj coord x1) (conj n-coord index) old-element new-element
-                          recur collect! coord n-coord (inc index) old-follows new-follows
-                      (and x1-remains? (not y1-existed?))
-                        let
-                            pair $ first new-children
-                            k $ first pair
-                            element $ last pair
-                            new-coord $ conj coord k
-                            new-n-coord $ conj n-coord index
-                          collect! $ :: :add-element new-coord new-n-coord element
-                          collect-mounting collect! coord new-n-coord (val-of-first new-children) true
-                          recur collect! coord n-coord (inc index) old-children new-follows
-                      (and (not x1-remains?) y1-existed?)
-                        let
-                            pair $ first old-children
-                            k $ first pair
-                            new-coord $ conj coord k
-                            new-n-coord $ conj n-coord index
-                          collect-unmounting collect! coord new-n-coord (last pair) true
-                          collect! $ :: :rm-element new-coord new-n-coord nil
-                          recur collect! coord n-coord index old-follows new-children
-                      true $ let
-                          xi $ index-of new-keys x1
-                          yi $ index-of old-keys y1
-                          first-old-entry $ first old-children
-                          first-new-entry $ first new-children
+              if
+                or (map? old-children) (map? new-children)
+                recur collect! coord n-coord index
+                  if (map? old-children)
+                    -> (.to-list old-children) .to-list
+                    , old-children
+                  if (map? new-children)
+                    -> (.to-list new-children) .to-list
+                    , new-children
+                let
+                    was-empty? $ empty? old-children
+                    now-empty? $ empty? new-children
+                  cond
+                      and was-empty? now-empty?
+                      , nil
+                    (and was-empty? (not now-empty?))
+                      let
+                          pair $ first new-children
+                          k $ first pair
+                          element $ last pair
+                          new-coord $ conj coord k
+                        collect! $ :: :append-element new-coord n-coord element
+                        collect-mounting collect! coord (conj n-coord index) element true
+                        recur collect! coord n-coord (inc index) ([]) (rest new-children)
+                    (and (not was-empty?) now-empty?)
+                      let
+                          pair $ first old-children
+                          k $ first pair
+                          new-coord $ conj coord k
                           new-n-coord $ conj n-coord index
-                        ; println |index: xi yi
-                        if
-                          not $ &= 1 (&compare xi yi)
+                        collect-unmounting collect! coord new-n-coord (last pair) true
+                        collect! $ :: :rm-element new-coord new-n-coord nil
+                        recur collect! coord n-coord index (rest old-children) ([])
+                    true $ let
+                        old-keys $ -> old-children (take 16) (map first)
+                        new-keys $ -> new-children (take 16) (map first)
+                        x1 $ first old-keys
+                        y1 $ first new-keys
+                        match-x1 $ fn (x) (= x x1)
+                        match-y1 $ fn (x) (= x y1)
+                        x1-remains? $ any? new-keys match-x1
+                        y1-existed? $ any? old-keys match-y1
+                        old-follows $ rest old-children
+                        new-follows $ rest new-children
+                      if (nil? y1) (js/console.warn "|nil key is bad in Respo")
+                      ; println |compare: x1 new-keys x1-remains? y1 y1-existed? old-keys
+                      cond
+                          &= x1 y1
                           let
+                              old-element $ val-of-first old-children
                               new-element $ val-of-first new-children
-                              new-coord $ conj coord y1
-                            collect! $ :: :add-element new-coord new-n-coord new-element
-                            collect-mounting collect! coord new-n-coord new-element true
+                            find-element-diffs collect! (conj coord x1) (conj n-coord index) old-element new-element
+                            recur collect! coord n-coord (inc index) old-follows new-follows
+                        (and x1-remains? (not y1-existed?))
+                          let
+                              pair $ first new-children
+                              k $ first pair
+                              element $ last pair
+                              new-coord $ conj coord k
+                              new-n-coord $ conj n-coord index
+                            collect! $ :: :add-element new-coord new-n-coord element
+                            collect-mounting collect! coord new-n-coord (val-of-first new-children) true
                             recur collect! coord n-coord (inc index) old-children new-follows
-                          do
-                            collect-unmounting collect! coord new-n-coord (val-of-first old-children) true
-                            collect! $ :: :rm-element (conj coord x1) new-n-coord nil
+                        (and (not x1-remains?) y1-existed?)
+                          let
+                              pair $ first old-children
+                              k $ first pair
+                              new-coord $ conj coord k
+                              new-n-coord $ conj n-coord index
+                            collect-unmounting collect! coord new-n-coord (last pair) true
+                            collect! $ :: :rm-element new-coord new-n-coord nil
                             recur collect! coord n-coord index old-follows new-children
+                        true $ let
+                            xi $ index-of new-keys x1
+                            yi $ index-of old-keys y1
+                            first-old-entry $ first old-children
+                            first-new-entry $ first new-children
+                            new-n-coord $ conj n-coord index
+                          ; println |index: xi yi
+                          if
+                            not $ &= 1 (&compare xi yi)
+                            let
+                                new-element $ val-of-first new-children
+                                new-coord $ conj coord y1
+                              collect! $ :: :add-element new-coord new-n-coord new-element
+                              collect-mounting collect! coord new-n-coord new-element true
+                              recur collect! coord n-coord (inc index) old-children new-follows
+                            do
+                              collect-unmounting collect! coord new-n-coord (val-of-first old-children) true
+                              collect! $ :: :rm-element (conj coord x1) new-n-coord nil
+                              recur collect! coord n-coord index old-follows new-children
           :examples $ []
           :schema $ :: :fn
             {} (:return :unit)
-              :args $ [] :fn :list :list :number :list :list
+              :args $ [] :fn :list :list :number :dynamic :dynamic
         |find-element-diffs $ %{} :CodeEntry (:doc "|Internal diff algorithm for comparing old and new virtual DOM trees.\n\nIt collects patch operations via `collect!`, handling components, plain elements, styles, events, keyed children, and effect lifecycle transitions.")
           :code $ quote
             defn find-element-diffs (collect! coord n-coord old-tree new-tree) (; js/console.log "|element diffing:" n-coord old-tree new-tree) (; echo "|element coord" coord)
@@ -2048,46 +2058,51 @@
           :code $ quote
             defn find-props-diffs (collect! coord n-coord old-props new-props)
               ; js/console.log "|find props:" n-coord old-props new-props (count old-props) (count new-props)
-              let
-                  was-empty? $ empty? old-props
-                  now-empty? $ empty? new-props
-                cond
-                    and was-empty? now-empty?
-                    , nil
-                  (and was-empty? (not now-empty?))
-                    do
-                      collect! $ :: :add-prop coord n-coord (first new-props)
-                      recur collect! coord n-coord old-props $ rest new-props
-                  (and (not was-empty?) now-empty?)
-                    do
-                      collect! $ :: :rm-prop coord n-coord
-                        first $ first old-props
-                      recur collect! coord n-coord (rest old-props) new-props
-                  true $ let
-                      old-pair $ first old-props
-                      new-pair $ first new-props
-                      old-k $ first old-pair
-                      old-v $ last old-pair
-                      new-k $ first new-pair
-                      new-v $ last new-pair
-                      old-follows $ rest old-props
-                      new-follows $ rest new-props
-                    ; js/console.log old-k new-k old-v new-v
-                    case-default (&compare old-k new-k) (eprintln "|[Respo] unknown compare result for props keys")
-                      -1 $ do
-                        collect! $ :: :rm-prop coord n-coord old-k
-                        recur collect! coord n-coord old-follows new-props
-                      1 $ do
-                        collect! $ :: :add-prop coord n-coord new-pair
-                        recur collect! coord n-coord old-props new-follows
-                      0 $ do
-                        if (not= old-v new-v)
-                          collect! $ :: :replace-prop coord n-coord new-pair
-                        recur collect! coord n-coord old-follows new-follows
+              if
+                and (list? old-props) (list? new-props)
+                let
+                    was-empty? $ empty? old-props
+                    now-empty? $ empty? new-props
+                  cond
+                      and was-empty? now-empty?
+                      , nil
+                    (and was-empty? (not now-empty?))
+                      do
+                        collect! $ :: :add-prop coord n-coord (first new-props)
+                        recur collect! coord n-coord old-props $ rest new-props
+                    (and (not was-empty?) now-empty?)
+                      do
+                        collect! $ :: :rm-prop coord n-coord
+                          first $ first old-props
+                        recur collect! coord n-coord (rest old-props) new-props
+                    true $ let
+                        old-pair $ first old-props
+                        new-pair $ first new-props
+                        old-k $ first old-pair
+                        old-v $ last old-pair
+                        new-k $ first new-pair
+                        new-v $ last new-pair
+                        old-follows $ rest old-props
+                        new-follows $ rest new-props
+                      ; js/console.log old-k new-k old-v new-v
+                      case-default (&compare old-k new-k) (eprintln "|[Respo] unknown compare result for props keys")
+                        -1 $ do
+                          collect! $ :: :rm-prop coord n-coord old-k
+                          recur collect! coord n-coord old-follows new-props
+                        1 $ do
+                          collect! $ :: :add-prop coord n-coord new-pair
+                          recur collect! coord n-coord old-props new-follows
+                        0 $ do
+                          if (not= old-v new-v)
+                            collect! $ :: :replace-prop coord n-coord new-pair
+                          recur collect! coord n-coord old-follows new-follows
+                recur collect! coord n-coord
+                  if (list? old-props) old-props $ -> old-props .to-list
+                  if (list? new-props) new-props $ -> new-props .to-list
           :examples $ []
           :schema $ :: :fn
             {} (:return :unit)
-              :args $ [] :fn :list :list :list :list
+              :args $ [] :fn :list :list :dynamic :dynamic
         |find-style-diffs $ %{} :CodeEntry (:doc "|Compares two style maps and collects effects for additions, removals, or updates.")
           :code $ quote
             defn find-style-diffs (collect! c-coord coord old-style new-style)
@@ -2155,8 +2170,16 @@
                     events $ &record:get virtual-element :event
                     children $ &record:get virtual-element :children
                     element $ js/document.createElement tag-name
-                    child-elements $ -> children
-                      map $ fn (pair)
+                    child-elements $ if (map? children)
+                      map (.to-list children)
+                        fn (pair)
+                          assert "|expect pair of key/element" $ and (list? pair)
+                            &= 2 $ count pair
+                          let[] (k child) pair
+                            when (nil? k) (js/console.warn "|nil key is bad for Respo")
+                            when (some? child)
+                              make-element child listener-builder $ conj coord k
+                      map children $ fn (pair)
                         assert "|expect pair of key/element" $ and (list? pair)
                           &= 2 $ count pair
                         let[] (k child) pair
@@ -2168,7 +2191,9 @@
                         prop-str $ turn-string (first entry)
                         v $ last entry
                       if (.!startsWith prop-str |data-)
-                        -> element .-dataset $ js-set (.!slice prop-str 5) v
+                        if (some? v)
+                          -> element .-dataset $ js-set (.!slice prop-str 5) v
+                          -> element .-dataset $ js-delete (.!slice prop-str 5)
                         let
                             k $ dashed->camel prop-str
                           if (some? v) (aset element k v)
@@ -2240,7 +2265,12 @@
                     recur collect! next-coord n-coord (:tree tree) false
                 (element? tree)
                   loop
-                      children $ :children tree
+                      children $ if
+                        map? $ :children tree
+                        ->
+                          .to-list $ :children tree
+                          , .to-list
+                        :children tree
                       idx 0
                     when
                       not $ empty? children
@@ -2273,7 +2303,12 @@
                               method (:args effect) ([] :unmount target at-place?)
                 (element? tree)
                   loop
-                      children $ :children tree
+                      children $ if
+                        map? $ :children tree
+                        ->
+                          .to-list $ :children tree
+                          , .to-list
+                        :children tree
                       idx 0
                     when
                       not $ empty? children
@@ -2467,7 +2502,9 @@
               let
                   prop-str $ turn-string p
                 if (.!startsWith prop-str |data-)
-                  -> target .-dataset $ js-set (.!slice prop-str 5) prop-value
+                  if (some? prop-value)
+                    -> target .-dataset $ js-set (.!slice prop-str 5) prop-value
+                    -> target .-dataset $ js-delete (.!slice prop-str 5)
                   let
                       prop-name $ dashed->camel prop-str
                     case-default prop-name (js-set target prop-name prop-value)
@@ -2567,9 +2604,11 @@
                 if (.!startsWith prop-str |data-)
                   let
                       name $ .!slice prop-str 5
-                    if
-                      not= prop-value $ -> target .-dataset (aget name)
-                      -> target .-dataset $ js-set name prop-value
+                    if (some? prop-value)
+                      if
+                        not= prop-value $ -> target .-dataset (aget name)
+                        -> target .-dataset $ js-set name prop-value
+                      -> target .-dataset $ js-delete name
                   let
                       prop-name $ dashed->camel prop-str
                     if (identical? prop-name |value)
@@ -2920,7 +2959,7 @@
       :defs $ {}
         |main! $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn main! () (html/run-tests) (test-pick-attrs) (test-pick-event) (memo/run-tests) (test-find-props-diffs)
+            defn main! () (html/run-tests) (test-pick-attrs) (test-pick-event) (memo/run-tests) (test-find-props-diffs) (test-pair-representation-transitions) (test-update-states-merge-record)
           :examples $ []
           :schema $ :: :fn
             {} (:return :unit)
@@ -2945,13 +2984,33 @@
                 is $ = (first @effects)
                   :: :replace-prop ([]) ([]) ([] :class-name |new)
           :examples $ []
+        |test-pair-representation-transitions $ %{} :CodeEntry (:doc |) (:schema :dynamic)
+          :code $ quote
+            deftest test-pair-representation-transitions $ testing |pair_collections_support_list_and_map_transitions
+              let
+                  child $ div ({})
+                  *ops $ atom ([])
+                  collect! $ fn (op) (swap! *ops conj op)
+                  child-list $ [] ([] :a child)
+                  child-map $ {} (:a child)
+                  prop-list $ [] ([] :title |same)
+                  prop-map $ {} (:title |same)
+                find-children-diffs collect! ([]) ([]) 0 child-list child-map
+                find-children-diffs collect! ([]) ([]) 0 child-map child-list
+                find-props-diffs collect! ([]) ([]) prop-list prop-map
+                find-props-diffs collect! ([]) ([]) prop-map prop-list
+                is $ empty? @*ops
+          :examples $ []
         |test-pick-attrs $ %{} :CodeEntry (:doc |) (:schema :dynamic)
           :code $ quote
-            deftest test-pick-attrs $ is
-              =
+            deftest test-pick-attrs
+              is $ =
                 pick-attrs $ {} (:value |string)
                   :on-click $ fn () nil
                 [] $ [] :value |string
+              is $ =
+                pick-attrs $ {} (:data-comp nil) (:data-name nil) (:title |ok)
+                [] $ [] :title |ok
           :examples $ []
         |test-pick-event $ %{} :CodeEntry (:doc |) (:schema :dynamic)
           :code $ quote
@@ -2966,13 +3025,29 @@
                     :on $ {} (:input f)
                   {} (:click f) (:input f)
           :examples $ []
+        |test-update-states-merge-record $ %{} :CodeEntry (:doc |) (:schema :dynamic)
+          :code $ quote
+            deftest test-update-states-merge-record $ testing |record_state_supports_repeated_merges
+              let
+                  state0 $ %{} TodoState (:draft |a) (:locked? false) (:message |ready)
+                  store1 $ update-states-merge ({}) ([]) state0
+                    {} $ :draft |b
+                  store2 $ update-states-merge store1 ([]) state0
+                    {} $ :draft |c
+                  state2 $ get-in store2 ([] :states :data)
+                is $ record? state2
+                is $ = |c (:draft state2)
+          :examples $ []
       :ns $ %{} :NsEntry (:doc |)
         :code $ quote
           ns respo.test.main $ :require (respo.test.html :as html)
             calcit-test.core :refer $ deftest testing is
             respo.util.list :refer $ pick-attrs pick-event
             respo.test.memo :as memo
-            respo.render.diff :refer $ find-props-diffs
+            respo.render.diff :refer $ find-children-diffs find-props-diffs
+            respo.cursor :refer $ update-states-merge
+            respo.core :refer $ div
+            respo.app.schema :refer $ TodoState
     |respo.test.memo $ %{} :FileEntry
       :defs $ {}
         |*render-count $ %{} :CodeEntry (:doc |) (:schema :ref)
@@ -3403,7 +3478,8 @@
                     let
                         k $ nth pair 0
                         v $ nth pair 1
-                      not $ starts-with? (turn-string k) |on-
+                      and (some? v)
+                        not $ starts-with? (turn-string k) |on-
                   sort $ fn (x y)
                     &compare (nth x 0) (nth y 0)
           :examples $ []
