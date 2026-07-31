@@ -33,7 +33,7 @@ The Respo project is a virtual DOM library written in Calcit-js, containing:
 - **Compiled source**: `calcit.cirru` (13806 lines) - full AST representation
 - **Namespaces**: 33 total namespaces organized by functionality
 - **Version**: 0.16.21
-- **Dependencies**: memof (memoization), lilac (UI utilities), calcit-test (testing)
+- **Dependencies**: calcit-test (testing)
 
 ### Core Namespace Organization
 
@@ -269,8 +269,12 @@ list->
 ```
 
 Use stable domain IDs as keys. A `nil` key deliberately bypasses memoization. Call
-`clear-cache!` during hot reload to clear both managed component caches and legacy
-`memof` caches.
+`clear-cache!` during hot reload to clear Respo's managed component caches.
+
+Applications do not need `memof` for component memoization. For the complete
+`render-with!` setup, cache semantics, and migration rules for `memof1-call-by`,
+`memof1-call`, and `memof1-as`, see
+[Render list: memoization and memof migration](guide/render-list.md#memoizing-components).
 
 ### 5. Styling Pattern
 

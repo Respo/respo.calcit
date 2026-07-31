@@ -12,7 +12,7 @@
 - **Init Function**: `respo.main/main!`
 - **Reload Function**: `respo.main/reload!`
 - **Core Namespaces**: 33 namespaces providing virtual DOM, rendering, components, and utilities
-- **Dependencies**: memof, lilac, calcit-test modules
+- **Dependencies**: calcit-test module
 
 ### Usage
 
@@ -152,7 +152,10 @@ list->
 
 `memo-comp-by` matches the component function, key, and complete argument list. Each
 `render-with!` call records active keys and prunes entries that disappeared from the
-latest tree. Passing `nil` as the key bypasses caching.
+latest tree. Passing `nil` as the key bypasses caching. Respo manages this cache
+internally, so applications do not need `memof` for component memoization. See
+[Render list: memoization and memof migration](docs/guide/render-list.md#memoizing-components)
+for setup, lifecycle, and migration details.
 
 Reset virtual DOM caching during hot code swapping, and rerender:
 

@@ -2,7 +2,7 @@
 {} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `cr query` to inspect and `cr edit`/`cr tree` to modify. Run `cr docs agents --full` first. Manual edits must follow format and schema conventions, then run `cr edit format`.") (:package |respo) (:version |0.16.58)
   :entries $ {}
     :default $ {} (:description |) (:init-fn 'respo.main/main!) (:mode :js) (:reload-fn 'respo.main/reload!)
-      :modules $ [] |memof/ |calcit-test/
+      :modules $ [] |calcit-test/
       :type-slots $ {} (:dispatch-op |respo.app.schema/Op)
   :files $ {}
     |respo.app.comp.container $ %{} :FileEntry
@@ -953,7 +953,7 @@
               :args $ [] (:: :optional 'respo.schema/DomProps)
         |clear-cache! $ %{} :CodeEntry (:doc "|Clear memoized render caches used by Respo.\n\nThis is mainly useful during hot reloading or code swapping, where mounted DOM may stay in place but cached render results must be dropped before the next render.")
           :code $ quote
-            defn clear-cache! () (memo/reset-component-caches!) (reset-memof1-caches!)
+            defn clear-cache! () $ memo/reset-component-caches!
           :examples $ []
           :schema $ :: :fn
             {} (:return :unit)
@@ -1493,7 +1493,6 @@
             respo.util.list :refer $ pick-attrs pick-event val-exists?
             respo.schema :as schema
             respo.util.dom :refer $ compare-to-dom!
-            memof.once :refer $ reset-memof1-caches!
             respo.util.detect :refer $ component? element? effect? listener?
             respo.memo :as memo
     |respo.css $ %{} :FileEntry
