@@ -54,6 +54,9 @@ cr query def respo.render.html/make-string
 |                      | `list->`          |
 |                      | `for-keyed`       |
 |                      | `show`            |
+|                      | `effect-on-mount` |
+|                      | `effect-on-update` |
+|                      | `effect-on-unmount` |
 |                      | `effect-watch`    |
 |                      | `error-boundary`  |
 |                      | `make-render-scheduler` |

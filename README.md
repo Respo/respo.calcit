@@ -267,10 +267,15 @@ cr query def respo.render.html/make-string
 | `memo-value-by`      | `respo.core/memo-value-by`                   | Memoize immutable derived data |
 | `show`               | `respo.core/show`                            | Render a child conditionally   |
 | `for-keyed`          | `respo.core/for-keyed`                       | Build ordered keyed child pairs |
+| `effect-on-mount`    | `respo.core/effect-on-mount`                 | Run a mount-only lifecycle callback |
+| `effect-on-update`   | `respo.core/effect-on-update`                | Run when immutable dependencies change |
+| `effect-on-unmount`  | `respo.core/effect-on-unmount`               | Run an unmount-only lifecycle callback |
 | `effect-watch`       | `respo.core/effect-watch`                    | Dependency-aware lifecycle effect |
 | `error-boundary`     | `respo.core/error-boundary`                  | Render a synchronous fallback  |
 | `make-render-scheduler` | `respo.core/make-render-scheduler`        | Coalesce render requests       |
 | `resource-reducer`   | `respo.resource/resource-reducer`            | Reduce immutable async state   |
+| `resource-idle`      | `respo.resource/resource-idle`               | Create initial resource state  |
+| `load-resource!`     | `respo.resource/load-resource!`              | Emit async resource actions    |
 | `<>`                 | `respo.core/<>`                              | Create text nodes              |
 | `comp-space`         | `respo.comp.space/comp-space`                | Spacing component              |
 | `comp-inspect`       | `respo.comp.inspect/comp-inspect`            | Inspection/debugging component |

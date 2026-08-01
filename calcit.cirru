@@ -1036,7 +1036,7 @@
           :schema $ :: :fn
             {} (:rest :dynamic) (:return 'respo.schema/Element)
               :args $ [] :tag (:: :optional 'respo.schema/DomProps)
-        |create-list-element $ %{} :CodeEntry (:doc "|Creates a virtual DOM element for list rendering. Arguments: tag-name, props, child-map (map of key -> child).")
+        |create-list-element $ %{} :CodeEntry (:doc "|Creates a virtual DOM element for keyed list rendering. child-pairs may be an ordered list or a map of [key child] pairs; invalid collections fail at this API boundary.")
           :code $ quote
             defn create-list-element (tag-name props child-pairs)
               let
@@ -1237,25 +1237,13 @@
                 let
                     child $ first body
                   quasiquote $ let
-                      ~fallback-fn $ expect-function ~fallback "|[Respo/error-boundary] expected fallback as a function"
+                      ~fallback-fn $ respo.util.detect/expect-function ~fallback "|[Respo/error-boundary] expected fallback as a function"
                     try ~child $ fn (~error) (~fallback-fn ~error)
           :examples $ []
             quote $ error-boundary
               fn (_error)
                 div ({}) (<> |Failed)
               div ({}) (<> |Ready)
-        |expect-function $ %{} :CodeEntry (:doc |)
-          :code $ quote
-            defn expect-function (value message)
-              when
-                not $ fn? value
-                raise message
-              , value
-          :examples $ []
-          :schema $ :: :fn
-            {} (:return :fn)
-              :args $ [] :dynamic :string
-          :tags $ #{} :internal
         |extract-effects-list $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn extract-effects-list (markup)
@@ -1415,7 +1403,7 @@
           :schema $ :: :fn
             {} (:return 'respo.schema/Element)
               :args $ [] (:: :optional 'respo.schema/DomProps) :dynamic
-        |make-render-scheduler $ %{} :CodeEntry (:doc "|Returns a zero-argument scheduler that coalesces repeated render requests into one microtask. It owns only queued metadata, never application state. Pass enqueue! only for custom scheduling or deterministic tests.")
+        |make-render-scheduler $ %{} :CodeEntry (:doc "|Returns a zero-argument scheduler. The default queueMicrotask implementation coalesces repeated requests before its callback runs; a custom enqueue! owns timing semantics. It stores only queued metadata, never application state.")
           :code $ quote
             defn make-render-scheduler (render! ? enqueue!)
               let
@@ -1688,7 +1676,7 @@
             respo.util.list :refer $ pick-attrs pick-event val-exists?
             respo.schema :as schema
             respo.util.dom :refer $ compare-to-dom!
-            respo.util.detect :refer $ component? element? effect? listener?
+            respo.util.detect :refer $ component? element? effect? listener? expect-function
             respo.memo :as memo
     |respo.css $ %{} :FileEntry
       :defs $ {}
@@ -2009,7 +1997,7 @@
             defn call-value (f args)
               when
                 not $ fn? f
-                raise "|[Respo/memo-value-by] expected a function as the second argument"
+                raise "|[Respo/memo] expected a memo callback function"
               f & args
           :examples $ []
           :schema $ :: :fn
@@ -3029,19 +3017,7 @@
               :error :dynamic
           :examples $ []
           :tags $ #{} :data
-        |expect-function $ %{} :CodeEntry (:doc |)
-          :code $ quote
-            defn expect-function (value message)
-              when
-                not $ fn? value
-                raise message
-              , value
-          :examples $ []
-          :schema $ :: :fn
-            {} (:return :fn)
-              :args $ [] :dynamic :string
-          :tags $ #{} :internal
-        |load-resource! $ %{} :CodeEntry (:doc "|Starts a Promise-compatible request and emits immutable :started then :ready or :failed ResourceAction values. Returns the numeric request id; it does not mutate application state.")
+        |load-resource! $ %{} :CodeEntry (:doc "|Invokes a zero-argument fetcher once, normalizes its value or Promise, and emits immutable :started then :ready or :failed ResourceAction values. Synchronous fetch errors and Promise-chain errors become :failed. Returns the numeric request id; it does not mutate application state.")
           :code $ quote
             defn load-resource! (fetcher emit!)
               let
@@ -3051,12 +3027,11 @@
                 emit-action! $ resource-started request-id
                 try
                   ->
-                    js/Promise.resolve $ fetch-resource
-                    .!then
-                      fn (value)
-                        emit-action! $ resource-ready request-id value
-                      fn (error)
-                        emit-action! $ resource-failed request-id error
+                    js/Promise.resolve $ do (fetch-resource)
+                    .!then $ fn (value)
+                      emit-action! $ resource-ready request-id value
+                    .!catch $ fn (error)
+                      emit-action! $ resource-failed request-id error
                   fn (error)
                     emit-action! $ resource-failed request-id error
                 , request-id
@@ -3146,7 +3121,9 @@
                 (:started request-id)
                   %{} ResourceState
                     :status $ if
-                      some? $ :data state
+                      or
+                        = :ready $ :status state
+                        = :refreshing $ :status state
                       , :refreshing :pending
                     :request-id request-id
                     :data $ :data state
@@ -3194,7 +3171,9 @@
               :args $ [] :dynamic
           :tags $ #{} :internal
       :ns $ %{} :NsEntry (:doc "|Immutable async resource helpers. Network completion emits ResourceAction values; applications keep ResourceState in their own store and apply resource-reducer from the updater.")
-        :code $ quote (ns respo.resource)
+        :code $ quote
+          ns respo.resource $ :require
+            respo.util.detect :refer $ expect-function
     |respo.schema $ %{} :FileEntry
       :defs $ {}
         |*dispatch-op $ %{} :CodeEntry (:doc |) (:schema :dynamic)
@@ -3738,16 +3717,21 @@
           :code $ quote
             defn run-collected! (ops target)
               &doseq (op ops)
-                let
-                    run! $ last op
-                  when (fn? run!) (run! target)
+                when
+                  contains? (#{} :effect-mount :effect-unmount :effect-update :effect-before-update) (first op)
+                  let
+                      run! $ last op
+                    when
+                      not $ fn? run!
+                      raise "|[Respo/test/run-collected!] expected lifecycle op callback"
+                    run! target
           :examples $ []
           :schema $ :: :fn
             {} (:return :unit)
               :args $ [] :list :dynamic
         |run-tests $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn run-tests () (test-show) (test-for-keyed) (test-error-boundary) (test-effect-watch) (test-effect-list-transitions) (test-effect-identity-change) (test-ref-lifecycle) (test-ref-update) (test-component-element-boundary) (test-resource-reducer) (test-render-scheduler)
+            defn run-tests () (test-show) (test-for-keyed) (test-error-boundary) (test-effect-watch) (test-effect-list-transitions) (test-effect-identity-change) (test-effect-specific-lifecycles) (test-ref-lifecycle) (test-ref-update) (test-component-element-boundary) (test-create-list-element-validation) (test-resource-reducer) (test-load-resource) (test-render-scheduler) (test-render-scheduler-validation)
           :examples $ []
           :schema $ :: :fn
             {} (:return :unit)
@@ -3773,6 +3757,13 @@
                 is $ =
                   [] ([] :cleanup :target) ([] :ref nil)
                   deref *log
+          :examples $ []
+        |test-create-list-element-validation $ %{} :CodeEntry (:doc |) (:schema :dynamic)
+          :code $ quote
+            deftest test-create-list-element-validation $ testing |create_list_element_rejects_invalid_keyed_children_at_the_api_boundary
+              is $ = "|[Respo/create-list-element] expected keyed child pairs as a list or map"
+                capture-error-message $ fn ()
+                  create-list-element :div ({}) :invalid
           :examples $ []
         |test-effect-identity-change $ %{} :CodeEntry (:doc |) (:schema :dynamic)
           :code $ quote
@@ -3808,6 +3799,27 @@
                 run-collected! @*ops :target
                 is $ =
                   [] ([] :setup :target) ([] :cleanup :target)
+                  deref *log
+          :examples $ []
+        |test-effect-specific-lifecycles $ %{} :CodeEntry (:doc |) (:schema :dynamic)
+          :code $ quote
+            deftest test-effect-specific-lifecycles $ testing |effect_on_update_and_unmount_dispatch_only_their_named_phase
+              let
+                  *log $ atom ([])
+                  update-effect $ effect-on-update ([] :value)
+                    fn (target)
+                      swap! *log conj $ [] :update target
+                  unmount-effect $ effect-on-unmount
+                    fn (target)
+                      swap! *log conj $ [] :unmount target
+                  update-method $ :method update-effect
+                  unmount-method $ :method unmount-effect
+                update-method (:args update-effect) ([] :mount :node false)
+                update-method (:args update-effect) ([] :update :node false)
+                unmount-method (:args unmount-effect) ([] :update :node false)
+                unmount-method (:args unmount-effect) ([] :unmount :node false)
+                is $ =
+                  [] ([] :update :node) ([] :unmount :node)
                   deref *log
           :examples $ []
         |test-effect-watch $ %{} :CodeEntry (:doc |) (:schema :dynamic)
@@ -3864,6 +3876,49 @@
                     fn (item) (:id item)
                     fn (_item _idx)
                       div $ {}
+          :examples $ []
+        |test-load-resource $ %{} :CodeEntry (:doc |) (:schema :dynamic)
+          :code $ quote
+            deftest test-load-resource $ testing |load_resource_invokes_fetchers_and_emits_started_then_ready_or_failed
+              let
+                  *calls $ atom 0
+                  *actions $ atom ([])
+                  request-id $ load-resource!
+                    fn () (swap! *calls inc) |ready
+                    fn (action) (swap! *actions conj action)
+                is $ = 1 @*calls
+                is $ = (resource-started request-id) (first @*actions)
+                js/queueMicrotask $ fn ()
+                  is $ = (resource-ready request-id |ready) (get @*actions 1)
+              let
+                  *actions $ atom ([])
+                  request-id $ load-resource!
+                    fn () $ raise |offline
+                    fn (action) (swap! *actions conj action)
+                is $ = 2 (count @*actions)
+                is $ = (resource-started request-id) (first @*actions)
+                match (get @*actions 1)
+                  (:failed failed-id error)
+                    do
+                      is $ = request-id failed-id
+                      is $ = |offline (.-message error)
+                  _ $ is false
+              let
+                  *actions $ atom ([])
+                  request-id $ load-resource!
+                    fn () |ready
+                    fn (action) (swap! *actions conj action)
+                      match action
+                        (:ready _id _value) (raise |emit-ready-failed)
+                        _ nil
+                js/queueMicrotask $ fn ()
+                  js/queueMicrotask $ fn ()
+                    match (last @*actions)
+                      (:failed failed-id error)
+                        do
+                          is $ = request-id failed-id
+                          is $ = |emit-ready-failed (.-message error)
+                      _ $ is false
           :examples $ []
         |test-ref-lifecycle $ %{} :CodeEntry (:doc |) (:schema :dynamic)
           :code $ quote
@@ -3925,6 +3980,15 @@
                 schedule!
                 is $ = 2 (count @*tasks)
           :examples $ []
+        |test-render-scheduler-validation $ %{} :CodeEntry (:doc |) (:schema :dynamic)
+          :code $ quote
+            deftest test-render-scheduler-validation $ testing |render_scheduler_rejects_an_invalid_custom_enqueue_function
+              is $ = "|[Respo/make-render-scheduler] expected enqueue! as a function or nil"
+                capture-error-message $ fn ()
+                  make-render-scheduler
+                    fn () nil
+                    , :invalid
+          :examples $ []
         |test-resource-reducer $ %{} :CodeEntry (:doc |) (:schema :dynamic)
           :code $ quote
             deftest test-resource-reducer $ testing |resource_reducer_keeps_immutable_data_and_ignores_stale_results
@@ -3937,6 +4001,8 @@
                   stale $ resource-reducer refreshing
                     resource-ready 1 $ {} (:value |stale)
                   failed $ resource-reducer refreshing (resource-failed 2 |offline)
+                  ready-nil $ resource-reducer pending (resource-ready 1 nil)
+                  refreshing-nil $ resource-reducer ready-nil (resource-started 3)
                 is $ = :pending (:status pending)
                 is $ resource-loading? pending
                 is $ = :ready (:status ready)
@@ -3950,6 +4016,7 @@
                 is $ =
                   {} $ :value |first
                   :data failed
+                is $ = :refreshing (:status refreshing-nil)
           :examples $ []
         |test-show $ %{} :CodeEntry (:doc |) (:schema :dynamic)
           :code $ quote
@@ -3965,10 +4032,10 @@
         :code $ quote
           ns respo.test.primitives $ :require
             calcit-test.core :refer $ deftest testing is
-            respo.core :refer $ defcomp div <> show for-keyed error-boundary effect-watch effect-on-mount make-render-scheduler
+            respo.core :refer $ defcomp div <> show for-keyed error-boundary effect-watch effect-on-mount effect-on-update effect-on-unmount make-render-scheduler create-list-element
             respo.render.diff :refer $ find-element-diffs
             respo.render.effect :refer $ collect-mounting collect-unmounting collect-updating
-            respo.resource :refer $ resource-idle resource-started resource-ready resource-failed resource-reducer resource-loading?
+            respo.resource :refer $ resource-idle resource-started resource-ready resource-failed resource-reducer resource-loading? load-resource!
     |respo.util.detect $ %{} :FileEntry
       :defs $ {}
         |=seq $ %{} :CodeEntry (:doc "|Recursively checks if two sequences are equal.")
@@ -4027,6 +4094,18 @@
           :schema $ :: :fn
             {} (:return :bool)
               :args $ [] :dynamic
+        |expect-function $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn expect-function (value message)
+              when
+                not $ fn? value
+                raise message
+              , value
+          :examples $ []
+          :schema $ :: :fn
+            {} (:return :fn)
+              :args $ [] :dynamic :string
+          :tags $ #{} :internal
         |listener? $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn listener? (item)

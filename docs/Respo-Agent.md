@@ -40,6 +40,7 @@ The Respo project is a virtual DOM library written in Calcit-js, containing:
 **User-facing APIs** (what you typically use):
 
 - `respo.core` - Core APIs: defcomp, div, render-with!, memo-comp-by, clear-cache!, etc.
+- `respo.resource` - Immutable async resource actions and reducer
 - `respo.comp.space` - Utility component comp-space (=<)
 - `respo.comp.inspect` - Debugging component comp-inspect
 - `respo.render.html` - HTML generation: make-string, make-html
@@ -57,7 +58,6 @@ The Respo project is a virtual DOM library written in Calcit-js, containing:
 - `respo.render.diff` - Find differences between virtual DOM trees
 - `respo.render.dom` - DOM element creation and manipulation
 - `respo.render.effect` - Component lifecycle effects
-- `respo.resource` - Immutable async resource actions and reducer
 - `respo.render.patch` - Apply DOM patches
 - `respo.controller.client` - Client-side state management (activate-instance!, patch-instance!, send-to-component!)
 - `respo.controller.resolve` - Event handling and resolution (build-deliver-event, wrap-dispatch)

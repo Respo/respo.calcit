@@ -137,6 +137,8 @@ div
 - Replacing a ref calls the old callback with `nil`, then the new callback with the element.
 - Unmount calls the active callback with `nil` after child cleanup.
 
+Callback identity is part of the ref lifecycle. An inline `fn` creates a new callback on every render, so an unchanged DOM element is still cleared through the old callback and assigned through the new one. Make ref callbacks idempotent; when repeated clear/set work is undesirable, explicitly reuse a stable callback value.
+
 Use refs only for imperative browser integrations such as focus, measurement, or third-party widgets. Do not put the mutable DOM node into the immutable application store.
 
 ## Immutable async resources
@@ -172,6 +174,8 @@ Create initial state with `resource-idle`. The reducer produces these statuses:
 | `:error` | The latest request failed; previous data is retained |
 
 Every request has a numeric ID. Ready or failed actions from an older request return the identical current state, preventing stale network completion from overwriting newer data. `load-resource!` accepts a value or Promise-compatible result and converts synchronous throws into `:failed` actions.
+
+`load-resource!` invokes the fetcher exactly once. Promise-chain failures, including an exception raised while emitting the `:ready` action, are converted into a `:failed` action with the same request ID. A completed `:ready` state remains a refresh even when its valid payload is `nil`; loading state is derived from resource status rather than payload truthiness.
 
 ## Error boundaries
 
@@ -209,9 +213,9 @@ let
   schedule-render!
 ```
 
-Multiple calls before the next microtask produce one render. The scheduler owns only its queued flag; the authoritative data remains in `*store`, and the render callback reads the newest immutable value when it runs.
+With the default `queueMicrotask` scheduler, multiple calls before the queued callback runs produce one render. The scheduler owns only its queued flag; the authoritative data remains in `*store`, and the render callback reads the newest immutable value when it runs.
 
-An optional `enqueue!` callback can replace `queueMicrotask`, mainly for deterministic tests or a host-specific scheduler.
+An optional `enqueue!` callback can replace `queueMicrotask`, mainly for deterministic tests or a host-specific scheduler. A custom implementation controls callback timing and may run synchronously, so the default microtask batching guarantee does not apply to it.
 
 ## Error behavior
 
