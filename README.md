@@ -239,6 +239,7 @@ This index helps LLM tools automatically fetch and reference documentation using
 | Typed Dispatch   | [docs/guide/type-slots.md](docs/guide/type-slots.md)             | Entry-level `Op` binding and checks |
 | Styles           | [docs/guide/styles.md](docs/guide/styles.md)                     | CSS and styling approach           |
 | Render Lists     | [docs/guide/render-list.md](docs/guide/render-list.md)           | Efficient list rendering           |
+| Common Primitives | [docs/guide/common-primitives.md](docs/guide/common-primitives.md) | Conditional UI, lifecycle, resources, errors, and batching |
 | Hot Swapping     | [docs/guide/hot-swapping.md](docs/guide/hot-swapping.md)         | Hot code reloading setup           |
 | Server Rendering | [docs/guide/server-rendering.md](docs/guide/server-rendering.md) | SSR capabilities                   |
 | Pros and Cons    | [docs/guide/pros-and-cons.md](docs/guide/pros-and-cons.md)       | Framework comparison               |
@@ -263,6 +264,13 @@ cr query def respo.render.html/make-string
 | `render!`            | `respo.core/render!`                         | Sync virtual DOM to real DOM   |
 | `render-with!`       | `respo.core/render-with!`                    | Render with managed memo frame |
 | `memo-comp-by`       | `respo.core/memo-comp-by`                    | Memoize keyed components       |
+| `memo-value-by`      | `respo.core/memo-value-by`                   | Memoize immutable derived data |
+| `show`               | `respo.core/show`                            | Render a child conditionally   |
+| `for-keyed`          | `respo.core/for-keyed`                       | Build ordered keyed child pairs |
+| `effect-watch`       | `respo.core/effect-watch`                    | Dependency-aware lifecycle effect |
+| `error-boundary`     | `respo.core/error-boundary`                  | Render a synchronous fallback  |
+| `make-render-scheduler` | `respo.core/make-render-scheduler`        | Coalesce render requests       |
+| `resource-reducer`   | `respo.resource/resource-reducer`            | Reduce immutable async state   |
 | `<>`                 | `respo.core/<>`                              | Create text nodes              |
 | `comp-space`         | `respo.comp.space/comp-space`                | Spacing component              |
 | `comp-inspect`       | `respo.comp.inspect/comp-inspect`            | Inspection/debugging component |

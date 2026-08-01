@@ -57,6 +57,7 @@ The Respo project is a virtual DOM library written in Calcit-js, containing:
 - `respo.render.diff` - Find differences between virtual DOM trees
 - `respo.render.dom` - DOM element creation and manipulation
 - `respo.render.effect` - Component lifecycle effects
+- `respo.resource` - Immutable async resource actions and reducer
 - `respo.render.patch` - Apply DOM patches
 - `respo.controller.client` - Client-side state management (activate-instance!, patch-instance!, send-to-component!)
 - `respo.controller.resolve` - Event handling and resolution (build-deliver-event, wrap-dispatch)
@@ -275,6 +276,12 @@ Applications do not need `memof` for component memoization. For the complete
 `render-with!` setup, cache semantics, and migration rules for `memof1-call-by`,
 `memof1-call`, and `memof1-as`, see
 [Render list: memoization and memof migration](guide/render-list.md#memoizing-components).
+
+For conditional rendering, keyed pair construction, derived-value memoization,
+lifecycle helpers, DOM refs, immutable resources, error boundaries, and render
+batching, follow [Common primitives](guide/common-primitives.md). These APIs keep
+application state in immutable store data and reserve effects for explicit external
+boundaries.
 
 ### 5. Styling Pattern
 
