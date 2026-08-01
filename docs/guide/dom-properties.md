@@ -12,6 +12,7 @@ entry_for:
   - "class-name"
   - "property naming"
   - "dom attributes"
+  - ":ref"
 ---
 
 ## DOM properties
@@ -33,6 +34,21 @@ Respo is updating DOM properties with a simple solution. It's okay but not that 
 I'm afraid you have to figure out more by yourself.
 
 Properties(except for `style` and `event`) are specified in `attrs` field. `style` is a HashMap. `event` is followed with a HashMap of events too.
+
+### Special `:ref` prop
+
+`:ref` accepts a callback, but it is not a DOM attribute. Respo calls it with the real element on mount and with `nil` when the ref is replaced or the element unmounts:
+
+```cirru.no-check
+div
+  {} $ :ref
+    fn (target)
+      println target
+```
+
+This guarantees that a removed ref is actually cleared instead of leaving `ref="null"` or another string in the DOM. Keep DOM handles outside the immutable application store. Lifecycle order and update behavior are documented in [Common primitives](./common-primitives.md#dom-refs).
+
+Ref callback identity is compared during diffing. Inline closures are new values on each render and therefore cause an old `nil` callback followed by a new element callback even when the DOM node itself is unchanged. Keep callbacks idempotent, or explicitly reuse a stable callback when that repeated lifecycle work is undesirable.
 
 The impelementation details is:
 

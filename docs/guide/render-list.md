@@ -11,7 +11,9 @@ aliases:
 entry_for:
   - "list->"
   - "keyed list"
+  - "for-keyed"
   - "memo-comp-by"
+  - "memo-value-by"
 ---
 
 ## Render list
@@ -54,6 +56,19 @@ list->
 ```
 
 Child elements are rendered in the order that items appear in the list. Diffing is not very fast, so don't make the list too large.
+
+`for-keyed` packages the common ordered-list transformation and reports a `nil` key with its source index:
+
+```cirru.no-check
+list->
+  {} (:class-name |task-list)
+  for-keyed tasks
+    fn (task) (:id task)
+    fn (task _idx)
+      task-component task
+```
+
+See [Common primitives](./common-primitives.md#conditional-and-keyed-rendering) for its callback contract and error behavior.
 
 ## Memoizing components
 
@@ -104,8 +119,9 @@ defn reload! ()
 ```
 
 Use `memo-comp-by` only for component functions returning a Respo `Component`. It is
-not a general-purpose replacement for memoizing data transformations, network
-requests, or arbitrary expressions.
+not a replacement for requests or effects. For deterministic immutable data
+transformations, use `memo-value-by` inside the same managed render frame; see
+[Common primitives](./common-primitives.md#memoizing-immutable-derived-values).
 
 ## Migrating from memof
 

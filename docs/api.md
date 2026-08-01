@@ -48,10 +48,20 @@ cr query def respo.render.html/make-string
 |                      | `render!`         |
 |                      | `render-with!`    |
 |                      | `memo-comp-by`    |
+|                      | `memo-value-by`   |
 |                      | `clear-cache!`    |
 |                      | `realize-ssr!`    |
 |                      | `list->`          |
+|                      | `for-keyed`       |
+|                      | `show`            |
+|                      | `effect-on-mount` |
+|                      | `effect-on-update` |
+|                      | `effect-on-unmount` |
+|                      | `effect-watch`    |
+|                      | `error-boundary`  |
+|                      | `make-render-scheduler` |
 |                      | `>>`              |
+| `respo.resource`     | `resource-idle` `resource-reducer` `load-resource!` |
 | `respo.comp.space`   | `comp-space` `=<` |
 | `respo.comp.inspect` | `comp-inspect`    |
 | `respo.render.html`  | `make-string`     |
@@ -72,6 +82,8 @@ Normally you do not need these lower level APIs for everyday component work, but
 |                           | `patch-instance!`    |
 
 Legacy standalone API pages were merged into source doc strings. Older names such as `make-html` and `render-app` are no longer separate API pages.
+
+The immutable-data-oriented conditional, keyed list, lifecycle, ref, resource, error, and batching APIs are introduced together in [Common primitives](guide/common-primitives.md).
 
 ### APIs
 
