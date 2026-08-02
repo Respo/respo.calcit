@@ -120,6 +120,8 @@ div $ {}
       + 24 $ text-width title 16 |BlinkMacSystemFont
 ```
 
+`text-width` returns `0` when Canvas is unavailable, so the same immutable style calculation is safe during SSR and Node.js tests. A `nil` inline style value is normalized to an empty string, which clears the CSS declaration without serializing `nil` into DOM or HTML output.
+
 #### Extract from `:style`
 
 When moving an inline style map into `defstyle`, keep the change mechanical:
