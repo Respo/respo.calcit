@@ -1,3 +1,3 @@
 
-{} (:calcit-version |0.12.55)
+{} (:calcit-version |0.12.57)
   :dependencies $ {} (|calcit-lang/calcit-test |0.0.6)
