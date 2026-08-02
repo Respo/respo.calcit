@@ -466,19 +466,19 @@
             defstruct TodoState (:draft 'String) (:locked? 'Bool) (:message 'String)
           :examples $ []
           :schema $ :: 'Dynamic
-        |store $ %{} :CodeEntry (:doc "|Default Store record value. The top-level schema uses the generic Record type until Calcit can persist a concrete defstruct value schema (calcit-lang/calcit#290).")
+        |store $ %{} :CodeEntry (:doc "|Default immutable Store record value used by the example application.")
           :code $ quote
             def store $ %{} Store
               :tasks $ []
               :states $ {}
               :cursor $ []
           :examples $ []
-          :schema $ :: 'Record
-        |task $ %{} :CodeEntry (:doc "|Default Task record value. The top-level schema uses the generic Record type until Calcit can persist a concrete defstruct value schema (calcit-lang/calcit#290).")
+          :schema $ :: 'respo.app.schema/Store
+        |task $ %{} :CodeEntry (:doc "|Default immutable Task record value used when constructing example tasks.")
           :code $ quote
             def task $ %{} Task (:id |) (:text |) (:done? false)
           :examples $ []
-          :schema $ :: 'Record
+          :schema $ :: 'respo.app.schema/Task
       :ns $ %{} :NsEntry (:doc |)
         :code $ quote (ns respo.app.schema)
     |respo.app.style.widget $ %{} :FileEntry
