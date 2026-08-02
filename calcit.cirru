@@ -1560,12 +1560,12 @@
             {} (:return 'Unit)
               :args $ [] 'Dynamic 'respo.schema/Component 'Fn
               :features $ #{} :js-ffi
-        |render! $ %{} :CodeEntry (:doc "|Synchronize a component tree to a mount target.\n\nThe first call mounts the app. Later calls diff against `*global-element` and patch the existing DOM. `dispatch!` is stored internally and used by generated event listeners to deliver action tuples.")
+        |render! $ %{} :CodeEntry (:doc "|Synchronize a component tree to a mount target.\n\nThe first call mounts the app. Later calls diff against `*global-element` and patch the existing DOM. `dispatch!` is stored internally and used by generated event listeners to deliver action tuples.\n\nThe stored example wraps the call in a function so `check-examples` validates the public call shape without executing browser DOM effects.")
           :code $ quote
             defn render! (target markup dispatch!) (reset! *dispatch-fn dispatch!)
               if (some? @*global-element) (rerender-app! target markup *dispatch-fn) (mount-app! target markup *dispatch-fn)
           :examples $ []
-            quote $ render! mount-target (comp-container @*store) dispatch!
+            quote $ fn (mount-target component dispatch!) (render! mount-target component dispatch!)
           :schema $ :: 'Fn
             {} (:return 'Unit)
               :args $ [] 'Dynamic 'respo.schema/Component 'Fn
