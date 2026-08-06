@@ -1910,14 +1910,14 @@
         |update-states-kv $ %{} :CodeEntry (:doc "|a quick dirty trick to partially update component state.\n\nnotice: need to handle empty state manually.")
           :code $ quote
             defn update-states-kv (store cursor k v)
-              update-in store
-                concat ([] :states) cursor $ [] :data
-                fn (state-option)
-                  option:fold state-option
-                    fn () $ do (js/console.warn |:states-kv-missing-state) nil
-                    fn (state)
-                      if (map? state) (assoc state k v)
-                        do (js/console.warn |:states-kv-invalid-state state) state
+              let
+                  path $ concat ([] :states) cursor ([] :data)
+                  state-option $ get-in store path
+                assoc-in store path $ option:fold state-option
+                  fn () $ do (js/console.warn |:states-kv-missing-state) nil
+                  fn (state)
+                    if (map? state) (assoc state k v)
+                      do (js/console.warn |:states-kv-invalid-state state) state
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'T)
@@ -1926,16 +1926,13 @@
         |update-states-merge $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn update-states-merge (store cursor state0 changes)
-              update-in store
-                concat ([] :states) cursor $ [] :data
-                fn (state-option)
-                  option:fold state-option
-                    fn () $ noted |merge-base-initial-state (merge state0 changes)
-                    fn (state)
-                      if
-                        or (map? state) (struct? state)
-                        noted |merge-base-latest-state $ merge state changes
-                        do (js/console.warn |unknown-state-to-merge state) state
+              let
+                  path $ concat ([] :states) cursor ([] :data)
+                  state $ option:unwrap-or (get-in store path) state0
+                assoc-in store path $ if
+                  or (map? state) (struct? state)
+                  noted |merge-base-latest-state $ merge state changes
+                  do (js/console.warn |unknown-state-to-merge state) state
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'T)
@@ -1992,23 +1989,35 @@
         |normalize-task $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn normalize-task (data)
-              if
-                or (struct? data) (map? data)
-                let
-                    id $ get data :id
-                    text $ get data :text
-                    done? $ get data :done?
-                  if
-                    and (option:some? id) (option:some? text) (option:some? done?)
-                      string? $ option:unwrap id
-                      string? $ option:unwrap text
-                      bool? $ option:unwrap done?
-                    %some $ %{} Task
-                      :id $ unsafe-coerce (option:unwrap id) String
-                      :text $ unsafe-coerce (option:unwrap text) String
-                      :done? $ unsafe-coerce (option:unwrap done?) Bool
-                    %none
-                %none
+              cond
+                  struct? data
+                  let
+                      id $ &struct:get data :id
+                      text $ &struct:get data :text
+                      done? $ &struct:get data :done?
+                    if
+                      and (string? id) (string? text) (bool? done?)
+                      %some $ %{} Task
+                        :id $ unsafe-coerce id String
+                        :text $ unsafe-coerce text String
+                        :done? $ unsafe-coerce done? Bool
+                      %none
+                (map? data)
+                  let
+                      id $ get data :id
+                      text $ get data :text
+                      done? $ get data :done?
+                    if
+                      and (option:some? id) (option:some? text) (option:some? done?)
+                        string? $ option:unwrap id
+                        string? $ option:unwrap text
+                        bool? $ option:unwrap done?
+                      %some $ %{} Task
+                        :id $ unsafe-coerce (option:unwrap id) String
+                        :text $ unsafe-coerce (option:unwrap text) String
+                        :done? $ unsafe-coerce (option:unwrap done?) Bool
+                      %none
+                true %none
           :examples $ []
           :schema $ :: 'Fn
             {}
@@ -3654,7 +3663,7 @@
       :defs $ {}
         |main! $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn main! () (html/run-tests) (test-pick-attrs) (test-pick-event) (memo/run-tests) (primitives/run-tests) (test-find-props-diffs) (test-pair-representation-transitions) (test-update-states-merge-record) (test-dom-fallback-values)
+            defn main! () (html/run-tests) (test-pick-attrs) (test-pick-event) (memo/run-tests) (primitives/run-tests) (test-find-props-diffs) (test-pair-representation-transitions) (test-update-states-merge-record) (test-dom-fallback-values) (test-normalize-task-struct)
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
@@ -3686,6 +3695,17 @@
                 is $ =
                   option:unwrap $ first @effects
                   :: :replace-prop ([]) ([]) ([] :class-name |new)
+          :examples $ []
+          :schema $ :: 'Dynamic
+        |test-normalize-task-struct $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            deftest test-normalize-task-struct $ testing |task_structs_restore_from_local_storage
+              let
+                  task $ %{} respo.app.schema/Task (:id |gen_id_39_1769789437265) (:text |saved) (:done? false)
+                  normalized $ option:unwrap (normalize-task task)
+                is $ = |gen_id_39_1769789437265 (&struct:get normalized :id)
+                is $ = |saved (&struct:get normalized :text)
+                is $ = false (&struct:get normalized :done?)
           :examples $ []
           :schema $ :: 'Dynamic
         |test-pair-representation-transitions $ %{} :CodeEntry (:doc |)
@@ -3765,6 +3785,7 @@
             respo.test.primitives :as primitives
             respo.util.format :refer $ get-style-value
             respo.util.dom :refer $ text-width
+            respo.main :refer $ normalize-task
     |respo.test.memo $ %{} :FileEntry
       :defs $ {}
         |*render-count $ %{} :CodeEntry (:doc |)
