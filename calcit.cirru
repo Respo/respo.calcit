@@ -1,5 +1,5 @@
 
-{} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `cr query` to inspect and `cr edit`/`cr tree` to modify. Run `cr docs agents --full` first. Manual edits must follow format and schema conventions, then run `cr edit format`.") (:package |respo) (:version |0.16.60)
+{} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `cr query` to inspect and `cr edit`/`cr tree` to modify. Run `cr docs agents --full` first. Manual edits must follow format and schema conventions, then run `cr edit format`.") (:package |respo) (:version |0.16.61)
   :entries $ {}
     :default $ {} (:description |) (:init-fn 'respo.main/main!) (:mode :js) (:reload-fn 'respo.main/reload!)
       :modules $ [] |calcit-test/
@@ -216,26 +216,6 @@
           :schema $ :: 'Fn
             {} (:return 'respo.schema/Effect)
               :args $ [] 'String
-        |make-keydown-listener $ %{} :CodeEntry (:doc "|DEPRECATED: Factory function approach for creating listeners. This was an experimental approach that did not work due to Record serialization issues. Use on-keydown function instead.")
-          :code $ quote
-            defn make-keydown-listener (cursor state)
-              %{} respo.schema/RespoListener (:name :on-keydown)
-                :handler $ fn (event dispatch!)
-                  match event $
-                    :keydown info
-                    when
-                      and
-                        = |m $ :key info
-                        :ctrl info
-                      do (js/console.log "|[7] on-keydown with cursor:" cursor |state: state)
-                        dispatch! cursor $ assoc state :message "|Message changed by Ctrl+M!"
-                        js/window.setTimeout
-                          fn () $ dispatch! cursor (assoc state :message "|Press Ctrl+M to change message")
-                          , 2000
-          :examples $ []
-          :schema $ :: 'Fn
-            {} (:return 'respo.schema/RespoListener)
-              :args $ [] 'List 'Map
         |number-order $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn number-order (a b)
@@ -260,8 +240,8 @@
                     :keydown info
                     when
                       and
-                        = |m $ :key info
-                        :ctrl info
+                        = |m $ option:unwrap-or (:key info) |
+                        option:unwrap-or (:ctrl info) false
                       do
                         dispatch! $ %:: Op :states cursor (assoc state :message "|Message changed by Ctrl+M!")
                         js/window.setTimeout
@@ -544,8 +524,11 @@
                           assoc task :text text
                           , task
                 (:hit-first rd)
-                  -> store $ update-in ([] :tasks 0)
-                    fn (task) (assoc task :text rd)
+                  update store :tasks $ fn (tasks)
+                    if (empty? tasks) tasks $ assoc tasks 0
+                      assoc
+                        option:unwrap $ first tasks
+                        , :text rd
                 (:toggle task-id)
                   update store :tasks $ fn (tasks)
                     assert-type tasks $ :: 'List 'respo.app.schema/Task
@@ -1964,7 +1947,7 @@
       :defs $ {}
         |main! $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn main! () $ do (; handle-ssr! mount-target) (load-console-formatter!)
+            defn main! () $ do
               if-let
                 raw $ js-nullish->option (js/window.localStorage.getItem |respo.calcit)
                 let
@@ -1977,7 +1960,10 @@
                   when
                     not $ list? tasks
                     raise |[Respo/main!]-expected-saved-tasks-as-a-list
-                  swap! *store assoc :tasks $ unsafe-coerce tasks (:: List respo.app.schema/Task)
+                  let
+                      restored $ -> tasks (map normalize-task) (filter option:some?) (map option:unwrap)
+                    assert-type restored $ :: List respo.app.schema/Task
+                    swap! *store assoc :tasks restored
               render-app! mount-target
               js/window.addEventListener |keydown $ fn (event)
                 let
@@ -2003,6 +1989,31 @@
             def mount-target $ query-mount-target
           :examples $ []
           :schema $ :: 'JsNullish 'JsObject
+        |normalize-task $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn normalize-task (data)
+              if
+                or (record? data) (map? data)
+                let
+                    id $ get data :id
+                    text $ get data :text
+                    done? $ get data :done?
+                  if
+                    and (option:some? id) (option:some? text) (option:some? done?)
+                      string? $ option:unwrap id
+                      string? $ option:unwrap text
+                      bool? $ option:unwrap done?
+                    %some $ %{} Task
+                      :id $ unsafe-coerce (option:unwrap id) String
+                      :text $ unsafe-coerce (option:unwrap text) String
+                      :done? $ unsafe-coerce (option:unwrap done?) Bool
+                    %none
+                %none
+          :examples $ []
+          :schema $ :: 'Fn
+            {}
+              :args $ [] 'Dynamic
+              :return $ :: 'Option 'respo.app.schema/Task
         |query-mount-target $ %{} :CodeEntry (:doc "|Queries the default mount element behind an explicit JavaScript FFI function so mount-target remains an optional value.")
           :code $ quote
             defn query-mount-target () $ if (exists? js/document) (js/document.querySelector |.app) nil
@@ -2042,7 +2053,7 @@
             |./calcit.build-errors :default build-errors
             |bottom-tip :default hud!
             respo.controller.client :refer $ send-to-component!
-            respo.app.schema :refer $ Op
+            respo.app.schema :refer $ Op Task
     |respo.memo $ %{} :FileEntry
       :defs $ {}
         |*component-caches $ %{} :CodeEntry (:doc |)

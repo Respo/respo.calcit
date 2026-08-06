@@ -8,7 +8,7 @@
 
 ### Project Info
 
-- **Version**: 0.16.21
+- **Version**: 0.16.61
 - **Init Function**: `respo.main/main!`
 - **Reload Function**: `respo.main/reload!`
 - **Core Namespaces**: 33 namespaces providing virtual DOM, rendering, components, and utilities
