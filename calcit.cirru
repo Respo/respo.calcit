@@ -4424,7 +4424,7 @@
                       js/console.log |virtual: $ -> vdom :children (map last) (map :name) to-lispy-string
                       js/console.log |real: $ .-children element
                 let
-                  real-children $ unsafe-coerce (.-children element) JsObject
+                    real-children $ unsafe-coerce (.-children element) JsObject
                   loop
                       acc 0
                       other-children $ :children vdom
