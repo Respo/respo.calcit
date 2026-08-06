@@ -109,7 +109,7 @@ App initialization:
 let
     *store $ atom $ {} (:point 0) (:states {})
     updater $ fn (store op)
-      tag-match op
+      match op
         (:TODO a b) store
         _ store
     dispatch! $ fn (op)
