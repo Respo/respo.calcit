@@ -11,14 +11,14 @@
           :code $ quote
             defcomp comp-container (store)
               let
-                  states $ &record:get store :states
+                  states $ &struct:get store :states
                 div
                   {} (; :class-name highlight-defcomp) (:class-name style-global)
-                  comp-todolist states $ &record:get store :tasks
+                  comp-todolist states $ &struct:get store :tasks
                   div
                     {} $ :style style-states
                     <> $ str "|states: "
-                      to-lispy-string $ &record:get store :states
+                      to-lispy-string $ &struct:get store :states
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'respo.schema/Component)
@@ -59,16 +59,16 @@
                     comp-inspect |Task task $ {} (:left 200)
                     button $ {} (:class-name style-done)
                       :style $ {}
-                        :background-color $ if (&record:get task :done?) (hsl 200 20 80) (hsl 200 80 70)
+                        :background-color $ if (&struct:get task :done?) (hsl 200 20 80) (hsl 200 80 70)
                       :on-click $ fn (e d!)
-                        d! $ :: :toggle (&record:get task :id)
+                        d! $ :: :toggle (&struct:get task :id)
                     =< 8 0
                     input $ {}
-                      :value $ &record:get task :text
+                      :value $ &struct:get task :text
                       :class-name widget/style-input
                       :on-input $ fn (e d!)
                         let
-                            task-id $ &record:get task :id
+                            task-id $ &struct:get task :id
                             text $ str
                               option:unwrap $ :value e
                           d! $ %:: Op :update task-id text
@@ -80,7 +80,7 @@
                     div
                       {} (:class-name widget/style-button)
                         :on-click $ fn (e d!)
-                          d! $ %:: Op :remove (&record:get task :id)
+                          d! $ %:: Op :remove (&struct:get task :id)
                       <> |Remove
                     =< 8 0
                     div ({}) (<> state)
@@ -142,11 +142,11 @@
                     div
                       {} $ :style style-panel
                       input $ {} (:placeholder |Text) (:id |draft-input)
-                        :value $ &record:get state :draft
+                        :value $ &struct:get state :draft
                         :class-name widget/style-input
                         :style $ {}
                           :width $ &max 200
-                            + 24 $ text-width (&record:get state :draft) 16 |BlinkMacSystemFont
+                            + 24 $ text-width (&struct:get state :draft) 16 |BlinkMacSystemFont
                         :on-input $ fn (e d!)
                           d! $ %:: Op :states-merge cursor state
                             {} $ :draft
@@ -156,7 +156,7 @@
                       span
                         {} (:class-name widget/style-button)
                           :on-click $ fn (e d!)
-                            d! $ %:: Op :add (&record:get state :draft)
+                            d! $ %:: Op :add (&struct:get state :draft)
                             d! cursor $ assoc state :draft |
                         span $ {} (:on-click nil) (:inner-text |Add)
                       =< 8 0
@@ -173,7 +173,7 @@
                       -> tasks .to-list .reverse $ map
                         fn (task)
                           let
-                              task-id $ &record:get task :id
+                              task-id $ &struct:get task :id
                             [] task-id $ memo-comp-by task-id comp-task (>> states task-id) task
                     if
                       > (count tasks) 0
@@ -182,7 +182,7 @@
                         div
                           {} (:class-name widget/style-button)
                             :on-click $ if
-                              not $ &record:get state :locked?
+                              not $ &struct:get state :locked?
                               fn (e d!)
                                 d! $ %:: Op :clear
                           <> |Clear2
@@ -192,7 +192,7 @@
                             :on-click $ fn (e d!)
                               d! cursor $ update state :locked? not
                           <>
-                            str-spaced |Lock? $ &record:get state :locked?
+                            str-spaced |Lock? $ &struct:get state :locked?
                             {} $ :font-size 13
                         =< 8 0
                         comp-wrap $ comp-zero
@@ -200,7 +200,7 @@
                     div
                       {} $ :style
                         {} (:padding |8px) (:font-size 12) (:color |#999) (:margin-top |16px)
-                      <> $ &record:get state :message
+                      <> $ &struct:get state :message
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'respo.schema/Component)
@@ -512,7 +512,7 @@
                   update store :tasks $ fn (tasks)
                     -> tasks $ filter
                       fn (task)
-                        not $ = (&record:get task :id) task-id
+                        not $ = (&struct:get task :id) task-id
                 (:clear)
                   assoc store :tasks $ []
                 (:update task-id text)
@@ -520,7 +520,7 @@
                     -> tasks $ map
                       fn (task)
                         if
-                          = (&record:get task :id) task-id
+                          = (&struct:get task :id) task-id
                           assoc task :text text
                           , task
                 (:hit-first rd)
@@ -535,7 +535,7 @@
                     -> tasks $ map
                       fn (task) (assert-type task 'respo.app.schema/Task)
                         if
-                          = (&record:get task :id) task-id
+                          = (&struct:get task :id) task-id
                           update task :done? not
                           , task
                 _ $ do (eprintln "|Unknown op:" op) store
@@ -747,22 +747,22 @@
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
-              :args $ [] 'Tuple
+              :args $ [] 'Enum
         |traverse-and-call $ %{} :CodeEntry (:doc "|Traverses the rendered tree and invokes component listeners. The dispatch callback intentionally stays at the generic Fn boundary because wrap-dispatch supports multiple operation forms and an optional payload.")
           :code $ quote
             defn traverse-and-call (element event-tuple dispatch!)
               when (some? element)
                 when (component? element)
                   let
-                      listeners $ &record:get element :listeners
-                      tree $ &record:get element :tree
+                      listeners $ &struct:get element :listeners
+                      tree $ &struct:get element :tree
                     each listeners $ fn (listener)
                       let
-                          handler $ &record:get listener :handler
+                          handler $ &struct:get listener :handler
                         handler event-tuple dispatch!
                     traverse-and-call tree event-tuple dispatch!
                 when (element? element)
-                  each (&record:get element :children)
+                  each (&struct:get element :children)
                     fn (pair)
                       let
                           child $ option:unwrap (get pair 1)
@@ -770,7 +770,7 @@
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
-              :args $ [] 'Dynamic 'Tuple 'Fn
+              :args $ [] 'Dynamic 'Enum 'Fn
         |wrap-dispatch $ %{} :CodeEntry (:doc "|Wraps a raw dispatch function to automatically handle different operation types (list, tag, or direct).")
           :code $ quote
             defn wrap-dispatch (*dispatch-fn)
@@ -804,7 +804,7 @@
                 let
                     target-element $ find-event-target @*global-element coord event-name
                     target-listener-option $ if (some? target-element)
-                      get (&record:get target-element :event) event-name
+                      get (&struct:get target-element :event) event-name
                       do (js/console.warn |found-no-element coord event-name) (%none)
                     dispatch-wrap $ wrap-dispatch *dispatch-fn
                   option:fold target-listener-option
@@ -842,11 +842,11 @@
                   target-element $ loop
                       m $ get-markup-at element coord
                     if (component? m)
-                      recur $ &record:get m :tree
+                      recur $ &struct:get m :tree
                       , m
                   event-present? $ if (some? target-element)
                     option:fold
-                      get (&record:get target-element :event) event-name
+                      get (&struct:get target-element :event) event-name
                       fn () false
                       fn (_handler) true
                     , false
@@ -865,9 +865,9 @@
                 () markup
                 (coord-head cs)
                   if (component? markup)
-                    recur (&record:get markup :tree) cs
+                    recur (&struct:get markup :tree) cs
                     let
-                        children $ &record:get markup :children
+                        children $ &struct:get markup :children
                         child-pair-option $ find children
                           fn (child-entry)
                             =
@@ -1088,8 +1088,8 @@
             defn decorate-defcomp (c name)
               update c :tree $ fn (tree)
                 if
-                  and (record? tree)
-                    = (&record:struct tree) schema/Element
+                  and (struct? tree)
+                    = (&struct:definition tree) schema/Element
                   update tree :attrs $ fn (attrs)
                     conj attrs $ [] :data-comp name
                   , tree
@@ -1275,7 +1275,7 @@
           :code $ quote
             defn extract-effects-list (markup)
               &let
-                markup-tree $ &record:get markup :tree
+                markup-tree $ &struct:get markup :tree
                 cond
                     nil? markup-tree
                     assoc markup :tree $ span ({})
@@ -1283,7 +1283,7 @@
                     let
                         node-tree $ option:unwrap
                           find markup-tree $ fn (x)
-                            and (record? x)
+                            and (struct? x)
                               or (component? x) (element? x)
                         effects-list $ -> markup-tree (filter effect?)
                         listeners-list $ -> markup-tree (filter listener?)
@@ -1501,8 +1501,8 @@
               cond
                   nil? props
                   {}
-                (record? props)
-                  &map:filter-kv (&record:to-map props)
+                (struct? props)
+                  &map:filter-kv (&struct:to-map props)
                     fn (_k v) (some? v)
                 (map? props) props
                 true $ raise
@@ -1555,7 +1555,7 @@
                   collect! $ fn (op coord n-coord v)
                     &buf-list:push changes $ [] op coord n-coord v
                   deliver-event $ build-deliver-event *global-element (atom dispatch!)
-                if (nil? app-element) (raise "|Detected no element from SSR!")
+                if (js-nullish? app-element) (raise "|Detected no element from SSR!")
                 compare-to-dom! (purify-element element) app-element
                 collect-mounting collect! ([]) ([]) element true
                 reset! *global-element $ mute-element element
@@ -1933,7 +1933,7 @@
                     fn () $ noted |merge-base-initial-state (merge state0 changes)
                     fn (state)
                       if
-                        or (map? state) (record? state)
+                        or (map? state) (struct? state)
                         noted |merge-base-latest-state $ merge state changes
                         do (js/console.warn |unknown-state-to-merge state) state
           :examples $ []
@@ -1952,7 +1952,7 @@
                 raw $ js-nullish->option (js/window.localStorage.getItem |respo.calcit)
                 let
                     decoded $ parse-cirru-edn (unsafe-coerce raw String)
-                    tasks $ if (tuple? decoded)
+                    tasks $ if (enum? decoded)
                       option:unwrap-or
                         unsafe-coerce decoded $ :: 'Option 'Dynamic
                         []
@@ -1993,7 +1993,7 @@
           :code $ quote
             defn normalize-task (data)
               if
-                or (record? data) (map? data)
+                or (struct? data) (map? data)
                 let
                     id $ get data :id
                     text $ get data :text
@@ -2038,7 +2038,7 @@
         |save-store! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn save-store! () $ do
-              js/window.localStorage.setItem |respo.calcit $ format-cirru-edn (&record:get @*store :tasks)
+              js/window.localStorage.setItem |respo.calcit $ format-cirru-edn (&struct:get @*store :tasks)
               ;nil
           :examples $ []
           :schema $ :: 'Fn
@@ -2158,7 +2158,7 @@
                     hit? $ option:fold entry-option
                       fn () false
                       fn (entry)
-                        &= args $ &record:get entry :args
+                        &= args $ &struct:get entry :args
                     resolved-entry $ if hit? (option:unwrap entry-option)
                       %{} MemoEntry (:args args)
                         :value $ call-value f args
@@ -2166,7 +2166,7 @@
                     swap! *frame-component-caches assoc-in ([] f key) resolved-entry
                     when (not hit?)
                       swap! *component-caches assoc-in ([] f key) resolved-entry
-                  &record:get resolved-entry :value
+                  &struct:get resolved-entry :value
           :examples $ []
           :schema $ :: 'Fn
             {} (:rest 'Dynamic) (:return 'Dynamic)
@@ -2329,35 +2329,35 @@
                     collect! $ :: :rm-element coord n-coord nil
                 (and (component? old-tree) (component? new-tree))
                   let
-                      next-coord $ conj coord (&record:get new-tree :name)
+                      next-coord $ conj coord (&struct:get new-tree :name)
                     if
-                      = (&record:get old-tree :name) (&record:get new-tree :name)
+                      = (&struct:get old-tree :name) (&struct:get new-tree :name)
                       do (collect-updating collect! :before-update coord n-coord old-tree new-tree)
-                        find-element-diffs collect! next-coord n-coord (&record:get old-tree :tree) (&record:get new-tree :tree)
+                        find-element-diffs collect! next-coord n-coord (&struct:get old-tree :tree) (&struct:get new-tree :tree)
                         collect-updating collect! :update coord n-coord old-tree new-tree
                       do (collect-unmounting collect! coord n-coord old-tree true)
                         collect! $ :: :replace-element coord n-coord new-tree
                         collect-mounting collect! coord n-coord new-tree true
                 (and (component? old-tree) (element? new-tree))
                   do (collect-own-unmounting collect! coord n-coord old-tree true)
-                    recur collect! coord n-coord (&record:get old-tree :tree) new-tree
+                    recur collect! coord n-coord (&struct:get old-tree :tree) new-tree
                 (and (element? old-tree) (component? new-tree))
                   let
-                      new-coord $ conj coord (&record:get new-tree :name)
+                      new-coord $ conj coord (&struct:get new-tree :name)
                     do
-                      find-element-diffs collect! new-coord n-coord old-tree $ &record:get new-tree :tree
+                      find-element-diffs collect! new-coord n-coord old-tree $ &struct:get new-tree :tree
                       collect-own-mounting collect! coord n-coord new-tree true
                 (and (element? old-tree) (element? new-tree))
                   if
-                    not= (&record:get old-tree :name) (&record:get new-tree :name)
+                    not= (&struct:get old-tree :name) (&struct:get new-tree :name)
                     do (collect-unmounting collect! coord n-coord old-tree true)
                       collect! $ :: :replace-element coord n-coord new-tree
                       collect-mounting collect! coord n-coord new-tree true
                     do
-                      find-props-diffs collect! coord n-coord (&record:get old-tree :attrs) (&record:get new-tree :attrs)
+                      find-props-diffs collect! coord n-coord (&struct:get old-tree :attrs) (&struct:get new-tree :attrs)
                       let
-                          old-ref $ &record:get old-tree :ref
-                          new-ref $ &record:get new-tree :ref
+                          old-ref $ &struct:get old-tree :ref
+                          new-ref $ &struct:get new-tree :ref
                         when
                           not $ identical? old-ref new-ref
                           if (some? old-ref)
@@ -2367,14 +2367,14 @@
                             collect! $ :: :effect-update coord n-coord
                               fn (target) (new-ref target)
                       let
-                          old-style $ &record:get old-tree :style
-                          new-style $ &record:get new-tree :style
+                          old-style $ &struct:get old-tree :style
+                          new-style $ &struct:get new-tree :style
                         if (not= old-style new-style) (find-style-diffs collect! coord n-coord old-style new-style)
                       let
                           old-events $ keys-non-nil
-                            either (&record:get old-tree :event) ({})
+                            either (&struct:get old-tree :event) ({})
                           new-events $ keys-non-nil
-                            either (&record:get new-tree :event) ({})
+                            either (&struct:get new-tree :event) ({})
                         when (not= old-events new-events)
                           let
                               added-events $ difference new-events old-events
@@ -2384,8 +2384,8 @@
                             &doseq (event-name removed-events)
                               collect! $ :: :rm-event coord n-coord event-name
                       let
-                          old-children $ &record:get old-tree :children
-                          new-children $ &record:get new-tree :children
+                          old-children $ &struct:get old-tree :children
+                          new-children $ &struct:get new-tree :children
                         if
                           and dev? $ detect-keys-dup
                             map new-children $ fn (entry)
@@ -2508,13 +2508,13 @@
             defn make-element (virtual-element listener-builder coord)
               assert |coord-is-required $ some? coord
               if (component? virtual-element)
-                make-element (&record:get virtual-element :tree) listener-builder $ conj coord (&record:get virtual-element :name)
+                make-element (&struct:get virtual-element :tree) listener-builder $ conj coord (&struct:get virtual-element :name)
                 let
-                    tag-name $ turn-string (&record:get virtual-element :name)
-                    attrs $ &record:get virtual-element :attrs
-                    style $ &record:get virtual-element :style
-                    events $ &record:get virtual-element :event
-                    children $ &record:get virtual-element :children
+                    tag-name $ turn-string (&struct:get virtual-element :name)
+                    attrs $ &struct:get virtual-element :attrs
+                    style $ &struct:get virtual-element :style
+                    events $ &struct:get virtual-element :event
+                    children $ &struct:get virtual-element :children
                     element $ unsafe-coerce (js/document.createElement tag-name) JsObject
                     child-elements $ if (map? children)
                       map (.to-list children)
@@ -2607,28 +2607,28 @@
               cond
                   component? tree
                   let
-                      effects $ &record:get tree :effects
-                      next-coord $ conj coord (&record:get tree :name)
+                      effects $ &struct:get tree :effects
+                      next-coord $ conj coord (&struct:get tree :name)
                     when
                       not $ empty? effects
                       &doseq (effect effects)
                         let
-                            method $ &record:get effect :method
+                            method $ &struct:get effect :method
                           collect! $ :: :effect-mount next-coord n-coord
                             fn (target)
-                              method (&record:get effect :args) ([] :mount target at-place?)
-                    recur collect! next-coord n-coord (&record:get tree :tree) false
+                              method (&struct:get effect :args) ([] :mount target at-place?)
+                    recur collect! next-coord n-coord (&struct:get tree :tree) false
                 (element? tree)
                   do
                     let
-                        ref! $ &record:get tree :ref
+                        ref! $ &struct:get tree :ref
                       when (some? ref!)
                         collect! $ :: :effect-mount coord n-coord
                           fn (target)
                             (unsafe-coerce ref! Fn) target
                     loop
                         children $ let
-                            source $ &record:get tree :children
+                            source $ &struct:get tree :children
                           if (map? source)
                             .to-list $ .to-list source
                             , source
@@ -2654,14 +2654,14 @@
                 not $ component? tree
                 raise |[Respo/collect-own-mounting]-expected-a-component
               let
-                  effects $ &record:get tree :effects
-                  next-coord $ conj coord (&record:get tree :name)
+                  effects $ &struct:get tree :effects
+                  next-coord $ conj coord (&struct:get tree :name)
                 &doseq (effect effects)
                   let
-                      method $ &record:get effect :method
+                      method $ &struct:get effect :method
                     collect! $ :: :effect-mount next-coord n-coord
                       fn (target)
-                        method (&record:get effect :args) ([] :mount target at-place?)
+                        method (&struct:get effect :args) ([] :mount target at-place?)
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
@@ -2674,14 +2674,14 @@
                 not $ component? tree
                 raise |[Respo/collect-own-unmounting]-expected-a-component
               let
-                  effects $ &record:get tree :effects
-                  next-coord $ conj coord (&record:get tree :name)
+                  effects $ &struct:get tree :effects
+                  next-coord $ conj coord (&struct:get tree :name)
                 &doseq (effect effects)
                   let
-                      method $ &record:get effect :method
+                      method $ &struct:get effect :method
                     collect! $ :: :effect-unmount next-coord n-coord
                       fn (target)
-                        method (&record:get effect :args) ([] :unmount target at-place?)
+                        method (&struct:get effect :args) ([] :unmount target at-place?)
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
@@ -2693,22 +2693,22 @@
               cond
                   component? tree
                   let
-                      effects $ &record:get tree :effects
-                      new-coord $ conj coord (&record:get tree :name)
-                    collect-unmounting collect! new-coord n-coord (&record:get tree :tree) false
+                      effects $ &struct:get tree :effects
+                      new-coord $ conj coord (&struct:get tree :name)
+                    collect-unmounting collect! new-coord n-coord (&struct:get tree :tree) false
                     when
                       not $ empty? effects
                       &doseq (effect effects)
                         let
-                            method $ &record:get effect :method
+                            method $ &struct:get effect :method
                           collect! $ :: :effect-unmount new-coord n-coord
                             fn (target)
-                              method (&record:get effect :args) ([] :unmount target at-place?)
+                              method (&struct:get effect :args) ([] :unmount target at-place?)
                 (element? tree)
                   do
                     loop
                         children $ let
-                            source $ &record:get tree :children
+                            source $ &struct:get tree :children
                           if (map? source)
                             .to-list $ .to-list source
                             , source
@@ -2723,7 +2723,7 @@
                             collect-unmounting collect! (conj coord k) (conj n-coord idx) child false
                         recur (rest children) (inc idx)
                     let
-                        ref! $ &record:get tree :ref
+                        ref! $ &struct:get tree :ref
                       when (some? ref!)
                         collect! $ :: :effect-unmount coord n-coord
                           fn (_target)
@@ -2740,9 +2740,9 @@
                 not $ component? new-tree
                 raise |[Respo/collect-updating]-expected-the-new-tree-to-be-a-component
               let
-                  old-effects $ &record:get old-tree :effects
-                  new-effects $ &record:get new-tree :effects
-                  next-coord $ conj coord (&record:get new-tree :name)
+                  old-effects $ &struct:get old-tree :effects
+                  new-effects $ &struct:get new-tree :effects
+                  next-coord $ conj coord (&struct:get new-tree :name)
                   effect-count $ option:unwrap
                     max $ [] (count old-effects) (count new-effects)
                 &doseq
@@ -2753,39 +2753,39 @@
                     if-let (old-effect old-effect-option)
                       if-let (new-effect new-effect-option)
                         if
-                          = (&record:get old-effect :name) (&record:get new-effect :name)
+                          = (&struct:get old-effect :name) (&struct:get new-effect :name)
                           when-not
-                            =seq (&record:get new-effect :args) (&record:get old-effect :args)
+                            =seq (&struct:get new-effect :args) (&struct:get old-effect :args)
                             let
                                 effect $ if (= action :before-update) old-effect new-effect
-                                method $ &record:get effect :method
+                                method $ &struct:get effect :method
                               collect! $ ::
                                 if (= :update action) :effect-update :effect-before-update
                                 , next-coord n-coord
                                   fn (target)
-                                    method (&record:get effect :args) ([] action target false)
+                                    method (&struct:get effect :args) ([] action target false)
                           let
                               effect $ if (= action :before-update) old-effect new-effect
-                              method $ &record:get effect :method
+                              method $ &struct:get effect :method
                               lifecycle-action $ if (= action :before-update) :unmount :mount
                             collect! $ ::
                               if (= :update action) :effect-update :effect-before-update
                               , next-coord n-coord
                                 fn (target)
-                                  method (&record:get effect :args) ([] lifecycle-action target false)
+                                  method (&struct:get effect :args) ([] lifecycle-action target false)
                         when (= action :before-update)
                           let
-                              method $ &record:get old-effect :method
+                              method $ &struct:get old-effect :method
                             collect! $ :: :effect-before-update next-coord n-coord
                               fn (target)
-                                method (&record:get old-effect :args) ([] :unmount target false)
+                                method (&struct:get old-effect :args) ([] :unmount target false)
                       if-let (new-effect new-effect-option)
                         when (= action :update)
                           let
-                              method $ &record:get new-effect :method
+                              method $ &struct:get new-effect :method
                             collect! $ :: :effect-update next-coord n-coord
                               fn (target)
-                                method (&record:get new-effect :args) ([] :mount target false)
+                                method (&struct:get new-effect :args) ([] :mount target false)
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
@@ -2801,15 +2801,11 @@
           :code $ quote
             defn element->string (element)
               let
-                  tag-name $ turn-string
-                    option:unwrap $ :name element
-                  attrs $ pairs-map
-                    option:unwrap-or (:attrs element) ([])
-                  styles $ option:unwrap-or (:style element) ([])
+                  tag-name $ turn-string (element :name)
+                  attrs $ pairs-map (element :attrs)
+                  styles $ element :style
                   text-inside $ if
-                    =
-                      option:unwrap $ :name element
-                      , :textarea
+                    = (element :name) :textarea
                     option:map (get attrs :value)
                       fn (value)
                         escape-html $ str value
@@ -2827,9 +2823,8 @@
                     if (blank? props-in-string) | "| "
                     , props-in-string "| >"
                   &let
-                    children $ ->
-                      option:unwrap-or (:children element) ([])
-                      map $ fn (entry)
+                    children $ map (element :children)
+                      fn (entry)
                         let
                             child $ option:unwrap (last entry)
                           element->string child
@@ -2841,7 +2836,7 @@
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'String)
-              :args $ [] 'Map
+              :args $ [] 'respo.schema/Element
         |entry->html $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn entry->html (entry)
@@ -3242,8 +3237,8 @@
         |resource-action? $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn resource-action? (x)
-              and (tuple? x)
-                = (&tuple:enum x) ResourceAction
+              and (enum? x)
+                = (&enum:definition x) ResourceAction
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Bool)
@@ -3279,7 +3274,7 @@
                 not $ resource-state? state
                 raise "|[Respo/resource-loading?] expected ResourceState"
               let
-                  status $ &record:get state :status
+                  status $ &struct:get state :status
                 or (= status :pending) (= status :refreshing)
           :examples $ []
             quote $ resource-loading?
@@ -3311,23 +3306,23 @@
                 (:started request-id)
                   %{} ResourceState
                     :status $ let
-                        status $ &record:get state :status
+                        status $ &struct:get state :status
                       if
                         or (= :ready status) (= :refreshing status)
                         , :refreshing :pending
                     :request-id request-id
-                    :data $ &record:get state :data
+                    :data $ &struct:get state :data
                     :error nil
                 (:ready request-id data)
                   if
-                    = (&record:get state :request-id) request-id
+                    = (&struct:get state :request-id) request-id
                     %{} ResourceState (:status :ready) (:request-id request-id) (:data data) (:error nil)
                     , state
                 (:failed request-id error)
                   if
-                    = (&record:get state :request-id) request-id
+                    = (&struct:get state :request-id) request-id
                     %{} ResourceState (:status :error) (:request-id request-id)
-                      :data $ &record:get state :data
+                      :data $ &struct:get state :data
                       :error error
                     , state
           :examples $ []
@@ -3353,8 +3348,8 @@
         |resource-state? $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn resource-state? (x)
-              and (record? x)
-                = (&record:struct x) ResourceState
+              and (struct? x)
+                = (&struct:definition x) ResourceState
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Bool)
@@ -3375,7 +3370,7 @@
             defstruct Component (:name 'Tag)
               :effects $ :: 'List 'respo.schema/Effect
               :listeners $ :: 'List 'respo.schema/RespoListener
-              :tree $ :: 'Optional 'Record
+              :tree $ :: 'Optional 'Struct
           :examples $ []
           :schema $ :: 'Dynamic
         |DomProps $ %{} :CodeEntry (:doc |)
@@ -3599,7 +3594,7 @@
                     fn (_target) nil
                 purified $ purify-element piece
               testing |ref_is_not_serialized_or_retained_by_purified_markup
-                is $ = (%none) (get purified :ref)
+                is $ nil? (get purified :ref)
                 is $ = |<div></div> (make-string piece)
           :examples $ []
           :schema $ :: 'Dynamic
@@ -3753,8 +3748,8 @@
                     {} $ :draft |c
                   state2 $ option:unwrap
                     get-in store2 $ [] :states :data
-                is $ record? state2
-                is $ = |c (&record:get state2 :draft)
+                is $ struct? state2
+                is $ = |c (&struct:get state2 :draft)
           :examples $ []
           :schema $ :: 'Dynamic
       :ns $ %{} :NsEntry (:doc |)
@@ -4071,12 +4066,12 @@
                   unmount-effect $ effect-on-unmount
                     fn (target)
                       swap! *log conj $ [] :unmount target
-                  update-method $ &record:get update-effect :method
-                  unmount-method $ &record:get unmount-effect :method
-                update-method (&record:get update-effect :args) ([] :mount :node false)
-                update-method (&record:get update-effect :args) ([] :update :node false)
-                unmount-method (&record:get unmount-effect :args) ([] :update :node false)
-                unmount-method (&record:get unmount-effect :args) ([] :unmount :node false)
+                  update-method $ &struct:get update-effect :method
+                  unmount-method $ &struct:get unmount-effect :method
+                update-method (&struct:get update-effect :args) ([] :mount :node false)
+                update-method (&struct:get update-effect :args) ([] :update :node false)
+                unmount-method (&struct:get unmount-effect :args) ([] :update :node false)
+                unmount-method (&struct:get unmount-effect :args) ([] :unmount :node false)
                 is $ =
                   [] ([] :update :node) ([] :unmount :node)
                   deref *log
@@ -4204,7 +4199,7 @@
                   element $ div
                     {} $ :ref ref!
                   collect! $ fn (op) (swap! *ops conj op)
-                is $ empty? (&record:get element :attrs)
+                is $ empty? (&struct:get element :attrs)
                 collect-mounting collect! ([]) ([]) element false
                 run-collected! @*ops :dom-node
                 reset! *ops $ []
@@ -4281,20 +4276,20 @@
                   failed $ resource-reducer refreshing (resource-failed 2 |offline)
                   ready-nil $ resource-reducer pending (resource-ready 1 nil)
                   refreshing-nil $ resource-reducer ready-nil (resource-started 3)
-                is $ = :pending (&record:get pending :status)
+                is $ = :pending (&struct:get pending :status)
                 is $ resource-loading? pending
-                is $ = :ready (&record:get ready :status)
+                is $ = :ready (&struct:get ready :status)
                 is $ =
                   {} $ :value |first
-                  &record:get refreshing :data
-                is $ = :refreshing (&record:get refreshing :status)
+                  &struct:get refreshing :data
+                is $ = :refreshing (&struct:get refreshing :status)
                 is $ identical? refreshing stale
-                is $ = :error (&record:get failed :status)
-                is $ = |offline (&record:get failed :error)
+                is $ = :error (&struct:get failed :status)
+                is $ = |offline (&struct:get failed :error)
                 is $ =
                   {} $ :value |first
-                  &record:get failed :data
-                is $ = :refreshing (&record:get refreshing-nil :status)
+                  &struct:get failed :data
+                is $ = :refreshing (&struct:get refreshing-nil :status)
           :examples $ []
           :schema $ :: 'Dynamic
         |test-show $ %{} :CodeEntry (:doc |)
@@ -4338,8 +4333,8 @@
         |component? $ %{} :CodeEntry (:doc "|check if value is a Respo component. returns true for component records, false otherwise.")
           :code $ quote
             defn component? (x)
-              if (record? x)
-                = (&record:struct x) schema/Component
+              if (struct? x)
+                = (&struct:definition x) schema/Component
                 , false
           :examples $ []
             quote $ component?
@@ -4353,8 +4348,8 @@
         |effect? $ %{} :CodeEntry (:doc "|Checks if the given value is a Respo Effect record.")
           :code $ quote
             defn effect? (x)
-              and (record? x)
-                = (&record:struct x) schema/Effect
+              and (struct? x)
+                = (&struct:definition x) schema/Effect
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Bool)
@@ -4362,8 +4357,8 @@
         |element? $ %{} :CodeEntry (:doc "|check if value is a Respo element. returns true for element records, false otherwise.")
           :code $ quote
             defn element? (x)
-              if (record? x)
-                = (&record:struct x) schema/Element
+              if (struct? x)
+                = (&struct:definition x) schema/Element
                 , false
           :examples $ []
             quote $ element?
@@ -4389,8 +4384,8 @@
         |listener? $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn listener? (item)
-              and (record? item)
-                = :RespoListener $ &record:get-name item
+              and (struct? item)
+                = :RespoListener $ &struct:get-name item
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Bool)
@@ -4408,7 +4403,8 @@
               ; js/console.log element
               let
                   virtual-name $ turn-string (:name vdom)
-                  real-name $ .!toLowerCase (.-tagName element)
+                  real-name $ .!toLowerCase
+                    unsafe-coerce (.-tagName element) JsObject
                 when (not= virtual-name real-name)
                   js/console.warn "|SSR checking: tag names do not match:"
                     to-lispy-string $ dissoc vdom :children
@@ -4416,7 +4412,7 @@
               if
                 not=
                   count $ :children vdom
-                  .-length $ .-children element
+                  .-length $ unsafe-coerce (.-children element) JsObject
                 let
                     maybe-html $ :innerHTML
                       pairs-map $ :attrs vdom
@@ -4428,7 +4424,7 @@
                       js/console.log |virtual: $ -> vdom :children (map last) (map :name) to-lispy-string
                       js/console.log |real: $ .-children element
                 let
-                    real-children $ .-children element
+                    real-children $ unsafe-coerce (.-children element) JsObject
                   loop
                       acc 0
                       other-children $ :children vdom
@@ -4640,13 +4636,13 @@
                   , nil
                 (component? markup)
                   purify-element $ &let
-                    t $ &record:get markup :tree
+                    t $ &struct:get markup :tree
                     when (nil? t) (raise |tree-is-empty)
                     , t
                 (element? markup)
-                  -> (&record:to-map markup) (dissoc :ref)
-                    assoc :event $ purify-events (&record:get markup :event)
-                    assoc :children $ -> (&record:get markup :children)
+                  -> markup (assoc :ref nil)
+                    assoc :event $ purify-events (&struct:get markup :event)
+                    assoc :children $ -> (&struct:get markup :children)
                       map $ fn (pair)
                         let
                             k $ option:unwrap (first pair)
