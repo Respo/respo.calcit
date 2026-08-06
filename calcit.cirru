@@ -1555,7 +1555,7 @@
                   collect! $ fn (op coord n-coord v)
                     &buf-list:push changes $ [] op coord n-coord v
                   deliver-event $ build-deliver-event *global-element (atom dispatch!)
-                if (nil? app-element) (raise "|Detected no element from SSR!")
+                if (js-nullish? app-element) (raise "|Detected no element from SSR!")
                 compare-to-dom! (purify-element element) app-element
                 collect-mounting collect! ([]) ([]) element true
                 reset! *global-element $ mute-element element
@@ -4403,7 +4403,8 @@
               ; js/console.log element
               let
                   virtual-name $ turn-string (:name vdom)
-                  real-name $ .!toLowerCase (.-tagName element)
+                  real-name $ .!toLowerCase
+                    unsafe-coerce (.-tagName element) JsObject
                 when (not= virtual-name real-name)
                   js/console.warn "|SSR checking: tag names do not match:"
                     to-lispy-string $ dissoc vdom :children
@@ -4411,7 +4412,7 @@
               if
                 not=
                   count $ :children vdom
-                  .-length $ .-children element
+                  .-length $ unsafe-coerce (.-children element) JsObject
                 let
                     maybe-html $ :innerHTML
                       pairs-map $ :attrs vdom
@@ -4423,7 +4424,7 @@
                       js/console.log |virtual: $ -> vdom :children (map last) (map :name) to-lispy-string
                       js/console.log |real: $ .-children element
                 let
-                    real-children $ .-children element
+                  real-children $ unsafe-coerce (.-children element) JsObject
                   loop
                       acc 0
                       other-children $ :children vdom
