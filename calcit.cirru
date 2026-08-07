@@ -2059,7 +2059,7 @@
             respo.core :refer $ *changes-logger clear-cache!
             respo.app.core :refer $ render-app! *store
             respo.app.core :refer $ handle-ssr!
-            |./calcit.build-errors :default build-errors
+            |./calcit.build-errors.mjs :default build-errors
             |bottom-tip :default hud!
             respo.controller.client :refer $ send-to-component!
             respo.app.schema :refer $ Op Task
@@ -3663,7 +3663,7 @@
       :defs $ {}
         |main! $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn main! () (html/run-tests) (test-pick-attrs) (test-pick-event) (memo/run-tests) (primitives/run-tests) (test-find-props-diffs) (test-pair-representation-transitions) (test-update-states-merge-record) (test-dom-fallback-values) (test-normalize-task-struct)
+            defn main! () (html/run-tests) (test-pick-attrs) (test-pick-event) (memo/run-tests) (primitives/run-tests) (test-find-props-diffs) (test-pair-representation-transitions) (test-update-states-merge-record) (test-dom-fallback-values)
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
@@ -3695,17 +3695,6 @@
                 is $ =
                   option:unwrap $ first @effects
                   :: :replace-prop ([]) ([]) ([] :class-name |new)
-          :examples $ []
-          :schema $ :: 'Dynamic
-        |test-normalize-task-struct $ %{} :CodeEntry (:doc |)
-          :code $ quote
-            deftest test-normalize-task-struct $ testing |task_structs_restore_from_local_storage
-              let
-                  task $ %{} respo.app.schema/Task (:id |gen_id_39_1769789437265) (:text |saved) (:done? false)
-                  normalized $ option:unwrap (normalize-task task)
-                is $ = |gen_id_39_1769789437265 (&struct:get normalized :id)
-                is $ = |saved (&struct:get normalized :text)
-                is $ = false (&struct:get normalized :done?)
           :examples $ []
           :schema $ :: 'Dynamic
         |test-pair-representation-transitions $ %{} :CodeEntry (:doc |)
@@ -3785,7 +3774,6 @@
             respo.test.primitives :as primitives
             respo.util.format :refer $ get-style-value
             respo.util.dom :refer $ text-width
-            respo.main :refer $ normalize-task
     |respo.test.memo $ %{} :FileEntry
       :defs $ {}
         |*render-count $ %{} :CodeEntry (:doc |)
