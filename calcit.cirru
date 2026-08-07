@@ -495,6 +495,49 @@
           ns respo.app.style.widget $ :require
             respo.util.format :refer $ hsl
             respo.css :refer $ defstyle
+    |respo.app.task $ %{} :FileEntry
+      :defs $ {}
+        |normalize-task $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn normalize-task (data)
+              cond
+                  struct? data
+                  let
+                      id $ &struct:get data :id
+                      text $ &struct:get data :text
+                      done? $ &struct:get data :done?
+                    if
+                      and (string? id) (string? text) (bool? done?)
+                      %some $ %{} Task
+                        :id $ unsafe-coerce id String
+                        :text $ unsafe-coerce text String
+                        :done? $ unsafe-coerce done? Bool
+                      %none
+                (map? data)
+                  let
+                      id $ get data :id
+                      text $ get data :text
+                      done? $ get data :done?
+                    if
+                      and (option:some? id) (option:some? text) (option:some? done?)
+                        string? $ option:unwrap id
+                        string? $ option:unwrap text
+                        bool? $ option:unwrap done?
+                      %some $ %{} Task
+                        :id $ unsafe-coerce (option:unwrap id) String
+                        :text $ unsafe-coerce (option:unwrap text) String
+                        :done? $ unsafe-coerce (option:unwrap done?) Bool
+                      %none
+                true %none
+          :examples $ []
+          :schema $ :: 'Fn
+            {}
+              :args $ [] 'Dynamic
+              :return $ :: 'Option 'respo.app.schema/Task
+      :ns $ %{} :NsEntry (:doc |)
+        :code $ quote
+          ns respo.app.task $ :require
+            respo.app.schema :refer $ Task
     |respo.app.updater $ %{} :FileEntry
       :defs $ {}
         |updater $ %{} :CodeEntry (:doc |)
@@ -1986,43 +2029,6 @@
             def mount-target $ query-mount-target
           :examples $ []
           :schema $ :: 'JsNullish 'JsObject
-        |normalize-task $ %{} :CodeEntry (:doc |)
-          :code $ quote
-            defn normalize-task (data)
-              cond
-                  struct? data
-                  let
-                      id $ &struct:get data :id
-                      text $ &struct:get data :text
-                      done? $ &struct:get data :done?
-                    if
-                      and (string? id) (string? text) (bool? done?)
-                      %some $ %{} Task
-                        :id $ unsafe-coerce id String
-                        :text $ unsafe-coerce text String
-                        :done? $ unsafe-coerce done? Bool
-                      %none
-                (map? data)
-                  let
-                      id $ get data :id
-                      text $ get data :text
-                      done? $ get data :done?
-                    if
-                      and (option:some? id) (option:some? text) (option:some? done?)
-                        string? $ option:unwrap id
-                        string? $ option:unwrap text
-                        bool? $ option:unwrap done?
-                      %some $ %{} Task
-                        :id $ unsafe-coerce (option:unwrap id) String
-                        :text $ unsafe-coerce (option:unwrap text) String
-                        :done? $ unsafe-coerce (option:unwrap done?) Bool
-                      %none
-                true %none
-          :examples $ []
-          :schema $ :: 'Fn
-            {}
-              :args $ [] 'Dynamic
-              :return $ :: 'Option 'respo.app.schema/Task
         |query-mount-target $ %{} :CodeEntry (:doc "|Queries the default mount element behind an explicit JavaScript FFI function so mount-target remains an optional value.")
           :code $ quote
             defn query-mount-target () $ if (exists? js/document) (js/document.querySelector |.app) nil
@@ -2059,10 +2065,11 @@
             respo.core :refer $ *changes-logger clear-cache!
             respo.app.core :refer $ render-app! *store
             respo.app.core :refer $ handle-ssr!
-            |./calcit.build-errors :default build-errors
+            |./calcit.build-errors.mjs :default build-errors
             |bottom-tip :default hud!
             respo.controller.client :refer $ send-to-component!
             respo.app.schema :refer $ Op Task
+            respo.app.task :refer $ normalize-task
     |respo.memo $ %{} :FileEntry
       :defs $ {}
         |*component-caches $ %{} :CodeEntry (:doc |)
@@ -3785,7 +3792,7 @@
             respo.test.primitives :as primitives
             respo.util.format :refer $ get-style-value
             respo.util.dom :refer $ text-width
-            respo.main :refer $ normalize-task
+            respo.app.task :refer $ normalize-task
     |respo.test.memo $ %{} :FileEntry
       :defs $ {}
         |*render-count $ %{} :CodeEntry (:doc |)
