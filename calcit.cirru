@@ -1811,22 +1811,22 @@
               assert "|expected symbol of style-name" $ symbol? style-name
               warn-style-literals rules
               if-let
-                query0 $ optionally (&list:nth rules 1)
+                query0 $ nth rules 1
                 assert "|expected rule 0 to be hashmap or symbol, use `defstyle` like:\n\n```cirru\ndefstyle style-demo $ {}\n  |& $ {}\n    :color :red\n```\n\nwhere `&` refers to current element.\n" $ if-let
-                  rule0 $ optionally (&list:nth query0 1)
+                  rule0 $ nth query0 1
                   or (symbol? rule0)
                     and (list? rule0)
                       &let
-                        h $ &list:nth rule0 0
+                        h $ option:unwrap (nth rule0 0)
                         or (&= '{} h) (&= 'merge h)
               if-let
-                query1 $ optionally (&list:nth rules 2)
+                query1 $ nth rules 2
                 assert "|expected rule 1 to be hashmap or symbol, use `defstyle` like:\n\n```cirru\ndefstyle style-demo $ {}\n  |& $ {} (:color :red)\n  \"|&:hover\" $ {}\n    :background-color :blue\n```\n\nwhere `&` refers to current element" $ if-let
-                  rule1 $ optionally (&list:nth query1 1)
+                  rule1 $ nth query1 1
                   or (symbol? rule1)
                     and (list? rule1)
                       &let
-                        h $ &list:nth rule1 0
+                        h $ option:unwrap (nth rule1 0)
                         or (&= '{} h) (&= 'merge h)
               let
                   style-name-str $ str
@@ -1839,23 +1839,21 @@
                 quasiquote $ def ~style-name (create-style! ~style-name-str ~rules)
           :examples $ []
             quote $ defstyle style-button
-              {} (:& button)
+              {}
+                |& $ {} (:color |blue)
                 |&:hover $ {} (:transform "|scale(1.04)")
             quote $ defstyle style-input
               {} $ |&
-                {} (:font-size |16px) (:padding "|0px 8px")
-                  :background-color $ hsl 0 0 94
+                {} (:font-size |16px) (:padding "|0px 8px") (:background-color "|hsl(0,0%,94%)")
             quote $ defstyle style-bold
               {} $ |&
                 {} $ :font-weight "|bold !important"
             quote $ defstyle style-space
-              {} $ :&
+              {} $ |&
                 {} (:height 1) (:width 1) (:display :inline-block)
             quote $ defstyle style-global
-              {}
-                |& $ {} (:font-family |Avenir,Verdana)
-                |& $ {} ('contained "|@media only screen and (max-width: 600px)")
-                  :background-color $ hsl 0 0 90
+              {} $ |&
+                {} (:font-family |Avenir,Verdana) (:background-color "|hsl(0,0%,90%)")
             quote $ defstyle style-absolute
               {} $ |&
                 {} (:position :absolute) (:top 0) (:left 0)
@@ -1870,10 +1868,8 @@
                 |& $ {} (:color |blue) (:text-decoration :none)
                 |&:hover $ {} (:text-decoration :underline)
             quote $ defstyle style-text
-              {}
-                |& $ {} (:font-size |14px) (:line-height |1.6)
-                  :color $ hsl 0 0 20
-                |&::before $ {} (:content "|\"→ \"")
+              {} $ |&
+                {} (:font-size |14px) (:line-height |1.6) (:color "|hsl(0,0%,20%)")
           :schema $ :: 'Macro
             {} $ :args ([] 'Symbol 'List)
         |detect-nodejs? $ %{} :CodeEntry (:doc "|Detects Node.js behind an explicit JavaScript FFI function so nodejs? remains a Boolean value.")
@@ -1915,19 +1911,21 @@
         |warn-style-literals $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn warn-style-literals (x)
-              if (list? x)
+              if (enum? x)
                 if
-                  &= '{} $ &list:nth x 0
+                  &= '{} $ option:unwrap (nth x 0)
                   loop
-                      pairs $ rest x
-                    if (empty? pairs) nil $ let
-                        pair $ &list:first pairs
-                        value $ &list:nth pair 1
-                      when
-                        some? $ &list:nth pair 2
-                        println "|[Respo] defstyle warning: CSS value has extra tokens. In Cirru, an unquoted multi-word CSS value is parsed as multiple AST nodes; use a quoted string such as |0 auto or |1px solid ... ."
-                      warn-style-literals value
-                      recur $ rest pairs
+                      idx 1
+                    if
+                      >= idx $ count x
+                      , nil $ let
+                          pair $ option:unwrap (nth x idx)
+                          value $ option:unwrap (nth pair 1)
+                        when
+                          option:some? $ nth pair 2
+                          println "|[Respo] defstyle warning: CSS value has extra tokens. In Cirru, an unquoted multi-word CSS value is parsed as multiple AST nodes; use a quoted string such as |0 auto or |1px solid ... ."
+                        warn-style-literals value
+                        recur $ inc idx
                   , nil
           :examples $ []
           :schema $ :: 'Fn
