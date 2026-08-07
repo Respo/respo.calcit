@@ -1853,7 +1853,7 @@
                 {} (:height 1) (:width 1) (:display :inline-block)
             quote $ defstyle style-global
               {} $ |&
-                {} (:font-family |Avenir,Verdana) (:background-color "|hsl(0,0%,90%)")
+                {} (:font-family |Avenir,Verdana) ('contained "|@media only screen and (max-width: 600px)") (:background-color "|hsl(0,0%,90%)")
             quote $ defstyle style-absolute
               {} $ |&
                 {} (:position :absolute) (:top 0) (:left 0)
@@ -1868,8 +1868,9 @@
                 |& $ {} (:color |blue) (:text-decoration :none)
                 |&:hover $ {} (:text-decoration :underline)
             quote $ defstyle style-text
-              {} $ |&
-                {} (:font-size |14px) (:line-height |1.6) (:color "|hsl(0,0%,20%)")
+              {}
+                |& $ {} (:font-size |14px) (:line-height |1.6) (:color "|hsl(0,0%,20%)")
+                |&::before $ {} (:content "|\"→ \"")
           :schema $ :: 'Macro
             {} $ :args ([] 'Symbol 'List)
         |detect-nodejs? $ %{} :CodeEntry (:doc "|Detects Node.js behind an explicit JavaScript FFI function so nodejs? remains a Boolean value.")
