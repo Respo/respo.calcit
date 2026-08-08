@@ -2806,7 +2806,7 @@
                           option:unwrap $ first entry
                         k $ dashed->camel style-name
                         v $ option:unwrap (last entry)
-                      aset (element :style) k $ get-style-value v k
+                      aset element.:style k $ get-style-value v k
                   &doseq (entry events)
                     let
                         event-handler $ option:unwrap (last entry)
