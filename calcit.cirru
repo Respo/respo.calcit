@@ -3237,7 +3237,7 @@
             defn append-element (target op listener-builder coord)
               &let
                 new-element $ make-element op listener-builder coord
-                .!appendChild target new-element
+                .append-child! target new-element
               ;nil
           :examples $ []
           :schema $ :: 'Fn
@@ -3362,7 +3362,7 @@
         |rm-element $ %{} 'CodeEntry (:doc "|Removes the DOM element from the document.")
           :code $ quote
             defn rm-element (target op)
-              if (some? target) (.!remove target) (js/console.warn "|Respo: Element already removed! Probably by :inner-text.")
+              if (some? target) (.remove! target) (js/console.warn "|Respo: Element already removed! Probably by :inner-text.")
               ;nil
           :examples $ []
           :schema $ :: 'Fn
@@ -3386,22 +3386,22 @@
                 let
                     prop-str $ turn-string op
                   if (.!startsWith prop-str |data-)
-                    -> target .-dataset $ js-delete (.!slice prop-str 5)
+                    js-delete (target :dataset) (.!slice prop-str 5)
                     let
                         k $ dashed->camel prop-str
                         ; ks $ prop->attr prop-str
                       aset target k nil
-                :class-name $ .!removeAttribute target |class
-                :href $ .!removeAttribute target |href
-                :inner-text $ set! (.-innerText target) |
-                :innerHTML $ set! (.-innerHTML target) |
-                :checked $ set! (.-checked target) false
-                :disabled $ set! (.-disabled target) false
-                :selected $ set! (.-selected target) false
+                :class-name $ target .remove-attribute! |class
+                :href $ target .remove-attribute! |href
+                :inner-text $ js-set target :inner-text |
+                :innerHTML $ js-set target :inner-html |
+                :checked $ js-set target :checked false
+                :disabled $ js-set target :disabled false
+                :selected $ js-set target :selected false
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
-              :args $ [] 'Dynamic 'Tag
+              :args $ [] 'respo.dom/DomElement 'Tag
               :features $ #{} :js-ffi
         |rm-style $ %{} 'CodeEntry (:doc "|Removes a style property from a DOM element.")
           :code $ quote
