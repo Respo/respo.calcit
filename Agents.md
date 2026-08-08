@@ -10,6 +10,15 @@ cr docs agents --full
 - `cr js -w` 监听变更并持续编译
 - `yarn vite` 启动 Vite 开发服务器
 
+浏览器调试（受控 Chrome DevTools）：
+
+- 开始前先运行 `chrome-devtools -v`，以本机实际安装版本输出的命令集为准；不要假设 MCP 工具已在当前 Agent 会话中注册。
+- 用 `chrome-devtools start --headless=false` 启动或重启受控浏览器服务，再用 `chrome-devtools status` 确认服务可用。
+- 访问开发页使用 `chrome-devtools new_page http://localhost:5173/`；已有页面使用 `chrome-devtools list_pages` 后以 `chrome-devtools select_page <pageId>` 选中，再执行 `chrome-devtools navigate_page --url http://localhost:5173/` 或 `navigate_page --type reload`。
+- 每次页面导航或刷新后，先执行 `chrome-devtools list_console_messages --types error`，再对每个消息 ID 执行 `chrome-devtools get_console_message <msgid>`，读取真实错误与堆栈。不要以编译成功代替浏览器验证。
+- 用 `chrome-devtools take_snapshot` 检查页面可访问树与渲染结果；需要执行页面内诊断时，用 `chrome-devtools evaluate_script '<function>'`，其返回值必须可 JSON 序列化。
+- 浏览器验证完毕后，保留最小的控制台错误证据；若无需继续调试，以 `chrome-devtools stop` 停止受控服务。
+
 类型标注建议（schema-first）:
 
 - 优先使用 `cr edit schema <ns/def> --code 'quote $ :: :fn $ {} ...'` 维护函数签名；`quote` 是 CLI 传入一个 AST 节点时必需的代码数据边界，不会存入 schema payload。

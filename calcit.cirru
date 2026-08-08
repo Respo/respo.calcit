@@ -2094,7 +2094,7 @@
                   :return 'Unit
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
-            :names $ {} (:add-event-listener! |addEventListener) (:append-child! |appendChild) (:blur! |blur) (:class-name |className) (:dispatch-event! |dispatchEvent) (:first-element-child |firstElementChild) (:focus! |focus) (:inner-html |innerHTML) (:inner-text |innerText) (:insert-before! |insertBefore) (:matches? |matches) (:parent-element |parentElement) (:query-selector |querySelector) (:remove! |remove) (:remove-attribute! |removeAttribute) (:remove-event-listener! |removeEventListener) (:select! |select) (:tag-name |tagName) (:text-content |textContent)
+            :names $ {} (:inner-html |innerHTML)
           :schema $ :: 'Dynamic
         |DomElementCollection $ %{} 'CodeEntry (:doc "|Indexed child element collection returned by the children property.")
           :code $ quote
@@ -2795,8 +2795,8 @@
                         v $ option:unwrap (last entry)
                       if (.!startsWith prop-str |data-)
                         if (some? v)
-                          -> element :dataset $ js-set (.!slice prop-str 5) v
-                          -> element :dataset $ js-delete (.!slice prop-str 5)
+                          js-set (element :dataset) (.!slice prop-str 5) v
+                          js-delete (element :dataset) (.!slice prop-str 5)
                         let
                             k $ dashed->camel prop-str
                           if (some? v) (aset element k v)
@@ -2806,7 +2806,7 @@
                           option:unwrap $ first entry
                         k $ dashed->camel style-name
                         v $ option:unwrap (last entry)
-                      aset (:style element) k $ get-style-value v k
+                      aset (element :style) k $ get-style-value v k
                   &doseq (entry events)
                     let
                         event-handler $ option:unwrap (last entry)
