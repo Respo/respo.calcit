@@ -2795,8 +2795,8 @@
                         v $ option:unwrap (last entry)
                       if (.!startsWith prop-str |data-)
                         if (some? v)
-                          js-set (element :dataset) (.!slice prop-str 5) v
-                          js-delete (element :dataset) (.!slice prop-str 5)
+                          js-set element.:dataset (.!slice prop-str 5) v
+                          js-delete element.:dataset $ .!slice prop-str 5
                         let
                             k $ dashed->camel prop-str
                           if (some? v) (aset element k v)
@@ -3386,7 +3386,7 @@
                 let
                     prop-str $ turn-string op
                   if (.!startsWith prop-str |data-)
-                    js-delete (target :dataset) (.!slice prop-str 5)
+                    js-delete target.:dataset $ .!slice prop-str 5
                     let
                         k $ dashed->camel prop-str
                         ; ks $ prop->attr prop-str
