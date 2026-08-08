@@ -757,7 +757,7 @@
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
-              :args $ [] 'respo.schema/Component 'Dynamic 'Fn
+              :args $ [] 'respo.schema/Component 'respo.dom/DomElement 'Fn
               :features $ #{} :js-ffi
         |build-listener $ %{} 'CodeEntry (:doc "|Creates a DOM event listener that converts events and dispatches them to Respo.")
           :code $ quote
@@ -775,11 +775,11 @@
             defn patch-instance! (changes mount-point deliver-event)
               let
                   listener-builder $ fn (event-name) (build-listener event-name deliver-event)
-                apply-dom-changes changes mount-point listener-builder
+                apply-dom-changes changes (unsafe-coerce mount-point 'respo.dom/DomElement) listener-builder
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
-              :args $ [] 'List 'Dynamic 'Fn
+              :args $ [] 'List 'respo.dom/DomElement 'Fn
         |send-to-component! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn send-to-component! (event-tuple)
@@ -838,6 +838,7 @@
             respo.core :refer $ *dispatch-fn *global-element
             respo.util.detect :refer $ component? element?
             respo.controller.resolve :refer $ extract-listeners
+            respo.dom :refer $ DomElement
     |respo.controller.resolve $ %{} 'FileEntry
       :defs $ {}
         |build-deliver-event $ %{} 'CodeEntry (:doc "|Creates a function to dispatch events from the DOM to Respo's event handling system.")
@@ -1984,7 +1985,7 @@
         :code $ quote (ns respo.cursor)
     |respo.dom $ %{} 'FileEntry
       :defs $ {}
-        |DomCanvasContext $ %{} 'CodeEntry (:doc |)
+        |DomCanvasContext $ %{} 'CodeEntry (:doc "|Canvas 2D context capability used for text measurement.")
           :code $ quote
             deftrait DomCanvasContext (:font 'String)
               .measure-text $ :: 'Fn
@@ -1996,37 +1997,41 @@
           :ffi $ {} (:backend :js) (:kind :external-object)
             :names $ {} (:measure-text |measureText)
           :schema $ :: 'Dynamic
-        |DomCanvasElement $ %{} 'CodeEntry (:doc |)
+        |DomCanvasElement $ %{} 'CodeEntry (:doc "|Canvas element capability; get-context returns a nullable 2D context in the subset Respo needs.")
           :code $ quote
             deftrait DomCanvasElement $ .get-context
               :: 'Fn $ {}
                 :generics $ [] 'T
                 :args $ [] 'T 'String
-                :return $ :: 'JsNullish 'DomCanvasContext
+                :return $ :: 'JsNullish 'respo.dom/DomCanvasContext
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
             :names $ {} (:get-context |getContext)
           :schema $ :: 'Dynamic
-        |DomDocument $ %{} 'CodeEntry (:doc |)
+        |DomDocument $ %{} 'CodeEntry (:doc "|Document APIs used by Respo: querying elements, creating elements, and document roots.")
           :code $ quote
-            deftrait DomDocument (:head 'DomElement) (:body 'DomElement)
+            deftrait DomDocument (:head 'respo.dom/DomElement) (:body 'respo.dom/DomElement) (:document-element 'respo.dom/DomElement)
               .create-element $ :: 'Fn
                 {}
                   :generics $ [] 'T
                   :args $ [] 'T 'String
-                  :return 'DomElement
+                  :return 'respo.dom/DomElement
               .query-selector $ :: 'Fn
                 {}
                   :generics $ [] 'T
                   :args $ [] 'T 'String
-                  :return $ :: 'JsNullish 'DomElement
+                  :return $ :: 'JsNullish 'respo.dom/DomElement
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
-            :names $ {} (:create-element |createElement) (:query-selector |querySelector)
+            :names $ {} (:create-element |createElement) (:document-element |documentElement) (:query-selector |querySelector)
           :schema $ :: 'Dynamic
-        |DomElement $ %{} 'CodeEntry (:doc |)
+        |DomElement $ %{} 'CodeEntry (:doc "|Stable DOM element capability set used by renderer and patches.")
           :code $ quote
             deftrait DomElement (:id 'String) (:text-content 'String) (:inner-html 'String) (:inner-text 'String) (:value 'Dynamic) (:checked 'Bool) (:disabled 'Bool) (:selected 'Bool) (:class-name 'String) (:type 'String) (:href 'String) (:dataset 'JsObject) (:style 'JsObject)
+              :parent-element $ :: 'JsNullish 'respo.dom/DomElement
+              :children 'respo.dom/DomElementCollection
+              :first-element-child $ :: 'JsNullish 'respo.dom/DomElement
+              :tag-name 'String
               .matches? $ :: 'Fn
                 {}
                   :generics $ [] 'T
@@ -2089,11 +2094,24 @@
                   :return 'Unit
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
-            :names $ {} (:add-event-listener! |addEventListener) (:append-child! |appendChild) (:class-name |className) (:dispatch-event! |dispatchEvent) (:inner-html |innerHTML) (:inner-text |innerText) (:insert-before! |insertBefore) (:matches? |matches) (:query-selector |querySelector) (:remove-attribute! |removeAttribute) (:remove-event-listener! |removeEventListener) (:text-content |textContent)
+            :names $ {} (:add-event-listener! |addEventListener) (:append-child! |appendChild) (:blur! |blur) (:class-name |className) (:dispatch-event! |dispatchEvent) (:first-element-child |firstElementChild) (:focus! |focus) (:inner-html |innerHTML) (:inner-text |innerText) (:insert-before! |insertBefore) (:matches? |matches) (:parent-element |parentElement) (:query-selector |querySelector) (:remove! |remove) (:remove-attribute! |removeAttribute) (:remove-event-listener! |removeEventListener) (:select! |select) (:tag-name |tagName) (:text-content |textContent)
           :schema $ :: 'Dynamic
-        |DomEvent $ %{} 'CodeEntry (:doc |)
+        |DomElementCollection $ %{} 'CodeEntry (:doc "|Indexed child element collection returned by the children property.")
           :code $ quote
-            deftrait DomEvent (:type 'String) (:key 'String) (:ctrl-key 'Bool) (:meta-key 'Bool) (:target 'DomElement)
+            deftrait DomElementCollection (:length 'Number)
+              .item $ :: 'Fn
+                {}
+                  :generics $ [] 'T
+                  :args $ [] 'T 'Number
+                  :return $ :: 'JsNullish 'respo.dom/DomElement
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object)
+          :schema $ :: 'Dynamic
+        |DomEvent $ %{} 'CodeEntry (:doc "|Base native DOM event before Respo converts it into immutable event data.")
+          :code $ quote
+            deftrait DomEvent (:type 'String)
+              :target $ :: 'JsNullish 'respo.dom/DomElement
+              :default-prevented 'Bool
               .prevent-default! $ :: 'Fn
                 {}
                   :generics $ [] 'T
@@ -2106,9 +2124,45 @@
                   :return 'Unit
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
-            :names $ {} (:ctrl-key |ctrlKey) (:meta-key |metaKey) (:prevent-default! |preventDefault) (:stop-propagation! |stopPropagation)
+            :names $ {} (:default-prevented |defaultPrevented) (:prevent-default! |preventDefault) (:stop-propagation! |stopPropagation)
           :schema $ :: 'Dynamic
-        |DomStorage $ %{} 'CodeEntry (:doc |)
+        |DomInputEvent $ %{} 'CodeEntry (:doc "|Input and change event surface used to read form values and checked state.")
+          :code $ quote
+            deftrait DomInputEvent (:type 'String)
+              :target $ :: 'JsNullish 'respo.dom/DomElement
+              .prevent-default! $ :: 'Fn
+                {}
+                  :generics $ [] 'T
+                  :args $ [] 'T
+                  :return 'Unit
+              .stop-propagation! $ :: 'Fn
+                {}
+                  :generics $ [] 'T
+                  :args $ [] 'T
+                  :return 'Unit
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object)
+            :names $ {} (:prevent-default! |preventDefault) (:stop-propagation! |stopPropagation)
+          :schema $ :: 'Dynamic
+        |DomKeyboardEvent $ %{} 'CodeEntry (:doc "|Keyboard event fields used by Respo key handlers and global keyboard forwarding.")
+          :code $ quote
+            deftrait DomKeyboardEvent (:type 'String) (:key 'String) (:code 'String) (:key-code 'Number) (:ctrl-key 'Bool) (:meta-key 'Bool) (:alt-key 'Bool) (:shift-key 'Bool)
+              :target $ :: 'JsNullish 'respo.dom/DomElement
+              .prevent-default! $ :: 'Fn
+                {}
+                  :generics $ [] 'T
+                  :args $ [] 'T
+                  :return 'Unit
+              .stop-propagation! $ :: 'Fn
+                {}
+                  :generics $ [] 'T
+                  :args $ [] 'T
+                  :return 'Unit
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object)
+            :names $ {} (:alt-key |altKey) (:ctrl-key |ctrlKey) (:key-code |keyCode) (:meta-key |metaKey) (:prevent-default! |preventDefault) (:shift-key |shiftKey) (:stop-propagation! |stopPropagation)
+          :schema $ :: 'Dynamic
+        |DomStorage $ %{} 'CodeEntry (:doc "|Browser storage capability used by Respo persistence. Nullish reads model absent keys.")
           :code $ quote
             deftrait DomStorage
               .get-item $ :: 'Fn
@@ -2133,17 +2187,17 @@
                   :return 'Unit
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
-            :names $ {} (:get-item |getItem) (:remove-item! |removeItem) (:set-item! |setItem)
+            :names $ {} (:clear! |clear) (:get-item |getItem) (:remove-item! |removeItem) (:set-item! |setItem)
           :schema $ :: 'Dynamic
-        |DomTextMetrics $ %{} 'CodeEntry (:doc |)
+        |DomTextMetrics $ %{} 'CodeEntry (:doc "|Canvas text measurement result used by Respo; width is the required stable field.")
           :code $ quote
             deftrait DomTextMetrics $ :width 'Number
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
           :schema $ :: 'Dynamic
-        |DomWindow $ %{} 'CodeEntry (:doc |)
+        |DomWindow $ %{} 'CodeEntry (:doc "|Window APIs used by Respo, including storage, timers, unload hooks, and global listeners.")
           :code $ quote
-            deftrait DomWindow (:local-storage 'DomStorage)
+            deftrait DomWindow (:document 'respo.dom/DomDocument) (:local-storage 'respo.dom/DomStorage) (:on-before-unload 'Fn) (:devtools-formatters 'Dynamic)
               .add-event-listener! $ :: 'Fn
                 {}
                   :generics $ [] 'T
@@ -2161,7 +2215,7 @@
                   :return 'Dynamic
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
-            :names $ {} (:add-event-listener! |addEventListener) (:local-storage |localStorage) (:remove-event-listener! |removeEventListener) (:set-timeout |setTimeout)
+            :names $ {} (:add-event-listener! |addEventListener) (:devtools-formatters |devtoolsFormatters) (:local-storage |localStorage) (:on-before-unload |onbeforeunload) (:remove-event-listener! |removeEventListener) (:set-timeout |setTimeout)
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote (ns respo.dom)
@@ -2210,7 +2264,7 @@
           :code $ quote
             def mount-target $ query-mount-target
           :examples $ []
-          :schema $ :: 'JsNullish 'JsObject
+          :schema $ :: 'JsNullish 'respo.dom/DomElement
         |query-mount-target $ %{} 'CodeEntry (:doc "|Queries the default mount element behind an explicit JavaScript FFI function so mount-target remains an optional value.")
           :code $ quote
             defn query-mount-target () $ if (exists? js/document) (js/document.querySelector |.app) nil
@@ -2219,7 +2273,7 @@
             {}
               :args $ []
               :features $ #{} :js-ffi
-              :return $ :: 'JsNullish 'JsObject
+              :return $ :: 'JsNullish 'respo.dom/DomElement
         |reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn reload () $ if (nil? build-errors)
@@ -3231,7 +3285,7 @@
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
-              :args $ [] 'List 'Dynamic 'Fn
+              :args $ [] 'List 'respo.dom/DomElement 'Fn
         |find-target $ %{} 'CodeEntry (:doc "|Locates a DOM node by traversing children using a coordinate path.")
           :code $ quote
             defn find-target (root coord)
@@ -3246,9 +3300,10 @@
                     find-target child xss
           :examples $ []
           :schema $ :: 'Fn
-            {} (:return 'Dynamic)
-              :args $ [] 'Dynamic (:: 'List 'Number)
+            {}
+              :args $ [] 'respo.dom/DomElement (:: 'List 'Number)
               :features $ #{} :js-ffi
+              :return $ :: 'JsNullish 'respo.dom/DomElement
         |replace-element $ %{} 'CodeEntry (:doc "|Replaces a DOM element with a new one created from an operation.")
           :code $ quote
             defn replace-element (target op listener-builder coord)
@@ -4726,13 +4781,16 @@
                     :type $ .-type event
                     :msg $ str "|Unhandled event: " (.-type event)
                   |click $ {} (:type :click)
-                  |keydown $ merge (map-keyboard-event event)
+                  |keydown $ merge
+                    map-keyboard-event $ unsafe-coerce event 'respo.dom/DomKeyboardEvent
                     {} (:type :keydown)
                       :key-code $ .-keyCode event
                       :keycode $ .-keyCode event
-                  |keypress $ merge (map-keyboard-event event)
+                  |keypress $ merge
+                    map-keyboard-event $ unsafe-coerce event 'respo.dom/DomKeyboardEvent
                     {} $ :type :keypress
-                  |keyup $ merge (map-keyboard-event event)
+                  |keyup $ merge
+                    map-keyboard-event $ unsafe-coerce event 'respo.dom/DomKeyboardEvent
                     {} $ :type :keyup
                   |input $ {} (:type :input)
                     :value $ aget
@@ -4750,7 +4808,7 @@
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Map)
-              :args $ [] 'Dynamic
+              :args $ [] 'respo.dom/DomEvent
               :features $ #{} :js-ffi
         |event->prop $ %{} 'CodeEntry (:doc "|Converts an event keyword (e.g. :click) to a prop name string (e.g. 'onclick').")
           :code $ quote
@@ -4813,7 +4871,7 @@
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Map)
-              :args $ [] 'Dynamic
+              :args $ [] 'respo.dom/DomKeyboardEvent
         |mute-element $ %{} 'CodeEntry (:doc "|Recursively remove event handlers from a component or element tree.\n\nThis is used in SSR-related flows where the initial HTML should not carry live client event functions.")
           :code $ quote
             defn mute-element (element)
@@ -4896,6 +4954,7 @@
         :code $ quote
           ns respo.util.format $ :require
             respo.util.detect :refer $ component? element?
+            respo.dom :refer $ DomEvent DomKeyboardEvent
     |respo.util.list $ %{} 'FileEntry
       :defs $ {}
         |map-with-idx $ %{} 'CodeEntry (:doc |)
