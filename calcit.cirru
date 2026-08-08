@@ -1984,17 +1984,184 @@
         :code $ quote (ns respo.cursor)
     |respo.dom $ %{} 'FileEntry
       :defs $ {}
+        |DomCanvasContext $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            deftrait DomCanvasContext (:font 'String)
+              .measure-text $ :: 'Fn
+                {}
+                  :generics $ [] 'T
+                  :args $ [] 'T 'String
+                  :return 'respo.dom/DomTextMetrics
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object)
+            :names $ {} (:measure-text |measureText)
+          :schema $ :: 'Dynamic
+        |DomCanvasElement $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            deftrait DomCanvasElement $ .get-context
+              :: 'Fn $ {}
+                :generics $ [] 'T
+                :args $ [] 'T 'String
+                :return $ :: 'JsNullish 'DomCanvasContext
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object)
+            :names $ {} (:get-context |getContext)
+          :schema $ :: 'Dynamic
+        |DomDocument $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            deftrait DomDocument (:head 'DomElement) (:body 'DomElement)
+              .create-element $ :: 'Fn
+                {}
+                  :generics $ [] 'T
+                  :args $ [] 'T 'String
+                  :return 'DomElement
+              .query-selector $ :: 'Fn
+                {}
+                  :generics $ [] 'T
+                  :args $ [] 'T 'String
+                  :return $ :: 'JsNullish 'DomElement
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object)
+            :names $ {} (:create-element |createElement) (:query-selector |querySelector)
+          :schema $ :: 'Dynamic
         |DomElement $ %{} 'CodeEntry (:doc |)
           :code $ quote
-            deftrait DomElement (:dataset 'JsObject) (:style 'JsObject)
+            deftrait DomElement (:id 'String) (:text-content 'String) (:inner-html 'String) (:inner-text 'String) (:value 'Dynamic) (:checked 'Bool) (:disabled 'Bool) (:selected 'Bool) (:class-name 'String) (:type 'String) (:href 'String) (:dataset 'JsObject) (:style 'JsObject)
+              .matches? $ :: 'Fn
+                {}
+                  :generics $ [] 'T
+                  :args $ [] 'T 'String
+                  :return 'Bool
+              .query-selector $ :: 'Fn
+                {}
+                  :generics $ [] 'T
+                  :args $ [] 'T 'String
+                  :return $ :: 'JsNullish 'respo.dom/DomElement
               .append-child! $ :: 'Fn
                 {}
                   :generics $ [] 'T
-                  :args $ [] 'T 'DomElement 'DomElement
-                  :return 'DomElement
+                  :args $ [] 'T 'respo.dom/DomElement
+                  :return 'respo.dom/DomElement
+              .insert-before! $ :: 'Fn
+                {}
+                  :generics $ [] 'T
+                  :args $ [] 'T 'respo.dom/DomElement 'respo.dom/DomElement
+                  :return 'respo.dom/DomElement
+              .remove! $ :: 'Fn
+                {}
+                  :generics $ [] 'T
+                  :args $ [] 'T
+                  :return 'Unit
+              .remove-attribute! $ :: 'Fn
+                {}
+                  :generics $ [] 'T
+                  :args $ [] 'T 'String
+                  :return 'Unit
+              .add-event-listener! $ :: 'Fn
+                {}
+                  :generics $ [] 'T
+                  :args $ [] 'T 'String 'Fn
+                  :return 'Unit
+              .remove-event-listener! $ :: 'Fn
+                {}
+                  :generics $ [] 'T
+                  :args $ [] 'T 'String 'Fn
+                  :return 'Unit
+              .dispatch-event! $ :: 'Fn
+                {}
+                  :generics $ [] 'T
+                  :args $ [] 'T 'Dynamic
+                  :return 'Bool
+              .focus! $ :: 'Fn
+                {}
+                  :generics $ [] 'T
+                  :args $ [] 'T
+                  :return 'Unit
+              .blur! $ :: 'Fn
+                {}
+                  :generics $ [] 'T
+                  :args $ [] 'T
+                  :return 'Unit
+              .select! $ :: 'Fn
+                {}
+                  :generics $ [] 'T
+                  :args $ [] 'T
+                  :return 'Unit
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
-            :names $ {} (:append-child! |appendChild)
+            :names $ {} (:add-event-listener! |addEventListener) (:append-child! |appendChild) (:class-name |className) (:dispatch-event! |dispatchEvent) (:inner-html |innerHTML) (:inner-text |innerText) (:insert-before! |insertBefore) (:matches? |matches) (:query-selector |querySelector) (:remove-attribute! |removeAttribute) (:remove-event-listener! |removeEventListener) (:text-content |textContent)
+          :schema $ :: 'Dynamic
+        |DomEvent $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            deftrait DomEvent (:type 'String) (:key 'String) (:ctrl-key 'Bool) (:meta-key 'Bool) (:target 'DomElement)
+              .prevent-default! $ :: 'Fn
+                {}
+                  :generics $ [] 'T
+                  :args $ [] 'T
+                  :return 'Unit
+              .stop-propagation! $ :: 'Fn
+                {}
+                  :generics $ [] 'T
+                  :args $ [] 'T
+                  :return 'Unit
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object)
+            :names $ {} (:ctrl-key |ctrlKey) (:meta-key |metaKey) (:prevent-default! |preventDefault) (:stop-propagation! |stopPropagation)
+          :schema $ :: 'Dynamic
+        |DomStorage $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            deftrait DomStorage
+              .get-item $ :: 'Fn
+                {}
+                  :generics $ [] 'T
+                  :args $ [] 'T 'String
+                  :return $ :: 'JsNullish 'String
+              .set-item! $ :: 'Fn
+                {}
+                  :generics $ [] 'T
+                  :args $ [] 'T 'String 'String
+                  :return 'Unit
+              .remove-item! $ :: 'Fn
+                {}
+                  :generics $ [] 'T
+                  :args $ [] 'T 'String
+                  :return 'Unit
+              .clear! $ :: 'Fn
+                {}
+                  :generics $ [] 'T
+                  :args $ [] 'T
+                  :return 'Unit
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object)
+            :names $ {} (:get-item |getItem) (:remove-item! |removeItem) (:set-item! |setItem)
+          :schema $ :: 'Dynamic
+        |DomTextMetrics $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            deftrait DomTextMetrics $ :width 'Number
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object)
+          :schema $ :: 'Dynamic
+        |DomWindow $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            deftrait DomWindow (:local-storage 'DomStorage)
+              .add-event-listener! $ :: 'Fn
+                {}
+                  :generics $ [] 'T
+                  :args $ [] 'T 'String 'Fn
+                  :return 'Unit
+              .remove-event-listener! $ :: 'Fn
+                {}
+                  :generics $ [] 'T
+                  :args $ [] 'T 'String 'Fn
+                  :return 'Unit
+              .set-timeout $ :: 'Fn
+                {}
+                  :generics $ [] 'T
+                  :args $ [] 'T 'Fn 'Number
+                  :return 'Dynamic
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object)
+            :names $ {} (:add-event-listener! |addEventListener) (:local-storage |localStorage) (:remove-event-listener! |removeEventListener) (:set-timeout |setTimeout)
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote (ns respo.dom)
@@ -2546,7 +2713,7 @@
                     style $ &struct:get virtual-element :style
                     events $ &struct:get virtual-element :event
                     children $ &struct:get virtual-element :children
-                    element $ unsafe-coerce (js/document.createElement tag-name) respo.dom/DomElement
+                    element $ unsafe-coerce (js/document.createElement tag-name) 'respo.dom/DomElement
                     child-elements $ if (map? children)
                       map (.to-list children)
                         fn (pair)
@@ -3021,7 +3188,7 @@
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
-              :args $ [] 'Dynamic 'Dynamic 'Fn 'List
+              :args $ [] 'respo.dom/DomElement 'Dynamic 'Fn 'List
         |apply-dom-changes $ %{} 'CodeEntry (:doc "|Internal DOM patch executor.\n\nIt walks collected diff operations, finds the target node by DOM coordinate, and applies prop, style, event, element, and effect changes in order.")
           :code $ quote
             defn apply-dom-changes (changes mount-point listener-builder)
@@ -3095,7 +3262,7 @@
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
-              :args $ [] 'Dynamic 'Dynamic 'Fn 'List
+              :args $ [] 'respo.dom/DomElement 'Dynamic 'Fn 'List
         |replace-prop $ %{} 'CodeEntry (:doc "|Updates a property on a DOM element. Handles data attributes and special cases like 'value'.")
           :code $ quote
             defn replace-prop (target p prop-value)
@@ -3145,7 +3312,7 @@
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
-              :args $ [] 'Dynamic 'Dynamic
+              :args $ [] 'respo.dom/DomElement 'Dynamic
         |rm-event $ %{} 'CodeEntry (:doc "|Removes an event listener from a DOM element by setting it to nil.")
           :code $ quote
             defn rm-event (target event-name)
@@ -3206,6 +3373,7 @@
             respo.util.format :refer $ dashed->camel event->prop get-style-value prop->attr
             respo.render.dom :refer $ make-element style->string
             respo.schema.op :as op
+            respo.dom :refer $ DomElement
     |respo.resource $ %{} 'FileEntry
       :defs $ {}
         |*resource-id $ %{} 'CodeEntry (:doc |)
@@ -4493,12 +4661,12 @@
             {}
               :args $ []
               :features $ #{} :js-ffi
-              :return $ :: 'JsNullish 'JsObject
+              :return $ :: 'JsNullish 'respo.dom/DomCanvasContext
         |shared-canvas-context $ %{} 'CodeEntry (:doc "|Shared Canvas 2D context for measuring text width or other canvas operations.")
           :code $ quote
             def shared-canvas-context $ create-shared-canvas-context
           :examples $ []
-          :schema $ :: 'JsNullish 'JsObject
+          :schema $ :: 'JsNullish 'respo.dom/DomCanvasContext
         |text-width $ %{} 'CodeEntry (:doc "|Measures text with a shared Canvas 2D context. Returns 0 when Canvas is unavailable, including server-side rendering and Node.js tests.")
           :code $ quote
             defn text-width (content font-size font-family)
@@ -4519,6 +4687,7 @@
         :code $ quote
           ns respo.util.dom $ :require
             respo.util.list :refer $ val-of-first
+            respo.dom :refer $ DomCanvasContext DomTextMetrics
     |respo.util.format $ %{} 'FileEntry
       :defs $ {}
         |create-dashed-letter-pattern $ %{} 'CodeEntry (:doc "|Creates the JavaScript RegExp behind an explicit FFI function so dashed-letter-pattern remains a value.")
