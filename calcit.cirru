@@ -1148,13 +1148,13 @@
             %{} 'TestEntry (:name |rejects-invalid-child-collections)
               :code $ quote
                 let
-                    caught? $ atom false
+                    caught-error $ atom nil
                   try
                     create-list-element :div
                       unsafe-coerce ({}) respo.schema/DomProps
                       , :invalid
-                    fn (_error) (reset! caught? true)
-                  assert |invalid-keyed-children-are-rejected @caught?
+                    fn (error) (reset! caught-error error)
+                  assert |invalid-keyed-children-report-the-contract $ = "|[Respo/create-list-element] expected keyed child pairs as a list or map" @caught-error
               :tags $ #{} :unit
         |decorate-defcomp $ %{} 'CodeEntry (:doc "|detect root element under component and add `data-defcomp` mark")
           :code $ quote
@@ -1342,6 +1342,144 @@
           :schema $ :: 'Fn
             {} (:return 'respo.schema/Effect)
               :args $ [] 'List 'Fn (:: 'Option 'Fn)
+          :tests $ []
+            %{} 'TestEntry (:name |cleans-old-closure-before-new-setup)
+              :code $ quote
+                let
+                    log $ atom ([])
+                    ops $ atom ([])
+                    collect! $ fn (op) (swap! ops conj op)
+                    run-ops! $ fn (items target)
+                      &doseq (op items)
+                        match op
+                          (:effect-before-update _coord _n-coord run!)
+                              unsafe-coerce run! Fn
+                              , target
+                          (:effect-update _coord _n-coord run!)
+                              unsafe-coerce run! Fn
+                              , target
+                          _ nil
+                    element $ %{} schema/Element (:name :div) (:coord nil)
+                      :attrs $ []
+                      :style $ []
+                      :event $ {}
+                      :children $ []
+                      :ref nil
+                    old-effect $ effect-watch ([] 1)
+                      fn (target)
+                        swap! log conj $ [] :setup 1 target
+                      %some $ fn (target)
+                        swap! log conj $ [] :cleanup 1 target
+                    new-effect $ effect-watch ([] 2)
+                      fn (target)
+                        swap! log conj $ [] :setup 2 target
+                      %some $ fn (target)
+                        swap! log conj $ [] :cleanup 2 target
+                    old-tree $ %{} schema/Component (:name :watch)
+                      :effects $ [] old-effect
+                      :listeners $ []
+                      :tree element
+                    new-tree $ %{} schema/Component (:name :watch)
+                      :effects $ [] new-effect
+                      :listeners $ []
+                      :tree element
+                  respo.render.effect/collect-updating collect! :before-update ([]) ([]) old-tree new-tree
+                  respo.render.effect/collect-updating collect! :update ([]) ([]) old-tree new-tree
+                  run-ops! @ops :target
+                  assert |old-cleanup-runs-before-new-setup $ =
+                    [] ([] :cleanup 1 :target) ([] :setup 2 :target)
+                    , @log
+              :tags $ #{} :unit
+            %{} 'TestEntry (:name |handles-effect-list-addition-and-removal)
+              :code $ quote
+                let
+                    log $ atom ([])
+                    ops $ atom ([])
+                    collect! $ fn (op) (swap! ops conj op)
+                    run-ops! $ fn (items target)
+                      &doseq (op items)
+                        match op
+                          (:effect-before-update _coord _n-coord run!)
+                              unsafe-coerce run! Fn
+                              , target
+                          (:effect-update _coord _n-coord run!)
+                              unsafe-coerce run! Fn
+                              , target
+                          _ nil
+                    element $ %{} schema/Element (:name :div) (:coord nil)
+                      :attrs $ []
+                      :style $ []
+                      :event $ {}
+                      :children $ []
+                      :ref nil
+                    watch $ effect-watch ([])
+                      fn (target)
+                        swap! log conj $ [] :setup target
+                      %some $ fn (target)
+                        swap! log conj $ [] :cleanup target
+                    without-effect $ %{} schema/Component (:name :optional)
+                      :effects $ []
+                      :listeners $ []
+                      :tree element
+                    with-effect $ %{} schema/Component (:name :optional)
+                      :effects $ [] watch
+                      :listeners $ []
+                      :tree element
+                  respo.render.effect/collect-updating collect! :before-update ([]) ([]) without-effect with-effect
+                  respo.render.effect/collect-updating collect! :update ([]) ([]) without-effect with-effect
+                  run-ops! @ops :target
+                  reset! ops $ []
+                  respo.render.effect/collect-updating collect! :before-update ([]) ([]) with-effect without-effect
+                  respo.render.effect/collect-updating collect! :update ([]) ([]) with-effect without-effect
+                  run-ops! @ops :target
+                  assert |added-effect-mounts-and-removed-effect-unmounts $ =
+                    [] ([] :setup :target) ([] :cleanup :target)
+                    , @log
+              :tags $ #{} :unit
+            %{} 'TestEntry (:name |replaces-effect-kinds-with-unmount-and-mount)
+              :code $ quote
+                let
+                    log $ atom ([])
+                    ops $ atom ([])
+                    collect! $ fn (op) (swap! ops conj op)
+                    run-ops! $ fn (items target)
+                      &doseq (op items)
+                        match op
+                          (:effect-before-update _coord _n-coord run!)
+                              unsafe-coerce run! Fn
+                              , target
+                          (:effect-update _coord _n-coord run!)
+                              unsafe-coerce run! Fn
+                              , target
+                          _ nil
+                    element $ %{} schema/Element (:name :div) (:coord nil)
+                      :attrs $ []
+                      :style $ []
+                      :event $ {}
+                      :children $ []
+                      :ref nil
+                    old-effect $ effect-watch ([])
+                      fn (_target) nil
+                      %some $ fn (target)
+                        swap! log conj $ [] :cleanup target
+                    new-effect $ effect-on-mount
+                      fn (target)
+                        swap! log conj $ [] :mount target
+                    old-tree $ %{} schema/Component (:name :replace)
+                      :effects $ [] old-effect
+                      :listeners $ []
+                      :tree element
+                    new-tree $ %{} schema/Component (:name :replace)
+                      :effects $ [] new-effect
+                      :listeners $ []
+                      :tree element
+                  respo.render.effect/collect-updating collect! :before-update ([]) ([]) old-tree new-tree
+                  respo.render.effect/collect-updating collect! :update ([]) ([]) old-tree new-tree
+                  run-ops! @ops :target
+                  assert |replaced-effect-unmounts-before-new-effect-mounts $ =
+                    [] ([] :cleanup :target) ([] :mount :target)
+                    , @log
+              :tags $ #{} :unit
         |element-type $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def element-type $ resolve-element-constructor
@@ -1368,13 +1506,20 @@
           :tests $ []
             %{} 'TestEntry (:name |catches-render-errors)
               :code $ quote
-                let
-                    caught? $ atom false
-                    result $ error-boundary
-                      fn (_error) (reset! caught? true) |fallback
-                      raise |boom
-                  assert |fallback-result-is-returned $ = |fallback result
-                  assert |fallback-receives-the-error @caught?
+                do
+                  let
+                      caught? $ atom false
+                      result $ error-boundary
+                        fn (_error) (reset! caught? true) |fallback
+                        raise |boom
+                    assert |fallback-result-is-returned $ = |fallback result
+                    assert |fallback-receives-the-error @caught?
+                  let
+                      caught-error $ atom nil
+                    try
+                      error-boundary (unsafe-coerce nil Fn) |child
+                      fn (error) (reset! caught-error error)
+                    assert |invalid-fallback-reports-the-contract $ = "|[Respo/error-boundary] expected fallback as a function" @caught-error
               :tags $ #{} :unit
         |extract-effects-list $ %{} 'CodeEntry (:doc |)
           :code $ quote
@@ -1454,7 +1599,7 @@
                         option:unwrap $ first pair
                     assert |all-items-are-rendered $ = 2 (count pairs)
                   let
-                      caught? $ atom false
+                      caught-error $ atom nil
                     try
                       for-keyed
                         [] $ {} (:id nil)
@@ -1467,8 +1612,8 @@
                             :event $ {}
                             :children $ []
                             :ref nil
-                      fn (_error) (reset! caught? true)
-                    assert |nil-key-is-rejected @caught?
+                      fn (error) (reset! caught-error error)
+                    assert |nil-key-reports-index $ = "|[Respo/for-keyed] key-fn returned nil at index 0" @caught-error
               :tags $ #{} :unit
         |h1 $ %{} 'CodeEntry (:doc |)
           :code $ quote
@@ -1599,21 +1744,30 @@
           :tests $ []
             %{} 'TestEntry (:name |coalesces-custom-queue-requests)
               :code $ quote
-                let
-                    render-count $ atom 0
-                    tasks $ atom ([])
-                    schedule! $ make-render-scheduler
-                      fn () $ swap! render-count inc
-                      %some $ fn (task) (swap! tasks conj task)
-                  schedule!
-                  schedule!
-                  assert |requests-are-coalesced $ = 1 (count @tasks)
+                do
                   let
-                      task! $ option:unwrap (first @tasks)
-                    task!
-                  assert |queued-task-renders-once $ = 1 @render-count
-                  schedule!
-                  assert |new-request-can-be-enqueued-after-run $ = 2 (count @tasks)
+                      render-count $ atom 0
+                      tasks $ atom ([])
+                      schedule! $ make-render-scheduler
+                        fn () $ swap! render-count inc
+                        %some $ fn (task) (swap! tasks conj task)
+                    schedule!
+                    schedule!
+                    assert |requests-are-coalesced $ = 1 (count @tasks)
+                    let
+                        task! $ option:unwrap (first @tasks)
+                      task!
+                    assert |queued-task-renders-once $ = 1 @render-count
+                    schedule!
+                    assert |new-request-can-be-enqueued-after-run $ = 2 (count @tasks)
+                  let
+                      caught-error $ atom nil
+                    try
+                      make-render-scheduler
+                        fn () nil
+                        %some $ unsafe-coerce :invalid Fn
+                      fn (error) (reset! caught-error error)
+                    assert |invalid-enqueue-reports-the-contract $ = "|[Respo/make-render-scheduler] expected enqueue! as a function or nil" @caught-error
               :tags $ #{} :unit
         |memo-comp-by $ %{} 'CodeEntry (:doc "|Memoize a component by key and its full argument list. Use it while building a tree inside render-with! so entries whose keys disappear are pruned after the frame. A nil key bypasses caching.")
           :code $ quote
@@ -2873,6 +3027,108 @@
           :schema $ :: 'Fn
             {} (:return 'Unit)
               :args $ [] 'Fn 'List (:: 'List 'Number) 'Dynamic 'Dynamic
+          :tests $ []
+            %{} 'TestEntry (:name |clears-old-ref-before-setting-new-ref)
+              :code $ quote
+                let
+                    log $ atom ([])
+                    ops $ atom ([])
+                    old-ref! $ fn (target)
+                      swap! log conj $ [] :old target
+                    new-ref! $ fn (target)
+                      swap! log conj $ [] :new target
+                    old-element $ %{} respo.schema/Element (:name :div) (:coord nil)
+                      :attrs $ []
+                      :style $ []
+                      :event $ {}
+                      :children $ []
+                      :ref old-ref!
+                    new-element $ %{} respo.schema/Element (:name :div) (:coord nil)
+                      :attrs $ []
+                      :style $ []
+                      :event $ {}
+                      :children $ []
+                      :ref new-ref!
+                    collect! $ fn (op) (swap! ops conj op)
+                  find-element-diffs collect! ([]) ([]) old-element new-element
+                  &doseq (op @ops)
+                    match op
+                      (:effect-mount _coord _n-coord run!)
+                          unsafe-coerce run! Fn
+                          , :dom-node
+                      (:effect-unmount _coord _n-coord run!)
+                          unsafe-coerce run! Fn
+                          , :dom-node
+                      (:effect-update _coord _n-coord run!)
+                          unsafe-coerce run! Fn
+                          , :dom-node
+                      (:effect-before-update _coord _n-coord run!)
+                          unsafe-coerce run! Fn
+                          , :dom-node
+                      _ nil
+                  assert |old-ref-is-cleared-before-new-ref-receives-target $ =
+                    [] ([] :old nil) ([] :new :dom-node)
+                    , @log
+              :tags $ #{} :unit
+            %{} 'TestEntry (:name |handles-component-element-boundaries-once)
+              :code $ quote
+                let
+                    log $ atom ([])
+                    ops $ atom ([])
+                    collect! $ fn (op) (swap! ops conj op)
+                    run-ops! $ fn (items target)
+                      &doseq (op items)
+                        match op
+                          (:effect-mount _coord _n-coord run!)
+                              unsafe-coerce run! Fn
+                              , target
+                          (:effect-unmount _coord _n-coord run!)
+                              unsafe-coerce run! Fn
+                              , target
+                          (:effect-update _coord _n-coord run!)
+                              unsafe-coerce run! Fn
+                              , target
+                          (:effect-before-update _coord _n-coord run!)
+                              unsafe-coerce run! Fn
+                              , target
+                          _ nil
+                    plain $ %{} respo.schema/Element (:name :div) (:coord nil)
+                      :attrs $ []
+                      :style $ []
+                      :event $ {}
+                      :children $ []
+                      :ref nil
+                    inner $ %{} respo.schema/Element (:name :div) (:coord nil)
+                      :attrs $ []
+                      :style $ []
+                      :event $ {}
+                      :children $ []
+                      :ref $ fn (target)
+                        swap! log conj $ [] :ref target
+                    watch $ %{} respo.schema/Effect (:name :effect-watch)
+                      :coord $ []
+                      :args $ []
+                      :method $ fn (_args params)
+                        let[] (action target _at-place?) params $ case-default action nil
+                          :mount $ swap! log conj ([] :setup target)
+                          :unmount $ swap! log conj ([] :cleanup target)
+                    wrapped $ %{} respo.schema/Component (:name :boundary)
+                      :effects $ [] watch
+                      :listeners $ []
+                      :tree inner
+                  find-element-diffs collect! ([]) ([]) plain wrapped
+                  run-ops! @ops :target
+                  assert |entering-wrapper-mounts-ref-and-effect-once $ =
+                    [] ([] :ref :target) ([] :setup :target)
+                    , @log
+                  reset! log $ []
+                  reset! ops $ []
+                  find-element-diffs collect! ([]) ([]) wrapped plain
+                  run-ops! @ops :target
+                  assert |leaving-wrapper-cleans-effect-and-ref-once $ =
+                    [] ([] :cleanup :target) ([] :ref nil)
+                    , @log
+              :tags $ #{} :unit
         |find-props-diffs $ %{} 'CodeEntry (:doc "|Compares old and new sorted property lists to identify additions, removals, and updates.")
           :code $ quote
             defn find-props-diffs (collect! coord n-coord old-props new-props)
@@ -3379,6 +3635,60 @@
                       :event $ {}
                       :children $ []
                       :ref nil
+              :tags $ #{} :unit
+            %{} 'TestEntry (:name |serializes-nested-html-document)
+              :code $ quote
+                let
+                    expected "|<html><head><title>Demo</title><link rel=\"icon\" type=\"image/png\" ><script>{}</script></head><body><div id=\"app\"><div></div></div></body></html>"
+                    title-node $ %{} respo.schema/Element (:name :title) (:coord nil)
+                      :attrs $ [] ([] :innerHTML |Demo)
+                      :style $ []
+                      :event $ {}
+                      :children $ []
+                      :ref nil
+                    link-node $ %{} respo.schema/Element (:name :link) (:coord nil)
+                      :attrs $ [] ([] :rel |icon) ([] :type |image/png)
+                      :style $ []
+                      :event $ {}
+                      :children $ []
+                      :ref nil
+                    script-node $ %{} respo.schema/Element (:name :script) (:coord nil)
+                      :attrs $ [] ([] :innerHTML |{})
+                      :style $ []
+                      :event $ {}
+                      :children $ []
+                      :ref nil
+                    head-node $ %{} respo.schema/Element (:name :head) (:coord nil)
+                      :attrs $ []
+                      :style $ []
+                      :event $ {}
+                      :children $ [] ([] :title title-node) ([] :link link-node) ([] :script script-node)
+                      :ref nil
+                    inner-div $ %{} respo.schema/Element (:name :div) (:coord nil)
+                      :attrs $ []
+                      :style $ []
+                      :event $ {}
+                      :children $ []
+                      :ref nil
+                    app-div $ %{} respo.schema/Element (:name :div) (:coord nil)
+                      :attrs $ [] ([] :id |app)
+                      :style $ []
+                      :event $ {}
+                      :children $ [] ([] :inner inner-div)
+                      :ref nil
+                    body-node $ %{} respo.schema/Element (:name :body) (:coord nil)
+                      :attrs $ []
+                      :style $ []
+                      :event $ {}
+                      :children $ [] ([] :app app-div)
+                      :ref nil
+                    html-node $ %{} respo.schema/Element (:name :html) (:coord nil)
+                      :attrs $ []
+                      :style $ []
+                      :event $ {}
+                      :children $ [] ([] :head head-node) ([] :body body-node)
+                      :ref nil
+                  assert |nested-document-is-serialized-in-child-order $ = expected (element->string html-node)
               :tags $ #{} :unit
         |entry->html $ %{} 'CodeEntry (:doc |)
           :code $ quote
@@ -4085,6 +4395,10 @@
                     {} (:value "|a\"b\"c") (:data-name |y)
                       :style $ {} (:content "|d\"e\"f")
                 assert |JS-HTML-keeps-escaped-attributes-and-styles $ = "|<div data-name=\"y\" style=\"content:d&quot;e&quot;f;\" value=\"a&quot;b&quot;c\"></div>" (make-string tree)
+              assert |JS-SSR-omits-ref-callbacks $ = |<div></div>
+                make-string $ div
+                  {} $ :ref
+                    fn (_target) nil
               assert |Node-without-Canvas-uses-zero-width $ = 0 (text-width |demo 16 |sans-serif)
               let
                   render-count $ atom 0
@@ -4096,10 +4410,12 @@
                 js/queueMicrotask $ fn ()
                   assert |default-JS-scheduler-coalesces-microtasks $ = 1 @render-count
               let
+                  calls $ atom 0
                   actions $ atom ([])
                   request-id $ load-resource!
-                    fn () |ready
+                    fn () (swap! calls inc) |ready
                     fn (action) (swap! actions conj action)
+                assert |resource-fetcher-runs-once $ = 1 @calls
                 assert |resource-load-starts-synchronously $ = (resource-started request-id)
                   option:unwrap $ first @actions
                 js/queueMicrotask $ fn ()
@@ -4113,9 +4429,29 @@
                 assert |sync-fetch-failure-emits-two-actions $ = 2 (count @actions)
                 match
                   option:unwrap $ last @actions
-                  (:failed failed-id _error)
-                    assert |failed-action-keeps-request-id $ = request-id failed-id
+                  (:failed failed-id error)
+                    do
+                      assert |failed-action-keeps-request-id $ = request-id failed-id
+                      assert |sync-failure-keeps-error-message $ = |offline (.-message error)
                   _ $ assert |expected-failed-resource-action false
+              let
+                  actions $ atom ([])
+                  request-id $ load-resource!
+                    fn () |ready
+                    fn (action) (swap! actions conj action)
+                      match action
+                        (:ready _id _value) (raise |emit-ready-failed)
+                        _ nil
+                js/queueMicrotask $ fn ()
+                  js/queueMicrotask $ fn ()
+                    match
+                      option:unwrap $ last @actions
+                      (:failed failed-id error)
+                        do
+                          assert |emitter-failure-keeps-request-id $ = request-id failed-id
+                          assert |emitter-failure-is-dispatched $ = |emit-ready-failed (.-message error)
+                      _ $ assert |expected-emitter-failure-action false
+              , nil
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
@@ -4490,6 +4826,29 @@
           :schema $ :: 'Fn
             {} (:return 'Dynamic)
               :args $ [] 'Dynamic
+          :tests $ []
+            %{} 'TestEntry (:name |removes-live-refs-recursively)
+              :code $ quote
+                let
+                    child $ %{} respo.schema/Element (:name :span) (:coord nil)
+                      :attrs $ []
+                      :style $ []
+                      :event $ {}
+                      :children $ []
+                      :ref $ fn (_target) nil
+                    parent $ %{} respo.schema/Element (:name :div) (:coord nil)
+                      :attrs $ []
+                      :style $ []
+                      :event $ {}
+                      :children $ [] ([] :child child)
+                      :ref $ fn (_target) nil
+                    purified $ purify-element parent
+                    purified-child $ option:unwrap
+                      last $ option:unwrap
+                        first $ &struct:get purified :children
+                  assert |parent-ref-is-removed $ nil? (&struct:get purified :ref)
+                  assert |child-ref-is-removed $ nil? (&struct:get purified-child :ref)
+              :tags $ #{} :unit
         |purify-events $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn purify-events (events)
