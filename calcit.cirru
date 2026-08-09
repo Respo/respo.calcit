@@ -2220,6 +2220,11 @@
             respo.render.dom :refer $ style->string
     |respo.cursor $ %{} 'FileEntry
       :defs $ {}
+        |CursorTestState $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defstruct CursorTestState (:draft 'String) (:locked? 'Bool) (:message 'String)
+          :examples $ []
+          :schema $ :: 'Dynamic
         |update-states $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn update-states (store cursor new-state)
@@ -2266,7 +2271,7 @@
             %{} 'TestEntry (:name |merges-struct-state-repeatedly)
               :code $ quote
                 let
-                    state0 $ %{} respo.app.schema/TodoState (:draft |a) (:locked? false) (:message |ready)
+                    state0 $ %{} CursorTestState (:draft |a) (:locked? false) (:message |ready)
                     store1 $ update-states-merge ({}) ([]) state0
                       {} $ :draft |b
                     store2 $ update-states-merge store1 ([]) state0
@@ -4387,9 +4392,13 @@
         :code $ quote (ns respo.schema.listener)
     |respo.test.main $ %{} 'FileEntry
       :defs $ {}
+        |*async-checks $ %{} 'CodeEntry (:doc |)
+          :code $ quote (defatom *async-checks 0)
+          :examples $ []
+          :schema $ :: 'Ref 'Number
         |main! $ %{} 'CodeEntry (:doc |)
           :code $ quote
-            defn main! ()
+            defn main! () (reset! *async-checks 0)
               let
                   tree $ div
                     {} (:value "|a\"b\"c") (:data-name |y)
@@ -4407,7 +4416,7 @@
                     %none
                 schedule!
                 schedule!
-                js/queueMicrotask $ fn ()
+                js/queueMicrotask $ fn () (swap! *async-checks inc)
                   assert |default-JS-scheduler-coalesces-microtasks $ = 1 @render-count
               let
                   calls $ atom 0
@@ -4418,7 +4427,7 @@
                 assert |resource-fetcher-runs-once $ = 1 @calls
                 assert |resource-load-starts-synchronously $ = (resource-started request-id)
                   option:unwrap $ first @actions
-                js/queueMicrotask $ fn ()
+                js/queueMicrotask $ fn () (swap! *async-checks inc)
                   assert |resolved-resource-emits-ready $ = (resource-ready request-id |ready)
                     option:unwrap $ get @actions 1
               let
@@ -4443,7 +4452,7 @@
                         (:ready _id _value) (raise |emit-ready-failed)
                         _ nil
                 js/queueMicrotask $ fn ()
-                  js/queueMicrotask $ fn ()
+                  js/queueMicrotask $ fn () (swap! *async-checks inc)
                     match
                       option:unwrap $ last @actions
                       (:failed failed-id error)
@@ -4451,6 +4460,9 @@
                           assert |emitter-failure-keeps-request-id $ = request-id failed-id
                           assert |emitter-failure-is-dispatched $ = |emit-ready-failed (.-message error)
                       _ $ assert |expected-emitter-failure-action false
+              js/setTimeout
+                fn () $ assert |all-async-checks-ran (= 3 @*async-checks)
+                , 0
               , nil
           :examples $ []
           :schema $ :: 'Fn
