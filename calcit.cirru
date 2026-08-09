@@ -4395,7 +4395,7 @@
         |*async-checks $ %{} 'CodeEntry (:doc |)
           :code $ quote (defatom *async-checks 0)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Ref 'Number
         |main! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn main! () (reset! *async-checks 0)
