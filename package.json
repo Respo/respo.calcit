@@ -1,9 +1,9 @@
 {
   "dependencies": {
-    "@calcit/procs": "^0.13.4"
+    "@calcit/procs": "^0.13.7"
   },
   "scripts": {
-    "test": "cr --init-fn 'respo.test.main/main!' js && node test.mjs",
+    "test": "cr test --tag unit --require-match && cr --init-fn 'respo.test.main/main!' js && node --no-warnings test.mjs",
     "check-docs": "bash scripts/check-docs-md.sh"
   },
   "devDependencies": {

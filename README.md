@@ -12,7 +12,7 @@
 - **Init Function**: `respo.main/main!`
 - **Reload Function**: `respo.main/reload!`
 - **Core Namespaces**: 33 namespaces providing virtual DOM, rendering, components, and utilities
-- **Dependencies**: calcit-test module
+- **Testing**: language built-in definition tests, plus a small JS-target smoke suite
 
 ### Usage
 
