@@ -2,7 +2,7 @@
 {} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `cr query` to inspect and `cr edit`/`cr tree` to modify. Run `cr docs agents --full` first. Manual edits must follow format and schema conventions, then run `cr edit format`.") (:package |respo) (:version |0.16.63)
   :entries $ {}
     :default $ {} (:description |) (:init-fn 'respo.main/main!) (:mode :js) (:reload-fn 'respo.main/reload!)
-      :modules $ [] |calcit-test/
+      :modules $ []
       :type-slots $ {} (:dispatch-op |respo.app.schema/Op)
   :files $ {}
     |respo.app.comp.container $ %{} 'FileEntry
@@ -534,6 +534,23 @@
             {}
               :args $ [] 'Dynamic
               :return $ :: 'Option 'respo.app.schema/Task
+          :tests $ []
+            %{} 'TestEntry (:name |restores-valid-task-data)
+              :code $ quote
+                do
+                  let
+                      task $ %{} Task (:id |task-1) (:text |saved) (:done? false)
+                      normalized $ option:unwrap (normalize-task task)
+                    assert |struct-id-is-kept $ = |task-1 (&struct:get normalized :id)
+                    assert |struct-text-is-kept $ = |saved (&struct:get normalized :text)
+                    assert |struct-status-is-kept $ = false (&struct:get normalized :done?)
+                  let
+                      normalized $ option:unwrap
+                        normalize-task $ {} (:id |task-2) (:text |mapped) (:done? true)
+                    assert |map-input-is-restored $ = |task-2 (&struct:get normalized :id)
+                  assert |invalid-data-is-rejected $ option:none?
+                    normalize-task $ {} (:id |missing-fields)
+              :tags $ #{} :unit
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote
           ns respo.app.task $ :require
@@ -1127,6 +1144,18 @@
           :schema $ :: 'Fn
             {} (:return 'respo.schema/Element)
               :args $ [] 'Tag 'respo.schema/DomProps 'Dynamic
+          :tests $ []
+            %{} 'TestEntry (:name |rejects-invalid-child-collections)
+              :code $ quote
+                let
+                    caught? $ atom false
+                  try
+                    create-list-element :div
+                      unsafe-coerce ({}) respo.schema/DomProps
+                      , :invalid
+                    fn (_error) (reset! caught? true)
+                  assert |invalid-keyed-children-are-rejected @caught?
+              :tags $ #{} :unit
         |decorate-defcomp $ %{} 'CodeEntry (:doc "|detect root element under component and add `data-defcomp` mark")
           :code $ quote
             defn decorate-defcomp (c name)
@@ -1263,6 +1292,27 @@
           :schema $ :: 'Fn
             {} (:return 'respo.schema/Effect)
               :args $ [] 'List 'Fn
+          :tests $ []
+            %{} 'TestEntry (:name |dispatches-only-matching-lifecycle-phases)
+              :code $ quote
+                let
+                    log $ atom ([])
+                    update-effect $ effect-on-update ([] :value)
+                      fn (target)
+                        swap! log conj $ [] :update target
+                    unmount-effect $ effect-on-unmount
+                      fn (target)
+                        swap! log conj $ [] :unmount target
+                    update-method $ &struct:get update-effect :method
+                    unmount-method $ &struct:get unmount-effect :method
+                  update-method (&struct:get update-effect :args) ([] :mount :node false)
+                  update-method (&struct:get update-effect :args) ([] :update :node false)
+                  unmount-method (&struct:get unmount-effect :args) ([] :update :node false)
+                  unmount-method (&struct:get unmount-effect :args) ([] :unmount :node false)
+                  assert |only-matching-phases-run $ =
+                    [] ([] :update :node) ([] :unmount :node)
+                    , @log
+              :tags $ #{} :unit
         |effect-watch $ %{} 'CodeEntry (:doc "|Creates a dependency-aware effect. setup! runs on mount and after dependency changes; cleanup! runs before a changed setup and on unmount. Cleanup uses the old render closure.")
           :code $ quote
             defn effect-watch (deps setup! cleanup-option)
@@ -1315,6 +1365,17 @@
                 div ({}) (<> |Failed)
               div ({}) (<> |Ready)
           :schema $ :: 'Dynamic
+          :tests $ []
+            %{} 'TestEntry (:name |catches-render-errors)
+              :code $ quote
+                let
+                    caught? $ atom false
+                    result $ error-boundary
+                      fn (_error) (reset! caught? true) |fallback
+                      raise |boom
+                  assert |fallback-result-is-returned $ = |fallback result
+                  assert |fallback-receives-the-error @caught?
+              :tags $ #{} :unit
         |extract-effects-list $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn extract-effects-list (markup)
@@ -1370,6 +1431,45 @@
                   :args $ [] 'T 'Number
               :generics $ [] 'T 'K
               :return $ :: 'List 'List
+          :tests $ []
+            %{} 'TestEntry (:name |preserves-order-and-rejects-nil-keys)
+              :code $ quote
+                do
+                  let
+                      items $ []
+                        {} $ :id :a
+                        {} $ :id :b
+                      pairs $ for-keyed items
+                        fn (item)
+                          option:unwrap $ get item :id
+                        fn (_item _idx)
+                          %{} schema/Element (:name :div) (:coord nil)
+                            :attrs $ []
+                            :style $ []
+                            :event $ {}
+                            :children $ []
+                            :ref nil
+                    assert |keys-preserve-input-order $ = ([] :a :b)
+                      map pairs $ fn (pair)
+                        option:unwrap $ first pair
+                    assert |all-items-are-rendered $ = 2 (count pairs)
+                  let
+                      caught? $ atom false
+                    try
+                      for-keyed
+                        [] $ {} (:id nil)
+                        fn (item)
+                          option:unwrap-or (get item :id) nil
+                        fn (_item _idx)
+                          %{} schema/Element (:name :div) (:coord nil)
+                            :attrs $ []
+                            :style $ []
+                            :event $ {}
+                            :children $ []
+                            :ref nil
+                      fn (_error) (reset! caught? true)
+                    assert |nil-key-is-rejected @caught?
+              :tags $ #{} :unit
         |h1 $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn h1 (props & children) (create-element :h1 props & children)
@@ -1496,6 +1596,25 @@
               :return $ :: 'Fn
                 {} (:return 'Unit)
                   :args $ []
+          :tests $ []
+            %{} 'TestEntry (:name |coalesces-custom-queue-requests)
+              :code $ quote
+                let
+                    render-count $ atom 0
+                    tasks $ atom ([])
+                    schedule! $ make-render-scheduler
+                      fn () $ swap! render-count inc
+                      %some $ fn (task) (swap! tasks conj task)
+                  schedule!
+                  schedule!
+                  assert |requests-are-coalesced $ = 1 (count @tasks)
+                  let
+                      task! $ option:unwrap (first @tasks)
+                    task!
+                  assert |queued-task-renders-once $ = 1 @render-count
+                  schedule!
+                  assert |new-request-can-be-enqueued-after-run $ = 2 (count @tasks)
+              :tags $ #{} :unit
         |memo-comp-by $ %{} 'CodeEntry (:doc "|Memoize a component by key and its full argument list. Use it while building a tree inside render-with! so entries whose keys disappear are pruned after the frame. A nil key bypasses caching.")
           :code $ quote
             defn memo-comp-by (key f & args) (memo/memo-comp-by key f & args)
@@ -1698,6 +1817,14 @@
               div ({}) (<> |Ready)
               div ({}) (<> |Loading)
           :schema $ :: 'Dynamic
+          :tests $ []
+            %{} 'TestEntry (:name |selects-one-branch)
+              :code $ quote
+                do
+                  assert |true-selects-child $ = |child (show true |child)
+                  assert |false-without-fallback-is-nil $ nil? (show false |child)
+                  assert |false-selects-fallback $ = |fallback (show false |child |fallback)
+              :tags $ #{} :unit
         |span $ %{} 'CodeEntry (:doc "|create a span element with properties and children. first argument is a hashmap for properties, rest arguments are children elements.")
           :code $ quote
             defn span (props & children) (create-element :span props & children)
@@ -1981,6 +2108,21 @@
             {} (:return 'T)
               :args $ [] 'T 'List 'Dynamic 'Map
               :generics $ [] 'T
+          :tests $ []
+            %{} 'TestEntry (:name |merges-struct-state-repeatedly)
+              :code $ quote
+                let
+                    state0 $ %{} respo.app.schema/TodoState (:draft |a) (:locked? false) (:message |ready)
+                    store1 $ update-states-merge ({}) ([]) state0
+                      {} $ :draft |b
+                    store2 $ update-states-merge store1 ([]) state0
+                      {} $ :draft |c
+                    state2 $ option:unwrap
+                      get-in store2 $ [] :states :data
+                  assert |state-remains-a-struct $ struct? state2
+                  assert |latest-change-wins $ = |c (&struct:get state2 :draft)
+                  assert |untouched-fields-remain $ = |ready (&struct:get state2 :message)
+              :tags $ #{} :unit
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote (ns respo.cursor)
     |respo.dom $ %{} 'FileEntry
@@ -2398,6 +2540,30 @@
           :schema $ :: 'Fn
             {} (:rest 'Dynamic) (:return 'respo.schema/Component)
               :args $ [] 'Dynamic 'Fn
+          :tests $ []
+            %{} 'TestEntry (:name |caches-only-valid-components)
+              :code $ quote
+                let
+                    calls $ atom 0
+                    build $ fn (value) (swap! calls inc)
+                      %{} respo.schema/Component
+                        :name $ turn-tag (str |counted- value)
+                        :effects $ []
+                        :listeners $ []
+                        :tree nil
+                  reset-component-caches!
+                  begin-memo-frame!
+                  let
+                      first-comp $ memo-comp-by :same build 1
+                      second-comp $ memo-comp-by :same build 1
+                      changed-comp $ memo-comp-by :same build 2
+                    assert |same-component-is-reused $ identical? first-comp second-comp
+                    assert |changed-args-produce-new-component $ not (identical? second-comp changed-comp)
+                    assert |component-builder-runs-only-on-miss $ = 2 @calls
+                  finish-memo-frame!
+                  assert |one-key-remains-cached $ = 1 (component-cache-size)
+                  reset-component-caches!
+              :tags $ #{} :unit
         |memo-value-by $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn memo-value-by (key f & args)
@@ -2423,6 +2589,46 @@
           :schema $ :: 'Fn
             {} (:rest 'Dynamic) (:return 'Dynamic)
               :args $ [] 'Dynamic 'Fn
+          :tests $ []
+            %{} 'TestEntry (:name |caches-values-and-prunes-frames)
+              :code $ quote
+                let
+                    calls $ atom 0
+                    derive $ fn (value) (swap! calls inc)
+                      {} $ :value value
+                  reset-component-caches!
+                  begin-memo-frame!
+                  let
+                      first-value $ memo-value-by :same derive 1
+                      second-value $ memo-value-by :same derive 1
+                      changed-value $ memo-value-by :same derive 2
+                    assert |same-key-and-args-reuse-identity $ identical? first-value second-value
+                    assert |changed-args-recompute $ not (identical? second-value changed-value)
+                    assert |changed-value-is-returned $ =
+                      {} $ :value 2
+                      , changed-value
+                    assert |only-misses-call-the-function $ = 2 @calls
+                  finish-memo-frame!
+                  reset-component-caches!
+                  reset! calls 0
+                  begin-memo-frame!
+                  memo-value-by nil derive 1
+                  memo-value-by nil derive 1
+                  finish-memo-frame!
+                  assert |nil-key-bypasses-cache $ = 2 @calls
+                  assert |nil-key-is-not-retained $ = 0 (component-cache-size)
+                  reset-component-caches!
+                  begin-memo-frame!
+                  memo-value-by :a derive 1
+                  memo-value-by :b derive 2
+                  finish-memo-frame!
+                  assert |first-frame-retains-two-keys $ = 2 (component-cache-size)
+                  begin-memo-frame!
+                  memo-value-by :b derive 2
+                  finish-memo-frame!
+                  assert |inactive-key-is-pruned $ = 1 (component-cache-size)
+                  reset-component-caches!
+              :tags $ #{} :unit
         |reset-component-caches! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn reset-component-caches! ()
@@ -2566,6 +2772,24 @@
           :schema $ :: 'Fn
             {} (:return 'Unit)
               :args $ [] 'Fn 'List 'List 'Number 'Dynamic 'Dynamic
+          :tests $ []
+            %{} 'TestEntry (:name |accepts-list-map-representation-transitions)
+              :code $ quote
+                let
+                    child $ %{} respo.schema/Element (:name :div) (:coord nil)
+                      :attrs $ []
+                      :style $ []
+                      :event $ {}
+                      :children $ []
+                      :ref nil
+                    effects $ atom ([])
+                    collect! $ fn (effect) (swap! effects conj effect)
+                    child-list $ [] ([] :a child)
+                    child-map $ {} (:a child)
+                  find-children-diffs collect! ([]) ([]) 0 child-list child-map
+                  find-children-diffs collect! ([]) ([]) 0 child-map child-list
+                  assert |equivalent-representations-have-no-diff $ empty? @effects
+              :tags $ #{} :unit
         |find-element-diffs $ %{} 'CodeEntry (:doc "|Internal diff algorithm for comparing old and new virtual DOM trees.\n\nIt collects patch operations via `collect!`, handling components, plain elements, styles, events, keyed children, and effect lifecycle transitions.")
           :code $ quote
             defn find-element-diffs (collect! coord n-coord old-tree new-tree) (; js/console.log "|element diffing:" n-coord old-tree new-tree) (; echo "|element coord" coord)
@@ -2698,6 +2922,20 @@
           :schema $ :: 'Fn
             {} (:return 'Unit)
               :args $ [] 'Fn 'List 'List 'Dynamic 'Dynamic
+          :tests $ []
+            %{} 'TestEntry (:name |reports-property-changes)
+              :code $ quote
+                let
+                    effects $ atom ([])
+                    collect! $ fn (effect) (swap! effects conj effect)
+                  find-props-diffs collect! ([]) ([])
+                    [] $ [] :class-name |old
+                    [] $ [] :class-name |new
+                  assert |one-replacement-is-produced $ = 1 (count @effects)
+                  assert |replacement-carries-the-new-pair $ =
+                    option:unwrap $ first @effects
+                    :: :replace-prop ([]) ([]) ([] :class-name |new)
+              :tags $ #{} :unit
         |find-style-diffs $ %{} 'CodeEntry (:doc "|Compares two style maps and collects effects for additions, removals, or updates.")
           :code $ quote
             defn find-style-diffs (collect! c-coord coord old-style new-style)
@@ -2899,6 +3137,33 @@
           :schema $ :: 'Fn
             {} (:return 'Unit)
               :args $ [] 'Fn 'List 'List 'Dynamic 'Bool
+          :tests $ []
+            %{} 'TestEntry (:name |runs-ref-mount-and-unmount-lifecycle)
+              :code $ quote
+                let
+                    log $ atom ([])
+                    ops $ atom ([])
+                    ref! $ fn (target) (swap! log conj target)
+                    element $ %{} respo.schema/Element (:name :div) (:coord nil)
+                      :attrs $ []
+                      :style $ []
+                      :event $ {}
+                      :children $ []
+                      :ref ref!
+                    collect! $ fn (op) (swap! ops conj op)
+                  collect-mounting collect! ([]) ([]) element false
+                  collect-unmounting collect! ([]) ([]) element false
+                  &doseq (op @ops)
+                    match op
+                      (:effect-mount _coord _n-coord run!)
+                          unsafe-coerce run! Fn
+                          , :dom-node
+                      (:effect-unmount _coord _n-coord run!)
+                          unsafe-coerce run! Fn
+                          , :ignored
+                      _ nil
+                  assert |ref-receives-target-then-nil $ = ([] :dom-node nil) @log
+              :tags $ #{} :unit
         |collect-own-mounting $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn collect-own-mounting (collect! coord n-coord tree at-place?)
@@ -3089,6 +3354,32 @@
           :schema $ :: 'Fn
             {} (:return 'String)
               :args $ [] 'respo.schema/Element
+          :tests $ []
+            %{} 'TestEntry (:name |serializes-elements-and-escapes-values)
+              :code $ quote
+                do
+                  assert |plain-element $ = "|<div class=\"test\"></div>"
+                    element->string $ %{} respo.schema/Element (:name :div) (:coord nil)
+                      :attrs $ [] ([] :class-name |test)
+                      :style $ []
+                      :event $ {}
+                      :children $ []
+                      :ref nil
+                  assert |nil-properties-are-omitted $ = "|<script src=\"a.js\"></script>"
+                    element->string $ %{} respo.schema/Element (:name :script) (:coord nil)
+                      :attrs $ [] ([] :src |a.js) ([] :defer nil)
+                      :style $ []
+                      :event $ {}
+                      :children $ []
+                      :ref nil
+                  assert |textarea-content-is-escaped $ = "|<textarea value=\"a&#13;&#10;&quot;b&quot;\">a&#13;&#10;&quot;b&quot;</textarea>"
+                    element->string $ %{} respo.schema/Element (:name :textarea) (:coord nil)
+                      :attrs $ [] ([] :value "|a\n\"b\"")
+                      :style $ []
+                      :event $ {}
+                      :children $ []
+                      :ref nil
+              :tags $ #{} :unit
         |entry->html $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn entry->html (entry)
@@ -3588,6 +3879,35 @@
           :schema $ :: 'Fn
             {} (:return 'respo.resource/ResourceState)
               :args $ [] 'respo.resource/ResourceState 'respo.resource/ResourceAction
+          :tests $ []
+            %{} 'TestEntry (:name |handles-refresh-stale-and-error-results)
+              :code $ quote
+                let
+                    idle $ resource-idle (%none)
+                    pending $ resource-reducer idle (resource-started 1)
+                    ready $ resource-reducer pending
+                      resource-ready 1 $ {} (:value |first)
+                    refreshing $ resource-reducer ready (resource-started 2)
+                    stale $ resource-reducer refreshing
+                      resource-ready 1 $ {} (:value |stale)
+                    failed $ resource-reducer refreshing (resource-failed 2 |offline)
+                    ready-nil $ resource-reducer pending (resource-ready 1 nil)
+                    refreshing-nil $ resource-reducer ready-nil (resource-started 3)
+                  assert |started-resource-is-pending $ = :pending (&struct:get pending :status)
+                  assert |pending-resource-is-loading $ resource-loading? pending
+                  assert |matching-result-is-ready $ = :ready (&struct:get ready :status)
+                  assert |refresh-keeps-existing-data $ =
+                    {} $ :value |first
+                    &struct:get refreshing :data
+                  assert |ready-resource-enters-refreshing $ = :refreshing (&struct:get refreshing :status)
+                  assert |stale-result-is-ignored $ identical? refreshing stale
+                  assert |matching-failure-is-recorded $ = :error (&struct:get failed :status)
+                  assert |failure-message-is-kept $ = |offline (&struct:get failed :error)
+                  assert |failure-keeps-existing-data $ =
+                    {} $ :value |first
+                    &struct:get failed :data
+                  assert |nil-data-can-refresh $ = :refreshing (&struct:get refreshing-nil :status)
+              :tags $ #{} :unit
         |resource-started $ %{} 'CodeEntry (:doc "|Creates a :started ResourceAction for a numeric request id.")
           :code $ quote
             defn resource-started (request-id)
@@ -3755,160 +4075,47 @@
       :defs $ {}
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote (ns respo.schema.listener)
-    |respo.test.comp.task $ %{} 'FileEntry
-      :defs $ {}
-        |comp-task $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-task (task)
-              div ({})
-                span $ {}
-                  :inner-text $ :text task
-          :examples $ []
-          :schema $ :: 'Fn
-            {} (:return 'respo.schema/Component)
-              :args $ [] 'Dynamic
-      :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns respo.test.comp.task $ :require
-            respo.util.format :refer $ hsl
-            respo.core :refer $ defcomp div span
-    |respo.test.comp.todolist $ %{} 'FileEntry
-      :defs $ {}
-        |comp-todolist $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-todolist (tasks)
-              list->
-                {} $ :style style-todolist
-                ->
-                  either tasks $ []
-                  map $ fn (task)
-                    [] (:id task) (comp-task task)
-          :examples $ []
-          :schema $ :: 'Fn
-            {} (:return 'respo.schema/Component)
-              :args $ [] 'Dynamic
-        |style-todolist $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def style-todolist $ {} (:color :blue) (:font-family "|\"微软雅黑\", Verdana")
-          :examples $ []
-          :schema $ :: 'Map
-      :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns respo.test.comp.todolist $ :require
-            respo.test.comp.task :refer $ comp-task
-            respo.core :refer $ defcomp div list->
-            respo.test.comp.todolist :refer $ comp-todolist
-    |respo.test.html $ %{} 'FileEntry
-      :defs $ {}
-        |html-quote-test $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            deftest html-quote-test $ let
-                tree-demo $ div
-                  {} (:value "|a\"b\"c") (:data-name |y)
-                    :style $ {} (:content "|d\"e\"f")
-              testing "|HTML contains quotes" $ is
-                = (slurp |test/examples/quote.html) (make-string tree-demo)
-          :examples $ []
-          :schema $ :: 'Dynamic
-        |html-test $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            deftest html-test $ let
-                todo-demo $ comp-todolist todolist-store
-              testing "|test generated HTML from component" $ is
-                = (slurp |test/examples/demo.html) (make-string todo-demo)
-          :examples $ []
-          :schema $ :: 'Dynamic
-        |map-to-record-test $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn map-to-record-test () $ testing "|test map-to-record rewrite for element->string"
-              is $ = "|<div class=\"test\"></div>"
-                element->string $ {} (:name :div) (:coord nil)
-                  :attrs $ [] ([] :class-name |test)
-                  :style $ []
-                  :event $ {}
-                  :children $ []
-          :examples $ []
-          :schema $ :: 'Fn
-            {} (:return 'Unit)
-              :args $ []
-        |nil-prop-test $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            deftest nil-prop-test $ let
-                piece $ script
-                  {} (:src |a.js) (:defer nil)
-              testing "|test generate script with nil" $ is
-                = "|<script src=\"a.js\"></script>" $ make-string piece
-          :examples $ []
-          :schema $ :: 'Dynamic
-        |ref-prop-test $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            deftest ref-prop-test $ let
-                piece $ div
-                  {} $ :ref
-                    fn (_target) nil
-                purified $ purify-element piece
-              testing |ref_is_not_serialized_or_retained_by_purified_markup
-                is $ nil? (get purified :ref)
-                is $ = |<div></div> (make-string piece)
-          :examples $ []
-          :schema $ :: 'Dynamic
-        |run-tests $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn run-tests () (html-quote-test) (nil-prop-test) (simple-html-test) (textarea-test) (map-to-record-test) (ref-prop-test)
-          :examples $ []
-          :schema $ :: 'Fn
-            {} (:return 'Unit)
-              :args $ []
-        |simple-html-test $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            deftest simple-html-test $ let
-                tree-demo $ html ({})
-                  head ({})
-                    title $ {} (:innerHTML |Demo)
-                    link $ {} (:rel |icon) (:type |image/png)
-                    script $ {} (:innerHTML |{})
-                  body ({})
-                    div
-                      {} $ :id |app
-                      div $ {}
-              testing "|test generated HTML from tree" $ is
-                = (slurp |test/examples/simple.html) (make-string tree-demo)
-          :examples $ []
-          :schema $ :: 'Dynamic
-        |slurp $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defmacro slurp (file-path) (read-file file-path)
-          :examples $ []
-          :schema $ :: 'Dynamic
-        |textarea-test $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            deftest textarea-test $ let
-                piece $ textarea
-                  {} $ :value "|a\nb\nc\n\"\nd"
-              testing "|test generated HTML from component" $ is
-                = "|<textarea value=\"a&#13;&#10;b&#13;&#10;c&#13;&#10;&quot;&#13;&#10;d\">a&#13;&#10;b&#13;&#10;c&#13;&#10;&quot;&#13;&#10;d</textarea>" $ make-string piece
-          :examples $ []
-          :schema $ :: 'Dynamic
-        |todolist-store $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def todolist-store $ []
-              {} (:id 101) (:text |101)
-              {} (:id 102) (:text |102)
-          :examples $ []
-          :schema $ :: 'List
-      :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns respo.test.html $ :require
-            calcit-test.core :refer $ deftest is testing
-            respo.core :refer $ html head title script div link textarea body
-            respo.render.html :refer $ make-string element->string
-            respo.test.comp.todolist :refer $ comp-todolist
-            respo.util.format :refer $ purify-element
     |respo.test.main $ %{} 'FileEntry
       :defs $ {}
         |main! $ %{} 'CodeEntry (:doc |)
           :code $ quote
-            defn main! () (html/run-tests) (test-pick-attrs) (test-pick-event) (memo/run-tests) (primitives/run-tests) (test-find-props-diffs) (test-pair-representation-transitions) (test-update-states-merge-record) (test-dom-fallback-values) (test-normalize-task-struct)
+            defn main! ()
+              let
+                  tree $ div
+                    {} (:value "|a\"b\"c") (:data-name |y)
+                      :style $ {} (:content "|d\"e\"f")
+                assert |JS-HTML-keeps-escaped-attributes-and-styles $ = "|<div data-name=\"y\" style=\"content:d&quot;e&quot;f;\" value=\"a&quot;b&quot;c\"></div>" (make-string tree)
+              assert |Node-without-Canvas-uses-zero-width $ = 0 (text-width |demo 16 |sans-serif)
+              let
+                  render-count $ atom 0
+                  schedule! $ make-render-scheduler
+                    fn () $ swap! render-count inc
+                    %none
+                schedule!
+                schedule!
+                js/queueMicrotask $ fn ()
+                  assert |default-JS-scheduler-coalesces-microtasks $ = 1 @render-count
+              let
+                  actions $ atom ([])
+                  request-id $ load-resource!
+                    fn () |ready
+                    fn (action) (swap! actions conj action)
+                assert |resource-load-starts-synchronously $ = (resource-started request-id)
+                  option:unwrap $ first @actions
+                js/queueMicrotask $ fn ()
+                  assert |resolved-resource-emits-ready $ = (resource-ready request-id |ready)
+                    option:unwrap $ get @actions 1
+              let
+                  actions $ atom ([])
+                  request-id $ load-resource!
+                    fn () $ raise |offline
+                    fn (action) (swap! actions conj action)
+                assert |sync-fetch-failure-emits-two-actions $ = 2 (count @actions)
+                match
+                  option:unwrap $ last @actions
+                  (:failed failed-id _error)
+                    assert |failed-action-keeps-request-id $ = request-id failed-id
+                  _ $ assert |expected-failed-resource-action false
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
@@ -3920,663 +4127,13 @@
           :schema $ :: 'Fn
             {} (:return 'Unit)
               :args $ []
-        |test-dom-fallback-values $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            deftest test-dom-fallback-values $ testing "|DOM helpers return stable values without browser globals"
-              is $ = | (get-style-value nil |width)
-              is $ = 0 (text-width |demo 16 |sans-serif)
-          :examples $ []
-          :schema $ :: 'Dynamic
-        |test-find-props-diffs $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            deftest test-find-props-diffs $ testing "|diff sorted prop lists without map specialization"
-              let
-                  effects $ atom ([])
-                  collect! $ fn (effect) (swap! effects conj effect)
-                  old-props $ [] ([] :class-name |old)
-                  new-props $ [] ([] :class-name |new)
-                find-props-diffs collect! ([]) ([]) old-props new-props
-                is $ = 1 (count @effects)
-                is $ =
-                  option:unwrap $ first @effects
-                  :: :replace-prop ([]) ([]) ([] :class-name |new)
-          :examples $ []
-          :schema $ :: 'Dynamic
-        |test-normalize-task-struct $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            deftest test-normalize-task-struct $ testing |task_structs_restore_from_local_storage
-              let
-                  task $ %{} respo.app.schema/Task (:id |gen_id_39_1769789437265) (:text |saved) (:done? false)
-                  normalized $ option:unwrap (normalize-task task)
-                is $ = |gen_id_39_1769789437265 (&struct:get normalized :id)
-                is $ = |saved (&struct:get normalized :text)
-                is $ = false (&struct:get normalized :done?)
-          :examples $ []
-          :schema $ :: 'Dynamic
-        |test-pair-representation-transitions $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            deftest test-pair-representation-transitions $ testing |pair_collections_support_list_and_map_transitions
-              let
-                  child $ div ({})
-                  *ops $ atom ([])
-                  collect! $ fn (op) (swap! *ops conj op)
-                  child-list $ [] ([] :a child)
-                  child-map $ {} (:a child)
-                  prop-list $ [] ([] :title |same)
-                  prop-map $ {} (:title |same)
-                find-children-diffs collect! ([]) ([]) 0 child-list child-map
-                find-children-diffs collect! ([]) ([]) 0 child-map child-list
-                find-props-diffs collect! ([]) ([]) prop-list prop-map
-                find-props-diffs collect! ([]) ([]) prop-map prop-list
-                is $ empty? @*ops
-          :examples $ []
-          :schema $ :: 'Dynamic
-        |test-pick-attrs $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            deftest test-pick-attrs
-              is $ =
-                pick-attrs $ {} (:value |string)
-                  :on-click $ fn () nil
-                [] $ [] :value |string
-              is $ =
-                pick-attrs $ {} (:data-comp nil) (:data-name nil) (:title |ok)
-                [] $ [] :title |ok
-              is $ =
-                pick-attrs $ {}
-                  :ref $ fn (_target) nil
-                  :title |ok
-                [] $ [] :title |ok
-          :examples $ []
-          :schema $ :: 'Dynamic
-        |test-pick-event $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            deftest test-pick-event $ testing "|test event"
-              let
-                  f $ fn () nil
-                is $ =
-                  pick-event $ {} (:value |a) (:on-click f)
-                  {} $ :click f
-                is $ =
-                  pick-event $ {} (:value |a) (:on-click f)
-                    :on $ {} (:input f)
-                  {} (:click f) (:input f)
-          :examples $ []
-          :schema $ :: 'Dynamic
-        |test-update-states-merge-record $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            deftest test-update-states-merge-record $ testing |record_state_supports_repeated_merges
-              let
-                  state0 $ %{} TodoState (:draft |a) (:locked? false) (:message |ready)
-                  store1 $ update-states-merge ({}) ([]) state0
-                    {} $ :draft |b
-                  store2 $ update-states-merge store1 ([]) state0
-                    {} $ :draft |c
-                  state2 $ option:unwrap
-                    get-in store2 $ [] :states :data
-                is $ struct? state2
-                is $ = |c (&struct:get state2 :draft)
-          :examples $ []
-          :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote
-          ns respo.test.main $ :require (respo.test.html :as html)
-            calcit-test.core :refer $ deftest testing is
-            respo.util.list :refer $ pick-attrs pick-event
-            respo.test.memo :as memo
-            respo.render.diff :refer $ find-children-diffs find-props-diffs
-            respo.cursor :refer $ update-states-merge
-            respo.core :refer $ div
-            respo.app.schema :refer $ TodoState
-            respo.test.primitives :as primitives
-            respo.util.format :refer $ get-style-value
+          ns respo.test.main $ :require
+            respo.core :refer $ div make-render-scheduler
+            respo.render.html :refer $ make-string
             respo.util.dom :refer $ text-width
-            respo.app.task :refer $ normalize-task
-    |respo.test.memo $ %{} 'FileEntry
-      :defs $ {}
-        |*render-count $ %{} 'CodeEntry (:doc |)
-          :code $ quote (defatom *render-count 0)
-          :examples $ []
-          :schema $ :: 'Ref
-        |*value-call-count $ %{} 'CodeEntry (:doc |)
-          :code $ quote (defatom *value-call-count 0)
-          :examples $ []
-          :schema $ :: 'Ref 'Number
-        |comp-counted $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-counted (value) (swap! *render-count inc)
-              div ({})
-                <> $ str value
-          :examples $ []
-          :schema $ :: 'Fn
-            {} (:return 'respo.schema/Component)
-              :args $ [] 'Number
-        |derive-counted $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn derive-counted (value) (swap! *value-call-count inc)
-              {} $ :value value
-          :examples $ []
-          :schema $ :: 'Fn
-            {}
-              :args $ [] 'Number
-              :return $ :: 'Map 'Tag 'Number
-        |memo-bypass-test $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            deftest memo-bypass-test $ testing |nil_key_bypasses_cache (reset-component-caches!) (reset! *render-count 0) (begin-memo-frame!) (memo-comp-by nil comp-counted 1) (memo-comp-by nil comp-counted 1) (finish-memo-frame!)
-              is $ = 2 @*render-count
-              is $ = 0 (component-cache-size)
-              reset-component-caches!
-          :examples $ []
-          :schema $ :: 'Dynamic
-        |memo-hit-test $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            deftest memo-hit-test $ testing |memo_hit_reuses_component_identity (reset-component-caches!) (reset! *render-count 0) (begin-memo-frame!)
-              let
-                  first-comp $ memo-comp-by :same comp-counted 1
-                  second-comp $ memo-comp-by :same comp-counted 1
-                is $ identical? first-comp second-comp
-                is $ = 1 @*render-count
-                finish-memo-frame!
-                is $ = 1 (component-cache-size)
-                reset-component-caches!
-          :examples $ []
-          :schema $ :: 'Dynamic
-        |memo-invalidation-test $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            deftest memo-invalidation-test $ testing |changed_args_recompute_same_key (reset-component-caches!) (reset! *render-count 0) (begin-memo-frame!)
-              let
-                  first-comp $ memo-comp-by :same comp-counted 1
-                  second-comp $ memo-comp-by :same comp-counted 2
-                is $ not (identical? first-comp second-comp)
-                is $ = 2 @*render-count
-                finish-memo-frame!
-                is $ = 1 (component-cache-size)
-                reset-component-caches!
-          :examples $ []
-          :schema $ :: 'Dynamic
-        |memo-prune-test $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            deftest memo-prune-test $ testing |memo_frame_prunes_inactive_keys (reset-component-caches!) (reset! *render-count 0) (begin-memo-frame!) (memo-comp-by :a comp-counted 1) (memo-comp-by :b comp-counted 2) (finish-memo-frame!)
-              is $ = 2 (component-cache-size)
-              begin-memo-frame!
-              memo-comp-by :b comp-counted 2
-              finish-memo-frame!
-              is $ = 1 (component-cache-size)
-              begin-memo-frame!
-              memo-comp-by :a comp-counted 1
-              finish-memo-frame!
-              is $ = 3 @*render-count
-              reset-component-caches!
-          :examples $ []
-          :schema $ :: 'Dynamic
-        |memo-value-bypass-test $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            deftest memo-value-bypass-test $ testing |memo_value_nil_key_bypasses_cache (reset-component-caches!) (reset! *value-call-count 0) (begin-memo-frame!) (memo-value-by nil derive-counted 1) (memo-value-by nil derive-counted 1) (finish-memo-frame!)
-              is $ = 2 @*value-call-count
-              is $ = 0 (component-cache-size)
-              reset-component-caches!
-          :examples $ []
-          :schema $ :: 'Dynamic
-        |memo-value-test $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            deftest memo-value-test $ testing |memo_value_reuses_immutable_derived_data (reset-component-caches!) (reset! *value-call-count 0) (begin-memo-frame!)
-              let
-                  first-value $ memo-value-by :same derive-counted 1
-                  second-value $ memo-value-by :same derive-counted 1
-                  changed-value $ memo-value-by :same derive-counted 2
-                is $ identical? first-value second-value
-                is $ not (identical? second-value changed-value)
-                is $ =
-                  {} $ :value 2
-                  , changed-value
-                is $ = 2 @*value-call-count
-              finish-memo-frame!
-              reset-component-caches!
-          :examples $ []
-          :schema $ :: 'Dynamic
-        |run-tests $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn run-tests () (memo-hit-test) (memo-prune-test) (memo-invalidation-test) (memo-bypass-test) (memo-value-test) (memo-value-bypass-test)
-          :examples $ []
-          :schema $ :: 'Fn
-            {} (:return 'Unit)
-              :args $ []
-      :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns respo.test.memo $ :require
-            calcit-test.core :refer $ deftest testing is
-            respo.core :refer $ defcomp div <> memo-comp-by memo-value-by
-            respo.memo :refer $ begin-memo-frame! finish-memo-frame! reset-component-caches! component-cache-size
-    |respo.test.primitives $ %{} 'FileEntry
-      :defs $ {}
-        |capture-error-message $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn capture-error-message (f)
-              try
-                do (f) (%none)
-                fn (error)
-                  %some $ unsafe-coerce (.-message error) String
-          :examples $ []
-          :schema $ :: 'Fn
-            {}
-              :args $ [] 'Fn
-              :features $ #{} :js-ffi
-              :return $ :: 'Option 'String
-        |comp-boundary $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-boundary (*log)
-              []
-                effect-watch ([])
-                  fn (target)
-                    swap! *log conj $ [] :setup target
-                  %some $ fn (target)
-                    swap! *log conj $ [] :cleanup target
-                div $ {}
-                  :ref $ fn (target)
-                    swap! *log conj $ [] :ref target
-          :examples $ []
-          :schema $ :: 'Fn
-            {} (:return 'respo.schema/Component)
-              :args $ [] 'Ref
-        |comp-optional-watch $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-optional-watch (enabled? *log)
-              if enabled?
-                []
-                  effect-watch ([])
-                    fn (target)
-                      swap! *log conj $ [] :setup target
-                    %some $ fn (target)
-                      swap! *log conj $ [] :cleanup target
-                  div $ {}
-                div $ {}
-          :examples $ []
-          :schema $ :: 'Fn
-            {} (:return 'respo.schema/Component)
-              :args $ [] 'Bool 'Ref
-        |comp-replaced-effect $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-replaced-effect (watch? *log)
-              []
-                if watch?
-                  effect-watch ([])
-                    fn (_target) nil
-                    %some $ fn (target)
-                      swap! *log conj $ [] :cleanup target
-                  effect-on-mount $ fn (target)
-                    swap! *log conj $ [] :mount target
-                div $ {}
-          :examples $ []
-          :schema $ :: 'Fn
-            {} (:return 'respo.schema/Component)
-              :args $ [] 'Bool 'Ref
-        |comp-watch $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-watch (dep *log)
-              []
-                effect-watch ([] dep)
-                  fn (target)
-                    swap! *log conj $ [] :setup dep target
-                  %some $ fn (target)
-                    swap! *log conj $ [] :cleanup dep target
-                div $ {}
-          :examples $ []
-          :schema $ :: 'Fn
-            {} (:return 'respo.schema/Component)
-              :args $ [] 'Dynamic 'Ref
-        |run-collected! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn run-collected! (ops target)
-              &doseq (op ops)
-                match op
-                  (:effect-mount _coord _n-coord run!)
-                      unsafe-coerce run! Fn
-                      , target
-                  (:effect-unmount _coord _n-coord run!)
-                      unsafe-coerce run! Fn
-                      , target
-                  (:effect-update _coord _n-coord run!)
-                      unsafe-coerce run! Fn
-                      , target
-                  (:effect-before-update _coord _n-coord run!)
-                      unsafe-coerce run! Fn
-                      , target
-                  _ nil
-          :examples $ []
-          :schema $ :: 'Fn
-            {} (:return 'Unit)
-              :args $ [] 'List 'Dynamic
-        |run-tests $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn run-tests () (test-show) (test-for-keyed) (test-error-boundary) (test-effect-watch) (test-effect-list-transitions) (test-effect-identity-change) (test-effect-specific-lifecycles) (test-ref-lifecycle) (test-ref-update) (test-component-element-boundary) (test-create-list-element-validation) (test-resource-reducer) (test-load-resource) (test-render-scheduler) (test-render-scheduler-validation)
-          :examples $ []
-          :schema $ :: 'Fn
-            {} (:return 'Unit)
-              :args $ []
-        |test-component-element-boundary $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            deftest test-component-element-boundary $ testing |component_wrapper_transitions_do_not_duplicate_ref_lifecycle
-              let
-                  *log $ atom ([])
-                  *ops $ atom ([])
-                  collect! $ fn (op) (swap! *ops conj op)
-                  plain $ div ({})
-                  wrapped $ comp-boundary *log
-                find-element-diffs collect! ([]) ([]) plain wrapped
-                run-collected! @*ops :target
-                is $ =
-                  [] ([] :ref :target) ([] :setup :target)
-                  deref *log
-                reset! *log $ []
-                reset! *ops $ []
-                find-element-diffs collect! ([]) ([]) wrapped plain
-                run-collected! @*ops :target
-                is $ =
-                  [] ([] :cleanup :target) ([] :ref nil)
-                  deref *log
-          :examples $ []
-          :schema $ :: 'Dynamic
-        |test-create-list-element-validation $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            deftest test-create-list-element-validation $ testing |create_list_element_rejects_invalid_keyed_children_at_the_api_boundary
-              is $ = (%some "|[Respo/create-list-element] expected keyed child pairs as a list or map")
-                capture-error-message $ fn ()
-                  create-list-element :div ({}) :invalid
-          :examples $ []
-          :schema $ :: 'Dynamic
-        |test-effect-identity-change $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            deftest test-effect-identity-change $ testing |replacing_effect_kind_with_equal_deps_unmounts_old_and_mounts_new
-              let
-                  *log $ atom ([])
-                  *ops $ atom ([])
-                  collect! $ fn (op) (swap! *ops conj op)
-                  old-tree $ comp-replaced-effect true *log
-                  new-tree $ comp-replaced-effect false *log
-                collect-updating collect! :before-update ([]) ([]) old-tree new-tree
-                collect-updating collect! :update ([]) ([]) old-tree new-tree
-                run-collected! @*ops :target
-                is $ =
-                  [] ([] :cleanup :target) ([] :mount :target)
-                  deref *log
-          :examples $ []
-          :schema $ :: 'Dynamic
-        |test-effect-list-transitions $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            deftest test-effect-list-transitions $ testing |effect_list_addition_and_removal_have_mount_unmount_semantics
-              let
-                  *log $ atom ([])
-                  *ops $ atom ([])
-                  collect! $ fn (op) (swap! *ops conj op)
-                  without-effect $ comp-optional-watch false *log
-                  with-effect $ comp-optional-watch true *log
-                collect-updating collect! :before-update ([]) ([]) without-effect with-effect
-                collect-updating collect! :update ([]) ([]) without-effect with-effect
-                run-collected! @*ops :target
-                reset! *ops $ []
-                collect-updating collect! :before-update ([]) ([]) with-effect without-effect
-                collect-updating collect! :update ([]) ([]) with-effect without-effect
-                run-collected! @*ops :target
-                is $ =
-                  [] ([] :setup :target) ([] :cleanup :target)
-                  deref *log
-          :examples $ []
-          :schema $ :: 'Dynamic
-        |test-effect-specific-lifecycles $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            deftest test-effect-specific-lifecycles $ testing |effect_on_update_and_unmount_dispatch_only_their_named_phase
-              let
-                  *log $ atom ([])
-                  update-effect $ effect-on-update ([] :value)
-                    fn (target)
-                      swap! *log conj $ [] :update target
-                  unmount-effect $ effect-on-unmount
-                    fn (target)
-                      swap! *log conj $ [] :unmount target
-                  update-method $ &struct:get update-effect :method
-                  unmount-method $ &struct:get unmount-effect :method
-                update-method (&struct:get update-effect :args) ([] :mount :node false)
-                update-method (&struct:get update-effect :args) ([] :update :node false)
-                unmount-method (&struct:get unmount-effect :args) ([] :update :node false)
-                unmount-method (&struct:get unmount-effect :args) ([] :unmount :node false)
-                is $ =
-                  [] ([] :update :node) ([] :unmount :node)
-                  deref *log
-          :examples $ []
-          :schema $ :: 'Dynamic
-        |test-effect-watch $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            deftest test-effect-watch $ testing |effect_watch_cleans_old_closure_before_setting_up_new_one
-              let
-                  *log $ atom ([])
-                  *ops $ atom ([])
-                  collect! $ fn (op) (swap! *ops conj op)
-                  old-tree $ comp-watch 1 *log
-                  new-tree $ comp-watch 2 *log
-                collect-updating collect! :before-update ([]) ([]) old-tree new-tree
-                collect-updating collect! :update ([]) ([]) old-tree new-tree
-                run-collected! @*ops :target
-                is $ =
-                  [] ([] :cleanup 1 :target) ([] :setup 2 :target)
-                  deref *log
-          :examples $ []
-          :schema $ :: 'Dynamic
-        |test-error-boundary $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            deftest test-error-boundary $ testing |error_boundary_catches_render_error_without_mutating_store
-              let
-                  *caught $ atom nil
-                  fallback $ div ({}) (<> |fallback)
-                  result $ error-boundary
-                    fn (error)
-                      reset! *caught $ .-message error
-                      , fallback
-                    raise |boom
-                is $ identical? fallback result
-                is $ = |boom @*caught
-              is $ = (%some "|[Respo/error-boundary] expected fallback as a function")
-                capture-error-message $ fn ()
-                  error-boundary (unsafe-coerce nil Fn)
-                    div $ {}
-          :examples $ []
-          :schema $ :: 'Dynamic
-        |test-for-keyed $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            deftest test-for-keyed $ testing |for_keyed_preserves_order_and_reports_nil_keys
-              let
-                  items $ []
-                    {} (:id :a) (:label |A)
-                    {} (:id :b) (:label |B)
-                  pairs $ for-keyed items
-                    fn (item)
-                      option:unwrap $ :id item
-                    fn (item _idx)
-                      div ({})
-                        <> $ option:unwrap (:label item)
-                is $ = ([] :a :b)
-                  map pairs $ fn (pair)
-                    option:unwrap $ first pair
-                is $ = 2 (count pairs)
-              is $ = (%some "|[Respo/for-keyed] key-fn returned nil at index 0")
-                capture-error-message $ fn ()
-                  for-keyed
-                    [] $ {} (:id nil)
-                    fn (item)
-                      option:unwrap $ :id item
-                    fn (_item _idx)
-                      div $ {}
-          :examples $ []
-          :schema $ :: 'Dynamic
-        |test-load-resource $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            deftest test-load-resource $ testing |load_resource_invokes_fetchers_and_emits_started_then_ready_or_failed
-              let
-                  *calls $ atom 0
-                  *actions $ atom ([])
-                  request-id $ load-resource!
-                    fn () (swap! *calls inc) |ready
-                    fn (action) (swap! *actions conj action)
-                is $ = 1 @*calls
-                is $ = (resource-started request-id)
-                  option:unwrap $ first @*actions
-                js/queueMicrotask $ fn ()
-                  is $ = (resource-ready request-id |ready)
-                    option:unwrap $ get @*actions 1
-              let
-                  *actions $ atom ([])
-                  request-id $ load-resource!
-                    fn () $ raise |offline
-                    fn (action) (swap! *actions conj action)
-                is $ = 2 (count @*actions)
-                is $ = (resource-started request-id)
-                  option:unwrap $ first @*actions
-                match
-                  option:unwrap $ get @*actions 1
-                  (:failed failed-id error)
-                    do
-                      is $ = request-id failed-id
-                      is $ = |offline (.-message error)
-                  _ $ is false
-              let
-                  *actions $ atom ([])
-                  request-id $ load-resource!
-                    fn () |ready
-                    fn (action) (swap! *actions conj action)
-                      match action
-                        (:ready _id _value) (raise |emit-ready-failed)
-                        _ nil
-                js/queueMicrotask $ fn ()
-                  js/queueMicrotask $ fn ()
-                    match
-                      option:unwrap $ last @*actions
-                      (:failed failed-id error)
-                        do
-                          is $ = request-id failed-id
-                          is $ = |emit-ready-failed (.-message error)
-                      _ $ is false
-          :examples $ []
-          :schema $ :: 'Dynamic
-        |test-ref-lifecycle $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            deftest test-ref-lifecycle $ testing |ref_receives_target_and_is_really_cleared_on_unmount
-              let
-                  *log $ atom ([])
-                  *ops $ atom ([])
-                  ref! $ fn (target) (swap! *log conj target)
-                  element $ div
-                    {} $ :ref ref!
-                  collect! $ fn (op) (swap! *ops conj op)
-                is $ empty? (&struct:get element :attrs)
-                collect-mounting collect! ([]) ([]) element false
-                run-collected! @*ops :dom-node
-                reset! *ops $ []
-                collect-unmounting collect! ([]) ([]) element false
-                run-collected! @*ops :ignored
-                is $ = ([] :dom-node nil) @*log
-          :examples $ []
-          :schema $ :: 'Dynamic
-        |test-ref-update $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            deftest test-ref-update $ testing |changing_ref_clears_old_callback_before_assigning_new_target
-              let
-                  *log $ atom ([])
-                  *ops $ atom ([])
-                  old-ref! $ fn (target)
-                    swap! *log conj $ [] :old target
-                  new-ref! $ fn (target)
-                    swap! *log conj $ [] :new target
-                  old-element $ div
-                    {} $ :ref old-ref!
-                  new-element $ div
-                    {} $ :ref new-ref!
-                  collect! $ fn (op) (swap! *ops conj op)
-                find-element-diffs collect! ([]) ([]) old-element new-element
-                run-collected! @*ops :dom-node
-                is $ =
-                  [] ([] :old nil) ([] :new :dom-node)
-                  deref *log
-          :examples $ []
-          :schema $ :: 'Dynamic
-        |test-render-scheduler $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            deftest test-render-scheduler $ testing |scheduler_coalesces_requests_without_owning_application_state
-              let
-                  *render-count $ atom 0
-                  *tasks $ atom
-                    [] $ fn () nil
-                  schedule! $ make-render-scheduler
-                    fn () $ swap! *render-count inc
-                    %some $ fn (task) (swap! *tasks conj task)
-                reset! *tasks $ []
-                schedule!
-                schedule!
-                is $ = 1 (count @*tasks)
-                let
-                    task! $ option:unwrap (first @*tasks)
-                  task!
-                is $ = 1 @*render-count
-                schedule!
-                is $ = 2 (count @*tasks)
-          :examples $ []
-          :schema $ :: 'Dynamic
-        |test-render-scheduler-validation $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            deftest test-render-scheduler-validation $ testing |render_scheduler_rejects_an_invalid_custom_enqueue_function
-              is $ = (%some "|[Respo/make-render-scheduler] expected enqueue! as a function or nil")
-                capture-error-message $ fn ()
-                  make-render-scheduler
-                    fn () nil
-                    unsafe-coerce (%some :invalid) Dynamic
-          :examples $ []
-          :schema $ :: 'Dynamic
-        |test-resource-reducer $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            deftest test-resource-reducer $ testing |resource_reducer_keeps_immutable_data_and_ignores_stale_results
-              let
-                  idle $ resource-idle (%none)
-                  pending $ resource-reducer idle (resource-started 1)
-                  ready $ resource-reducer pending
-                    resource-ready 1 $ {} (:value |first)
-                  refreshing $ resource-reducer ready (resource-started 2)
-                  stale $ resource-reducer refreshing
-                    resource-ready 1 $ {} (:value |stale)
-                  failed $ resource-reducer refreshing (resource-failed 2 |offline)
-                  ready-nil $ resource-reducer pending (resource-ready 1 nil)
-                  refreshing-nil $ resource-reducer ready-nil (resource-started 3)
-                is $ = :pending (&struct:get pending :status)
-                is $ resource-loading? pending
-                is $ = :ready (&struct:get ready :status)
-                is $ =
-                  {} $ :value |first
-                  &struct:get refreshing :data
-                is $ = :refreshing (&struct:get refreshing :status)
-                is $ identical? refreshing stale
-                is $ = :error (&struct:get failed :status)
-                is $ = |offline (&struct:get failed :error)
-                is $ =
-                  {} $ :value |first
-                  &struct:get failed :data
-                is $ = :refreshing (&struct:get refreshing-nil :status)
-          :examples $ []
-          :schema $ :: 'Dynamic
-        |test-show $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            deftest test-show $ testing |show_selects_one_immutable_branch
-              let
-                  child $ div ({}) (<> |child)
-                  fallback $ div ({}) (<> |fallback)
-                is $ identical? child (show true child)
-                is $ nil? (show false child)
-                is $ identical? fallback (show false child fallback)
-          :examples $ []
-          :schema $ :: 'Dynamic
-      :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns respo.test.primitives $ :require
-            calcit-test.core :refer $ deftest testing is
-            respo.core :refer $ defcomp div <> show for-keyed error-boundary effect-watch effect-on-mount effect-on-update effect-on-unmount make-render-scheduler create-list-element
-            respo.render.diff :refer $ find-element-diffs
-            respo.render.effect :refer $ collect-mounting collect-unmounting collect-updating
-            respo.resource :refer $ resource-idle resource-started resource-ready resource-failed resource-reducer resource-loading? load-resource!
+            respo.resource :refer $ load-resource! resource-started resource-ready
     |respo.util.detect $ %{} 'FileEntry
       :defs $ {}
         |=seq $ %{} 'CodeEntry (:doc "|Recursively checks if two sequences are equal.")
@@ -4845,6 +4402,16 @@
           :schema $ :: 'Fn
             {} (:return 'String)
               :args $ [] 'Dynamic 'String
+          :tests $ []
+            %{} 'TestEntry (:name |formats-style-values)
+              :code $ quote
+                do
+                  assert |string-is-kept $ = |12rem (get-style-value |12rem |width)
+                  assert |tag-is-stringified $ = |block (get-style-value :block |display)
+                  assert |length-numbers-use-pixels $ = |12px (get-style-value 12 |width)
+                  assert |unitless-numbers-stay-unitless $ = |0.5 (get-style-value 0.5 |opacity)
+                  assert |nil-clears-the-value $ = | (get-style-value nil |width)
+              :tags $ #{} :unit
         |hsl $ %{} 'CodeEntry (:doc "|Generates HSL color string. Arguments: h, s (percent), l (percent), optional alpha (0-1).")
           :code $ quote
             defn hsl (h s l ? arg)
@@ -4987,6 +4554,20 @@
           :schema $ :: 'Fn
             {} (:return 'List)
               :args $ [] 'Map
+          :tests $ []
+            %{} 'TestEntry (:name |filters-internal-and-empty-properties)
+              :code $ quote
+                do
+                  assert |nil-props-produce-an-empty-list $ = ([])
+                    pick-attrs $ unsafe-coerce nil Map
+                  assert |attributes-are-filtered-and-sorted $ =
+                    [] ([] :data-id |x) ([] :title |ok) ([] :value |string)
+                    pick-attrs $ {} (:value |string) (:title |ok) (:data-id |x)
+                      :on-click $ fn () nil
+                      :data-empty nil
+                      :style $ {} (:color |red)
+                      :ref $ fn (_target) nil
+              :tags $ #{} :unit
         |pick-event $ %{} 'CodeEntry (:doc "|Extracts event listeners from a properties map. Handles both :on map and on-* keys.")
           :code $ quote
             defn pick-event (props)
@@ -5007,6 +4588,20 @@
           :schema $ :: 'Fn
             {} (:return 'Map)
               :args $ [] 'Map
+          :tests $ []
+            %{} 'TestEntry (:name |extracts-event-properties)
+              :code $ quote
+                do
+                  assert |nil-props-produce-an-empty-map $ = ({})
+                    pick-event $ unsafe-coerce nil Map
+                  let
+                      click! $ fn () nil
+                      input! $ fn () nil
+                    assert |events-are-filtered-and-merged $ =
+                      {} (:click click!) (:input input!)
+                      pick-event $ {} (:value |ignored) (:on-click click!) (:on-change nil)
+                        :on $ {} (:input input!)
+              :tags $ #{} :unit
         |val-exists? $ %{} 'CodeEntry (:doc "|Predicate to check if a key-value pair has a non-nil value.")
           :code $ quote
             defn val-exists? (pair)
