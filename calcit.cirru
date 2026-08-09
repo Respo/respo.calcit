@@ -51,8 +51,8 @@
           :code $ quote
             defcomp comp-task (states task)
               let
-                  cursor $ option:unwrap-or (:cursor states) ([])
-                  state $ option:unwrap-or (:data states) |
+                  cursor $ option:unwrap-or (get states :cursor) ([])
+                  state $ option:unwrap-or (get states :data) |
                 [] (effect-log task)
                   div
                     {} $ :class-name style-task
@@ -70,12 +70,12 @@
                         let
                             task-id $ &struct:get task :id
                             text $ str
-                              option:unwrap $ :value e
+                              option:unwrap $ get e :value
                           d! $ %:: Op :update task-id text
                     =< 8 0
                     input $ {} (:value state) (:class-name widget/style-input)
                       :on-input $ fn (e d!)
-                        d! cursor $ option:unwrap (:value e)
+                        d! cursor $ option:unwrap (get e :value)
                     =< 8 0
                     div
                       {} (:class-name widget/style-button)
@@ -130,8 +130,8 @@
           :code $ quote
             defcomp comp-todolist (states tasks)
               let
-                  cursor $ option:unwrap-or (:cursor states) ([])
-                  state $ option:unwrap-or (:data states)
+                  cursor $ option:unwrap-or (get states :cursor) ([])
+                  state $ option:unwrap-or (get states :data)
                     %{} respo.app.schema/TodoState (:draft |) (:locked? false) (:message "|Press Ctrl+M to change message")
                 assert-type state 'respo.app.schema/TodoState
                 assert-type tasks $ :: 'List 'respo.app.schema/Task
@@ -150,7 +150,7 @@
                         :on-input $ fn (e d!)
                           d! $ %:: Op :states-merge cursor state
                             {} $ :draft
-                              option:unwrap $ :value e
+                              option:unwrap $ get e :value
                         :on-focus on-focus
                       =< 8 0
                       span
@@ -240,8 +240,8 @@
                     :keydown info
                     when
                       and
-                        = |m $ option:unwrap-or (:key info) |
-                        option:unwrap-or (:ctrl info) false
+                        = |m $ option:unwrap-or (get info :key) |
+                        option:unwrap-or (get info :ctrl) false
                       do
                         dispatch! $ %:: Op :states cursor (assoc state :message "|Message changed by Ctrl+M!")
                         js/window.setTimeout
@@ -681,7 +681,7 @@
                   :inner-text $ str tip "|: " (grab-info data)
                   :style style-map
                   :on-click $ fn (e d!)
-                    if (some? js/window.devtoolsFormatters) (js/console.log data)
+                    if (js-present? js/window.devtoolsFormatters) (js/console.log data)
                       js/console.log $ to-js-data data
           :examples $ []
           :schema $ :: 'Fn
@@ -981,7 +981,7 @@
           :code $ quote
             defn >> (states k)
               let
-                  parent-cursor $ option:unwrap-or (:cursor states) ([])
+                  parent-cursor $ option:unwrap-or (get states :cursor) ([])
                   branch $ option:unwrap-or (get states k) ({})
                 assoc branch :cursor $ conj parent-cursor k
           :examples $ []
@@ -1100,7 +1100,10 @@
                       {}
                     &map:to-list
                     sort $ fn (x y)
-                      &compare (nth x 0) (nth y 0)
+                      fn (x y)
+                        &compare
+                          option:unwrap $ nth x 0
+                          option:unwrap $ nth y 0
                   event $ pick-event props-map
                   children-nodes $ -> children
                     map-indexed $ fn (idx item) (confirm-child item) ([] idx item)
@@ -1131,7 +1134,10 @@
                     option:unwrap-or (get props-map :style) ({})
                     .to-list
                     sort $ fn (x y)
-                      &compare (first x) (first y)
+                      fn (x y)
+                        &compare
+                          option:unwrap $ first x
+                          option:unwrap $ first y
                   event $ pick-event props-map
                 %{} schema/Element (:name tag-name) (:coord nil) (:attrs attrs) (:style styles) (:event event)
                   :children $ map child-pairs confirm-child-pair
@@ -2115,7 +2121,7 @@
                     -> (turn-string style-name) (&str:replace |! |_EX_) (&str:replace |? |_QU_)
                     , |__
                       ->
-                        option:unwrap $ :ns (&extract-code-into-edn style-name)
+                        option:unwrap $ get (&extract-code-into-edn style-name) :ns
                         turn-string
                         &str:replace |. |_
                 quasiquote $ def ~style-name (create-style! ~style-name-str ~rules)
@@ -4976,7 +4982,7 @@
         |val-exists? $ %{} 'CodeEntry (:doc "|Predicate to check if a key-value pair has a non-nil value.")
           :code $ quote
             defn val-exists? (pair)
-              some? $ last pair
+              option:some? $ last pair
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Bool)
