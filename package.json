@@ -3,7 +3,7 @@
     "@calcit/procs": "^0.13.7"
   },
   "scripts": {
-    "test": "cr test --tag unit --require-match && cr --init-fn 'respo.test.main/main!' js && node --no-warnings test.mjs",
+    "test": "cr test --tag unit --require-match && cr --init-fn 'respo.test.main/main!' js && node test.mjs",
     "check-docs": "bash scripts/check-docs-md.sh"
   },
   "devDependencies": {
