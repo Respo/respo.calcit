@@ -1100,10 +1100,9 @@
                       {}
                     &map:to-list
                     sort $ fn (x y)
-                      fn (x y)
-                        &compare
-                          option:unwrap $ nth x 0
-                          option:unwrap $ nth y 0
+                      &compare
+                        option:unwrap $ nth x 0
+                        option:unwrap $ nth y 0
                   event $ pick-event props-map
                   children-nodes $ -> children
                     map-indexed $ fn (idx item) (confirm-child item) ([] idx item)
@@ -1134,10 +1133,9 @@
                     option:unwrap-or (get props-map :style) ({})
                     .to-list
                     sort $ fn (x y)
-                      fn (x y)
-                        &compare
-                          option:unwrap $ first x
-                          option:unwrap $ first y
+                      &compare
+                        option:unwrap $ first x
+                        option:unwrap $ first y
                   event $ pick-event props-map
                 %{} schema/Element (:name tag-name) (:coord nil) (:attrs attrs) (:style styles) (:event event)
                   :children $ map child-pairs confirm-child-pair
@@ -4982,7 +4980,8 @@
         |val-exists? $ %{} 'CodeEntry (:doc "|Predicate to check if a key-value pair has a non-nil value.")
           :code $ quote
             defn val-exists? (pair)
-              option:some? $ last pair
+              not $ nil?
+                option:unwrap-or (last pair) nil
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Bool)
