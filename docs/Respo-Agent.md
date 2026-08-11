@@ -33,7 +33,7 @@ The Respo project is a virtual DOM library written in Calcit-js, containing:
 - **Compiled source**: `calcit.cirru` (13806 lines) - full AST representation
 - **Namespaces**: 33 total namespaces organized by functionality
 - **Version**: 0.16.21
-- **Dependencies**: calcit-test (testing)
+- **Testing**: Calcit built-in definition-attached tests (`cr test`)
 
 ### Core Namespace Organization
 
