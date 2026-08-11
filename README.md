@@ -227,22 +227,22 @@ This index helps LLM tools automatically fetch and reference documentation using
 
 ### Guides and Concepts (see `docs/guide/`)
 
-| Topic            | Path                                                             | Overview                           |
-| ---------------- | ---------------------------------------------------------------- | ---------------------------------- |
-| Why Respo        | [docs/guide/why-respo.md](docs/guide/why-respo.md)               | Motivation and design philosophy   |
-| Virtual DOM      | [docs/guide/virtual-dom.md](docs/guide/virtual-dom.md)           | Understanding virtual DOM concepts |
-| Base Components  | [docs/guide/base-components.md](docs/guide/base-components.md)   | Core component patterns            |
-| DOM Elements     | [docs/guide/dom-elements.md](docs/guide/dom-elements.md)         | HTML element creation and usage    |
-| Component States | [docs/guide/component-states.md](docs/guide/component-states.md) | Managing component state           |
-| DOM Properties   | [docs/guide/dom-properties.md](docs/guide/dom-properties.md)     | DOM property binding               |
-| DOM Events       | [docs/guide/dom-events.md](docs/guide/dom-events.md)             | Event handling in Respo            |
-| Typed Dispatch   | [docs/guide/type-slots.md](docs/guide/type-slots.md)             | Entry-level `Op` binding and checks |
-| Styles           | [docs/guide/styles.md](docs/guide/styles.md)                     | CSS and styling approach           |
-| Render Lists     | [docs/guide/render-list.md](docs/guide/render-list.md)           | Efficient list rendering           |
+| Topic             | Path                                                               | Overview                                                   |
+| ----------------- | ------------------------------------------------------------------ | ---------------------------------------------------------- |
+| Why Respo         | [docs/guide/why-respo.md](docs/guide/why-respo.md)                 | Motivation and design philosophy                           |
+| Virtual DOM       | [docs/guide/virtual-dom.md](docs/guide/virtual-dom.md)             | Understanding virtual DOM concepts                         |
+| Base Components   | [docs/guide/base-components.md](docs/guide/base-components.md)     | Core component patterns                                    |
+| DOM Elements      | [docs/guide/dom-elements.md](docs/guide/dom-elements.md)           | HTML element creation and usage                            |
+| Component States  | [docs/guide/component-states.md](docs/guide/component-states.md)   | Managing component state                                   |
+| DOM Properties    | [docs/guide/dom-properties.md](docs/guide/dom-properties.md)       | DOM property binding                                       |
+| DOM Events        | [docs/guide/dom-events.md](docs/guide/dom-events.md)               | Event handling in Respo                                    |
+| Typed Dispatch    | [docs/guide/type-slots.md](docs/guide/type-slots.md)               | Entry-level `Op` binding and checks                        |
+| Styles            | [docs/guide/styles.md](docs/guide/styles.md)                       | CSS and styling approach                                   |
+| Render Lists      | [docs/guide/render-list.md](docs/guide/render-list.md)             | Efficient list rendering                                   |
 | Common Primitives | [docs/guide/common-primitives.md](docs/guide/common-primitives.md) | Conditional UI, lifecycle, resources, errors, and batching |
-| Hot Swapping     | [docs/guide/hot-swapping.md](docs/guide/hot-swapping.md)         | Hot code reloading setup           |
-| Server Rendering | [docs/guide/server-rendering.md](docs/guide/server-rendering.md) | SSR capabilities                   |
-| Pros and Cons    | [docs/guide/pros-and-cons.md](docs/guide/pros-and-cons.md)       | Framework comparison               |
+| Hot Swapping      | [docs/guide/hot-swapping.md](docs/guide/hot-swapping.md)           | Hot code reloading setup                                   |
+| Server Rendering  | [docs/guide/server-rendering.md](docs/guide/server-rendering.md)   | SSR capabilities                                           |
+| Pros and Cons     | [docs/guide/pros-and-cons.md](docs/guide/pros-and-cons.md)         | Framework comparison                                       |
 
 ### API Reference
 
@@ -255,41 +255,41 @@ cr query def respo.core/render!
 cr query def respo.render.html/make-string
 ```
 
-| API                  | Namespace                                    | Purpose                        |
-| -------------------- | -------------------------------------------- | ------------------------------ |
-| `defcomp`            | `respo.core/defcomp`                         | Define components with macro   |
-| `defeffect`          | `respo.core/defeffect`                       | Define lifecycle effects       |
-| `div`                | `respo.core/div`                             | Create div elements            |
-| `create-element`     | `respo.core/create-element`                  | Dynamically create elements    |
-| `render!`            | `respo.core/render!`                         | Sync virtual DOM to real DOM   |
-| `render-with!`       | `respo.core/render-with!`                    | Render with managed memo frame |
-| `memo-comp-by`       | `respo.core/memo-comp-by`                    | Memoize keyed components       |
-| `memo-value-by`      | `respo.core/memo-value-by`                   | Memoize immutable derived data |
-| `show`               | `respo.core/show`                            | Render a child conditionally   |
-| `for-keyed`          | `respo.core/for-keyed`                       | Build ordered keyed child pairs |
-| `effect-on-mount`    | `respo.core/effect-on-mount`                 | Run a mount-only lifecycle callback |
-| `effect-on-update`   | `respo.core/effect-on-update`                | Run when immutable dependencies change |
-| `effect-on-unmount`  | `respo.core/effect-on-unmount`               | Run an unmount-only lifecycle callback |
-| `effect-watch`       | `respo.core/effect-watch`                    | Dependency-aware lifecycle effect |
-| `error-boundary`     | `respo.core/error-boundary`                  | Render a synchronous fallback  |
-| `make-render-scheduler` | `respo.core/make-render-scheduler`        | Coalesce render requests       |
-| `resource-reducer`   | `respo.resource/resource-reducer`            | Reduce immutable async state   |
-| `resource-idle`      | `respo.resource/resource-idle`               | Create initial resource state  |
-| `load-resource!`     | `respo.resource/load-resource!`              | Emit async resource actions    |
-| `<>`                 | `respo.core/<>`                              | Create text nodes              |
-| `comp-space`         | `respo.comp.space/comp-space`                | Spacing component              |
-| `comp-inspect`       | `respo.comp.inspect/comp-inspect`            | Inspection/debugging component |
-| `clear-cache!`       | `respo.core/clear-cache!`                    | Clear memoization cache        |
-| `patch-instance!`    | `respo.controller.client/patch-instance!`    | Patch DOM instances            |
-| `activate-instance!` | `respo.controller.client/activate-instance!` | Activate DOM instances         |
-| `>>`                 | `respo.core/>>`                              | Create state cursors           |
-| `purify-element`     | `respo.util.format/purify-element`           | Clean element markup           |
-| `mute-element`       | `respo.util.format/mute-element`             | Silence element output         |
-| `make-string`        | `respo.render.html/make-string`              | Serialize to string            |
-| `find-element-diffs` | `respo.render.diff/find-element-diffs`       | Find DOM differences           |
-| `apply-dom-changes`  | `respo.render.patch/apply-dom-changes`       | Apply DOM patches              |
-| `realize-ssr!`       | `respo.core/realize-ssr!`                    | Server-side rendering          |
-| `list->`             | `respo.core/list->`                          | Create list containers         |
+| API                     | Namespace                                    | Purpose                                |
+| ----------------------- | -------------------------------------------- | -------------------------------------- |
+| `defcomp`               | `respo.core/defcomp`                         | Define components with macro           |
+| `defeffect`             | `respo.core/defeffect`                       | Define lifecycle effects               |
+| `div`                   | `respo.core/div`                             | Create div elements                    |
+| `create-element`        | `respo.core/create-element`                  | Dynamically create elements            |
+| `render!`               | `respo.core/render!`                         | Sync virtual DOM to real DOM           |
+| `render-with!`          | `respo.core/render-with!`                    | Render with managed memo frame         |
+| `memo-comp-by`          | `respo.core/memo-comp-by`                    | Memoize keyed components               |
+| `memo-value-by`         | `respo.core/memo-value-by`                   | Memoize immutable derived data         |
+| `show`                  | `respo.core/show`                            | Render a child conditionally           |
+| `for-keyed`             | `respo.core/for-keyed`                       | Build ordered keyed child pairs        |
+| `effect-on-mount`       | `respo.core/effect-on-mount`                 | Run a mount-only lifecycle callback    |
+| `effect-on-update`      | `respo.core/effect-on-update`                | Run when immutable dependencies change |
+| `effect-on-unmount`     | `respo.core/effect-on-unmount`               | Run an unmount-only lifecycle callback |
+| `effect-watch`          | `respo.core/effect-watch`                    | Dependency-aware lifecycle effect      |
+| `error-boundary`        | `respo.core/error-boundary`                  | Render a synchronous fallback          |
+| `make-render-scheduler` | `respo.core/make-render-scheduler`           | Coalesce render requests               |
+| `resource-reducer`      | `respo.resource/resource-reducer`            | Reduce immutable async state           |
+| `resource-idle`         | `respo.resource/resource-idle`               | Create initial resource state          |
+| `load-resource!`        | `respo.resource/load-resource!`              | Emit async resource actions            |
+| `<>`                    | `respo.core/<>`                              | Create text nodes                      |
+| `comp-space`            | `respo.comp.space/comp-space`                | Spacing component                      |
+| `comp-inspect`          | `respo.comp.inspect/comp-inspect`            | Inspection/debugging component         |
+| `clear-cache!`          | `respo.core/clear-cache!`                    | Clear memoization cache                |
+| `patch-instance!`       | `respo.controller.client/patch-instance!`    | Patch DOM instances                    |
+| `activate-instance!`    | `respo.controller.client/activate-instance!` | Activate DOM instances                 |
+| `>>`                    | `respo.core/>>`                              | Create state cursors                   |
+| `purify-element`        | `respo.util.format/purify-element`           | Clean element markup                   |
+| `mute-element`          | `respo.util.format/mute-element`             | Silence element output                 |
+| `make-string`           | `respo.render.html/make-string`              | Serialize to string                    |
+| `find-element-diffs`    | `respo.render.diff/find-element-diffs`       | Find DOM differences                   |
+| `apply-dom-changes`     | `respo.render.patch/apply-dom-changes`       | Apply DOM patches                      |
+| `realize-ssr!`          | `respo.core/realize-ssr!`                    | Server-side rendering                  |
+| `list->`                | `respo.core/list->`                          | Create list containers                 |
 
 Legacy page names such as `make-html` and `render-app` were removed during the migration to source doc strings.
 
