@@ -30,7 +30,7 @@ input $ {}
 
 `e` is a HashMap with several entries:
 
-```cirru
+```cirru.no-check
 ; ns app.demo
 
 let

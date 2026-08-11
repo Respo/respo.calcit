@@ -27,10 +27,8 @@ jobs:
       - name: "load deps"
         run: caps --ci && yarn install --immutable
 
-      - name: "test js"
-        run: >
-          cr --init-fn respo.test.main/main! js
-          && node test.mjs
+      - name: "test"
+        run: cr test --require-match --summary-only --format json
 
       - name: "check docs markdown"
         run: bash scripts/check-docs-md.sh
