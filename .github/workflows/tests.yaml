@@ -27,15 +27,23 @@ jobs:
       - name: "load deps"
         run: caps --ci && yarn install --immutable
 
+      - name: Validate Calcit snapshot and type baseline
+        run: |
+          cr calcit.cirru edit format
+          git diff --exit-code -- calcit.cirru
+          cr calcit.cirru --check-only
+          cr calcit.cirru analyze check-types --summary-only --format json
+          cr calcit.cirru analyze weak-types --only schema-dynamic,code-dynamic --intent unresolved --summary-only --format json
+
       - name: "test"
-        run: cr test --require-match --summary-only --format json
+        run: cr calcit.cirru test --require-match --summary-only --format json
 
       - name: "check docs markdown"
         run: bash scripts/check-docs-md.sh
 
       - name: "build js"
         run: >
-          cr js
+          cr calcit.cirru js
           && yarn vite build --base=./
 
       - name: Deploy to server
