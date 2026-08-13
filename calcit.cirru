@@ -4591,7 +4591,7 @@
                   .-length $ unsafe-coerce (.-children element) JsObject
                 let
                     maybe-html $ :innerHTML
-                      pairs-map $ option:unwrap-or (get vdom :attrs) {}
+                      pairs-map $ option:unwrap-or (get vdom :attrs) ({})
                   if (some? maybe-html)
                     when
                       = maybe-html $ .-innerHTML element
