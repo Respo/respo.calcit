@@ -1,5 +1,5 @@
 
-{} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `cr query` to inspect and `cr edit`/`cr tree` to modify. Run `cr docs agents --full` first. Manual edits must follow format and schema conventions, then run `cr edit format`.") (:package |respo) (:version |0.16.68)
+{} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `cr query` to inspect and `cr edit`/`cr tree` to modify. Run `cr docs agents --full` first. Manual edits must follow format and schema conventions, then run `cr edit format`.") (:package |respo) (:version |0.16.69)
   :entries $ {}
     :default $ {} (:description |) (:init-fn 'respo.main/main!) (:mode :js) (:reload-fn 'respo.main/reload!)
       :modules $ []
@@ -4590,11 +4590,12 @@
                   count $ option:unwrap-or (get vdom :children) []
                   .-length $ unsafe-coerce (.-children element) JsObject
                 let
-                    maybe-html $ :innerHTML
+                    maybe-html $ get
                       pairs-map $ option:unwrap-or (get vdom :attrs) ({})
-                  if (some? maybe-html)
+                      , :innerHTML
+                  if (option:some? maybe-html)
                     when
-                      = maybe-html $ .-innerHTML element
+                      = (option:unwrap-or maybe-html |) (.-innerHTML element)
                       js/console.warn "|SSR checking: noticed dom containing innerHTML:" element
                     do (js/console.error "|SSR checking: children sizes do not match!")
                       js/console.log |virtual: $ ->
