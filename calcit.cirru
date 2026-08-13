@@ -4577,7 +4577,8 @@
                 map :name $ vals (:children vdom)
               ; js/console.log element
               let
-                  virtual-name $ turn-string (:name vdom)
+                  virtual-name $ turn-string
+                    option:unwrap-or (get vdom :name) |unknown
                   real-name $ .!toLowerCase
                     unsafe-coerce (.-tagName element) JsObject
                 when (not= virtual-name real-name)
@@ -4586,23 +4587,27 @@
                     , element
               if
                 not=
-                  count $ :children vdom
+                  count $ option:unwrap-or (get vdom :children) []
                   .-length $ unsafe-coerce (.-children element) JsObject
                 let
                     maybe-html $ :innerHTML
-                      pairs-map $ :attrs vdom
+                      pairs-map $ option:unwrap-or (get vdom :attrs) ({})
                   if (some? maybe-html)
                     when
                       = maybe-html $ .-innerHTML element
                       js/console.warn "|SSR checking: noticed dom containing innerHTML:" element
                     do (js/console.error "|SSR checking: children sizes do not match!")
-                      js/console.log |virtual: $ -> vdom :children (map last) (map :name) to-lispy-string
+                      js/console.log |virtual: $ ->
+                        option:unwrap-or (get vdom :children) []
+                        map last
+                        map :name
+                        , to-lispy-string
                       js/console.log |real: $ .-children element
                 let
                     real-children $ unsafe-coerce (.-children element) JsObject
                   loop
                       acc 0
-                      other-children $ :children vdom
+                      other-children $ option:unwrap-or (get vdom :children) []
                     when
                       not $ empty? other-children
                       compare-to-dom! (val-of-first other-children) (aget real-children acc)
