@@ -640,7 +640,7 @@
                   or (= action :mount) (= action :update)
                   let
                       disabled-commands $ noted "|copied event does not support `event.preventDefault()`, so we need to pass a set of configs"
-                        either (:disabled-commands options) (#{} |p |s)
+                        option:unwrap-or (get options :disabled-commands) (#{} |p |s)
                       handler $ fn (event)
                         if
                           and
@@ -648,9 +648,9 @@
                             or (.-ctrlKey event) (.-metaKey event)
                           .!preventDefault event
                         .!dispatchEvent el $ new js/KeyboardEvent (.-type event) event
-                    if-let
-                      prev-listener $ aget el dirty-field
-                      js/window.removeEventListener event-name prev-listener
+                    let
+                        prev-listener $ aget el dirty-field
+                      if (js-present? prev-listener) (js/window.removeEventListener event-name prev-listener)
                     aset el dirty-field handler
                     js/window.addEventListener event-name handler
                 (= action :unmount)
