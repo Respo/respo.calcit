@@ -3321,7 +3321,8 @@
                             (listener-builder event-name) event coord
                             .!stopPropagation event
                   each child-elements $ fn (child-element)
-                    if (some? child-element) (.append-child! element child-element)
+                    if (some? child-element)
+                      .append-child! element $ unsafe-coerce child-element 'respo.dom/DomElement
                   , element
           :examples $ []
           :schema $ :: 'Fn
