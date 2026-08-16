@@ -646,10 +646,16 @@
                           do
                             if
                               and
-                                .includes? disabled-commands $ option:unwrap-or (js-nullish->option (.-key event)) |
+                                .includes? disabled-commands $ option:unwrap-or
+                                  js-nullish->option $ .-key event
+                                  , |
                                 or
-                                  option:unwrap-or (js-nullish->option (.-ctrlKey event)) false
-                                  option:unwrap-or (js-nullish->option (.-metaKey event)) false
+                                  option:unwrap-or
+                                    js-nullish->option $ .-ctrlKey event
+                                    , false
+                                  option:unwrap-or
+                                    js-nullish->option $ .-metaKey event
+                                    , false
                               .!preventDefault event
                               %none
                             .!dispatchEvent el $ new js/KeyboardEvent (.-type event) event
