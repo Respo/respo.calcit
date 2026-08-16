@@ -618,7 +618,9 @@
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'respo.schema/Component)
-              :args $ [] 'Dynamic 'Dynamic
+              :args $ []
+                :: 'Map 'Tag $ :: 'Set 'String
+                , 'Fn
         |comp-global-keyup $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defcomp comp-global-keyup (options on-event) (; "|dirty solution: proxy window keydown event to a `<span/>`, comes with some restrictions. however Respo does not allow effects to modify states.")
@@ -628,53 +630,51 @@
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'respo.schema/Component)
-              :args $ [] 'Dynamic 'Dynamic
-        |dirty-field $ %{} 'CodeEntry (:doc "|Constant string key for the global keyboard listener.")
-          :code $ quote (def dirty-field |_global_listener)
-          :examples $ []
-          :schema $ :: 'String
+              :args $ []
+                :: 'Map 'Tag $ :: 'Set 'String
+                , 'Fn
         |effect-listen-keyboard $ %{} 'CodeEntry (:doc "|Effect for listening to global keyboard events on the window object.")
           :code $ quote
             defeffect effect-listen-keyboard (options event-name) (action el at?)
-              cond
+              let
+                window $ unsafe-coerce js/window 'respo.dom/DomWindow
+                element $ unsafe-coerce el 'respo.dom/DomElement
+                listener-host $ unsafe-coerce el 'respo.dom/DomKeyboardListenerHost
+                cond
                   or (= action :mount) (= action :update)
                   let
-                      disabled-commands $ noted "|copied event does not support `event.preventDefault()`, so we need to pass a set of configs"
-                        option:unwrap-or (get options :disabled-commands) (#{} |p |s)
-                      handler $ fn (event)
-                        if (js-present? event)
+                    disabled-commands $ noted "|copied event does not support `event.preventDefault()`, so we need to pass a set of configs"
+                      option:unwrap-or (get options :disabled-commands) (#{} |p |s)
+                    handler $ fn (event)
+                      if (js-present? event)
+                        let
+                          keyboard-event $ unsafe-coerce event 'respo.dom/DomKeyboardEvent
                           do
                             if
                               and
-                                .includes? disabled-commands $ option:unwrap-or
-                                  js-nullish->option $ .-key event
-                                  , |
-                                or
-                                  option:unwrap-or
-                                    js-nullish->option $ .-ctrlKey event
-                                    , false
-                                  option:unwrap-or
-                                    js-nullish->option $ .-metaKey event
-                                    , false
-                              .!preventDefault event
+                                .includes? disabled-commands $ .-key keyboard-event
+                                or (.-ctrl-key keyboard-event) (.-meta-key keyboard-event)
+                              keyboard-event .prevent-default!
                               %none
-                            .!dispatchEvent el $ new js/KeyboardEvent (.-type event) event
-                          %none
+                            element .dispatch-event! $ new js/KeyboardEvent (.-type keyboard-event) keyboard-event
+                        %none
                     let
-                        prev-listener $ aget el dirty-field
-                      if (js-present? prev-listener) (js/window.removeEventListener event-name prev-listener)
-                    aset el dirty-field handler
-                    js/window.addEventListener event-name handler
-                (= action :unmount)
+                      prev-listener $ js-get listener-host :global-listener
+                      if (js-present? prev-listener) (window .remove-event-listener! event-name prev-listener)
+                    js-set listener-host :global-listener handler
+                    window .add-event-listener! event-name handler
+                  (= action :unmount)
                   let
-                      handler $ aget el dirty-field
-                    js/window.removeEventListener event-name handler
-                    js-delete el dirty-field
-                true nil
+                    handler $ js-get listener-host :global-listener
+                    if (js-present? handler) (window .remove-event-listener! event-name handler)
+                    js-delete listener-host :global-listener
+                  true ;nil
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'respo.schema/Effect)
-              :args $ [] 'Dynamic 'Dynamic
+              :args $ []
+                :: 'Map 'Tag $ :: 'Set 'String
+                , 'String
               :features $ #{} :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote
@@ -2478,6 +2478,13 @@
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
             :names $ {} (:alt-key |altKey) (:ctrl-key |ctrlKey) (:key-code |keyCode) (:meta-key |metaKey) (:prevent-default! |preventDefault) (:shift-key |shiftKey) (:stop-propagation! |stopPropagation)
+          :schema $ :: 'Dynamic
+        |DomKeyboardListenerHost $ %{} 'CodeEntry (:doc "||Private global keyboard-listener slot attached to Respo DOM elements.")
+          :code $ quote
+            deftrait DomKeyboardListenerHost $ :global-listener 'Fn
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object)
+            :names $ {} (:global-listener |_global_listener)
           :schema $ :: 'Dynamic
         |DomStorage $ %{} 'CodeEntry (:doc "|Browser storage capability used by Respo persistence. Nullish reads model absent keys.")
           :code $ quote
