@@ -642,12 +642,18 @@
                       disabled-commands $ noted "|copied event does not support `event.preventDefault()`, so we need to pass a set of configs"
                         option:unwrap-or (get options :disabled-commands) (#{} |p |s)
                       handler $ fn (event)
-                        if
-                          and
-                            .includes? disabled-commands $ .-key event
-                            or (.-ctrlKey event) (.-metaKey event)
-                          .!preventDefault event
-                        .!dispatchEvent el $ new js/KeyboardEvent (.-type event) event
+                        if (js-present? event)
+                          do
+                            if
+                              and
+                                .includes? disabled-commands $ option:unwrap-or (js-nullish->option (.-key event)) |
+                                or
+                                  option:unwrap-or (js-nullish->option (.-ctrlKey event)) false
+                                  option:unwrap-or (js-nullish->option (.-metaKey event)) false
+                              .!preventDefault event
+                              %none
+                            .!dispatchEvent el $ new js/KeyboardEvent (.-type event) event
+                          %none
                     let
                         prev-listener $ aget el dirty-field
                       if (js-present? prev-listener) (js/window.removeEventListener event-name prev-listener)
