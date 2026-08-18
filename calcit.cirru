@@ -1,5 +1,5 @@
 
-{} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `cr query` to inspect and `cr edit`/`cr tree` to modify. Run `cr docs agents --full` first. Manual edits must follow format and schema conventions, then run `cr edit format`.") (:package |respo) (:version |0.16.72)
+{} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `cr query` to inspect and `cr edit`/`cr tree` to modify. Run `cr docs agents --full` first. Manual edits must follow format and schema conventions, then run `cr edit format`.") (:package |respo)
   :entries $ {}
     :default $ {} (:description |) (:init-fn 'respo.main/main!) (:mode :js) (:reload-fn 'respo.main/reload!)
       :feature-policy $ {}
@@ -430,7 +430,7 @@
           :code $ quote
             defenum Op (:states 'List 'Dynamic) (:states-kv 'List 'Dynamic 'Dynamic) (:states-merge 'List 'respo.app.schema/TodoState 'Map) (:add 'String) (:remove 'String) (:clear) (:update 'String 'String) (:hit-first 'String) (:toggle 'String)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Enum
         |Store $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstruct Store
@@ -438,17 +438,17 @@
               :states 'Map
               :cursor $ :: 'List 'Dynamic
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Enum
         |Task $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstruct Task (:id 'String) (:text 'String) (:done? 'Bool)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Enum
         |TodoState $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstruct TodoState (:draft 'String) (:locked? 'Bool) (:message 'String)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Enum
         |store $ %{} 'CodeEntry (:doc "|Default immutable Store record value used by the example application.")
           :code $ quote
             def store $ %{} Store
@@ -822,27 +822,27 @@
               :args $ [] 'Enum
         |traverse-and-call $ %{} 'CodeEntry (:doc "|Traverses the rendered tree and invokes component listeners. The dispatch callback intentionally stays at the generic Fn boundary because wrap-dispatch supports multiple operation forms and an optional payload.")
           :code $ quote
-            defn traverse-and-call (element event-tuple dispatch!)
-              when (some? element)
-                when (component? element)
-                  let
-                      listeners $ component-listeners element
-                      tree $ component-tree element
-                    each listeners $ fn (listener)
-                      let
-                          handler $ listener-handler listener
-                        handler event-tuple dispatch!
-                    traverse-and-call tree event-tuple dispatch!
-                when (element? element)
-                  each (element-children element)
-                    fn (pair)
-                      let
-                          child $ option:unwrap (get pair 1)
-                        traverse-and-call child event-tuple dispatch!
+            defn traverse-and-call (node event-tuple dispatch!)
+              struct-match node
+                respo.schema/Component component $ let
+                    listeners $ component-listeners component
+                    tree $ component-tree component
+                  each listeners $ fn (listener)
+                    let
+                        handler $ listener-handler listener
+                      handler event-tuple dispatch!
+                  when (some? tree)
+                    traverse-and-call (confirm-node tree) event-tuple dispatch!
+                respo.schema/Element element $ each (element-children element)
+                  fn (pair)
+                    let
+                        child $ option:unwrap (get pair 1)
+                      when (some? child)
+                        traverse-and-call (confirm-node child) event-tuple dispatch!
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
-              :args $ [] 'Dynamic 'Enum 'Fn
+              :args $ [] 'respo.schema/RespoNode 'Enum 'Fn
         |wrap-dispatch $ %{} 'CodeEntry (:doc "|Wraps a raw dispatch function to automatically handle different operation types (list, tag, or direct).")
           :code $ quote
             defn wrap-dispatch (*dispatch-fn)
@@ -864,7 +864,7 @@
             respo.render.patch :refer $ apply-dom-changes
             respo.util.format :refer $ event->edn
             respo.render.dom :refer $ make-element
-            respo.core :refer $ *dispatch-fn *global-element
+            respo.core :refer $ *dispatch-fn *global-element confirm-node
             respo.util.detect :refer $ component? element? component-listeners component-tree element-children listener-handler
             respo.controller.resolve :refer $ extract-listeners
             respo.dom :refer $ DomElement
@@ -1098,6 +1098,15 @@
           :schema $ :: 'Fn
             {} (:return 'List)
               :args $ [] 'List
+        |confirm-node $ %{} 'CodeEntry (:doc "|Validates a non-nil Respo node at the untyped child-pair boundary, then exposes the precise transparent union to tree traversal.")
+          :code $ quote
+            defn confirm-node (x)
+              assert "|Invalid Respo node: " $ or (element? x) (component? x)
+              unsafe-coerce x 'respo.schema/RespoNode
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'respo.schema/RespoNode)
+              :args $ [] 'Struct
         |create-element $ %{} 'CodeEntry (:doc "|Low-level helper for creating a virtual DOM element.\n\nPass a tag name, an optional props map, and child nodes. Public helpers such as `div`, `span`, `button`, and `input` are thin wrappers around this function.")
           :code $ quote
             defn create-element (tag-name props & children)
@@ -2239,7 +2248,7 @@
           :code $ quote
             defstruct CursorTestState (:draft 'String) (:locked? 'Bool) (:message 'String)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Enum
         |update-states $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn update-states (store cursor new-state)
@@ -2340,7 +2349,7 @@
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
             :names $ {} (:measure-text |measureText)
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Trait
         |DomCanvasElement $ %{} 'CodeEntry (:doc "|Canvas element capability; get-context returns a nullable 2D context in the subset Respo needs.")
           :code $ quote
             deftrait DomCanvasElement $ .get-context
@@ -2351,7 +2360,7 @@
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
             :names $ {} (:get-context |getContext)
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Trait
         |DomDocument $ %{} 'CodeEntry (:doc "|Document APIs used by Respo: querying elements, creating elements, and document roots.")
           :code $ quote
             deftrait DomDocument (:head 'respo.dom/DomElement) (:body 'respo.dom/DomElement) (:document-element 'respo.dom/DomElement)
@@ -2368,7 +2377,7 @@
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
             :names $ {} (:create-element |createElement) (:document-element |documentElement) (:query-selector |querySelector)
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Trait
         |DomElement $ %{} 'CodeEntry (:doc "|Stable DOM element capability set used by renderer and patches.")
           :code $ quote
             deftrait DomElement (:id 'String) (:text-content 'String) (:inner-html 'String) (:inner-text 'String) (:value 'Dynamic) (:checked 'Bool) (:disabled 'Bool) (:selected 'Bool) (:class-name 'String) (:type 'String) (:href 'String) (:dataset 'JsObject) (:style 'JsObject)
@@ -2439,7 +2448,7 @@
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
             :names $ {} (:inner-html |innerHTML)
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Trait
         |DomElementCollection $ %{} 'CodeEntry (:doc "|Indexed child element collection returned by the children property.")
           :code $ quote
             deftrait DomElementCollection (:length 'Number)
@@ -2450,7 +2459,7 @@
                   :return $ :: 'JsNullish 'respo.dom/DomElement
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Trait
         |DomEvent $ %{} 'CodeEntry (:doc "|Base native DOM event before Respo converts it into immutable event data.")
           :code $ quote
             deftrait DomEvent (:type 'String)
@@ -2469,7 +2478,7 @@
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
             :names $ {} (:default-prevented |defaultPrevented) (:prevent-default! |preventDefault) (:stop-propagation! |stopPropagation)
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Trait
         |DomInputEvent $ %{} 'CodeEntry (:doc "|Input and change event surface used to read form values and checked state.")
           :code $ quote
             deftrait DomInputEvent (:type 'String)
@@ -2487,7 +2496,7 @@
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
             :names $ {} (:prevent-default! |preventDefault) (:stop-propagation! |stopPropagation)
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Trait
         |DomKeyboardEvent $ %{} 'CodeEntry (:doc "|Keyboard event fields used by Respo key handlers and global keyboard forwarding.")
           :code $ quote
             deftrait DomKeyboardEvent (:type 'String) (:key 'String) (:code 'String) (:key-code 'Number) (:ctrl-key 'Bool) (:meta-key 'Bool) (:alt-key 'Bool) (:shift-key 'Bool)
@@ -2505,7 +2514,7 @@
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
             :names $ {} (:alt-key |altKey) (:ctrl-key |ctrlKey) (:key-code |keyCode) (:meta-key |metaKey) (:prevent-default! |preventDefault) (:shift-key |shiftKey) (:stop-propagation! |stopPropagation)
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Trait
         |DomStorage $ %{} 'CodeEntry (:doc "|Browser storage capability used by Respo persistence. Nullish reads model absent keys.")
           :code $ quote
             deftrait DomStorage
@@ -2532,13 +2541,13 @@
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
             :names $ {} (:clear! |clear) (:get-item |getItem) (:remove-item! |removeItem) (:set-item! |setItem)
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Trait
         |DomTextMetrics $ %{} 'CodeEntry (:doc "|Canvas text measurement result used by Respo; width is the required stable field.")
           :code $ quote
             deftrait DomTextMetrics $ :width 'Number
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Trait
         |DomWindow $ %{} 'CodeEntry (:doc "|Window APIs used by Respo, including storage, timers, unload hooks, and global listeners.")
           :code $ quote
             deftrait DomWindow (:document 'respo.dom/DomDocument) (:local-storage 'respo.dom/DomStorage) (:on-before-unload 'Fn) (:devtools-formatters 'Dynamic)
@@ -2560,7 +2569,7 @@
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
             :names $ {} (:add-event-listener! |addEventListener) (:devtools-formatters |devtoolsFormatters) (:local-storage |localStorage) (:on-before-unload |onbeforeunload) (:remove-event-listener! |removeEventListener) (:set-timeout |setTimeout)
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Trait
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote (ns respo.dom)
     |respo.ffi.browser $ %{} 'FileEntry
@@ -2697,7 +2706,7 @@
               :args $ :: 'List 'Dynamic
               :value 'Dynamic
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Enum
         |begin-memo-frame! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn begin-memo-frame! ()
@@ -4136,7 +4145,7 @@
           :code $ quote
             defenum ResourceAction (:started 'Number) (:ready 'Number 'Dynamic) (:failed 'Number 'Dynamic)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Enum
           :tags $ #{} :data
         |ResourceState $ %{} 'CodeEntry (:doc "|Immutable resource state record. :data and :error are application payload boundaries; :status and :request-id drive deterministic reducer transitions.")
           :code $ quote
@@ -4145,7 +4154,7 @@
               :data 'Dynamic
               :error 'Dynamic
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Enum
           :tags $ #{} :data
         |load-resource! $ %{} 'CodeEntry (:doc "|Invokes a zero-argument fetcher once, normalizes its value or Promise, and emits immutable :started then :ready or :failed ResourceAction values. Synchronous fetch errors and Promise-chain errors become :failed. Returns the numeric request id; it does not mutate application state.")
           :code $ quote
@@ -4351,7 +4360,7 @@
               :listeners $ :: 'List 'respo.schema/RespoListener
               :tree $ :: 'Optional 'Struct
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Enum
         |DomProps $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstruct DomProps
@@ -4403,7 +4412,7 @@
               :accept $ :: 'Optional 'String
               :ref $ :: 'Optional 'Fn
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Enum
         |Effect $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstruct Effect (:name 'Tag)
@@ -4411,7 +4420,7 @@
               :args $ :: 'List 'Dynamic
               :method 'Fn
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Enum
         |Element $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstruct Element (:name 'Tag)
@@ -4422,7 +4431,7 @@
               :children $ :: 'List (:: 'List 'Dynamic)
               :ref $ :: 'Optional 'Fn
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Enum
         |EventHandler $ %{} 'CodeEntry (:doc "|Event callback signature. Respo delivers an immutable map produced by event->edn together with the application dispatch function.")
           :code $ quote (def EventHandler nil)
           :examples $ []
@@ -4448,10 +4457,15 @@
               :shift? $ :: 'Optional 'Bool
               :msg $ :: 'Optional 'String
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Enum
         |RespoListener $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstruct RespoListener (:name 'Tag) (:handler 'Fn)
+          :examples $ []
+          :schema $ :: 'Enum
+        |RespoNode $ %{} 'CodeEntry (:doc "|A transparent union for values that can appear in the rendered Respo tree.")
+          :code $ quote
+            deftype RespoNode $ or 'respo.schema/Component 'respo.schema/Element
           :examples $ []
           :schema $ :: 'Dynamic
         |cache-info $ %{} 'CodeEntry (:doc |)
