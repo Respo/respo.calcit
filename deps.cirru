@@ -1,3 +1,3 @@
 
-{} (:calcit-version |0.13.25)
+{} (:calcit-version |0.13.26)
   :dependencies $ {} (|calcit-lang/js-ffi |0.1.9)

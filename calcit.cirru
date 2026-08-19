@@ -12,8 +12,8 @@
           :code $ quote
             defcomp comp-container (store)
               let
-                  states $ &struct:nth store 1 :states
-                  tasks $ &struct:nth store 2 :tasks
+                  states $ :states store
+                  tasks $ :tasks store
                 div
                   {} (; :class-name highlight-defcomp) (:class-name style-global)
                   comp-todolist states tasks
@@ -54,9 +54,9 @@
               let
                   cursor $ option:unwrap-or (get states :cursor) ([])
                   state $ option:unwrap-or (get states :data) |
-                  task-id $ &struct:nth task 1 :id
-                  task-text $ &struct:nth task 2 :text
-                  done? $ &struct:nth task 0 :done?
+                  task-id $ :id task
+                  task-text $ :text task
+                  done? $ :done? task
                 [] (effect-log task)
                   div
                     {} $ :class-name style-task
@@ -4234,7 +4234,7 @@
                 not $ resource-state? state
                 raise "|[Respo/resource-loading?] expected ResourceState"
               let
-                  status $ &struct:nth state 3 :status
+                  status $ :status state
                 or (= status :pending) (= status :refreshing)
           :examples $ []
             quote $ resource-loading?
@@ -4266,23 +4266,23 @@
                 (:started request-id)
                   %{} ResourceState
                     :status $ let
-                        status $ &struct:nth state 3 :status
+                        status $ :status state
                       if
                         or (= :ready status) (= :refreshing status)
                         , :refreshing :pending
                     :request-id request-id
-                    :data $ &struct:nth state 0 :data
+                    :data $ :data state
                     :error nil
                 (:ready request-id data)
                   if
-                    = (&struct:nth state 2 :request-id) request-id
+                    = (:request-id state) request-id
                     %{} ResourceState (:status :ready) (:request-id request-id) (:data data) (:error nil)
                     , state
                 (:failed request-id error)
                   if
-                    = (&struct:nth state 2 :request-id) request-id
+                    = (:request-id state) request-id
                     %{} ResourceState (:status :error) (:request-id request-id)
-                      :data $ &struct:nth state 0 :data
+                      :data $ :data state
                       :error error
                     , state
           :examples $ []
