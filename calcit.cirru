@@ -1,8 +1,9 @@
 
-{} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `cr query` to inspect and `cr edit`/`cr tree` to modify. Run `cr docs agents --full` first. Manual edits must follow format and schema conventions, then run `cr edit format`.") (:package |respo) (:version |0.16.72)
+{} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `cr query` to inspect and `cr edit`/`cr tree` to modify. Run `cr docs agents --full` first. Manual edits must follow format and schema conventions, then run `cr edit format`.") (:package |respo)
   :entries $ {}
     :default $ {} (:description |) (:init-fn 'respo.main/main!) (:mode :js) (:reload-fn 'respo.main/reload!)
-      :modules $ []
+      :feature-policy $ {}
+      :modules $ [] |js-ffi/
       :type-slots $ {} (:dispatch-op |respo.app.schema/Op)
   :files $ {}
     |respo.app.comp.container $ %{} 'FileEntry
@@ -11,14 +12,14 @@
           :code $ quote
             defcomp comp-container (store)
               let
-                  states $ &struct:get store :states
+                  states $ :states store
+                  tasks $ :tasks store
                 div
                   {} (; :class-name highlight-defcomp) (:class-name style-global)
-                  comp-todolist states $ &struct:get store :tasks
+                  comp-todolist states tasks
                   div
                     {} $ :style style-states
-                    <> $ str "|states: "
-                      to-lispy-string $ &struct:get store :states
+                    <> $ str "|states: " (to-lispy-string states)
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'respo.schema/Component)
@@ -53,22 +54,22 @@
               let
                   cursor $ option:unwrap-or (get states :cursor) ([])
                   state $ option:unwrap-or (get states :data) |
+                  task-id $ :id task
+                  task-text $ :text task
+                  done? $ :done? task
                 [] (effect-log task)
                   div
                     {} $ :class-name style-task
                     comp-inspect |Task task $ {} (:left 200)
                     button $ {} (:class-name style-done)
                       :style $ {}
-                        :background-color $ if (&struct:get task :done?) (hsl 200 20 80) (hsl 200 80 70)
+                        :background-color $ if done? (hsl 200 20 80) (hsl 200 80 70)
                       :on-click $ fn (e d!)
-                        d! $ :: :toggle (&struct:get task :id)
+                        d! $ :: :toggle task-id
                     =< 8 0
-                    input $ {}
-                      :value $ &struct:get task :text
-                      :class-name widget/style-input
+                    input $ {} (:value task-text) (:class-name widget/style-input)
                       :on-input $ fn (e d!)
                         let
-                            task-id $ &struct:get task :id
                             text $ str
                               option:unwrap $ get e :value
                           d! $ %:: Op :update task-id text
@@ -80,7 +81,7 @@
                     div
                       {} (:class-name widget/style-button)
                         :on-click $ fn (e d!)
-                          d! $ %:: Op :remove (&struct:get task :id)
+                          d! $ %:: Op :remove task-id
                       <> |Remove
                     =< 8 0
                     div ({}) (<> state)
@@ -133,6 +134,9 @@
                   cursor $ option:unwrap-or (get states :cursor) ([])
                   state $ option:unwrap-or (get states :data)
                     %{} respo.app.schema/TodoState (:draft |) (:locked? false) (:message "|Press Ctrl+M to change message")
+                  draft $ &struct:nth state 0 :draft
+                  locked? $ &struct:nth state 1 :locked?
+                  message $ &struct:nth state 2 :message
                 assert-type state 'respo.app.schema/TodoState
                 assert-type tasks $ :: 'List 'respo.app.schema/Task
                 [] (on-keydown cursor state) (effect-focus |#draft-input)
@@ -141,12 +145,10 @@
                     comp-inspect |States state $ {} (:left |80px)
                     div
                       {} $ :style style-panel
-                      input $ {} (:placeholder |Text) (:id |draft-input)
-                        :value $ &struct:get state :draft
-                        :class-name widget/style-input
+                      input $ {} (:placeholder |Text) (:id |draft-input) (:value draft) (:class-name widget/style-input)
                         :style $ {}
                           :width $ &max 200
-                            + 24 $ text-width (&struct:get state :draft) 16 |BlinkMacSystemFont
+                            + 24 $ text-width draft 16 |BlinkMacSystemFont
                         :on-input $ fn (e d!)
                           d! $ %:: Op :states-merge cursor state
                             {} $ :draft
@@ -156,7 +158,7 @@
                       span
                         {} (:class-name widget/style-button)
                           :on-click $ fn (e d!)
-                            d! $ %:: Op :add (&struct:get state :draft)
+                            d! $ %:: Op :add draft
                             d! cursor $ assoc state :draft |
                         span $ {} (:on-click nil) (:inner-text |Add)
                       =< 8 0
@@ -173,7 +175,7 @@
                       -> tasks .to-list .reverse $ map
                         fn (task)
                           let
-                              task-id $ &struct:get task :id
+                              task-id $ &struct:nth task 1 :id
                             [] task-id $ memo-comp-by task-id comp-task (>> states task-id) task
                     if
                       > (count tasks) 0
@@ -181,8 +183,7 @@
                         {} (:spell-check true) (:class-name style-toolbar)
                         div
                           {} (:class-name widget/style-button)
-                            :on-click $ if
-                              not $ &struct:get state :locked?
+                            :on-click $ if (not locked?)
                               fn (e d!)
                                 d! $ %:: Op :clear
                           <> |Clear2
@@ -191,8 +192,7 @@
                           {} (:class-name widget/style-button)
                             :on-click $ fn (e d!)
                               d! cursor $ update state :locked? not
-                          <>
-                            str-spaced |Lock? $ &struct:get state :locked?
+                          <> (str-spaced |Lock? locked?)
                             {} $ :font-size 13
                         =< 8 0
                         comp-wrap $ comp-zero
@@ -200,7 +200,7 @@
                     div
                       {} $ :style
                         {} (:padding |8px) (:font-size 12) (:color |#999) (:margin-top |16px)
-                      <> $ &struct:get state :message
+                      <> message
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'respo.schema/Component)
@@ -430,7 +430,7 @@
           :code $ quote
             defenum Op (:states 'List 'Dynamic) (:states-kv 'List 'Dynamic 'Dynamic) (:states-merge 'List 'respo.app.schema/TodoState 'Map) (:add 'String) (:remove 'String) (:clear) (:update 'String 'String) (:hit-first 'String) (:toggle 'String)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Enum
         |Store $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstruct Store
@@ -438,17 +438,17 @@
               :states 'Map
               :cursor $ :: 'List 'Dynamic
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Enum
         |Task $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstruct Task (:id 'String) (:text 'String) (:done? 'Bool)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Enum
         |TodoState $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstruct TodoState (:draft 'String) (:locked? 'Bool) (:message 'String)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Enum
         |store $ %{} 'CodeEntry (:doc "|Default immutable Store record value used by the example application.")
           :code $ quote
             def store $ %{} Store
@@ -503,9 +503,9 @@
               cond
                   struct? data
                   let
-                      id $ &struct:get data :id
-                      text $ &struct:get data :text
-                      done? $ &struct:get data :done?
+                      id $ &struct:nth data 1 :id
+                      text $ &struct:nth data 2 :text
+                      done? $ &struct:nth data 0 :done?
                     if
                       and (string? id) (string? text) (bool? done?)
                       %some $ %{} Task
@@ -541,16 +541,15 @@
                   let
                       task $ %{} Task (:id |task-1) (:text |saved) (:done? false)
                       normalized $ option:unwrap (normalize-task task)
-                    assert |struct-id-is-kept $ = |task-1 (&struct:get normalized :id)
-                    assert |struct-text-is-kept $ = |saved (&struct:get normalized :text)
-                    assert |struct-status-is-kept $ = false (&struct:get normalized :done?)
+                    assert |struct-id-is-kept $ = |task-1 (&struct:nth normalized 1 :id)
+                    assert |struct-text-is-kept $ = |saved (&struct:nth normalized 2 :text)
+                    assert |struct-status-is-kept $ = false (&struct:nth normalized 0 :done?)
                   let
                       normalized $ option:unwrap
                         normalize-task $ {} (:id |task-2) (:text |mapped) (:done? true)
-                    assert |map-input-is-restored $ = |task-2 (&struct:get normalized :id)
+                    assert |map-input-is-restored $ = |task-2 (&struct:nth normalized 1 :id)
                   assert |invalid-data-is-rejected $ option:none?
                     normalize-task $ {} (:id |missing-fields)
-              :tags $ #{} :unit
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote
           ns respo.app.task $ :require
@@ -572,7 +571,7 @@
                   update store :tasks $ fn (tasks)
                     -> tasks $ filter
                       fn (task)
-                        not $ = (&struct:get task :id) task-id
+                        not $ = (&struct:nth task 1 :id) task-id
                 (:clear)
                   assoc store :tasks $ []
                 (:update task-id text)
@@ -580,7 +579,7 @@
                     -> tasks $ map
                       fn (task)
                         if
-                          = (&struct:get task :id) task-id
+                          = (&struct:nth task 1 :id) task-id
                           assoc task :text text
                           , task
                 (:hit-first rd)
@@ -595,7 +594,7 @@
                     -> tasks $ map
                       fn (task) (assert-type task 'respo.app.schema/Task)
                         if
-                          = (&struct:get task :id) task-id
+                          = (&struct:nth task 1 :id) task-id
                           update task :done? not
                           , task
                 _ $ do (eprintln "|Unknown op:" op) store
@@ -662,13 +661,13 @@
                           %none
                     let
                         prev-listener $ aget el dirty-field
-                      if (js-present? prev-listener) (js/window.removeEventListener event-name prev-listener)
+                      if (js-present? prev-listener) (browser/remove-event-listener! event-name prev-listener)
                     aset el dirty-field handler
-                    js/window.addEventListener event-name handler
+                    browser/add-event-listener! event-name handler
                 (= action :unmount)
                   let
                       handler $ aget el dirty-field
-                    js/window.removeEventListener event-name handler
+                    browser/remove-event-listener! event-name handler
                     js-delete el dirty-field
                 true nil
           :examples $ []
@@ -680,6 +679,7 @@
         :code $ quote
           ns respo.comp.global-keydown $ :require
             respo.core :refer $ defcomp defeffect <> >> div button textarea span input a list->
+            js-ffi.browser :as browser
     |respo.comp.inspect $ %{} 'FileEntry
       :defs $ {}
         |comp-inspect $ %{} 'CodeEntry (:doc "|Development helper for visualizing data in the UI.\n\nIt renders a labeled preview of arbitrary data and logs the original value when clicked. This is useful for debugging component props or local state and is usually disabled or removed in production.")
@@ -826,15 +826,15 @@
               when (some? element)
                 when (component? element)
                   let
-                      listeners $ &struct:get element :listeners
-                      tree $ &struct:get element :tree
+                      listeners $ component-listeners element
+                      tree $ component-tree element
                     each listeners $ fn (listener)
                       let
-                          handler $ &struct:get listener :handler
+                          handler $ listener-handler listener
                         handler event-tuple dispatch!
                     traverse-and-call tree event-tuple dispatch!
                 when (element? element)
-                  each (&struct:get element :children)
+                  each (element-children element)
                     fn (pair)
                       let
                           child $ option:unwrap (get pair 1)
@@ -865,7 +865,7 @@
             respo.util.format :refer $ event->edn
             respo.render.dom :refer $ make-element
             respo.core :refer $ *dispatch-fn *global-element
-            respo.util.detect :refer $ component? element?
+            respo.util.detect :refer $ component? element? component-listeners component-tree element-children listener-handler
             respo.controller.resolve :refer $ extract-listeners
             respo.dom :refer $ DomElement
     |respo.controller.resolve $ %{} 'FileEntry
@@ -877,7 +877,7 @@
                 let
                     target-element $ find-event-target @*global-element coord event-name
                     target-listener-option $ if (some? target-element)
-                      get (&struct:get target-element :event) event-name
+                      get (element-event target-element) event-name
                       do (js/console.warn |found-no-element coord event-name) (%none)
                     dispatch-wrap $ wrap-dispatch *dispatch-fn
                   option:fold target-listener-option
@@ -915,11 +915,11 @@
                   target-element $ loop
                       m $ get-markup-at element coord
                     if (component? m)
-                      recur $ &struct:get m :tree
+                      recur $ component-tree m
                       , m
                   event-present? $ if (some? target-element)
                     option:fold
-                      get (&struct:get target-element :event) event-name
+                      get (element-event target-element) event-name
                       fn () false
                       fn (_handler) true
                     , false
@@ -938,9 +938,9 @@
                 () markup
                 (coord-head cs)
                   if (component? markup)
-                    recur (&struct:get markup :tree) cs
+                    recur (component-tree markup) cs
                     let
-                        children $ &struct:get markup :children
+                        children $ element-children markup
                         child-pair-option $ find children
                           fn (child-entry)
                             =
@@ -960,7 +960,7 @@
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote
           ns respo.controller.resolve $ :require
-            respo.util.detect :refer $ component? element? listener?
+            respo.util.detect :refer $ component? element? listener? component-tree element-children element-event
             respo.controller.client :refer $ wrap-dispatch
     |respo.core $ %{} 'FileEntry
       :defs $ {}
@@ -1319,16 +1319,15 @@
                     unmount-effect $ effect-on-unmount
                       fn (target)
                         swap! log conj $ [] :unmount target
-                    update-method $ &struct:get update-effect :method
-                    unmount-method $ &struct:get unmount-effect :method
-                  update-method (&struct:get update-effect :args) ([] :mount :node false)
-                  update-method (&struct:get update-effect :args) ([] :update :node false)
-                  unmount-method (&struct:get unmount-effect :args) ([] :update :node false)
-                  unmount-method (&struct:get unmount-effect :args) ([] :unmount :node false)
+                    update-method $ &struct:nth update-effect 2 :method
+                    unmount-method $ &struct:nth unmount-effect 2 :method
+                  update-method (&struct:nth update-effect 0 :args) ([] :mount :node false)
+                  update-method (&struct:nth update-effect 0 :args) ([] :update :node false)
+                  unmount-method (&struct:nth unmount-effect 0 :args) ([] :update :node false)
+                  unmount-method (&struct:nth unmount-effect 0 :args) ([] :unmount :node false)
                   assert |only-matching-phases-run $ =
                     [] ([] :update :node) ([] :unmount :node)
                     , @log
-              :tags $ #{} :unit
         |effect-watch $ %{} 'CodeEntry (:doc "|Creates a dependency-aware effect. setup! runs on mount and after dependency changes; cleanup! runs before a changed setup and on unmount. Cleanup uses the old render closure.")
           :code $ quote
             defn effect-watch (deps setup! cleanup-option)
@@ -1540,8 +1539,7 @@
         |extract-effects-list $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn extract-effects-list (markup)
-              &let
-                markup-tree $ &struct:get markup :tree
+              &let (markup-tree markup.:tree)
                 cond
                     nil? markup-tree
                     assoc markup :tree $ span ({})
@@ -1741,7 +1739,7 @@
               let
                   render-fn $ expect-function render! |[Respo/make-render-scheduler]-expected-render-function
                   queue! $ option:fold enqueue-option
-                    fn () js/queueMicrotask
+                    fn () shared/queue-microtask!
                     fn (enqueue!) (expect-function enqueue! "|[Respo/make-render-scheduler] expected enqueue! as a function or nil")
                   *queued? $ atom false
                 fn () $ when (not @*queued?) (reset! *queued? true)
@@ -2060,6 +2058,7 @@
             respo.util.dom :refer $ compare-to-dom!
             respo.util.detect :refer $ component? element? effect? listener? expect-function
             respo.memo :as memo
+            js-ffi.shared :as shared
     |respo.css $ %{} 'FileEntry
       :defs $ {}
         |*style-caches $ %{} 'CodeEntry (:doc "|Atom for caching style information.")
@@ -2240,13 +2239,19 @@
           :code $ quote
             defstruct CursorTestState (:draft 'String) (:locked? 'Bool) (:message 'String)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Enum
         |update-states $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn update-states (store cursor new-state)
-              assoc-in store
-                concat ([] :states) cursor $ [] :data
-                , new-state
+              let
+                  path $ concat cursor ([] :data)
+                if (struct? store)
+                  let
+                      states $ &struct:nth store 1 :states
+                    assoc store :states $ assoc-in states path new-state
+                  assoc-in store
+                    concat ([] :states) path
+                    , new-state
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'T)
@@ -2256,13 +2261,25 @@
           :code $ quote
             defn update-states-kv (store cursor k v)
               let
-                  path $ concat ([] :states) cursor ([] :data)
-                  state-option $ get-in store path
-                assoc-in store path $ option:fold state-option
-                  fn () $ do (js/console.warn |:states-kv-missing-state) nil
-                  fn (state)
-                    if (map? state) (assoc state k v)
-                      do (js/console.warn |:states-kv-invalid-state state) state
+                  path $ concat cursor ([] :data)
+                if (struct? store)
+                  let
+                      states $ &struct:nth store 1 :states
+                      state-option $ get-in states path
+                    assoc store :states $ assoc-in states path
+                      option:fold state-option
+                        fn () $ do (js/console.warn |:states-kv-missing-state) nil
+                        fn (state)
+                          if (map? state) (assoc state k v)
+                            do (js/console.warn |:states-kv-invalid-state state) state
+                  let
+                      map-path $ concat ([] :states) path
+                      state-option $ get-in store map-path
+                    assoc-in store map-path $ option:fold state-option
+                      fn () $ do (js/console.warn |:states-kv-missing-state) nil
+                      fn (state)
+                        if (map? state) (assoc state k v)
+                          do (js/console.warn |:states-kv-invalid-state state) state
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'T)
@@ -2272,12 +2289,23 @@
           :code $ quote
             defn update-states-merge (store cursor state0 changes)
               let
-                  path $ concat ([] :states) cursor ([] :data)
-                  state $ option:unwrap-or (get-in store path) state0
-                assoc-in store path $ if
-                  or (map? state) (struct? state)
-                  noted |merge-base-latest-state $ merge state changes
-                  do (js/console.warn |unknown-state-to-merge state) state
+                  path $ concat cursor ([] :data)
+                if (struct? store)
+                  let
+                      states $ &struct:nth store 1 :states
+                      state $ option:unwrap-or (get-in states path) state0
+                    assoc store :states $ assoc-in states path
+                      if
+                        or (map? state) (struct? state)
+                        noted |merge-base-latest-state $ merge state changes
+                        do (js/console.warn |unknown-state-to-merge state) state
+                  let
+                      map-path $ concat ([] :states) path
+                      state $ option:unwrap-or (get-in store map-path) state0
+                    assoc-in store map-path $ if
+                      or (map? state) (struct? state)
+                      noted |merge-base-latest-state $ merge state changes
+                      do (js/console.warn |unknown-state-to-merge state) state
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'T)
@@ -2295,9 +2323,8 @@
                     state2 $ option:unwrap
                       get-in store2 $ [] :states :data
                   assert |state-remains-a-struct $ struct? state2
-                  assert |latest-change-wins $ = |c (&struct:get state2 :draft)
-                  assert |untouched-fields-remain $ = |ready (&struct:get state2 :message)
-              :tags $ #{} :unit
+                  assert |latest-change-wins $ = |c (&struct:nth state2 0 :draft)
+                  assert |untouched-fields-remain $ = |ready (&struct:nth state2 2 :message)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote (ns respo.cursor)
     |respo.dom $ %{} 'FileEntry
@@ -2313,7 +2340,7 @@
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
             :names $ {} (:measure-text |measureText)
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Trait
         |DomCanvasElement $ %{} 'CodeEntry (:doc "|Canvas element capability; get-context returns a nullable 2D context in the subset Respo needs.")
           :code $ quote
             deftrait DomCanvasElement $ .get-context
@@ -2324,7 +2351,7 @@
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
             :names $ {} (:get-context |getContext)
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Trait
         |DomDocument $ %{} 'CodeEntry (:doc "|Document APIs used by Respo: querying elements, creating elements, and document roots.")
           :code $ quote
             deftrait DomDocument (:head 'respo.dom/DomElement) (:body 'respo.dom/DomElement) (:document-element 'respo.dom/DomElement)
@@ -2341,7 +2368,7 @@
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
             :names $ {} (:create-element |createElement) (:document-element |documentElement) (:query-selector |querySelector)
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Trait
         |DomElement $ %{} 'CodeEntry (:doc "|Stable DOM element capability set used by renderer and patches.")
           :code $ quote
             deftrait DomElement (:id 'String) (:text-content 'String) (:inner-html 'String) (:inner-text 'String) (:value 'Dynamic) (:checked 'Bool) (:disabled 'Bool) (:selected 'Bool) (:class-name 'String) (:type 'String) (:href 'String) (:dataset 'JsObject) (:style 'JsObject)
@@ -2412,7 +2439,7 @@
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
             :names $ {} (:inner-html |innerHTML)
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Trait
         |DomElementCollection $ %{} 'CodeEntry (:doc "|Indexed child element collection returned by the children property.")
           :code $ quote
             deftrait DomElementCollection (:length 'Number)
@@ -2423,7 +2450,7 @@
                   :return $ :: 'JsNullish 'respo.dom/DomElement
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Trait
         |DomEvent $ %{} 'CodeEntry (:doc "|Base native DOM event before Respo converts it into immutable event data.")
           :code $ quote
             deftrait DomEvent (:type 'String)
@@ -2442,7 +2469,7 @@
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
             :names $ {} (:default-prevented |defaultPrevented) (:prevent-default! |preventDefault) (:stop-propagation! |stopPropagation)
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Trait
         |DomInputEvent $ %{} 'CodeEntry (:doc "|Input and change event surface used to read form values and checked state.")
           :code $ quote
             deftrait DomInputEvent (:type 'String)
@@ -2460,7 +2487,7 @@
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
             :names $ {} (:prevent-default! |preventDefault) (:stop-propagation! |stopPropagation)
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Trait
         |DomKeyboardEvent $ %{} 'CodeEntry (:doc "|Keyboard event fields used by Respo key handlers and global keyboard forwarding.")
           :code $ quote
             deftrait DomKeyboardEvent (:type 'String) (:key 'String) (:code 'String) (:key-code 'Number) (:ctrl-key 'Bool) (:meta-key 'Bool) (:alt-key 'Bool) (:shift-key 'Bool)
@@ -2478,7 +2505,7 @@
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
             :names $ {} (:alt-key |altKey) (:ctrl-key |ctrlKey) (:key-code |keyCode) (:meta-key |metaKey) (:prevent-default! |preventDefault) (:shift-key |shiftKey) (:stop-propagation! |stopPropagation)
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Trait
         |DomStorage $ %{} 'CodeEntry (:doc "|Browser storage capability used by Respo persistence. Nullish reads model absent keys.")
           :code $ quote
             deftrait DomStorage
@@ -2505,13 +2532,13 @@
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
             :names $ {} (:clear! |clear) (:get-item |getItem) (:remove-item! |removeItem) (:set-item! |setItem)
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Trait
         |DomTextMetrics $ %{} 'CodeEntry (:doc "|Canvas text measurement result used by Respo; width is the required stable field.")
           :code $ quote
             deftrait DomTextMetrics $ :width 'Number
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Trait
         |DomWindow $ %{} 'CodeEntry (:doc "|Window APIs used by Respo, including storage, timers, unload hooks, and global listeners.")
           :code $ quote
             deftrait DomWindow (:document 'respo.dom/DomDocument) (:local-storage 'respo.dom/DomStorage) (:on-before-unload 'Fn) (:devtools-formatters 'Dynamic)
@@ -2533,16 +2560,34 @@
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
             :names $ {} (:add-event-listener! |addEventListener) (:devtools-formatters |devtoolsFormatters) (:local-storage |localStorage) (:on-before-unload |onbeforeunload) (:remove-event-listener! |removeEventListener) (:set-timeout |setTimeout)
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Trait
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote (ns respo.dom)
+    |respo.ffi.browser $ %{} 'FileEntry
+      :defs $ {}
+        |host-element $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defn host-element (element) (unsafe-coerce element 'js-ffi.browser/DomElementHost)
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'js-ffi.browser/DomElementHost)
+              :args $ [] 'respo.dom/DomElement
+        |narrow-element $ %{} 'CodeEntry (:doc "|Narrow the generic js-ffi DOM host to Respo's richer renderer DOM trait at the sole cross-library object boundary.")
+          :code $ quote
+            defn narrow-element (host-element) (unsafe-coerce host-element 'respo.dom/DomElement)
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'respo.dom/DomElement)
+              :args $ [] 'js-ffi.browser/DomElementHost
+      :ns $ %{} 'NsEntry (:doc |)
+        :code $ quote (ns respo.ffi.browser)
     |respo.main $ %{} 'FileEntry
       :defs $ {}
         |main! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn main! () $ do
               if-let
-                raw $ js-nullish->option (js/window.localStorage.getItem |respo.calcit)
+                raw $ browser/storage-get |respo.calcit
                 let
                     decoded $ parse-cirru-edn (unsafe-coerce raw String)
                     tasks $ if (enum? decoded)
@@ -2558,8 +2603,9 @@
                     assert-type restored $ :: List respo.app.schema/Task
                     swap! *store assoc :tasks restored
               render-app! mount-target
-              js/window.addEventListener |keydown $ fn (event)
+              browser/add-event-listener! |keydown $ fn (raw-event)
                 let
+                    event $ unsafe-coerce raw-event 'respo.dom/DomKeyboardEvent
                     event-tuple $ :: :keydown
                       {}
                         :key $ .-key event
@@ -2570,8 +2616,8 @@
                   send-to-component! event-tuple
               add-watch *store :rerender $ fn (store prev) (render-app! mount-target)
               ; reset! *changes-logger $ fn (old-tree new-tree changes) (js/console.log |Patch changes)
-              println |Loaded. $ js/performance.now
-              set! js/window.onbeforeunload $ fn (event) (save-store!)
+              println |Loaded.
+              browser/set-before-unload! $ fn (event) (save-store!)
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
@@ -2584,7 +2630,9 @@
           :schema $ :: 'JsNullish 'respo.dom/DomElement
         |query-mount-target $ %{} 'CodeEntry (:doc "|Queries the default mount element behind an explicit JavaScript FFI function so mount-target remains an optional value.")
           :code $ quote
-            defn query-mount-target () $ if (exists? js/document) (js/document.querySelector |.app) nil
+            defn query-mount-target () $ option:fold (browser/query-selector |.app)
+              fn () nil
+              fn (host-element) (narrow-element host-element)
           :examples $ []
           :schema $ :: 'Fn
             {}
@@ -2605,9 +2653,9 @@
               :args $ []
         |save-store! $ %{} 'CodeEntry (:doc |)
           :code $ quote
-            defn save-store! () $ do
-              js/window.localStorage.setItem |respo.calcit $ format-cirru-edn (&struct:get @*store :tasks)
-              ;nil
+            defn save-store! () $ let
+                store $ unsafe-coerce @*store 'respo.app.schema/Store
+              browser/storage-set! |respo.calcit $ format-cirru-edn store.:tasks
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
@@ -2623,6 +2671,8 @@
             respo.controller.client :refer $ send-to-component!
             respo.app.schema :refer $ Op Task
             respo.app.task :refer $ normalize-task
+            js-ffi.browser :as browser
+            respo.ffi.browser :refer $ narrow-element
     |respo.memo $ %{} 'FileEntry
       :defs $ {}
         |*component-caches $ %{} 'CodeEntry (:doc |)
@@ -2647,7 +2697,7 @@
               :args $ :: 'List 'Dynamic
               :value 'Dynamic
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Enum
         |begin-memo-frame! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn begin-memo-frame! ()
@@ -2739,6 +2789,20 @@
                   assert |one-key-remains-cached $ = 1 (component-cache-size)
                   reset-component-caches!
               :tags $ #{} :unit
+        |memo-entry-args $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defn memo-entry-args (entry) (&struct:nth entry 0 :args)
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'List)
+              :args $ [] 'Dynamic
+        |memo-entry-value $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defn memo-entry-value (entry) (&struct:nth entry 1 :value)
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'Dynamic)
+              :args $ [] 'Dynamic
         |memo-value-by $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn memo-value-by (key f & args)
@@ -2751,7 +2815,7 @@
                     hit? $ option:fold entry-option
                       fn () false
                       fn (entry)
-                        &= args $ &struct:get entry :args
+                        &= args $ memo-entry-args entry
                     resolved-entry $ if hit? (option:unwrap entry-option)
                       %{} MemoEntry (:args args)
                         :value $ call-value f args
@@ -2759,7 +2823,7 @@
                     swap! *frame-component-caches assoc-in ([] f key) resolved-entry
                     when (not hit?)
                       swap! *component-caches assoc-in ([] f key) resolved-entry
-                  &struct:get resolved-entry :value
+                  memo-entry-value resolved-entry
           :examples $ []
           :schema $ :: 'Fn
             {} (:rest 'Dynamic) (:return 'Dynamic)
@@ -2980,35 +3044,35 @@
                     collect! $ :: :rm-element coord n-coord nil
                 (and (component? old-tree) (component? new-tree))
                   let
-                      next-coord $ conj coord (&struct:get new-tree :name)
+                      next-coord $ conj coord (component-name new-tree)
                     if
-                      = (&struct:get old-tree :name) (&struct:get new-tree :name)
+                      = (component-name old-tree) (component-name new-tree)
                       do (collect-updating collect! :before-update coord n-coord old-tree new-tree)
-                        find-element-diffs collect! next-coord n-coord (&struct:get old-tree :tree) (&struct:get new-tree :tree)
+                        find-element-diffs collect! next-coord n-coord (component-tree old-tree) (component-tree new-tree)
                         collect-updating collect! :update coord n-coord old-tree new-tree
                       do (collect-unmounting collect! coord n-coord old-tree true)
                         collect! $ :: :replace-element coord n-coord new-tree
                         collect-mounting collect! coord n-coord new-tree true
                 (and (component? old-tree) (element? new-tree))
                   do (collect-own-unmounting collect! coord n-coord old-tree true)
-                    recur collect! coord n-coord (&struct:get old-tree :tree) new-tree
+                    recur collect! coord n-coord (component-tree old-tree) new-tree
                 (and (element? old-tree) (component? new-tree))
                   let
-                      new-coord $ conj coord (&struct:get new-tree :name)
+                      new-coord $ conj coord (component-name new-tree)
                     do
-                      find-element-diffs collect! new-coord n-coord old-tree $ &struct:get new-tree :tree
+                      find-element-diffs collect! new-coord n-coord old-tree $ component-tree new-tree
                       collect-own-mounting collect! coord n-coord new-tree true
                 (and (element? old-tree) (element? new-tree))
                   if
-                    not= (&struct:get old-tree :name) (&struct:get new-tree :name)
+                    not= (element-name old-tree) (element-name new-tree)
                     do (collect-unmounting collect! coord n-coord old-tree true)
                       collect! $ :: :replace-element coord n-coord new-tree
                       collect-mounting collect! coord n-coord new-tree true
                     do
-                      find-props-diffs collect! coord n-coord (&struct:get old-tree :attrs) (&struct:get new-tree :attrs)
+                      find-props-diffs collect! coord n-coord (element-attrs old-tree) (element-attrs new-tree)
                       let
-                          old-ref $ &struct:get old-tree :ref
-                          new-ref $ &struct:get new-tree :ref
+                          old-ref $ element-ref old-tree
+                          new-ref $ element-ref new-tree
                         when
                           not $ identical? old-ref new-ref
                           if (some? old-ref)
@@ -3018,14 +3082,14 @@
                             collect! $ :: :effect-update coord n-coord
                               fn (target) (new-ref target)
                       let
-                          old-style $ &struct:get old-tree :style
-                          new-style $ &struct:get new-tree :style
+                          old-style $ element-style old-tree
+                          new-style $ element-style new-tree
                         if (not= old-style new-style) (find-style-diffs collect! coord n-coord old-style new-style)
                       let
                           old-events $ keys-non-nil
-                            either (&struct:get old-tree :event) ({})
+                            either (element-event old-tree) ({})
                           new-events $ keys-non-nil
-                            either (&struct:get new-tree :event) ({})
+                            either (element-event new-tree) ({})
                         when (not= old-events new-events)
                           let
                               added-events $ difference new-events old-events
@@ -3035,8 +3099,8 @@
                             &doseq (event-name removed-events)
                               collect! $ :: :rm-event coord n-coord event-name
                       let
-                          old-children $ &struct:get old-tree :children
-                          new-children $ &struct:get new-tree :children
+                          old-children $ element-children old-tree
+                          new-children $ element-children new-tree
                         if
                           and dev? $ detect-keys-dup
                             map new-children $ fn (entry)
@@ -3264,7 +3328,7 @@
         :code $ quote
           ns respo.render.diff $ :require
             respo.util.format :refer $ purify-element
-            respo.util.detect :refer $ component? element?
+            respo.util.detect :refer $ component? element? component-name component-tree element-name element-attrs element-ref element-style element-event element-children
             respo.render.effect :refer $ collect-mounting collect-updating collect-unmounting collect-own-mounting collect-own-unmounting
             respo.util.list :refer $ val-of-first
             respo.schema :refer $ dev?
@@ -3275,14 +3339,14 @@
             defn make-element (virtual-element listener-builder coord)
               assert |coord-is-required $ some? coord
               if (component? virtual-element)
-                make-element (&struct:get virtual-element :tree) listener-builder $ conj coord (&struct:get virtual-element :name)
+                make-element (component-tree virtual-element) listener-builder $ conj coord (component-name virtual-element)
                 let
-                    tag-name $ turn-string (&struct:get virtual-element :name)
-                    attrs $ &struct:get virtual-element :attrs
-                    style $ &struct:get virtual-element :style
-                    events $ &struct:get virtual-element :event
-                    children $ &struct:get virtual-element :children
-                    element $ unsafe-coerce (js/document.createElement tag-name) 'respo.dom/DomElement
+                    tag-name $ turn-string (element-name virtual-element)
+                    attrs $ element-attrs virtual-element
+                    style $ element-style virtual-element
+                    events $ element-event virtual-element
+                    children $ element-children virtual-element
+                    element $ narrow-element (browser/create-element tag-name)
                     child-elements $ if (map? children)
                       map (.to-list children)
                         fn (pair)
@@ -3310,8 +3374,13 @@
                         v $ option:unwrap (last entry)
                       if (.!startsWith prop-str |data-)
                         if (some? v)
-                          js-set element.:dataset (.!slice prop-str 5) v
-                          js-delete element.:dataset $ .!slice prop-str 5
+                          js-set
+                            browser/element-dataset $ host-element element
+                            .!slice prop-str 5
+                            , v
+                          js-delete
+                            browser/element-dataset $ host-element element
+                            .!slice prop-str 5
                         let
                             k $ dashed->camel prop-str
                           if (some? v) (aset element k v)
@@ -3321,7 +3390,9 @@
                           option:unwrap $ first entry
                         k $ dashed->camel style-name
                         v $ option:unwrap (last entry)
-                      aset element.:style k $ get-style-value v k
+                      aset
+                        browser/element-style $ host-element element
+                        , k $ get-style-value v k
                   &doseq (entry events)
                     let
                         event-handler $ option:unwrap (last entry)
@@ -3334,7 +3405,7 @@
                             .!stopPropagation event
                   each child-elements $ fn (child-element)
                     if (some? child-element)
-                      .append-child! element $ unsafe-coerce child-element 'respo.dom/DomElement
+                      browser/append-child! (host-element element) (host-element child-element)
                   , element
           :examples $ []
           :schema $ :: 'Fn
@@ -3366,7 +3437,9 @@
         :code $ quote
           ns respo.render.dom $ :require
             respo.util.format :refer $ dashed->camel event->prop get-style-value
-            respo.util.detect :refer $ component?
+            respo.util.detect :refer $ component? component-tree component-name element-name element-attrs element-style element-event element-children
+            js-ffi.browser :as browser
+            respo.ffi.browser :refer $ narrow-element host-element
     |respo.render.effect $ %{} 'FileEntry
       :defs $ {}
         |collect-mounting $ %{} 'CodeEntry (:doc "|internal function to collect mounting effects from component tree. recursively traverses the virtual DOM and collects effect:mount callbacks.")
@@ -3375,28 +3448,30 @@
               cond
                   component? tree
                   let
-                      effects $ &struct:get tree :effects
-                      next-coord $ conj coord (&struct:get tree :name)
+                      component-value $ as-component tree
+                      effects $ component-effects component-value
+                      next-coord $ conj coord (component-name component-value)
                     when
                       not $ empty? effects
                       &doseq (effect effects)
                         let
-                            method $ &struct:get effect :method
+                            typed-effect $ as-effect effect
+                            method $ effect-method typed-effect
                           collect! $ :: :effect-mount next-coord n-coord
                             fn (target)
-                              method (&struct:get effect :args) ([] :mount target at-place?)
-                    recur collect! next-coord n-coord (&struct:get tree :tree) false
+                              method (effect-args typed-effect) ([] :mount target at-place?)
+                    recur collect! next-coord n-coord (respo.util.detect/component-tree component-value) false
                 (element? tree)
                   do
                     let
-                        ref! $ &struct:get tree :ref
+                        ref! $ element-ref tree
                       when (some? ref!)
                         collect! $ :: :effect-mount coord n-coord
                           fn (target)
                             (unsafe-coerce ref! Fn) target
                     loop
                         children $ let
-                            source $ &struct:get tree :children
+                            source $ element-children tree
                           if (map? source)
                             .to-list $ .to-list source
                             , source
@@ -3449,14 +3524,14 @@
                 not $ component? tree
                 raise |[Respo/collect-own-mounting]-expected-a-component
               let
-                  effects $ &struct:get tree :effects
-                  next-coord $ conj coord (&struct:get tree :name)
+                  effects $ component-effects tree
+                  next-coord $ conj coord (component-name tree)
                 &doseq (effect effects)
                   let
-                      method $ &struct:get effect :method
+                      method $ effect-method effect
                     collect! $ :: :effect-mount next-coord n-coord
                       fn (target)
-                        method (&struct:get effect :args) ([] :mount target at-place?)
+                        method (effect-args effect) ([] :mount target at-place?)
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
@@ -3469,14 +3544,14 @@
                 not $ component? tree
                 raise |[Respo/collect-own-unmounting]-expected-a-component
               let
-                  effects $ &struct:get tree :effects
-                  next-coord $ conj coord (&struct:get tree :name)
+                  effects $ component-effects tree
+                  next-coord $ conj coord (component-name tree)
                 &doseq (effect effects)
                   let
-                      method $ &struct:get effect :method
+                      method $ effect-method effect
                     collect! $ :: :effect-unmount next-coord n-coord
                       fn (target)
-                        method (&struct:get effect :args) ([] :unmount target at-place?)
+                        method (effect-args effect) ([] :unmount target at-place?)
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
@@ -3488,25 +3563,23 @@
               cond
                   component? tree
                   let
-                      effects $ &struct:get tree :effects
-                      new-coord $ conj coord (&struct:get tree :name)
-                    collect-unmounting collect! new-coord n-coord (&struct:get tree :tree) false
+                      component-value $ as-component tree
+                      effects $ component-effects component-value
+                      new-coord $ conj coord (component-name component-value)
+                    collect-unmounting collect! new-coord n-coord (respo.util.detect/component-tree component-value) false
                     when
                       not $ empty? effects
                       &doseq (effect effects)
                         let
-                            method $ &struct:get effect :method
+                            typed-effect $ as-effect effect
+                            method $ effect-method typed-effect
                           collect! $ :: :effect-unmount new-coord n-coord
                             fn (target)
-                              method (&struct:get effect :args) ([] :unmount target at-place?)
+                              method (effect-args typed-effect) ([] :unmount target at-place?)
                 (element? tree)
                   do
                     loop
-                        children $ let
-                            source $ &struct:get tree :children
-                          if (map? source)
-                            .to-list $ .to-list source
-                            , source
+                        children $ element-children tree
                         idx 0
                       when
                         not $ empty? children
@@ -3517,12 +3590,13 @@
                           when (some? child)
                             collect-unmounting collect! (conj coord k) (conj n-coord idx) child false
                         recur (rest children) (inc idx)
-                    let
-                        ref! $ &struct:get tree :ref
-                      when (some? ref!)
-                        collect! $ :: :effect-unmount coord n-coord
-                          fn (_target)
-                            (unsafe-coerce ref! Fn) nil
+                    when
+                      some? $ element-ref tree
+                      collect! $ :: :effect-unmount coord n-coord
+                        fn (_target)
+                          apply
+                            unsafe-coerce (element-ref tree) Fn
+                            [] nil
                 true $ js/console.warn |Unknown-entry-for-unmounting: tree
           :examples $ []
           :schema $ :: 'Fn
@@ -3535,9 +3609,9 @@
                 not $ component? new-tree
                 raise |[Respo/collect-updating]-expected-the-new-tree-to-be-a-component
               let
-                  old-effects $ &struct:get old-tree :effects
-                  new-effects $ &struct:get new-tree :effects
-                  next-coord $ conj coord (&struct:get new-tree :name)
+                  old-effects $ component-effects old-tree
+                  new-effects $ component-effects new-tree
+                  next-coord $ conj coord (component-name new-tree)
                   effect-count $ option:unwrap
                     max $ [] (count old-effects) (count new-effects)
                 &doseq
@@ -3548,39 +3622,39 @@
                     if-let (old-effect old-effect-option)
                       if-let (new-effect new-effect-option)
                         if
-                          = (&struct:get old-effect :name) (&struct:get new-effect :name)
+                          = (effect-name old-effect) (effect-name new-effect)
                           when-not
-                            =seq (&struct:get new-effect :args) (&struct:get old-effect :args)
+                            =seq (effect-args new-effect) (effect-args old-effect)
                             let
                                 effect $ if (= action :before-update) old-effect new-effect
-                                method $ &struct:get effect :method
+                                method $ effect-method effect
                               collect! $ ::
                                 if (= :update action) :effect-update :effect-before-update
                                 , next-coord n-coord
                                   fn (target)
-                                    method (&struct:get effect :args) ([] action target false)
+                                    method (effect-args effect) ([] action target false)
                           let
                               effect $ if (= action :before-update) old-effect new-effect
-                              method $ &struct:get effect :method
+                              method $ effect-method effect
                               lifecycle-action $ if (= action :before-update) :unmount :mount
                             collect! $ ::
                               if (= :update action) :effect-update :effect-before-update
                               , next-coord n-coord
                                 fn (target)
-                                  method (&struct:get effect :args) ([] lifecycle-action target false)
+                                  method (effect-args effect) ([] lifecycle-action target false)
                         when (= action :before-update)
                           let
-                              method $ &struct:get old-effect :method
+                              method $ effect-method old-effect
                             collect! $ :: :effect-before-update next-coord n-coord
                               fn (target)
-                                method (&struct:get old-effect :args) ([] :unmount target false)
+                                method (effect-args old-effect) ([] :unmount target false)
                       if-let (new-effect new-effect-option)
                         when (= action :update)
                           let
-                              method $ &struct:get new-effect :method
+                              method $ effect-method new-effect
                             collect! $ :: :effect-update next-coord n-coord
                               fn (target)
-                                method (&struct:get new-effect :args) ([] :mount target false)
+                                method (effect-args new-effect) ([] :mount target false)
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
@@ -3588,7 +3662,7 @@
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote
           ns respo.render.effect $ :require (respo.schema.op :as op)
-            respo.util.detect :refer $ component? element? =seq
+            respo.util.detect :refer $ component? element? =seq as-component as-element as-effect component-name component-effects component-tree effect-name effect-method effect-args element-children element-ref
             respo.util.list :refer $ val-of-first
     |respo.render.html $ %{} 'FileEntry
       :defs $ {}
@@ -4009,7 +4083,7 @@
                 let
                     prop-str $ turn-string op
                   if (.!startsWith prop-str |data-)
-                    js-delete target.:dataset $ .!slice prop-str 5
+                    js-delete (target :dataset) (.!slice prop-str 5)
                     let
                         k $ dashed->camel prop-str
                         ; ks $ prop->attr prop-str
@@ -4062,7 +4136,7 @@
           :code $ quote
             defenum ResourceAction (:started 'Number) (:ready 'Number 'Dynamic) (:failed 'Number 'Dynamic)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Enum
           :tags $ #{} :data
         |ResourceState $ %{} 'CodeEntry (:doc "|Immutable resource state record. :data and :error are application payload boundaries; :status and :request-id drive deterministic reducer transitions.")
           :code $ quote
@@ -4071,7 +4145,7 @@
               :data 'Dynamic
               :error 'Dynamic
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Enum
           :tags $ #{} :data
         |load-resource! $ %{} 'CodeEntry (:doc "|Invokes a zero-argument fetcher once, normalizes its value or Promise, and emits immutable :started then :ready or :failed ResourceAction values. Synchronous fetch errors and Promise-chain errors become :failed. Returns the numeric request id; it does not mutate application state.")
           :code $ quote
@@ -4151,7 +4225,7 @@
                 not $ resource-state? state
                 raise "|[Respo/resource-loading?] expected ResourceState"
               let
-                  status $ &struct:get state :status
+                  status $ :status state
                 or (= status :pending) (= status :refreshing)
           :examples $ []
             quote $ resource-loading?
@@ -4183,23 +4257,23 @@
                 (:started request-id)
                   %{} ResourceState
                     :status $ let
-                        status $ &struct:get state :status
+                        status $ :status state
                       if
                         or (= :ready status) (= :refreshing status)
                         , :refreshing :pending
                     :request-id request-id
-                    :data $ &struct:get state :data
+                    :data $ :data state
                     :error nil
                 (:ready request-id data)
                   if
-                    = (&struct:get state :request-id) request-id
+                    = (:request-id state) request-id
                     %{} ResourceState (:status :ready) (:request-id request-id) (:data data) (:error nil)
                     , state
                 (:failed request-id error)
                   if
-                    = (&struct:get state :request-id) request-id
+                    = (:request-id state) request-id
                     %{} ResourceState (:status :error) (:request-id request-id)
-                      :data $ &struct:get state :data
+                      :data $ :data state
                       :error error
                     , state
           :examples $ []
@@ -4225,21 +4299,20 @@
                     failed $ resource-reducer refreshing (resource-failed 2 |offline)
                     ready-nil $ resource-reducer pending (resource-ready 1 nil)
                     refreshing-nil $ resource-reducer ready-nil (resource-started 3)
-                  assert |started-resource-is-pending $ = :pending (&struct:get pending :status)
+                  assert |started-resource-is-pending $ = :pending (&struct:nth pending 3 :status)
                   assert |pending-resource-is-loading $ resource-loading? pending
-                  assert |matching-result-is-ready $ = :ready (&struct:get ready :status)
+                  assert |matching-result-is-ready $ = :ready (&struct:nth ready 3 :status)
                   assert |refresh-keeps-existing-data $ =
                     {} $ :value |first
-                    &struct:get refreshing :data
-                  assert |ready-resource-enters-refreshing $ = :refreshing (&struct:get refreshing :status)
+                    &struct:nth refreshing 0 :data
+                  assert |ready-resource-enters-refreshing $ = :refreshing (&struct:nth refreshing 3 :status)
                   assert |stale-result-is-ignored $ identical? refreshing stale
-                  assert |matching-failure-is-recorded $ = :error (&struct:get failed :status)
-                  assert |failure-message-is-kept $ = |offline (&struct:get failed :error)
+                  assert |matching-failure-is-recorded $ = :error (&struct:nth failed 3 :status)
+                  assert |failure-message-is-kept $ = |offline (&struct:nth failed 1 :error)
                   assert |failure-keeps-existing-data $ =
                     {} $ :value |first
-                    &struct:get failed :data
-                  assert |nil-data-can-refresh $ = :refreshing (&struct:get refreshing-nil :status)
-              :tags $ #{} :unit
+                    &struct:nth failed 0 :data
+                  assert |nil-data-can-refresh $ = :refreshing (&struct:nth refreshing-nil 3 :status)
         |resource-started $ %{} 'CodeEntry (:doc "|Creates a :started ResourceAction for a numeric request id.")
           :code $ quote
             defn resource-started (request-id)
@@ -4278,7 +4351,7 @@
               :listeners $ :: 'List 'respo.schema/RespoListener
               :tree $ :: 'Optional 'Struct
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Enum
         |DomProps $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstruct DomProps
@@ -4330,7 +4403,7 @@
               :accept $ :: 'Optional 'String
               :ref $ :: 'Optional 'Fn
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Enum
         |Effect $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstruct Effect (:name 'Tag)
@@ -4338,7 +4411,7 @@
               :args $ :: 'List 'Dynamic
               :method 'Fn
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Enum
         |Element $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstruct Element (:name 'Tag)
@@ -4349,7 +4422,7 @@
               :children $ :: 'List (:: 'List 'Dynamic)
               :ref $ :: 'Optional 'Fn
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Enum
         |EventHandler $ %{} 'CodeEntry (:doc "|Event callback signature. Respo delivers an immutable map produced by event->edn together with the application dispatch function.")
           :code $ quote (def EventHandler nil)
           :examples $ []
@@ -4375,12 +4448,12 @@
               :shift? $ :: 'Optional 'Bool
               :msg $ :: 'Optional 'String
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Enum
         |RespoListener $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstruct RespoListener (:name 'Tag) (:handler 'Fn)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Enum
         |cache-info $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def cache-info $ {} (:value nil) (:initial-loop nil) (:last-hit nil) (:hit-times 0)
@@ -4518,6 +4591,64 @@
           :schema $ :: 'Fn
             {} (:return 'Bool)
               :args $ [] 'List 'List
+        |as-component $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defn as-component (value) value
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'respo.schema/Component)
+              :args $ [] 'Dynamic
+        |as-effect $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defn as-effect (value) value
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'respo.schema/Effect)
+              :args $ [] 'Dynamic
+        |as-element $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defn as-element (value) value
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'respo.schema/Element)
+              :args $ [] 'Dynamic
+        |as-listener $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defn as-listener (value) value
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'respo.schema/RespoListener)
+              :args $ [] 'Dynamic
+        |component-effects $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defn component-effects (value) (&struct:nth value 0 :effects)
+          :examples $ []
+          :schema $ :: 'Fn
+            {}
+              :args $ [] 'Dynamic
+              :return $ :: 'List 'schema/Effect
+        |component-listeners $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defn component-listeners (value) (&struct:nth value 1 :listeners)
+          :examples $ []
+          :schema $ :: 'Fn
+            {}
+              :args $ [] 'Dynamic
+              :return $ :: 'List 'schema/RespoListener
+        |component-name $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defn component-name (value) (&struct:nth value 2 :name)
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'Tag)
+              :args $ [] 'Dynamic
+        |component-tree $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defn component-tree (value) (&struct:nth value 3 :tree)
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'Dynamic)
+              :args $ [] 'Dynamic
         |component? $ %{} 'CodeEntry (:doc "|check if value is a Respo component. returns true for component records, false otherwise.")
           :code $ quote
             defn component? (x)
@@ -4533,6 +4664,27 @@
           :schema $ :: 'Fn
             {} (:return 'Bool)
               :args $ [] 'Dynamic
+        |effect-args $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defn effect-args (value) (&struct:nth value 0 :args)
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'List)
+              :args $ [] 'Dynamic
+        |effect-method $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defn effect-method (value) (&struct:nth value 2 :method)
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'Fn)
+              :args $ [] 'Dynamic
+        |effect-name $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defn effect-name (value) (&struct:nth value 3 :name)
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'Tag)
+              :args $ [] 'Dynamic
         |effect? $ %{} 'CodeEntry (:doc "|Checks if the given value is a Respo Effect record.")
           :code $ quote
             defn effect? (x)
@@ -4542,6 +4694,52 @@
           :schema $ :: 'Fn
             {} (:return 'Bool)
               :args $ [] 'Dynamic
+        |element-attrs $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defn element-attrs (value) (&struct:nth value 0 :attrs)
+          :examples $ []
+          :schema $ :: 'Fn
+            {}
+              :args $ [] 'Dynamic
+              :return $ :: 'List 'List
+        |element-children $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defn element-children (value) (&struct:nth value 1 :children)
+          :examples $ []
+          :schema $ :: 'Fn
+            {}
+              :args $ [] 'Dynamic
+              :return $ :: 'List 'List
+        |element-event $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defn element-event (value) (&struct:nth value 3 :event)
+          :examples $ []
+          :schema $ :: 'Fn
+            {}
+              :args $ [] 'Dynamic
+              :return $ :: 'Map 'Tag 'Dynamic
+        |element-name $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defn element-name (value) (&struct:nth value 4 :name)
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'Tag)
+              :args $ [] 'Dynamic
+        |element-ref $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defn element-ref (value) (&struct:nth value 5 :ref)
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'Dynamic)
+              :args $ [] 'Dynamic
+        |element-style $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defn element-style (value) (&struct:nth value 6 :style)
+          :examples $ []
+          :schema $ :: 'Fn
+            {}
+              :args $ [] 'Dynamic
+              :return $ :: 'List 'List
         |element? $ %{} 'CodeEntry (:doc "|check if value is a Respo element. returns true for element records, false otherwise.")
           :code $ quote
             defn element? (x)
@@ -4569,6 +4767,13 @@
             {} (:return 'Fn)
               :args $ [] 'Dynamic 'String
           :tags $ #{} :internal
+        |listener-handler $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defn listener-handler (value) (&struct:nth value 0 :handler)
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'Fn)
+              :args $ [] 'Dynamic
         |listener? $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn listener? (item)
@@ -4633,10 +4838,9 @@
               :features $ #{} :js-ffi
         |create-shared-canvas-context $ %{} 'CodeEntry (:doc "|Creates the shared Canvas context behind an explicit JavaScript FFI boundary.")
           :code $ quote
-            defn create-shared-canvas-context () $ if
-              and (exists? js/window) (exists? js/document)
+            defn create-shared-canvas-context () $ if (browser/document-available?)
               .!getContext
-                unsafe-coerce (js/document.createElement |canvas) JsObject
+                unsafe-coerce (browser/create-element |canvas) JsObject
                 , |2d
               , nil
           :examples $ []
@@ -4671,6 +4875,7 @@
           ns respo.util.dom $ :require
             respo.util.list :refer $ val-of-first
             respo.dom :refer $ DomCanvasContext DomTextMetrics
+            js-ffi.browser :as browser
     |respo.util.format $ %{} 'FileEntry
       :defs $ {}
         |create-dashed-letter-pattern $ %{} 'CodeEntry (:doc "|Creates the JavaScript RegExp behind an explicit FFI function so dashed-letter-pattern remains a value.")
@@ -4844,13 +5049,13 @@
                   , nil
                 (component? markup)
                   purify-element $ &let
-                    t $ &struct:get markup :tree
+                    t $ component-tree markup
                     when (nil? t) (raise |tree-is-empty)
                     , t
                 (element? markup)
                   -> markup (assoc :ref nil)
-                    assoc :event $ purify-events (&struct:get markup :event)
-                    assoc :children $ -> (&struct:get markup :children)
+                    assoc :event $ purify-events (element-event markup)
+                    assoc :children $ -> (element-children markup)
                       map $ fn (pair)
                         let
                             k $ option:unwrap (first pair)
@@ -4877,13 +5082,13 @@
                       :event $ {}
                       :children $ [] ([] :child child)
                       :ref $ fn (_target) nil
-                    purified $ purify-element parent
-                    purified-child $ option:unwrap
-                      last $ option:unwrap
-                        first $ &struct:get purified :children
-                  assert |parent-ref-is-removed $ nil? (&struct:get purified :ref)
-                  assert |child-ref-is-removed $ nil? (&struct:get purified-child :ref)
-              :tags $ #{} :unit
+                    purified $ unsafe-coerce (purify-element parent) 'respo.schema/Element
+                    purified-child $ unsafe-coerce
+                      option:unwrap $ last
+                        option:unwrap $ first (element-children purified)
+                      , 'respo.schema/Element
+                  assert |parent-ref-is-removed $ nil? (element-ref purified)
+                  assert |child-ref-is-removed $ nil? (element-ref purified-child)
         |purify-events $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn purify-events (events)
@@ -4914,7 +5119,7 @@
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote
           ns respo.util.format $ :require
-            respo.util.detect :refer $ component? element?
+            respo.util.detect :refer $ component? element? component-tree element-event element-children element-ref
             respo.dom :refer $ DomEvent DomKeyboardEvent
     |respo.util.list $ %{} 'FileEntry
       :defs $ {}
