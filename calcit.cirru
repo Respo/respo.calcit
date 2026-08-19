@@ -640,7 +640,7 @@
           :code $ quote
             defeffect effect-listen-keyboard (options event-name) (action el at?)
               cond
-                  or (= action :mount) (= action :update)
+                  (or (= action :mount) (= action :update))
                   let
                       disabled-commands $ noted "|copied event does not support `event.preventDefault()`, so we need to pass a set of configs"
                         option:unwrap-or (get options :disabled-commands) (#{} |p |s)
@@ -665,14 +665,16 @@
                           %none
                     let
                         prev-listener $ aget el dirty-field
+                        listener $ unsafe-coerce prev-listener 'Fn
                       if (js-present? prev-listener)
-                        browser/remove-event-listener! event-name $ unsafe-coerce prev-listener 'Fn
+                        browser/remove-event-listener! event-name listener
                     aset el dirty-field handler
                     browser/add-event-listener! event-name handler
                   (= action :unmount)
                   let
                       handler $ aget el dirty-field
-                    browser/remove-event-listener! event-name $ unsafe-coerce handler 'Fn
+                      listener $ unsafe-coerce handler 'Fn
+                    if (js-present? handler) (browser/remove-event-listener! event-name listener)
                     js-delete el dirty-field
                 true nil
           :examples $ []
