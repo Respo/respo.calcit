@@ -2512,7 +2512,7 @@
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
             :names $ {} (:global-listener |_global_listener)
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Trait
         |DomStorage $ %{} 'CodeEntry (:doc "|Browser storage capability used by Respo persistence. Nullish reads model absent keys.")
           :code $ quote
             deftrait DomStorage
