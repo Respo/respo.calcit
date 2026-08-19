@@ -30,27 +30,6 @@ defrecord Component :name :effects :tree
 defrecord Effect :name :coord :args :method
 ```
 
-### Typed tree nodes
-
-With Calcit 0.13.25 or later, Respo describes the internal rendered-node
-alternative explicitly. A tree node is either a `Component` or an `Element`:
-
-```cirru.no-check
-deftype RespoNode
-  or 'respo.schema/Component 'respo.schema/Element
-```
-
-This is a transparent union: it changes neither the runtime representation nor
-the public component API. Respo validates the legacy keyed-child storage at its
-single boundary, then the renderer traverses `RespoNode` exhaustively with
-`struct-match`. Applications normally keep returning elements and components
-from `defcomp`, `div`, `<>`, and other existing helpers; they do not need to
-construct or unwrap `RespoNode` themselves.
-
-When extending renderer internals, keep the untyped `[key child]` pair handling
-at the boundary and accept `RespoNode` in recursive tree functions. This keeps
-the type conversion local rather than propagating `Dynamic` through traversal.
-
 `coord` means "coordinate" in Respo, it looks like `[] 0 1 3` or even `[] 0 0 0 :container 0 0 "|a"`.
 
 If you define component like this:

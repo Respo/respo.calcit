@@ -822,27 +822,27 @@
               :args $ [] 'Enum
         |traverse-and-call $ %{} 'CodeEntry (:doc "|Traverses the rendered tree and invokes component listeners. The dispatch callback intentionally stays at the generic Fn boundary because wrap-dispatch supports multiple operation forms and an optional payload.")
           :code $ quote
-            defn traverse-and-call (node event-tuple dispatch!)
-              struct-match node
-                respo.schema/Component component $ let
-                    listeners $ component-listeners component
-                    tree $ component-tree component
-                  each listeners $ fn (listener)
-                    let
-                        handler $ listener-handler listener
-                      handler event-tuple dispatch!
-                  when (some? tree)
-                    traverse-and-call (confirm-node tree) event-tuple dispatch!
-                respo.schema/Element element $ each (element-children element)
-                  fn (pair)
-                    let
-                        child $ option:unwrap (get pair 1)
-                      when (some? child)
-                        traverse-and-call (confirm-node child) event-tuple dispatch!
+            defn traverse-and-call (element event-tuple dispatch!)
+              when (some? element)
+                when (component? element)
+                  let
+                      listeners $ component-listeners element
+                      tree $ component-tree element
+                    each listeners $ fn (listener)
+                      let
+                          handler $ listener-handler listener
+                        handler event-tuple dispatch!
+                    traverse-and-call tree event-tuple dispatch!
+                when (element? element)
+                  each (element-children element)
+                    fn (pair)
+                      let
+                          child $ option:unwrap (get pair 1)
+                        traverse-and-call child event-tuple dispatch!
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
-              :args $ [] 'respo.schema/RespoNode 'Enum 'Fn
+              :args $ [] 'Dynamic 'Enum 'Fn
         |wrap-dispatch $ %{} 'CodeEntry (:doc "|Wraps a raw dispatch function to automatically handle different operation types (list, tag, or direct).")
           :code $ quote
             defn wrap-dispatch (*dispatch-fn)
@@ -864,7 +864,7 @@
             respo.render.patch :refer $ apply-dom-changes
             respo.util.format :refer $ event->edn
             respo.render.dom :refer $ make-element
-            respo.core :refer $ *dispatch-fn *global-element confirm-node
+            respo.core :refer $ *dispatch-fn *global-element
             respo.util.detect :refer $ component? element? component-listeners component-tree element-children listener-handler
             respo.controller.resolve :refer $ extract-listeners
             respo.dom :refer $ DomElement
@@ -1098,15 +1098,6 @@
           :schema $ :: 'Fn
             {} (:return 'List)
               :args $ [] 'List
-        |confirm-node $ %{} 'CodeEntry (:doc "|Validates a non-nil Respo node at the untyped child-pair boundary, then exposes the precise transparent union to tree traversal.")
-          :code $ quote
-            defn confirm-node (x)
-              assert "|Invalid Respo node: " $ or (element? x) (component? x)
-              unsafe-coerce x 'respo.schema/RespoNode
-          :examples $ []
-          :schema $ :: 'Fn
-            {} (:return 'respo.schema/RespoNode)
-              :args $ [] 'Struct
         |create-element $ %{} 'CodeEntry (:doc "|Low-level helper for creating a virtual DOM element.\n\nPass a tag name, an optional props map, and child nodes. Public helpers such as `div`, `span`, `button`, and `input` are thin wrappers around this function.")
           :code $ quote
             defn create-element (tag-name props & children)
@@ -4463,11 +4454,6 @@
             defstruct RespoListener (:name 'Tag) (:handler 'Fn)
           :examples $ []
           :schema $ :: 'Enum
-        |RespoNode $ %{} 'CodeEntry (:doc "|A transparent union for values that can appear in the rendered Respo tree.")
-          :code $ quote
-            deftype RespoNode $ or 'respo.schema/Component 'respo.schema/Element
-          :examples $ []
-          :schema $ :: 'Dynamic
         |cache-info $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def cache-info $ {} (:value nil) (:initial-loop nil) (:last-hit nil) (:hit-times 0)
