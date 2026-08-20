@@ -639,8 +639,8 @@
         |effect-listen-keyboard $ %{} 'CodeEntry (:doc "|Effect for listening to global keyboard events on the window object.")
           :code $ quote
             defeffect effect-listen-keyboard (options event-name) (action el at?)
-              cond
-                  (or (= action :mount) (= action :update))
+              cond $
+                  or (= action :mount) (= action :update)
                   let
                       disabled-commands $ noted "|copied event does not support `event.preventDefault()`, so we need to pass a set of configs"
                         option:unwrap-or (get options :disabled-commands) (#{} |p |s)
@@ -666,11 +666,10 @@
                     let
                         prev-listener $ aget el dirty-field
                         listener $ unsafe-coerce prev-listener 'Fn
-                      if (js-present? prev-listener)
-                        browser/remove-event-listener! event-name listener
+                      if (js-present? prev-listener) (browser/remove-event-listener! event-name listener)
                     aset el dirty-field handler
                     browser/add-event-listener! event-name handler
-                  (= action :unmount)
+                (= action :unmount)
                   let
                       handler $ aget el dirty-field
                       listener $ unsafe-coerce handler 'Fn
