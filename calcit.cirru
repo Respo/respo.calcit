@@ -639,7 +639,7 @@
         |effect-listen-keyboard $ %{} 'CodeEntry (:doc "|Effect for listening to global keyboard events on the window object.")
           :code $ quote
             defeffect effect-listen-keyboard (options event-name) (action el at?)
-              cond $
+              cond
                   or (= action :mount) (= action :update)
                   let
                       disabled-commands $ noted "|copied event does not support `event.preventDefault()`, so we need to pass a set of configs"
