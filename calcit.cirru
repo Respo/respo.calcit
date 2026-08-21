@@ -666,22 +666,19 @@
                     let
                         prev-listener $ aget el dirty-field
                         listener $ unsafe-coerce prev-listener
-                          :: 'Fn
-                            {}
-                              :args $ [] 'js-ffi.browser/EventHost
-                              :return 'Unit
-                      if (js-present? prev-listener)
-                        browser/remove-event-listener! event-name listener
+                          :: 'Fn $ {}
+                            :args $ [] 'js-ffi.browser/EventHost
+                            :return 'Unit
+                      if (js-present? prev-listener) (browser/remove-event-listener! event-name listener)
                     aset el dirty-field handler
                     browser/add-event-listener! event-name handler
                 (= action :unmount)
                   let
                       handler $ aget el dirty-field
                       listener $ unsafe-coerce handler
-                        :: 'Fn
-                          {}
-                            :args $ [] 'js-ffi.browser/EventHost
-                            :return 'Unit
+                        :: 'Fn $ {}
+                          :args $ [] 'js-ffi.browser/EventHost
+                          :return 'Unit
                     if (js-present? handler) (browser/remove-event-listener! event-name listener)
                     js-delete el dirty-field
                 true nil
