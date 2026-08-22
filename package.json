@@ -1,9 +1,9 @@
 {
   "dependencies": {
-    "@calcit/procs": "0.13.27"
+    "@calcit/procs": "0.13.29"
   },
   "scripts": {
-    "test": "cr test --require-match --summary-only --format json",
+    "test": "calcit calcit.cirru test --require-match --summary-only --format json",
     "check-docs": "bash scripts/check-docs-md.sh"
   },
   "devDependencies": {

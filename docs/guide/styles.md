@@ -150,39 +150,39 @@ When the source is stored in `calcit.cirru`, a stable workflow is:
 
 ```bash
 # 1. locate the inline style leaf
-cr query search ':style' --filter app.comp.container/comp-env-card
+calcit query search ':style' --filter app.comp.container/comp-env-card
 
 # 2. inspect the surrounding props and find the actual style map path
-cr tree show app.comp.container/comp-env-card --path '3.2.4.2'
+calcit tree show app.comp.container/comp-env-card --path '3.2.4.2'
 
 # 3. extract the style map itself, not the :style leaf
-cr edit split-def app.comp.container/comp-env-card --path '3.2.4.2.1.2.1' --name style-env-card-preview
+calcit edit split-def app.comp.container/comp-env-card --path '3.2.4.2.1.2.1' --name style-env-card-preview
 ```
 
 After extraction, the new definition is often still a raw map. Wrap it into a `defstyle` definition:
 
 ```bash
-cr query def app.comp.container/style-env-card-preview
+calcit query def app.comp.container/style-env-card-preview
 ```
 
 If the style contains tricky string values, prefer a snippet file instead of shell inline code:
 
 ```bash
-cr edit def app.comp.container/style-env-card-preview --overwrite --file .calcit-snippets/style-env-card-preview.cirru
+calcit edit def app.comp.container/style-env-card-preview --overwrite --file .calcit-snippets/style-env-card-preview.cirru
 ```
 
 Then switch the original node from `:style` to `:class-name`:
 
 ```bash
-cr tree replace app.comp.container/comp-env-card --path '3.2.4.2.1' --code 'quote $ {}
+calcit tree replace app.comp.container/comp-env-card --path '3.2.4.2.1' --code 'quote $ {}
   :class-name $ str-spaced css/row-middle css/gap8 style-env-card-preview'
 ```
 
 Validate the extraction after each batch:
 
 ```bash
-cr query search ':style' --filter app.comp.container/comp-env-card
-cr js
+calcit query search ':style' --filter app.comp.container/comp-env-card
+calcit js
 ```
 
 `|&` will be replace by a string of `className`. So if you want to add rules for `:hover`, use the string selector `|&:hover`.

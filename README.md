@@ -217,7 +217,7 @@ MIT
 
 ## Documentation Index (For LLM Tool Integration)
 
-This index helps LLM tools automatically fetch and reference documentation using relative paths and the `cr` CLI.
+This index helps LLM tools automatically fetch and reference documentation using relative paths and the `calcit` CLI.
 
 ### Getting Started
 
@@ -250,9 +250,9 @@ Core API descriptions are now stored in source doc strings inside `calcit.cirru`
 Use `docs/api.md` for the overview, or inspect a definition directly with Calcit CLI:
 
 ```bash
-cr query def respo.core/defcomp
-cr query def respo.core/render!
-cr query def respo.render.html/make-string
+calcit query def respo.core/defcomp
+calcit query def respo.core/render!
+calcit query def respo.render.html/make-string
 ```
 
 | API                     | Namespace                                    | Purpose                                |

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Validate Cirru fenced blocks in Markdown via `cr docs check-md`.
+# Validate Cirru fenced blocks in Markdown via `calcit docs check-md`.
 #
 # Usage:
 #   ./scripts/check-docs-md.sh [entry]
@@ -14,14 +14,14 @@ cd "$ROOT"
 
 ENTRY="${1:-${ENTRY:-calcit.cirru}}"
 
-if command -v cr >/dev/null 2>&1; then
-  CR_CMD=(cr)
-elif [ -x "./target/debug/cr" ]; then
-  CR_CMD=("./target/debug/cr")
-elif [ -x "./target/release/cr" ]; then
-  CR_CMD=("./target/release/cr")
+if command -v calcit >/dev/null 2>&1; then
+  CR_CMD=(calcit)
+elif [ -x "./target/debug/calcit" ]; then
+  CR_CMD=("./target/debug/calcit")
+elif [ -x "./target/release/calcit" ]; then
+  CR_CMD=("./target/release/calcit")
 else
-  echo "check-docs-md: need \`cr\` on PATH (or build calcit locally)" >&2
+  echo "check-docs-md: need \`calcit\` on PATH (or build calcit locally)" >&2
   exit 1
 fi
 

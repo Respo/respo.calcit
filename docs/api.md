@@ -29,12 +29,12 @@ Detailed API descriptions now live in source doc strings inside `calcit.cirru`.
 Use Calcit CLI to inspect them:
 
 ```bash
-cr query def respo.core/defcomp
-cr query def respo.core/render!
-cr query def respo.render.html/make-string
+calcit query def respo.core/defcomp
+calcit query def respo.core/render!
+calcit query def respo.render.html/make-string
 ```
 
-`cr query examples <ns/def>` is also useful when an API has runnable examples.
+`calcit query examples <ns/def>` is also useful when an API has runnable examples.
 
 ### User APIs
 

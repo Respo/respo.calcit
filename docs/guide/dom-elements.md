@@ -75,4 +75,4 @@ a body br button canvas code div footer
   ul
 ```
 
-Some are not, but you can create them very quickly with `respo.core/create-element`. For details, run `cr query def respo.core/create-element`.
+Some are not, but you can create them very quickly with `respo.core/create-element`. For details, run `calcit query def respo.core/create-element`.
