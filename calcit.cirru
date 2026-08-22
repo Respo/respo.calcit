@@ -1,5 +1,5 @@
 
-{} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `cr query` to inspect and `cr edit`/`cr tree` to modify. Run `cr docs agents --full` first. Manual edits must follow format and schema conventions, then run `cr edit format`.") (:package |respo)
+{} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `calcit query` to inspect and `calcit edit`/`calcit tree` to modify. Run `calcit docs agents --full` first. Manual edits must follow format and schema conventions, then run `calcit edit format`.") (:package |respo)
   :entries $ {}
     :default $ {} (:description |) (:init-fn 'respo.main/main!) (:mode :js) (:reload-fn 'respo.main/reload!)
       :feature-policy $ {}
@@ -617,7 +617,9 @@
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'respo.schema/Component)
-              :args $ [] 'Dynamic 'Dynamic
+              :args $ []
+                :: 'Map 'Tag $ :: 'Set 'String
+                , 'Fn
         |comp-global-keyup $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defcomp comp-global-keyup (options on-event) (; "|dirty solution: proxy window keydown event to a `<span/>`, comes with some restrictions. however Respo does not allow effects to modify states.")
@@ -627,7 +629,9 @@
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'respo.schema/Component)
-              :args $ [] 'Dynamic 'Dynamic
+              :args $ []
+                :: 'Map 'Tag $ :: 'Set 'String
+                , 'Fn
         |dirty-field $ %{} 'CodeEntry (:doc "|Constant string key for the global keyboard listener.")
           :code $ quote (def dirty-field |_global_listener)
           :examples $ []
@@ -661,19 +665,29 @@
                           %none
                     let
                         prev-listener $ aget el dirty-field
-                      if (js-present? prev-listener) (browser/remove-event-listener! event-name prev-listener)
+                        listener $ unsafe-coerce prev-listener
+                          :: 'Fn $ {}
+                            :args $ [] 'js-ffi.browser/EventHost
+                            :return 'Unit
+                      if (js-present? prev-listener) (browser/remove-event-listener! event-name listener)
                     aset el dirty-field handler
                     browser/add-event-listener! event-name handler
                 (= action :unmount)
                   let
                       handler $ aget el dirty-field
-                    browser/remove-event-listener! event-name handler
+                      listener $ unsafe-coerce handler
+                        :: 'Fn $ {}
+                          :args $ [] 'js-ffi.browser/EventHost
+                          :return 'Unit
+                    if (js-present? handler) (browser/remove-event-listener! event-name listener)
                     js-delete el dirty-field
                 true nil
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'respo.schema/Effect)
-              :args $ [] 'Dynamic 'Dynamic
+              :args $ []
+                :: 'Map 'Tag $ :: 'Set 'String
+                , 'String
               :features $ #{} :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote

@@ -11,7 +11,7 @@ aliases:
   - "dispatch-op"
   - "d! enum shorthand"
 entry_for:
-  - "cr config set-type-slot"
+  - "calcit config set-type-slot"
   - "*dispatch-op"
   - "d! $ ::"
   - "invalid dispatch variant"
@@ -26,8 +26,8 @@ Respo declares the `:dispatch-op` type slot in `respo.schema`. An application bi
 Define the application operation enum as usual, then bind its full definition path in the default entry configuration:
 
 ```bash
-cr config set-type-slot :dispatch-op app.schema/Op
-cr config type-slots
+calcit config set-type-slot :dispatch-op app.schema/Op
+calcit config type-slots
 ```
 
 The command writes this shape to `calcit.cirru`:
@@ -55,21 +55,21 @@ The selected entry installs its bindings before any definition is preprocessed, 
 A named entry is a complete configuration and does not inherit `:configs.type-slots`. Bind the slot explicitly when another entry compiles Respo components:
 
 ```bash
-cr config set-type-slot --entry test :dispatch-op app.test-schema/TestOp
-cr config type-slots --entry test
+calcit config set-type-slot --entry test :dispatch-op app.test-schema/TestOp
+calcit config type-slots --entry test
 ```
 
 Client and server entries can bind the same slot to different enums because each invocation selects one entry:
 
 ```bash
-cr config set-type-slot :dispatch-op app.schema/ClientOp
-cr config set-type-slot --entry server :dispatch-op app.schema/ServerOp
+calcit config set-type-slot :dispatch-op app.schema/ClientOp
+calcit config set-type-slot --entry server :dispatch-op app.schema/ServerOp
 ```
 
 Use `:dynamic` as an explicit opt-out when an entry intentionally does not want dispatch checking:
 
 ```bash
-cr config set-type-slot --entry test :dispatch-op :dynamic
+calcit config set-type-slot --entry test :dispatch-op :dynamic
 ```
 
 ## Dispatch shorthand
@@ -104,7 +104,7 @@ defn main! () $ with-type-slot (:dispatch-op Op)
 Move the binding to config and remove the wrapper:
 
 ```bash
-cr config set-type-slot :dispatch-op app.schema/Op
+calcit config set-type-slot :dispatch-op app.schema/Op
 ```
 
 `with-type-slot` remains a compile-time compatibility form in Calcit and is erased for both single and multiple bodies; adding `do` is no longer required. Entry configuration is preferred because it states the build-wide type choice directly and avoids making a global compile decision look like runtime or lexical behavior. `bind-type` is obsolete and should not be used.
@@ -114,17 +114,17 @@ cr config set-type-slot :dispatch-op app.schema/Op
 After changing the enum or entry binding, run:
 
 ```bash
-cr config type-slots
-cr --check-only
-cr js
+calcit config type-slots
+calcit --check-only
+calcit js
 ```
 
 For a named entry, pass the same selection to inspection and compilation:
 
 ```bash
-cr config type-slots --entry server
-cr --entry server --check-only
-cr --entry server js
+calcit config type-slots --entry server
+calcit --entry server --check-only
+calcit --entry server js
 ```
 
 Common failures:
@@ -135,14 +135,14 @@ Common failures:
 - shorthand silently stays dynamic: inspect the event/listener callback schema and ensure it accepts `'*dispatch-op`.
 - Rust execution works but generated JS fails around old slot runtime code: align the Calcit CLI and `@calcit/procs` versions, then regenerate JS; current Calcit erases `with-type-slot` before codegen.
 
-## Reusing this guide with `cr docs`
+## Reusing this guide with `calcit docs`
 
 When Respo is installed as a module, search and reopen this page instead of copying its rules into each application:
 
 ```bash
-cr docs search 'typed dispatch' --module respo.calcit
-cr docs search 'dispatch-op' --module respo.calcit
-cr docs read type-slots.md --full --module respo.calcit
+calcit docs search 'typed dispatch' --module respo.calcit
+calcit docs search 'dispatch-op' --module respo.calcit
+calcit docs read type-slots.md --full --module respo.calcit
 ```
 
-Use `cr docs scopes` if the installed module scope has a different displayed name.
+Use `calcit docs scopes` if the installed module scope has a different displayed name.

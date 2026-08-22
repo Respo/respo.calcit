@@ -33,7 +33,7 @@ The Respo project is a virtual DOM library written in Calcit-js, containing:
 - **Compiled source**: `calcit.cirru` (13806 lines) - full AST representation
 - **Namespaces**: 33 total namespaces organized by functionality
 - **Version**: 0.16.21
-- **Testing**: `cr test` definition-attached tests and a JS-target smoke suite; no external test module
+- **Testing**: `calcit test` definition-attached tests and a JS-target smoke suite; no external test module
 
 ### Core Namespace Organization
 
@@ -75,82 +75,82 @@ The Respo project is a virtual DOM library written in Calcit-js, containing:
 
 ## Essential Calcit CLI Commands for Development
 
-CLI 套件完整参考见 `cr docs agents --full`。以下只列出 Respo 开发中高频使用的命令。
+CLI 套件完整参考见 `calcit docs agents --full`。以下只列出 Respo 开发中高频使用的命令。
 
 ### 探索与定位
 
 ```bash
-cr query ns                            # 列出命名空间
-cr query ns respo.core                 # 阅读命名空间详情
-cr query defs respo.core               # 列出定义
-cr query peek 'respo.core/render!'     # 轻量签名预览
-cr query def 'respo.core/render!'      # 完整定义
-cr query find render!                  # 全局搜索
-cr query usages 'respo.core/render!'   # 查找引用
+calcit query ns                            # 列出命名空间
+calcit query ns respo.core                 # 阅读命名空间详情
+calcit query defs respo.core               # 列出定义
+calcit query peek 'respo.core/render!'     # 轻量签名预览
+calcit query def 'respo.core/render!'      # 完整定义
+calcit query find render!                  # 全局搜索
+calcit query usages 'respo.core/render!'   # 查找引用
 ```
 
 ### 结构化编辑
 
 ```bash
 # 看结构
-cr tree show 'respo.app.updater/updater' --path  --depth 1
-cr tree show 'respo.app.updater/updater' --path @2 --depth 1
+calcit tree show 'respo.app.updater/updater' --path  --depth 1
+calcit tree show 'respo.app.updater/updater' --path @2 --depth 1
 
 # 改内容（--code 自动识别 JSON vs Cirru）
-cr tree replace 'respo.app.updater/updater' --path @2.1.0 --code '["fn", ["x"], "x"]'
+calcit tree replace 'respo.app.updater/updater' --path @2.1.0 --code '["fn", ["x"], "x"]'
 
 # 定义操作
-cr edit def 'respo.demo/greet' --code '["defn", "greet", ["name"], ["println", "|Hello", "name"]]'
-cr edit imports respo.demo --code '[["respo.core", ":refer", ["div", "span"]]]'
-cr edit rm-def 'respo.demo/old-fn'
+calcit edit def 'respo.demo/greet' --code '["defn", "greet", ["name"], ["println", "|Hello", "name"]]'
+calcit edit imports respo.demo --code '[["respo.core", ":refer", ["div", "span"]]]'
+calcit edit rm-def 'respo.demo/old-fn'
 ```
 
 ### 项目配置
 
 ```bash
-cr config show
-cr config version "0.16.22"
-cr config init-fn "respo.main/main!"
+calcit config show
+calcit config version "0.16.22"
+calcit config init-fn "respo.main/main!"
 ```
 
 ### 架构探索
 
 ```bash
 # 调用图分析
-cr analyze call-graph --root 'respo.app.core/render-app!' --ns-prefix respo.app. --max-depth 3
+calcit analyze call-graph --root 'respo.app.core/render-app!' --ns-prefix respo.app. --max-depth 3
 
 # 模式搜索
-cr query search-expr '>> states'
-cr query search-expr 'd! cursor'
-cr query search-expr 'fn (e d!)'
+calcit query search-expr '>> states'
+calcit query search-expr 'd! cursor'
+calcit query search-expr 'fn (e d!)'
 ```
 
 ---
 
 ## Development Workflow for LLM Agents
 
-CLI 命令的详细用法见 `cr docs agents --full`。以下是 Respo 开发常用的工作流模板：
+CLI 命令的详细用法见 `calcit docs agents --full`。以下是 Respo 开发常用的工作流模板：
 
 ```bash
 # 1. 探索
-cr query ns 'respo.app.updater'
-cr query usages 'respo.core/render!'
+calcit query ns 'respo.app.updater'
+calcit query usages 'respo.core/render!'
 
 # 2. 定位 → 修改 → 验证
-cr tree show 'respo.app.updater/updater' --path  --depth 1
-cr tree replace 'namespace/function-name' --path @2.1.0 --code '["new", "code"]'
-cr tree show 'namespace/function-name' --path @2.1
+calcit tree show 'respo.app.updater/updater' --path  --depth 1
+calcit tree replace 'namespace/function-name' --path @2.1.0 --code '["new", "code"]'
+calcit tree show 'namespace/function-name' --path @2.1
 
 # 3. 编译与运行
-cr --check-only
-cr js --check-only
-cr
-cr --watch
+calcit --check-only
+calcit js --check-only
+calcit
+calcit --watch
 
 # 4. 排错
-cr query error
-cr query find problem-symbol
-cr query def 'namespace/definition'
+calcit query error
+calcit query find problem-symbol
+calcit query def 'namespace/definition'
 ```
 
 ---
@@ -173,7 +173,7 @@ let
         respo.core/<> "|Content"
 ```
 
-**JSON AST (Write - for `cr edit`):**
+**JSON AST (Write - for `calcit edit`):**
 
 ```json
 [
@@ -352,7 +352,7 @@ let
 
 ```bash
 # Basic example (thread-first pipeline avoids bash escaping issues)
-cr eval 'thread-first ({} (:display "|flex") (:color "|red") (:padding "|10px")) .to-list respo.render.dom/style->string println' --dep respo.calcit/
+calcit eval 'thread-first ({} (:display "|flex") (:color "|red") (:padding "|10px")) .to-list respo.render.dom/style->string println' --dep respo.calcit/
 # Output: padding:10px;color:red;display:flex;
 ```
 
@@ -459,16 +459,16 @@ js/window.setTimeout
 **Type slots** let the application choose the concrete `Op` enum accepted by Respo's `dispatch!` callbacks without passing a generic through every component API. The canonical, reusable guide is [Typed dispatch with type slots](./guide/type-slots.md); when Respo is installed, reopen it with:
 
 ```bash
-cr docs search 'typed dispatch' --module respo.calcit
-cr docs read type-slots.md --full --module respo.calcit
+calcit docs search 'typed dispatch' --module respo.calcit
+calcit docs read type-slots.md --full --module respo.calcit
 ```
 
 Bind the slot in the configuration for every entry that builds Respo components:
 
 ```bash
-cr config set-type-slot :dispatch-op app.schema/Op
-cr config set-type-slot --entry test :dispatch-op app.test-schema/TestOp
-cr config type-slots
+calcit config set-type-slot :dispatch-op app.schema/Op
+calcit config set-type-slot --entry test :dispatch-op app.test-schema/TestOp
+calcit config type-slots
 ```
 
 The path must be a full `namespace/definition`. Named entries are independent and do not inherit the default binding. No `bind-type` call or `with-type-slot` wrapper belongs in `main!`.
@@ -481,7 +481,7 @@ button $ {}
     d! $ :: :toggle (:id task)
 ```
 
-The compiler resolves this like `%:: app.schema/Op :toggle ...` and checks the variant name, payload count, and payload types. If shorthand is not checked, inspect `cr config type-slots` and the callback schema; a dynamic callback provides no enum evidence.
+The compiler resolves this like `%:: app.schema/Op :toggle ...` and checks the variant name, payload count, and payload types. If shorthand is not checked, inspect `calcit config type-slots` and the callback schema; a dynamic callback provides no enum evidence.
 
 ---
 
@@ -493,12 +493,12 @@ The compiler resolves this like `%:: app.schema/Op :toggle ...` and checks the v
 
 ```bash
 # Check if render-app! is being called
-cr query find render-app!
-cr query usages 'respo.main/render-app!'
+calcit query find render-app!
+calcit query usages 'respo.main/render-app!'
 
 # Verify store watcher is set up
-cr query def 'respo.app.core/dispatch!'
-cr query def 'respo.main/main!'
+calcit query def 'respo.app.core/dispatch!'
+calcit query def 'respo.main/main!'
 ```
 
 **Solution Pattern**:
@@ -523,13 +523,13 @@ defn reload! ()
 
 ```bash
 # Check updater function logic
-cr query def 'respo.app.updater/updater'
+calcit query def 'respo.app.updater/updater'
 
 # Verify dispatch! is calling updater correctly
-cr query def 'respo.app.core/dispatch!'
+calcit query def 'respo.app.core/dispatch!'
 
 # Check the state path in component
-cr query def 'respo.app.comp.container/comp-container'
+calcit query def 'respo.app.comp.container/comp-container'
 ```
 
 **Solution Pattern**:
@@ -552,11 +552,11 @@ dispatch! [:action-name actual-value]
 
 ```bash
 # Check effect definition
-cr query def 'respo.core/defeffect'  # macro documentation
+calcit query def 'respo.core/defeffect'  # macro documentation
 
 # Find effect in component
-cr query find my-effect
-cr query usages 'respo.app.comp.task/my-effect'
+calcit query find my-effect
+calcit query usages 'respo.app.comp.task/my-effect'
 ```
 
 **Solution Pattern**:
@@ -584,10 +584,10 @@ defeffect my-effect (initial-value)
 
 ```bash
 # Check reload! function
-cr query def 'respo.main/reload!'
+calcit query def 'respo.main/reload!'
 
 # Verify clear-cache! is called
-cr query usages 'respo.core/clear-cache!'
+calcit query usages 'respo.core/clear-cache!'
 ```
 
 **Solution Pattern**:
@@ -606,30 +606,30 @@ defn reload! ()
 
 ## Modification Strategy: Safe Editing Guide
 
-结构化编辑操作的完整参考见 `cr docs agents --full`。修改前先执行：
+结构化编辑操作的完整参考见 `calcit docs agents --full`。修改前先执行：
 
 ```bash
-cr query ns namespace-name
-cr query peek '<namespace/def>'
-cr tree show '<namespace/def>' --path @  --depth 2
-cr tree show '<namespace/def>' --path @2 --depth 2
-cr tree replace '<namespace/def>' --path @2.1.0 --code 'quote |new-value'
-cr tree show '<namespace/def>' --path @2.1  # 确认
-cr --check-only
+calcit query ns namespace-name
+calcit query peek '<namespace/def>'
+calcit tree show '<namespace/def>' --path @  --depth 2
+calcit tree show '<namespace/def>' --path @2 --depth 2
+calcit tree replace '<namespace/def>' --path @2.1.0 --code 'quote |new-value'
+calcit tree show '<namespace/def>' --path @2.1  # 确认
+calcit --check-only
 ```
 
 ---
 
 ## Testing and Validation
 
-详见 `cr docs agents --full`。常用验证命令：
+详见 `calcit docs agents --full`。常用验证命令：
 
 ```bash
-cr --check-only           # 语法检查
-cr js --check-only        # JS 编译检查
-cr                        # 运行
-cr query error            # 查看错误
-cr query def 'respo.test.main/test-fn'
+calcit --check-only           # 语法检查
+calcit js --check-only        # JS 编译检查
+calcit                        # 运行
+calcit query error            # 查看错误
+calcit query def 'respo.test.main/test-fn'
 ```
 
 ---
@@ -638,21 +638,21 @@ cr query def 'respo.test.main/test-fn'
 
 ### ⚠️ Critical Rules
 
-1. **NEVER directly edit `calcit.cirru`** — 使用 `cr edit` 命令操作 AST
+1. **NEVER directly edit `calcit.cirru`** — 使用 `calcit edit` 命令操作 AST
 2. **ALWAYS use relative paths** for documentation links
-3. **运行 `cr --check-only` 验证语法**
-4. **修改后立即验证**：`cr tree show` + `cr --check-only`
-5. **优先 `cr query peek`** 看签名，需要时再用 `cr query def`
+3. **运行 `calcit --check-only` 验证语法**
+4. **修改后立即验证**：`calcit tree show` + `calcit --check-only`
+5. **优先 `calcit query peek`** 看签名，需要时再用 `calcit query def`
 
 ### 🎯 Optimization Tips for Token Usage
 
 ```bash
-cr query peek 'respo.core/defcomp'              # 5-10 行签名
-cr query def 'respo.app.updater/updater'        # 完整 AST
-cr tree show 'ns/def' --path @2.1 --depth 1            # 浅层
-cr tree show 'ns/def' --path @2.1 --depth 3            # 中层
-cr query find my-function                       # 先搜再深入
-cr query usages 'ns/def'
+calcit query peek 'respo.core/defcomp'              # 5-10 行签名
+calcit query def 'respo.app.updater/updater'        # 完整 AST
+calcit tree show 'ns/def' --path @2.1 --depth 1            # 浅层
+calcit tree show 'ns/def' --path @2.1 --depth 3            # 中层
+calcit query find my-function                       # 先搜再深入
+calcit query usages 'ns/def'
 ```
 
 ### 📖 Documentation Strategy
@@ -664,22 +664,22 @@ When stuck, use these resources in order:
 3. [Beginner Guide](./beginner-guide.md) - Conceptual introduction
 4. [API Reference](./api.md) - Specific API documentation
 5. [Guide docs](./guide/) - Detailed topics
-6. `cr docs api <keyword>` - Language documentation
-7. Project code itself: `cr query ns <namespace>`
+6. `calcit docs api <keyword>` - Language documentation
+7. Project code itself: `calcit query ns <namespace>`
 
 ---
 
 ## Quick Reference
 
-完整参考见 `cr docs agents --full`。Respo 常用命令：
+完整参考见 `calcit docs agents --full`。Respo 常用命令：
 
 ```bash
-cr query def 'respo.core/render!'
-cr query usages 'respo.core/render!'
-cr tree show 'ns/def' --path @2.1 --depth 1
-cr edit def 'ns/def' --code '["defn", "func", [], "body"]'
-cr tree replace 'ns/def' --path @2.1.0 --code 'quote |value'
-cr --check-only
+calcit query def 'respo.core/render!'
+calcit query usages 'respo.core/render!'
+calcit tree show 'ns/def' --path @2.1 --depth 1
+calcit edit def 'ns/def' --code '["defn", "func", [], "body"]'
+calcit tree replace 'ns/def' --path @2.1.0 --code 'quote |value'
+calcit --check-only
 ```
 
 ### File Paths in Documentation
