@@ -514,19 +514,16 @@
                         :done? $ unsafe-coerce done? Bool
                       %none
                 (map? data)
-                  let
+                  option:let
                       id $ get data :id
                       text $ get data :text
                       done? $ get data :done?
                     if
-                      and (option:some? id) (option:some? text) (option:some? done?)
-                        string? $ option:unwrap id
-                        string? $ option:unwrap text
-                        bool? $ option:unwrap done?
+                      and (string? id) (string? text) (bool? done?)
                       %some $ %{} Task
-                        :id $ unsafe-coerce (option:unwrap id) String
-                        :text $ unsafe-coerce (option:unwrap text) String
-                        :done? $ unsafe-coerce (option:unwrap done?) Bool
+                        :id $ unsafe-coerce id String
+                        :text $ unsafe-coerce text String
+                        :done? $ unsafe-coerce done? Bool
                       %none
                 true %none
           :examples $ []
