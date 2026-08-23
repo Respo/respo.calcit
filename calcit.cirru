@@ -209,7 +209,7 @@
           :code $ quote
             defeffect effect-focus (pattern) (action parent at-place?)
               when (= action :mount)
-                if-let
+                when-let
                   target $ js-nullish->option (js/document.querySelector pattern)
                   .!select target
           :examples $ []
@@ -514,19 +514,16 @@
                         :done? $ unsafe-coerce done? Bool
                       %none
                 (map? data)
-                  let
+                  option:let
                       id $ get data :id
                       text $ get data :text
                       done? $ get data :done?
                     if
-                      and (option:some? id) (option:some? text) (option:some? done?)
-                        string? $ option:unwrap id
-                        string? $ option:unwrap text
-                        bool? $ option:unwrap done?
+                      and (string? id) (string? text) (bool? done?)
                       %some $ %{} Task
-                        :id $ unsafe-coerce (option:unwrap id) String
-                        :text $ unsafe-coerce (option:unwrap text) String
-                        :done? $ unsafe-coerce (option:unwrap done?) Bool
+                        :id $ unsafe-coerce id String
+                        :text $ unsafe-coerce text String
+                        :done? $ unsafe-coerce done? Bool
                       %none
                 true %none
           :examples $ []
@@ -1753,13 +1750,16 @@
           :code $ quote
             defn make-render-scheduler (render! enqueue-option)
               let
-                  render-fn $ expect-function render! |[Respo/make-render-scheduler]-expected-render-function
+                  render-fn $ unsafe-coerce (expect-function render! |[Respo/make-render-scheduler]-expected-render-function) Fn
                   queue! $ option:fold enqueue-option
                     fn () shared/queue-microtask!
-                    fn (enqueue!) (expect-function enqueue! "|[Respo/make-render-scheduler] expected enqueue! as a function or nil")
+                    fn (enqueue!)
+                      unsafe-coerce (expect-function enqueue! "|[Respo/make-render-scheduler] expected enqueue! as a function or nil") Fn
                   *queued? $ atom false
-                fn () $ when (not @*queued?) (reset! *queued? true)
-                  queue! $ fn () (reset! *queued? false) (render-fn)
+                fn () $ do
+                  when (not @*queued?) (reset! *queued? true)
+                    queue! $ fn () (reset! *queued? false) (render-fn)
+                  , nil
           :examples $ []
             quote $ make-render-scheduler
               fn () nil
@@ -2123,24 +2123,26 @@
             defmacro defstyle (style-name rules)
               assert "|expected symbol of style-name" $ symbol? style-name
               warn-style-literals rules
-              if-let
+              when-let
                 query0 $ nth rules 1
-                assert "|expected rule 0 to be hashmap or symbol, use `defstyle` like:\n\n```cirru\ndefstyle style-demo $ {}\n  |& $ {}\n    :color :red\n```\n\nwhere `&` refers to current element.\n" $ if-let
-                  rule0 $ nth query0 1
-                  or (symbol? rule0)
-                    and (list? rule0)
-                      &let
-                        h $ option:unwrap (nth rule0 0)
-                        or (&= '{} h) (&= 'merge h)
-              if-let
+                assert "|expected rule 0 to be hashmap or symbol, use `defstyle` like:\n\n```cirru\ndefstyle style-demo $ {}\n  |& $ {}\n    :color :red\n```\n\nwhere `&` refers to current element.\n" $ option:fold (nth query0 1)
+                  fn () true
+                  fn (rule0)
+                    or (symbol? rule0)
+                      and (list? rule0)
+                        &let
+                          h $ option:unwrap (nth rule0 0)
+                          or (&= '{} h) (&= 'merge h)
+              when-let
                 query1 $ nth rules 2
-                assert "|expected rule 1 to be hashmap or symbol, use `defstyle` like:\n\n```cirru\ndefstyle style-demo $ {}\n  |& $ {} (:color :red)\n  \"|&:hover\" $ {}\n    :background-color :blue\n```\n\nwhere `&` refers to current element" $ if-let
-                  rule1 $ nth query1 1
-                  or (symbol? rule1)
-                    and (list? rule1)
-                      &let
-                        h $ option:unwrap (nth rule1 0)
-                        or (&= '{} h) (&= 'merge h)
+                assert "|expected rule 1 to be hashmap or symbol, use `defstyle` like:\n\n```cirru\ndefstyle style-demo $ {}\n  |& $ {} (:color :red)\n  \"|&:hover\" $ {}\n    :background-color :blue\n```\n\nwhere `&` refers to current element" $ option:fold (nth query1 1)
+                  fn () true
+                  fn (rule1)
+                    or (symbol? rule1)
+                      and (list? rule1)
+                        &let
+                          h $ option:unwrap (nth rule1 0)
+                          or (&= '{} h) (&= 'merge h)
               let
                   style-name-str $ str
                     -> (turn-string style-name) (&str:replace |! |_EX_) (&str:replace |? |_QU_)
@@ -2283,19 +2285,21 @@
                       states $ &struct:nth store 1 :states
                       state-option $ get-in states path
                     assoc store :states $ assoc-in states path
-                      option:fold state-option
-                        fn () $ do (js/console.warn |:states-kv-missing-state) nil
-                        fn (state)
+                      if (state-option .some?)
+                        let
+                            state $ state-option .unwrap
                           if (map? state) (assoc state k v)
                             do (js/console.warn |:states-kv-invalid-state state) state
+                        do (js/console.warn |:states-kv-missing-state) nil
                   let
                       map-path $ concat ([] :states) path
                       state-option $ get-in store map-path
-                    assoc-in store map-path $ option:fold state-option
-                      fn () $ do (js/console.warn |:states-kv-missing-state) nil
-                      fn (state)
+                    assoc-in store map-path $ if (state-option .some?)
+                      let
+                          state $ state-option .unwrap
                         if (map? state) (assoc state k v)
                           do (js/console.warn |:states-kv-invalid-state state) state
+                      do (js/console.warn |:states-kv-missing-state) nil
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'T)
@@ -3664,7 +3668,7 @@
                             collect! $ :: :effect-before-update next-coord n-coord
                               fn (target)
                                 method (effect-args old-effect) ([] :unmount target false)
-                      if-let (new-effect new-effect-option)
+                      when-let (new-effect new-effect-option)
                         when (= action :update)
                           let
                               method $ effect-method new-effect
@@ -3960,7 +3964,8 @@
           :code $ quote
             defn apply-dom-changes (changes mount-point listener-builder)
               let
-                  get-root $ fn () (.-firstElementChild mount-point)
+                  get-root $ fn ()
+                    unsafe-coerce (.-firstElementChild mount-point) 'respo.dom/DomElement
                 &doseq (op changes)
                   let-sugar
                       n-coord $ option:unwrap (nth op 2)
