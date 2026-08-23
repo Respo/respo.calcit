@@ -707,8 +707,10 @@
                   :inner-text $ str tip "|: " (grab-info data)
                   :style style-map
                   :on-click $ fn (e d!)
-                    if (js-present? js/window.devtoolsFormatters) (js/console.log data)
-                      js/console.log $ to-js-data data
+                    do
+                      if (js-present? js/window.devtoolsFormatters) (js/console.log data)
+                        js/console.log $ to-js-data data
+                      , nil
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'respo.schema/Component)
