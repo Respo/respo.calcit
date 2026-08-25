@@ -2243,10 +2243,15 @@
                         warn-style-literals value
                         recur $ inc idx
                   , &unit
+                , &unit
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
               :args $ [] 'Dynamic
+          :tests $ []
+            %{} 'TestEntry (:name |returns-unit-for-non-enum)
+              :code $ quote
+                assert= &unit $ warn-style-literals |plain
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote
           ns respo.css $ :require
