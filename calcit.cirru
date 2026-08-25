@@ -4166,7 +4166,7 @@
         |ResourceState $ %{} 'CodeEntry (:doc "|Immutable resource state record. :data and :error are application payload boundaries; :status and :request-id drive deterministic reducer transitions.")
           :code $ quote
             defstruct ResourceState (:status 'Tag)
-              :request-id $ :: 'Optional 'Number
+              :request-id $ :: 'Option 'Number
               :data 'Dynamic
               :error 'Dynamic
           :examples $ []
@@ -4234,7 +4234,8 @@
         |resource-idle $ %{} 'CodeEntry (:doc "|Creates an immutable idle ResourceState with optional initial data.")
           :code $ quote
             defn resource-idle (initial-data-option)
-              %{} ResourceState (:status :idle) (:request-id nil)
+              %{} ResourceState (:status :idle)
+                :request-id $ %none
                 :data $ option:unwrap-or initial-data-option nil
                 :error nil
           :examples $ []
@@ -4286,18 +4287,22 @@
                       if
                         or (= :ready status) (= :refreshing status)
                         , :refreshing :pending
-                    :request-id request-id
+                    :request-id $ %some request-id
                     :data $ :data state
                     :error nil
                 (:ready request-id data)
                   if
-                    = (:request-id state) request-id
-                    %{} ResourceState (:status :ready) (:request-id request-id) (:data data) (:error nil)
+                    = (:request-id state) (%some request-id)
+                    %{} ResourceState (:status :ready)
+                      :request-id $ %some request-id
+                      :data data
+                      :error nil
                     , state
                 (:failed request-id error)
                   if
-                    = (:request-id state) request-id
-                    %{} ResourceState (:status :error) (:request-id request-id)
+                    = (:request-id state) (%some request-id)
+                    %{} ResourceState (:status :error)
+                      :request-id $ %some request-id
                       :data $ :data state
                       :error error
                     , state
@@ -4338,6 +4343,19 @@
                     {} $ :value |first
                     &struct:nth failed 0 :data
                   assert |nil-data-can-refresh $ = :refreshing (&struct:nth refreshing-nil 3 :status)
+            %{} 'TestEntry (:name |stores-request-id-as-option)
+              :code $ quote
+                let
+                    idle $ resource-idle (%none)
+                    pending $ resource-reducer idle (resource-started 7)
+                    ready $ resource-reducer pending (resource-ready 7 |ok)
+                    failed $ resource-reducer pending (resource-failed 7 |offline)
+                    stale $ resource-reducer pending (resource-ready 8 |stale)
+                  assert= (%none) (&struct:nth idle 2 :request-id)
+                  assert= (%some 7) (&struct:nth pending 2 :request-id)
+                  assert= (%some 7) (&struct:nth ready 2 :request-id)
+                  assert= (%some 7) (&struct:nth failed 2 :request-id)
+                  assert |stale-result-keeps-option-state $ identical? pending stale
         |resource-started $ %{} 'CodeEntry (:doc "|Creates a :started ResourceAction for a numeric request id.")
           :code $ quote
             defn resource-started (request-id)
