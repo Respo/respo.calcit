@@ -707,7 +707,7 @@
                     do
                       if (js-present? js/window.devtoolsFormatters) (js/console.log data)
                         js/console.log $ to-js-data data
-                      , nil
+                      , &unit
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'respo.schema/Component)
@@ -795,7 +795,7 @@
                   listener-builder $ fn (event-name) (build-listener event-name deliver-event)
                 set! (.-innerHTML mount-point) |
                 .!appendChild mount-point $ make-element entire-dom listener-builder ([])
-              ;nil
+              do &unit
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
@@ -1759,7 +1759,7 @@
                 fn () $ do
                   when (not @*queued?) (reset! *queued? true)
                     queue! $ fn () (reset! *queued? false) (render-fn)
-                  , nil
+                  , &unit
           :examples $ []
             quote $ make-render-scheduler
               fn () nil
@@ -1943,7 +1943,7 @@
         |rerender-app! $ %{} 'CodeEntry (:doc "|Diffs the new element against the global element and patches the DOM. Used internally by render!.")
           :code $ quote
             defn rerender-app! (target element *dispatch-fn)
-              if (identical? @*global-element element) nil $ let
+              if (identical? @*global-element element) &unit $ let
                   deliver-event $ build-deliver-event *global-element *dispatch-fn
                   changes $ &buf-list:new
                   collect! $ fn (op) (&buf-list:push changes op)
@@ -2234,7 +2234,7 @@
                       idx 1
                     if
                       >= idx $ count x
-                      , nil $ let
+                      , &unit $ let
                           pair $ option:unwrap (nth x idx)
                           value $ option:unwrap (nth pair 1)
                         when
@@ -2242,11 +2242,16 @@
                           println "|[Respo] defstyle warning: CSS value has extra tokens. In Cirru, an unquoted multi-word CSS value is parsed as multiple AST nodes; use a quoted string such as |0 auto or |1px solid ... ."
                         warn-style-literals value
                         recur $ inc idx
-                  , nil
+                  , &unit
+                , &unit
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
               :args $ [] 'Dynamic
+          :tests $ []
+            %{} 'TestEntry (:name |returns-unit-for-non-enum)
+              :code $ quote
+                assert= &unit $ warn-style-literals |plain
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote
           ns respo.css $ :require
@@ -3303,9 +3308,9 @@
               let
                   was-empty? $ empty? old-style
                   now-empty? $ empty? new-style
-                if (identical? old-style new-style) nil $ cond
+                if (identical? old-style new-style) &unit $ cond
                     and was-empty? now-empty?
-                    , nil
+                    , &unit
                   (and was-empty? (not now-empty?))
                     let
                         entry $ option:unwrap (first new-style)
@@ -3898,7 +3903,7 @@
                 ->
                   unsafe-coerce (.-parentElement target) JsObject
                   .!insertBefore new-element target
-              ;nil
+              do &unit
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
@@ -3943,7 +3948,7 @@
                 aset
                   unsafe-coerce (.-style target) JsObject
                   , style-name style-value
-              ;nil
+              do &unit
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
@@ -3955,7 +3960,7 @@
               &let
                 new-element $ make-element op listener-builder coord
                 .append-child! target new-element
-              ;nil
+              do &unit
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
@@ -3969,7 +3974,9 @@
                 &doseq (op changes)
                   let-sugar
                       n-coord $ option:unwrap (nth op 2)
-                      target $ find-target (get-root) n-coord
+                      target $ find-target
+                        unsafe-coerce (get-root) 'respo.dom/DomElement
+                        , n-coord
                     match op
                       (:replace-prop _coord _n-coord op-data)
                         replace-prop target
@@ -4031,7 +4038,7 @@
                   unsafe-coerce (.-parentElement target) JsObject
                   .!insertBefore new-element target
                 .!remove target
-              ;nil
+              do &unit
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
@@ -4057,7 +4064,7 @@
                         not= prop-value $ .-value target
                         js-set target prop-name prop-value
                       js-set target prop-name prop-value
-                ;nil
+                do &unit
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
@@ -4071,7 +4078,7 @@
                 aset
                   unsafe-coerce (.-style target) JsObject
                   , style-name $ get-style-value v style-name
-              ;nil
+              do &unit
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
@@ -4081,7 +4088,7 @@
           :code $ quote
             defn rm-element (target op)
               if (some? target) (.remove! target) (js/console.warn "|Respo: Element already removed! Probably by :inner-text.")
-              ;nil
+              do &unit
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
@@ -4091,7 +4098,7 @@
             defn rm-event (target event-name)
               &let
                 event-prop $ event->prop event-name
-                js-set target event-prop nil
+                do (js-set target event-prop nil) &unit
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
@@ -4126,7 +4133,9 @@
             defn rm-style (target op)
               &let
                 style-name $ dashed->camel (turn-string op)
-                -> (.-style target) (js-set style-name nil)
+                do
+                  -> (.-style target) (js-set style-name nil)
+                  , &unit
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
@@ -4162,7 +4171,7 @@
         |ResourceState $ %{} 'CodeEntry (:doc "|Immutable resource state record. :data and :error are application payload boundaries; :status and :request-id drive deterministic reducer transitions.")
           :code $ quote
             defstruct ResourceState (:status 'Tag)
-              :request-id $ :: 'Optional 'Number
+              :request-id $ :: 'Option 'Number
               :data 'Dynamic
               :error 'Dynamic
           :examples $ []
@@ -4230,7 +4239,8 @@
         |resource-idle $ %{} 'CodeEntry (:doc "|Creates an immutable idle ResourceState with optional initial data.")
           :code $ quote
             defn resource-idle (initial-data-option)
-              %{} ResourceState (:status :idle) (:request-id nil)
+              %{} ResourceState (:status :idle)
+                :request-id $ %none
                 :data $ option:unwrap-or initial-data-option nil
                 :error nil
           :examples $ []
@@ -4282,18 +4292,22 @@
                       if
                         or (= :ready status) (= :refreshing status)
                         , :refreshing :pending
-                    :request-id request-id
+                    :request-id $ %some request-id
                     :data $ :data state
                     :error nil
                 (:ready request-id data)
                   if
-                    = (:request-id state) request-id
-                    %{} ResourceState (:status :ready) (:request-id request-id) (:data data) (:error nil)
+                    = (:request-id state) (%some request-id)
+                    %{} ResourceState (:status :ready)
+                      :request-id $ %some request-id
+                      :data data
+                      :error nil
                     , state
                 (:failed request-id error)
                   if
-                    = (:request-id state) request-id
-                    %{} ResourceState (:status :error) (:request-id request-id)
+                    = (:request-id state) (%some request-id)
+                    %{} ResourceState (:status :error)
+                      :request-id $ %some request-id
                       :data $ :data state
                       :error error
                     , state
@@ -4334,6 +4348,19 @@
                     {} $ :value |first
                     &struct:nth failed 0 :data
                   assert |nil-data-can-refresh $ = :refreshing (&struct:nth refreshing-nil 3 :status)
+            %{} 'TestEntry (:name |stores-request-id-as-option)
+              :code $ quote
+                let
+                    idle $ resource-idle (%none)
+                    pending $ resource-reducer idle (resource-started 7)
+                    ready $ resource-reducer pending (resource-ready 7 |ok)
+                    failed $ resource-reducer pending (resource-failed 7 |offline)
+                    stale $ resource-reducer pending (resource-ready 8 |stale)
+                  assert= (%none) (&struct:nth idle 2 :request-id)
+                  assert= (%some 7) (&struct:nth pending 2 :request-id)
+                  assert= (%some 7) (&struct:nth ready 2 :request-id)
+                  assert= (%some 7) (&struct:nth failed 2 :request-id)
+                  assert |stale-result-keeps-option-state $ identical? pending stale
         |resource-started $ %{} 'CodeEntry (:doc "|Creates a :started ResourceAction for a numeric request id.")
           :code $ quote
             defn resource-started (request-id)
@@ -4445,7 +4472,7 @@
           :examples $ []
           :schema $ :: 'Enum
         |EventHandler $ %{} 'CodeEntry (:doc "|Event callback signature. Respo delivers an immutable map produced by event->edn together with the application dispatch function.")
-          :code $ quote (def EventHandler nil)
+          :code $ quote (def EventHandler &unit)
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
@@ -4574,7 +4601,7 @@
               js/setTimeout
                 fn () $ assert |all-async-checks-ran (= 3 @*async-checks)
                 , 0
-              , nil
+              , &unit
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
