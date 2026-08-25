@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "@calcit/procs": "0.13.44"
+    "@calcit/procs": "0.13.45"
   },
   "scripts": {
     "test": "calcit calcit.cirru test --require-match --summary-only --format json",
