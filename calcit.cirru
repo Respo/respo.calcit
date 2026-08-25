@@ -1225,7 +1225,11 @@
             quote $ defcomp comp-with-effect (value)
               [] (effect-log value)
                 div ({}) (<> value)
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Macro
+            {} (:rest 'Syntax)
+              :capabilities $ #{}
+              :expansion $ :: 'Definition 'Fn
+              :required $ [] 'SyntaxSymbol 'SyntaxList
         |defeffect $ %{} 'CodeEntry (:doc "|Macro for defining component effects.\n\nThe generated effect receives lifecycle information such as `action`, the root element, and `at-place?`, and is typically used inside a component effect vector like `[] (effect ...) child-tree`.\n\nSupported actions are `:mount`, `:before-update`, `:update`, and `:unmount`.")
           :code $ quote
             defmacro defeffect (effect-name args params & body)
@@ -1248,7 +1252,11 @@
           :examples $ []
             quote $ defeffect log-message (message) (action el at-place?)
               if (= action :mount) (js/console.log message)
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Macro
+            {} (:rest 'Syntax)
+              :capabilities $ #{}
+              :expansion $ :: 'Definition 'Fn
+              :required $ [] 'SyntaxSymbol 'SyntaxList 'SyntaxList
         |defplugin $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defmacro defplugin (x params & body)
@@ -1257,7 +1265,11 @@
               assert "|expected some result" $ > (count body) 0
               quasiquote $ defn ~x ~params ~@body
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Macro
+            {} (:rest 'Syntax)
+              :capabilities $ #{}
+              :expansion $ :: 'Definition 'Fn
+              :required $ [] 'SyntaxSymbol 'SyntaxList
         |div $ %{} 'CodeEntry (:doc "|Create a `<div>` virtual element.\n\nThe first argument is an optional props map. Remaining arguments are child nodes. Put DOM props such as `:class-name`, `:style`, and event handlers in the props map.")
           :code $ quote
             defn div (props & children) (create-element :div props & children)
@@ -1530,7 +1542,12 @@
               fn (_error)
                 div ({}) (<> |Failed)
               div ({}) (<> |Ready)
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Macro
+            {}
+              :capabilities $ #{}
+              :expansion $ :: 'Expr 'Dynamic
+              :required $ [] (:: 'Expr 'Fn)
+              :rest $ :: 'Expr 'Dynamic
           :tests $ []
             %{} 'TestEntry (:name |catches-render-errors)
               :code $ quote
@@ -2000,7 +2017,12 @@
             quote $ show true
               div ({}) (<> |Ready)
               div ({}) (<> |Loading)
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Macro
+            {}
+              :capabilities $ #{}
+              :expansion $ :: 'Expr 'Dynamic
+              :required $ [] (:: 'Expr 'Dynamic)
+              :rest $ :: 'Expr 'Dynamic
           :tests $ []
             %{} 'TestEntry (:name |selects-one-branch)
               :code $ quote
@@ -2187,7 +2209,10 @@
                 |& $ {} (:font-size |14px) (:line-height |1.6) (:color "|hsl(0,0%,20%)")
                 |&::before $ {} (:content "|\"→ \"")
           :schema $ :: 'Macro
-            {} $ :args ([] 'Symbol 'List)
+            {}
+              :capabilities $ #{} :log
+              :expansion $ :: 'Expr 'String
+              :required $ [] 'SyntaxSymbol 'SyntaxList
         |detect-nodejs? $ %{} 'CodeEntry (:doc "|Detects Node.js behind an explicit JavaScript FFI function so nodejs? remains a Boolean value.")
           :code $ quote
             defn detect-nodejs? () $ and (exists? js/process) (= js/process.release.name |node)
