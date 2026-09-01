@@ -178,18 +178,28 @@ Then the state of `comp-demo` would be in global store:
       :data $ {}
 ```
 
-Actually it's still `{:states {}}`, but it's like we got `nil` when you look into `(:demo state)`.
+Actually it is still `{:states {}}`. A missing branch is absence in the deep
+state tree; component code should supply an initial state rather than pass a
+missing value into typed application logic.
 
-You need to handle states operation in the store with function `respo.cursor/update-states`:
+Handle a component-state operation by passing the deep state `Map` to
+`respo.cursor/update-state-tree`. Keep the application Store nominal so the
+compiler can check its `:states` field:
 
 ```cirru.no-check
-defatom *store $ {}
-  :states $ {}
+defstruct Store (:states 'Map)
 
-defn updater (store op op-data)
-  case-default op store
-    :states (update-states store op-data)
+defatom *store $ %{} Store (:states $ {})
+
+defn updater (store op op-id)
+  match op
+    (:states cursor new-state)
+      assoc store :states $ update-state-tree (:states store) cursor new-state
+    _ store
 ```
+
+The older `update-states*` helpers accept Map stores for compatibility. Do not
+pass an arbitrary Struct through them or use a hard-coded `&struct:nth` index.
 
 ### Render to the DOM
 
@@ -202,10 +212,10 @@ defatom *store $ {}
 
 defn id! () (.!valueOf (new js/Date))
 
-defn dispatch! (op op-data)
+defn dispatch! (op)
   let
       op-id $ id!
-      new-store (updater @*store op op-data op-id)
+      new-store (updater @*store op op-id)
     reset! *store new-store
 
 def mount-target (js/document.querySelector "|#app")

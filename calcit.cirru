@@ -557,9 +557,12 @@
           :code $ quote
             defn updater (store op op-id) (; println store op) (assert-type store 'respo.app.schema/Store)
               match op
-                (:states cursor s) (update-states store cursor s)
-                (:states-kv cursor k v) (update-states-kv store cursor k v)
-                (:states-merge cursor s o) (update-states-merge store cursor s o)
+                (:states cursor s)
+                  assoc store :states $ update-state-tree (:states store) cursor s
+                (:states-kv cursor k v)
+                  assoc store :states $ update-state-tree-kv (:states store) cursor k v
+                (:states-merge cursor s o)
+                  assoc store :states $ update-state-tree-merge (:states store) cursor s o
                 (:add text)
                   update store :tasks $ fn (tasks)
                     assert-type tasks $ :: 'List 'respo.app.schema/Task
@@ -568,15 +571,21 @@
                   update store :tasks $ fn (tasks)
                     -> tasks $ filter
                       fn (task)
-                        not $ = (&struct:nth task 1 :id) task-id
+                        hint-fn $ {}
+                          :args $ [] 'respo.app.schema/Task
+                          :return 'Bool
+                        not $ = (:id task) task-id
                 (:clear)
                   assoc store :tasks $ []
                 (:update task-id text)
                   update store :tasks $ fn (tasks)
                     -> tasks $ map
                       fn (task)
+                        hint-fn $ {}
+                          :args $ [] 'respo.app.schema/Task
+                          :return 'respo.app.schema/Task
                         if
-                          = (&struct:nth task 1 :id) task-id
+                          = (:id task) task-id
                           assoc task :text text
                           , task
                 (:hit-first rd)
@@ -591,7 +600,7 @@
                     -> tasks $ map
                       fn (task) (assert-type task 'respo.app.schema/Task)
                         if
-                          = (&struct:nth task 1 :id) task-id
+                          = (:id task) task-id
                           update task :done? not
                           , task
                 _ $ do (eprintln "|Unknown op:" op) store
@@ -602,7 +611,7 @@
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote
           ns respo.app.updater $ :require
-            respo.cursor :refer $ update-states update-states-kv update-states-merge
+            respo.cursor :refer $ update-state-tree update-state-tree-kv update-state-tree-merge
     'respo.comp.global-keydown $ %{} 'FileEntry
       :defs $ {}
         'comp-global-keydown $ %{} 'CodeEntry (:doc |)
@@ -2288,79 +2297,98 @@
             defstruct CursorTestState (:draft 'String) (:locked? 'Bool) (:message 'String)
           :examples $ []
           :schema $ :: 'Enum
+        'update-state-tree $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defn update-state-tree (states cursor new-state)
+              assoc-in states
+                concat cursor $ [] :data
+                , new-state
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'Map)
+              :args $ [] 'Map 'List 'S
+              :generics $ [] 'S
+          :tests $ []
+            %{} 'TestEntry (:name |updates-root-state)
+              :code $ quote
+                let
+                    states1 $ update-state-tree ({}) ([]) :ready
+                  assert= :ready $ option:unwrap
+                    get-in states1 $ [] :data
+              :tags $ #{} :regression :unit
+        'update-state-tree-kv $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defn update-state-tree-kv (states cursor k v)
+              let
+                  path $ concat cursor ([] :data)
+                  state-option $ get-in states path
+                if (option:some? state-option)
+                  let
+                      state $ option:unwrap state-option
+                    if
+                      or (map? state) (struct? state)
+                      assoc-in states path $ assoc state k v
+                      do (eprintln |:states-kv-invalid-state state) states
+                  do (eprintln |:states-kv-missing-state) states
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'Map)
+              :args $ [] 'Map 'List 'K 'V
+              :generics $ [] 'K 'V
+        'update-state-tree-merge $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defn update-state-tree-merge (states cursor state0 changes)
+              let
+                  path $ concat cursor ([] :data)
+                  state $ option:unwrap-or (get-in states path) state0
+                if
+                  or (map? state) (struct? state)
+                  assoc-in states path $ noted |merge-base-latest-state (merge state changes)
+                  do (eprintln |unknown-state-to-merge state) states
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'Map)
+              :args $ [] 'Map 'List 'S 'Map
+              :generics $ [] 'S
+          :tests $ []
+            %{} 'TestEntry (:name |preserves-tree-on-invalid-base)
+              :code $ quote
+                assert= ({})
+                  update-state-tree-merge ({}) ([]) 1 $ {}
+              :tags $ #{} :regression :unit
         'update-states $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn update-states (store cursor new-state)
-              let
-                  path $ concat cursor ([] :data)
-                if (struct? store)
-                  let
-                      states $ &struct:nth store 1 :states
-                    assoc store :states $ assoc-in states path new-state
-                  assoc-in store
-                    concat ([] :states) path
-                    , new-state
+              assoc store :states $ update-state-tree
+                option:unwrap-or (get store :states) ({})
+                , cursor new-state
           :examples $ []
           :schema $ :: 'Fn
-            {} (:return 'T)
-              :args $ [] 'T 'List 'Dynamic
-              :generics $ [] 'T
+            {} (:return 'Map)
+              :args $ [] 'Map 'List 'S
+              :generics $ [] 'S
         'update-states-kv $ %{} 'CodeEntry (:doc "|a quick dirty trick to partially update component state.\n\nnotice: need to handle empty state manually.")
           :code $ quote
             defn update-states-kv (store cursor k v)
-              let
-                  path $ concat cursor ([] :data)
-                if (struct? store)
-                  let
-                      states $ &struct:nth store 1 :states
-                      state-option $ get-in states path
-                    assoc store :states $ assoc-in states path
-                      if (state-option .some?)
-                        let
-                            state $ state-option .unwrap
-                          if (map? state) (assoc state k v)
-                            do (js/console.warn |:states-kv-invalid-state state) state
-                        do (js/console.warn |:states-kv-missing-state) nil
-                  let
-                      map-path $ concat ([] :states) path
-                      state-option $ get-in store map-path
-                    assoc-in store map-path $ if (state-option .some?)
-                      let
-                          state $ state-option .unwrap
-                        if (map? state) (assoc state k v)
-                          do (js/console.warn |:states-kv-invalid-state state) state
-                      do (js/console.warn |:states-kv-missing-state) nil
+              assoc store :states $ update-state-tree-kv
+                option:unwrap-or (get store :states) ({})
+                , cursor k v
           :examples $ []
           :schema $ :: 'Fn
-            {} (:return 'T)
-              :args $ [] 'T 'List 'Dynamic 'Dynamic
-              :generics $ [] 'T
+            {} (:return 'Map)
+              :args $ [] 'Map 'List 'K 'V
+              :generics $ [] 'K 'V
         'update-states-merge $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn update-states-merge (store cursor state0 changes)
-              let
-                  path $ concat cursor ([] :data)
-                if (struct? store)
-                  let
-                      states $ &struct:nth store 1 :states
-                      state $ option:unwrap-or (get-in states path) state0
-                    assoc store :states $ assoc-in states path
-                      if
-                        or (map? state) (struct? state)
-                        noted |merge-base-latest-state $ merge state changes
-                        do (js/console.warn |unknown-state-to-merge state) state
-                  let
-                      map-path $ concat ([] :states) path
-                      state $ option:unwrap-or (get-in store map-path) state0
-                    assoc-in store map-path $ if
-                      or (map? state) (struct? state)
-                      noted |merge-base-latest-state $ merge state changes
-                      do (js/console.warn |unknown-state-to-merge state) state
+              assoc store :states $ update-state-tree-merge
+                option:unwrap-or (get store :states) ({})
+                , cursor state0 changes
           :examples $ []
           :schema $ :: 'Fn
-            {} (:return 'T)
-              :args $ [] 'T 'List 'Dynamic 'Map
-              :generics $ [] 'T
+            {} (:return 'Map)
+              :args $ [] 'Map 'List 'S 'Map
+              :generics $ [] 'S
           :tests $ []
             %{} 'TestEntry (:name |merges-struct-state-repeatedly)
               :code $ quote
