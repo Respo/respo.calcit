@@ -2328,8 +2328,8 @@
                     if
                       or (map? state) (struct? state)
                       assoc-in states path $ assoc state k v
-                      do (js/console.warn |:states-kv-invalid-state state) states
-                  do (js/console.warn |:states-kv-missing-state) states
+                      do (eprintln |:states-kv-invalid-state state) states
+                  do (eprintln |:states-kv-missing-state) states
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Map)
@@ -2341,15 +2341,21 @@
               let
                   path $ concat cursor ([] :data)
                   state $ option:unwrap-or (get-in states path) state0
-                assoc-in states path $ if
+                if
                   or (map? state) (struct? state)
-                  noted |merge-base-latest-state $ merge state changes
-                  do (js/console.warn |unknown-state-to-merge state) state
+                  assoc-in states path $ noted |merge-base-latest-state (merge state changes)
+                  do (eprintln |unknown-state-to-merge state) states
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Map)
               :args $ [] 'Map 'List 'S 'Map
               :generics $ [] 'S
+          :tests $ []
+            %{} 'TestEntry (:name |preserves-tree-on-invalid-base)
+              :code $ quote
+                assert= ({})
+                  update-state-tree-merge ({}) ([]) 1 $ {}
+              :tags $ #{} :regression :unit
         'update-states $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn update-states (store cursor new-state)

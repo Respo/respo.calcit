@@ -149,7 +149,8 @@ The last step is to update global states. A nominal application `Store` should
 keep its Struct field access typed and pass only the intentionally deep state
 tree to `respo.cursor/update-state-tree`:
 Internally `(dispatch! cursor op-data)` will be transformed to `(dispatch! :states ([] cursor op-data))`.
-And then in `updater` you add:
+Define a Store-specific typed helper, then call it from the `:states` branch of
+your `(store op op-id)` updater after matching `(:states cursor new-state)`:
 
 ```cirru
 ns app.demo $ :require

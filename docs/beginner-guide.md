@@ -191,10 +191,11 @@ defstruct Store (:states 'Map)
 
 defatom *store $ %{} Store (:states $ {})
 
-defn updater (store op cursor new-state)
-  case-default op store
-    :states $ assoc store :states
-      update-state-tree (:states store) cursor new-state
+defn updater (store op op-id)
+  match op
+    (:states cursor new-state)
+      assoc store :states $ update-state-tree (:states store) cursor new-state
+    _ store
 ```
 
 The older `update-states*` helpers accept Map stores for compatibility. Do not
@@ -211,10 +212,10 @@ defatom *store $ {}
 
 defn id! () (.!valueOf (new js/Date))
 
-defn dispatch! (op op-data)
+defn dispatch! (op)
   let
       op-id $ id!
-      new-store (updater @*store op op-data op-id)
+      new-store (updater @*store op op-id)
     reset! *store new-store
 
 def mount-target (js/document.querySelector "|#app")

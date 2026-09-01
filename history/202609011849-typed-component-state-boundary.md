@@ -13,5 +13,9 @@ This change makes the deep state tree the explicit reusable boundary:
 - Legacy `update-states*` wrappers are restricted to Map stores.
 - Missing partial-state updates preserve the existing state tree instead of
   inserting `nil`.
+- Merge updates validate the effective base before `assoc-in`; invalid or
+  absent fallback values also preserve the whole state tree.
+- Invalid deep-state diagnostics use cross-backend `eprintln` rather than a raw
+  JavaScript console form, so native tests exercise the same failure paths.
 - The checked quality baseline prevents new Dynamic, nil, unresolved type, or
   unsafe-coerce debt from entering unnoticed.
