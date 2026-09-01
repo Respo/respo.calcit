@@ -145,18 +145,35 @@ let
 
 So `(dispatch! cursor state)` sends the new state.
 
-The last step to to update global states with `respo.cursor/update-states`.
+The last step is to update global states. A nominal application `Store` should
+keep its Struct field access typed and pass only the intentionally deep state
+tree to `respo.cursor/update-state-tree`:
 Internally `(dispatch! cursor op-data)` will be transformed to `(dispatch! :states ([] cursor op-data))`.
 And then in `updater` you add:
 
-```cirru.no-check
-case-default op
-  ; other actions
-  do store
+```cirru
+ns app.demo $ :require
+  respo.cursor :refer $ update-state-tree
 
-  ; "where op-data is [cursor new-state]"
-  :states (update-states store op-data)
+defstruct Store (:states 'Map)
+
+defn update-component-state (store cursor new-state)
+  hint-fn $ {}
+    :args $ [] 'app.demo/Store 'List 'S
+    :return 'app.demo/Store
+    :generics $ [] 'S
+  assoc store :states $ update-state-tree (:states store) cursor new-state
 ```
+
+`update-state-tree`, `update-state-tree-kv`, and
+`update-state-tree-merge` accept the state `Map` directly. This keeps the
+application `Store` nominal and lets Calcit derive the real `:states` field
+index at the call site. Do not use `&struct:nth` in a reusable cursor helper:
+the same field can occupy a different index in another Struct.
+
+The older `update-states*` functions remain Map-store compatibility wrappers.
+Their first argument is now explicitly `Map`; Struct stores should migrate to
+the state-tree functions above instead of crossing a dynamic record boundary.
 
 ---
 

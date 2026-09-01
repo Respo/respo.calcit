@@ -178,18 +178,27 @@ Then the state of `comp-demo` would be in global store:
       :data $ {}
 ```
 
-Actually it's still `{:states {}}`, but it's like we got `nil` when you look into `(:demo state)`.
+Actually it is still `{:states {}}`. A missing branch is absence in the deep
+state tree; component code should supply an initial state rather than pass a
+missing value into typed application logic.
 
-You need to handle states operation in the store with function `respo.cursor/update-states`:
+Handle a component-state operation by passing the deep state `Map` to
+`respo.cursor/update-state-tree`. Keep the application Store nominal so the
+compiler can check its `:states` field:
 
 ```cirru.no-check
-defatom *store $ {}
-  :states $ {}
+defstruct Store (:states 'Map)
 
-defn updater (store op op-data)
+defatom *store $ %{} Store (:states $ {})
+
+defn updater (store op cursor new-state)
   case-default op store
-    :states (update-states store op-data)
+    :states $ assoc store :states
+      update-state-tree (:states store) cursor new-state
 ```
+
+The older `update-states*` helpers accept Map stores for compatibility. Do not
+pass an arbitrary Struct through them or use a hard-coded `&struct:nth` index.
 
 ### Render to the DOM
 
