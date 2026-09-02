@@ -2224,9 +2224,9 @@
               :required $ [] 'SyntaxSymbol 'SyntaxList
         'detect-nodejs? $ %{} 'CodeEntry (:doc "|Detects Node.js behind an explicit JavaScript FFI function so nodejs? remains a Boolean value.")
           :code $ quote
-            defn detect-nodejs? () $ and (exists? js/process)
+            defn detect-nodejs? () $ and (exists? js/process) (exists? js/process.release)
               let
-                  release-name $ js/process.release.name
+                  release-name js/process.release.name
                 and (string? release-name) (= |node release-name)
           :examples $ []
           :schema $ :: 'Fn
