@@ -4050,39 +4050,50 @@
                 &doseq (op changes)
                   let-sugar
                       n-coord $ option:unwrap (nth op 2)
-                      target $ option:unwrap
-                        js-nullish->option $ find-target
+                      target $ js-nullish->option
+                        find-target
                           unsafe-coerce (get-root) 'respo.dom/DomElement
                           , n-coord
                     match op
                       (:replace-prop _coord _n-coord op-data)
-                        replace-prop target
+                        replace-prop (option:unwrap target)
                           option:unwrap $ nth op-data 0
                           option:unwrap $ nth op-data 1
                       (:add-prop _coord _n-coord op-data)
-                        add-prop target
+                        add-prop (option:unwrap target)
                           option:unwrap $ nth op-data 0
                           option:unwrap $ nth op-data 1
-                      (:rm-prop _coord _n-coord op-data) (rm-prop target op-data)
+                      (:rm-prop _coord _n-coord op-data)
+                        rm-prop (option:unwrap target) op-data
                       (:add-style _coord _n-coord op-data)
-                        add-style target
+                        add-style (option:unwrap target)
                           option:unwrap $ nth op-data 0
                           option:unwrap $ nth op-data 1
                       (:replace-style _coord _n-coord op-data)
-                        replace-style target
+                        replace-style (option:unwrap target)
                           option:unwrap $ nth op-data 0
                           option:unwrap $ nth op-data 1
-                      (:rm-style _coord _n-coord op-data) (rm-style target op-data)
-                      (:set-event coord _n-coord op-data) (add-event target op-data listener-builder coord)
-                      (:rm-event _coord _n-coord op-data) (rm-event target op-data)
-                      (:add-element coord _n-coord op-data) (add-element target op-data listener-builder coord)
+                      (:rm-style _coord _n-coord op-data)
+                        rm-style (option:unwrap target) op-data
+                      (:set-event coord _n-coord op-data)
+                        add-event (option:unwrap target) op-data listener-builder coord
+                      (:rm-event _coord _n-coord op-data)
+                        rm-event (option:unwrap target) op-data
+                      (:add-element coord _n-coord op-data)
+                        add-element (option:unwrap target) op-data listener-builder coord
                       (:rm-element _coord _n-coord op-data) (rm-element target op-data)
-                      (:replace-element coord _n-coord op-data) (replace-element target op-data listener-builder coord)
-                      (:append-element coord _n-coord op-data) (append-element target op-data listener-builder coord)
-                      (:effect-mount _coord n-coord op-data) (run-effect target op-data n-coord)
-                      (:effect-unmount _coord n-coord op-data) (run-effect target op-data n-coord)
-                      (:effect-update _coord n-coord op-data) (run-effect target op-data n-coord)
-                      (:effect-before-update _coord n-coord op-data) (run-effect target op-data n-coord)
+                      (:replace-element coord _n-coord op-data)
+                        replace-element (option:unwrap target) op-data listener-builder coord
+                      (:append-element coord _n-coord op-data)
+                        append-element (option:unwrap target) op-data listener-builder coord
+                      (:effect-mount _coord n-coord op-data)
+                        run-effect (option:unwrap target) op-data n-coord
+                      (:effect-unmount _coord n-coord op-data)
+                        run-effect (option:unwrap target) op-data n-coord
+                      (:effect-update _coord n-coord op-data)
+                        run-effect (option:unwrap target) op-data n-coord
+                      (:effect-before-update _coord n-coord op-data)
+                        run-effect (option:unwrap target) op-data n-coord
                       _ $ eprintln |not-implemented: op
           :examples $ []
           :schema $ :: 'Fn
@@ -4164,12 +4175,14 @@
         'rm-element $ %{} 'CodeEntry (:doc "|Removes the DOM element from the document.")
           :code $ quote
             defn rm-element (target op)
-              if (some? target) (.remove! target) (js/console.warn "|Respo: Element already removed! Probably by :inner-text.")
+              match target
+                (:some element) (.remove! element)
+                (:none) (js/console.warn |Respo:-Element-already-removed!-Probably-by-:inner-text.)
               do &unit
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
-              :args $ [] 'respo.dom/DomElement 'Dynamic
+              :args $ [] (:: 'Option 'respo.dom/DomElement) 'Dynamic
         'rm-event $ %{} 'CodeEntry (:doc "|Removes an event listener from a DOM element by setting it to nil.")
           :code $ quote
             defn rm-event (target event-name)
