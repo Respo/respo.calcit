@@ -1932,7 +1932,7 @@
                     &buf-list:push changes $ [] op coord n-coord v
                   deliver-event $ build-deliver-event *global-element (atom dispatch!)
                 if (js-nullish? app-element) (raise "|Detected no element from SSR!")
-                compare-to-dom! (purify-element element) app-element
+                compare-to-dom! (purify-element element) (unsafe-coerce app-element 'js-ffi.browser/DomElementHost)
                 collect-mounting collect! ([]) ([]) element true
                 reset! *global-element $ mute-element element
                 patch-instance! (&buf-list:to-list changes) target deliver-event
@@ -4560,7 +4560,7 @@
               :children $ :: 'List (:: 'List 'Dynamic)
               :ref $ :: 'Optional 'Fn
           :examples $ []
-          :schema $ :: 'Enum
+          :schema $ :: 'StructDef
         'EventHandler $ %{} 'CodeEntry (:doc "|Event callback signature. Respo delivers an immutable map produced by event->edn together with the application dispatch function.")
           :code $ quote (def EventHandler &unit)
           :examples $ []
@@ -4618,6 +4618,33 @@
       :defs $ {}
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote (ns respo.schema.listener)
+    'respo.test.dom $ %{} 'FileEntry
+      :defs $ {}
+        'main! $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defn main! (root-host html-host)
+              assert |typed-DOM-host-traverses-nested-child $ = &unit
+                compare-to-dom!
+                  div ({})
+                    span $ {}
+                  , root-host
+              assert |typed-DOM-host-reads-innerHTML $ = &unit
+                compare-to-dom!
+                  div $ {} (:innerHTML |<b>x</b>)
+                  , html-host
+              println |typed-DOM-host-contract-ok
+              , &unit
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'Unit)
+              :args $ [] 'js-ffi.browser/DomElementHost 'js-ffi.browser/DomElementHost
+              :features $ #{} :js-ffi
+      :ns $ %{} 'NsEntry (:doc |)
+        :code $ quote
+          ns respo.test.dom $ :require
+            respo.core :refer $ div span
+            respo.util.dom :refer $ compare-to-dom!
+            js-ffi.browser :as browser
     'respo.test.main $ %{} 'FileEntry
       :defs $ {}
         '*async-checks $ %{} 'CodeEntry (:doc |)
@@ -4933,46 +4960,43 @@
                 map :name $ vals (:children vdom)
               ; js/console.log element
               let
-                  virtual-name $ turn-string
-                    option:unwrap-or (get vdom :name) |unknown
-                  real-name $ .!toLowerCase
-                    unsafe-coerce (.-tagName element) JsObject
+                  virtual-name $ turn-string (:name vdom)
+                  real-name $ element :local-name
                 when (not= virtual-name real-name)
-                  js/console.warn "|SSR checking: tag names do not match:"
-                    to-lispy-string $ dissoc vdom :children
-                    , element
+                  js/console.warn "|SSR checking: tag names do not match:" (to-lispy-string vdom) element
               if
                 not=
-                  count $ option:unwrap-or (get vdom :children) []
-                  .-length $ unsafe-coerce (.-children element) JsObject
+                  count $ :children vdom
+                  element :child-element-count
                 let
                     maybe-html $ get
-                      pairs-map $ option:unwrap-or (get vdom :attrs) ({})
+                      pairs-map $ :attrs vdom
                       , :innerHTML
                   if (option:some? maybe-html)
                     when
-                      = (option:unwrap-or maybe-html |) (.-innerHTML element)
+                      not=
+                        turn-string $ option:unwrap maybe-html
+                        element :inner-html
                       js/console.warn "|SSR checking: noticed dom containing innerHTML:" element
                     do (js/console.error "|SSR checking: children sizes do not match!")
-                      js/console.log |virtual: $ ->
-                        option:unwrap-or (get vdom :children) []
-                        map last
-                        map :name
-                        , to-lispy-string
-                      js/console.log |real: $ .-children element
+                      js/console.log |virtual: $ -> (:children vdom) (map last) (map :name) to-lispy-string
+                      js/console.log |real: $ element :children
                 let
-                    real-children $ unsafe-coerce (.-children element) JsObject
+                    real-children $ element :children
                   loop
                       acc 0
-                      other-children $ option:unwrap-or (get vdom :children) []
+                      other-children $ :children vdom
                     when
                       not $ empty? other-children
-                      compare-to-dom! (val-of-first other-children) (aget real-children acc)
+                      compare-to-dom!
+                        as-element $ val-of-first other-children
+                        option:unwrap $ browser/child-element-at real-children acc
                       recur (inc acc) (rest other-children)
+              , &unit
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
-              :args $ [] 'Dynamic 'Dynamic
+              :args $ [] 'respo.schema/Element 'js-ffi.browser/DomElementHost
               :features $ #{} :js-ffi
         'create-shared-canvas-context $ %{} 'CodeEntry (:doc "|Creates the shared Canvas context behind an explicit JavaScript FFI boundary.")
           :code $ quote
@@ -5014,6 +5038,7 @@
             respo.util.list :refer $ val-of-first
             respo.dom :refer $ DomCanvasContext DomTextMetrics
             js-ffi.browser :as browser
+            respo.util.detect :refer $ as-element
     'respo.util.format $ %{} 'FileEntry
       :defs $ {}
         'create-dashed-letter-pattern $ %{} 'CodeEntry (:doc "|Creates the JavaScript RegExp behind an explicit FFI function so dashed-letter-pattern remains a value.")
