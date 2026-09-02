@@ -4974,7 +4974,7 @@
                       , :innerHTML
                   if (option:some? maybe-html)
                     when
-                      =
+                      not=
                         turn-string $ option:unwrap maybe-html
                         element :inner-html
                       js/console.warn "|SSR checking: noticed dom containing innerHTML:" element
