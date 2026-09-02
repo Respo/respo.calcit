@@ -4622,51 +4622,22 @@
       :defs $ {}
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote
-            defn main! ()
-              let
-                  child-host $ make-dom-element-host |span | ([])
-                  root-host $ make-dom-element-host |div | ([] child-host)
-                  html-host $ make-dom-element-host |div |<b>x</b> ([] child-host)
-                assert |typed-DOM-host-traverses-nested-child $ = &unit
-                  compare-to-dom!
-                    div ({})
-                      span $ {}
-                    , root-host
-                assert |typed-DOM-host-reads-innerHTML $ = &unit
-                  compare-to-dom!
-                    div $ {} (:innerHTML |<b>x</b>)
-                    , html-host
+            defn main! (root-host html-host)
+              assert |typed-DOM-host-traverses-nested-child $ = &unit
+                compare-to-dom!
+                  div ({})
+                    span $ {}
+                  , root-host
+              assert |typed-DOM-host-reads-innerHTML $ = &unit
+                compare-to-dom!
+                  div $ {} (:innerHTML |<b>x</b>)
+                  , html-host
               println |typed-DOM-host-contract-ok
               , &unit
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
-              :args $ []
-              :features $ #{} :js-ffi
-        'make-dom-children-host $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn make-dom-children-host (children)
-              js-object
-                |length $ count children
-                |item $ fn (idx)
-                  let
-                      maybe-child $ get children idx
-                    if (option:some? maybe-child) (option:unwrap maybe-child) js/undefined
-          :examples $ []
-          :schema $ :: 'Fn
-            {} (:return 'JsObject)
-              :args $ [] (:: 'List 'js-ffi.browser/DomElementHost)
-              :features $ #{} :js-ffi
-        'make-dom-element-host $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn make-dom-element-host (local-name inner-html children)
-              browser/dom-element-host $ js-object (|localName local-name) (|innerHTML inner-html)
-                |childElementCount $ count children
-                |children $ make-dom-children-host children
-          :examples $ []
-          :schema $ :: 'Fn
-            {} (:return 'js-ffi.browser/DomElementHost)
-              :args $ [] 'String 'String (:: 'List 'js-ffi.browser/DomElementHost)
+              :args $ [] 'js-ffi.browser/DomElementHost 'js-ffi.browser/DomElementHost
               :features $ #{} :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote

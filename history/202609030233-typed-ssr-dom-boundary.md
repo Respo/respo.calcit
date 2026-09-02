@@ -5,7 +5,7 @@
 - The VDOM `:attrs` field is a pair list, so `:innerHTML` lookup converts it through `pairs-map` before `get`; the resulting value is normalized with `turn-string` rather than `unsafe-coerce`.
 - `realize-ssr!` keeps the only explicit host coercion immediately after the existing nullish check.
 - `compare-to-dom!` now returns explicit `&unit`, matching its schema instead of leaking a nil result from `when`.
-- A dedicated `respo.test.dom/main!` JavaScript test builds typed host fixtures and executes both nested child traversal and the `innerHTML` path at runtime.
+- A dedicated JavaScript runner builds host fixtures, passes them through the typed `respo.test.dom/main!` boundary, and executes both nested child traversal and the `innerHTML` path at runtime.
 - The repository quality baseline moved from JSON to native Cirru EDN and is marked as generated text.
 
 Validation: `--check-only`, definition tests, the dedicated Node DOM-host test, checked documentation blocks, native quality baseline, JS code generation, and the Node 24 Vite build all pass.
