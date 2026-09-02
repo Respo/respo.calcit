@@ -1932,7 +1932,7 @@
                     &buf-list:push changes $ [] op coord n-coord v
                   deliver-event $ build-deliver-event *global-element (atom dispatch!)
                 if (js-nullish? app-element) (raise "|Detected no element from SSR!")
-                compare-to-dom! (purify-element element) app-element
+                compare-to-dom! (purify-element element) (unsafe-coerce app-element 'js-ffi.browser/DomElementHost)
                 collect-mounting collect! ([]) ([]) element true
                 reset! *global-element $ mute-element element
                 patch-instance! (&buf-list:to-list changes) target deliver-event
@@ -4935,8 +4935,7 @@
               let
                   virtual-name $ turn-string
                     option:unwrap-or (get vdom :name) |unknown
-                  real-name $ .!toLowerCase
-                    unsafe-coerce (.-tagName element) JsObject
+                  real-name $ element :local-name
                 when (not= virtual-name real-name)
                   js/console.warn "|SSR checking: tag names do not match:"
                     to-lispy-string $ dissoc vdom :children
@@ -4944,14 +4943,14 @@
               if
                 not=
                   count $ option:unwrap-or (get vdom :children) []
-                  .-length $ unsafe-coerce (.-children element) JsObject
+                  element :child-element-count
                 let
-                    maybe-html $ get
-                      pairs-map $ option:unwrap-or (get vdom :attrs) ({})
-                      , :innerHTML
+                    maybe-html $ get-in vdom ([] :attrs :innerHTML)
                   if (option:some? maybe-html)
                     when
-                      = (option:unwrap-or maybe-html |) (.-innerHTML element)
+                      =
+                        unsafe-coerce (option:unwrap-or maybe-html |) 'String
+                        element :inner-html
                       js/console.warn "|SSR checking: noticed dom containing innerHTML:" element
                     do (js/console.error "|SSR checking: children sizes do not match!")
                       js/console.log |virtual: $ ->
@@ -4959,21 +4958,29 @@
                         map last
                         map :name
                         , to-lispy-string
-                      js/console.log |real: $ .-children element
+                      js/console.log |real: $ element :children
                 let
-                    real-children $ unsafe-coerce (.-children element) JsObject
+                    real-children $ element :children
                   loop
                       acc 0
                       other-children $ option:unwrap-or (get vdom :children) []
                     when
                       not $ empty? other-children
-                      compare-to-dom! (val-of-first other-children) (aget real-children acc)
+                      compare-to-dom! (val-of-first other-children)
+                        (browser/child-element-at real-children acc) .unwrap
                       recur (inc acc) (rest other-children)
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
-              :args $ [] 'Dynamic 'Dynamic
+              :args $ [] 'Dynamic 'js-ffi.browser/DomElementHost
               :features $ #{} :js-ffi
+          :tests $ []
+            %{} 'TestEntry (:name |typed-dom-host-path)
+              :code $ quote
+                if false
+                  compare-to-dom! ({})
+                    unsafe-coerce ({}) 'js-ffi.browser/DomElementHost
+                  , true
         'create-shared-canvas-context $ %{} 'CodeEntry (:doc "|Creates the shared Canvas context behind an explicit JavaScript FFI boundary.")
           :code $ quote
             defn create-shared-canvas-context () $ if (browser/document-available?)

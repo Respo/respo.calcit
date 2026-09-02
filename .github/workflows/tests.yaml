@@ -6,6 +6,9 @@ on:
       - main
   pull_request: {}
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -36,6 +39,7 @@ jobs:
           calcit calcit.cirru --check-only
           calcit calcit.cirru analyze check-types --summary-only --format json
           calcit calcit.cirru analyze weak-types --only schema-dynamic,code-dynamic --intent unresolved --summary-only --format json
+          calcit calcit.cirru analyze quality --baseline config/calcit-quality.cirru --format json
 
       - name: "test"
         run: calcit calcit.cirru test --require-match --summary-only --format json

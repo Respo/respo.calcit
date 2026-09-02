@@ -5,7 +5,7 @@
   "scripts": {
     "test": "calcit calcit.cirru test --require-match --summary-only --format json",
     "check-docs": "bash scripts/check-docs-md.sh",
-    "check-quality": "calcit calcit.cirru analyze quality --baseline config/calcit-quality.json"
+    "check-quality": "calcit calcit.cirru analyze quality --baseline config/calcit-quality.cirru"
   },
   "devDependencies": {
     "bottom-tip": "^0.1.5",
