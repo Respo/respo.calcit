@@ -44,6 +44,9 @@ jobs:
       - name: "test"
         run: calcit calcit.cirru test --require-match --summary-only --format json
 
+      - name: "test typed DOM host"
+        run: yarn test-dom-host
+
       - name: "check docs markdown"
         run: bash scripts/check-docs-md.sh
 

@@ -1611,15 +1611,6 @@
       :typeNotFull 1
       :unresolved 1
       :unsafeCoerce 0
-    |respo.util.dom/compare-to-dom! $ {} (:codeDynamic 0)
-      :codeNil 0
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 0
-      :typeNone 0
-      :typeNotFull 1
-      :unresolved 0
-      :unsafeCoerce 1
     |respo.util.dom/create-shared-canvas-context $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -1806,9 +1797,9 @@
     :deprecatedCalls 0
     :schemaDynamic 277
     :typeNone 3
-    :typeNotFull 182
+    :typeNotFull 181
     :unresolved 322
-    :unsafeCoerce 51
+    :unsafeCoerce 50
   :scope $ {} (:includeDependencies false)
     :namespace nil
     :namespacePrefix nil
