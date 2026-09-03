@@ -4,8 +4,9 @@
   },
   "scripts": {
     "test": "calcit calcit.cirru test --require-match --summary-only --format json",
+    "test-dom-host": "calcit --init-fn respo.test.dom/main! calcit.cirru js && node test-dom.mjs",
     "check-docs": "bash scripts/check-docs-md.sh",
-    "check-quality": "calcit calcit.cirru analyze quality --baseline config/calcit-quality.json"
+    "check-quality": "calcit calcit.cirru analyze quality --baseline config/calcit-quality.cirru"
   },
   "devDependencies": {
     "bottom-tip": "^0.1.5",
