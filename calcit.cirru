@@ -1453,15 +1453,18 @@
                       :event $ {}
                       :children $ []
                       :ref nil
-                    unchanged-effect $ effect-watch ([] 1)
+                    old-effect $ effect-watch ([] 1)
+                      fn (_target) nil
+                      %none
+                    new-effect $ effect-watch ([] 1)
                       fn (_target) nil
                       %none
                     old-tree $ %{} schema/Component (:name :watch)
-                      :effects $ [] unchanged-effect
+                      :effects $ [] old-effect
                       :listeners $ []
                       :tree element
                     new-tree $ %{} schema/Component (:name :watch)
-                      :effects $ [] unchanged-effect
+                      :effects $ [] new-effect
                       :listeners $ []
                       :tree element
                   respo.render.effect/collect-updating collect! :before-update ([]) ([]) old-tree new-tree
@@ -3747,17 +3750,15 @@
                                     , next-coord n-coord
                                       fn (target)
                                         method (effect-args effect) ([] action target false)
-                              when-not
-                                = (effect-name old-effect) (effect-name new-effect)
-                                let
-                                    effect $ if (= action :before-update) old-effect new-effect
-                                    method $ effect-method effect
-                                    lifecycle-action $ if (= action :before-update) :unmount :mount
-                                  collect! $ ::
-                                    if (= :update action) :effect-update :effect-before-update
-                                    , next-coord n-coord
-                                      fn (target)
-                                        method (effect-args effect) ([] lifecycle-action target false)
+                              let
+                                  effect $ if (= action :before-update) old-effect new-effect
+                                  method $ effect-method effect
+                                  lifecycle-action $ if (= action :before-update) :unmount :mount
+                                collect! $ ::
+                                  if (= :update action) :effect-update :effect-before-update
+                                  , next-coord n-coord
+                                    fn (target)
+                                      method (effect-args effect) ([] lifecycle-action target false)
                             , &unit
                           do
                             when (= action :before-update)
