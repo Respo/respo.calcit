@@ -2473,12 +2473,12 @@
               .append-child! $ :: 'Fn
                 {}
                   :generics $ [] 'T
-                  :args $ [] 'T 'respo.dom/DomElement
+                  :args $ [] 'T 'T
                   :return 'respo.dom/DomElement
               .insert-before! $ :: 'Fn
                 {}
                   :generics $ [] 'T
-                  :args $ [] 'T 'respo.dom/DomElement 'respo.dom/DomElement
+                  :args $ [] 'T 'T 'T
                   :return 'respo.dom/DomElement
               .remove! $ :: 'Fn
                 {}
@@ -2655,7 +2655,9 @@
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'js-ffi.browser/DomElementHost)
-              :args $ [] 'respo.dom/DomElement
+              :args $ [] 'T
+              :generics $ [] 'T
+              :where $ {} ('T 'DomElement)
         'narrow-element $ %{} 'CodeEntry (:doc "|Narrow the generic js-ffi DOM host to Respo's richer renderer DOM trait at the sole cross-library object boundary.")
           :code $ quote
             defn narrow-element (host-element) (unsafe-coerce host-element 'respo.dom/DomElement)
@@ -3703,56 +3705,50 @@
                   let
                       old-effect-option $ get old-effects idx
                       new-effect-option $ get new-effects idx
-                    match old-effect-option
-                      (:some old-effect)
-                        match new-effect-option
-                          (:some new-effect)
-                            do
-                              if
-                                = (effect-name old-effect) (effect-name new-effect)
-                                when-not
-                                  =seq (effect-args new-effect) (effect-args old-effect)
-                                  let
-                                      effect $ if (= action :before-update) old-effect new-effect
-                                      method $ effect-method effect
-                                    collect! $ ::
-                                      if (= :update action) :effect-update :effect-before-update
-                                      , next-coord n-coord
-                                        fn (target)
-                                          method (effect-args effect) ([] action target false)
+                    if-let (old-effect old-effect-option)
+                      do
+                        if-let (new-effect new-effect-option)
+                          do
+                            if
+                              = (effect-name old-effect) (effect-name new-effect)
+                              when-not
+                                =seq (effect-args new-effect) (effect-args old-effect)
                                 let
                                     effect $ if (= action :before-update) old-effect new-effect
                                     method $ effect-method effect
-                                    lifecycle-action $ if (= action :before-update) :unmount :mount
                                   collect! $ ::
                                     if (= :update action) :effect-update :effect-before-update
                                     , next-coord n-coord
                                       fn (target)
-                                        method (effect-args effect) ([] lifecycle-action target false)
-                              , &unit
-                          (:none)
-                            do
-                              when (= action :before-update)
-                                let
-                                    method $ effect-method old-effect
-                                  collect! $ :: :effect-before-update next-coord n-coord
+                                        method (effect-args effect) ([] action target false)
+                              let
+                                  effect $ if (= action :before-update) old-effect new-effect
+                                  method $ effect-method effect
+                                  lifecycle-action $ if (= action :before-update) :unmount :mount
+                                collect! $ ::
+                                  if (= :update action) :effect-update :effect-before-update
+                                  , next-coord n-coord
                                     fn (target)
-                                      method (effect-args old-effect) ([] :unmount target false)
-                              , &unit
-                      (:none)
-                        do
-                          match new-effect-option
-                            (:some new-effect)
-                              do
-                                when (= action :update)
-                                  let
-                                      method $ effect-method new-effect
-                                    collect! $ :: :effect-update next-coord n-coord
-                                      fn (target)
-                                        method (effect-args new-effect) ([] :mount target false)
-                                , &unit
-                            (:none) &unit
-                          , &unit
+                                      method (effect-args effect) ([] lifecycle-action target false)
+                            , &unit
+                          do
+                            when (= action :before-update)
+                              let
+                                  method $ effect-method old-effect
+                                collect! $ :: :effect-before-update next-coord n-coord
+                                  fn (target)
+                                    method (effect-args old-effect) ([] :unmount target false)
+                            , &unit
+                        , &unit
+                      do
+                        when-let (new-effect new-effect-option)
+                          when (= action :update)
+                            let
+                                method $ effect-method new-effect
+                              collect! $ :: :effect-update next-coord n-coord
+                                fn (target)
+                                  method (effect-args new-effect) ([] :mount target false)
+                        , &unit
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
