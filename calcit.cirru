@@ -1442,6 +1442,35 @@
                     [] ([] :cleanup 1 :target) ([] :setup 2 :target)
                     , @log
               :tags $ #{} :unit
+            %{} 'TestEntry (:name |keeps-unchanged-effects-idle)
+              :code $ quote
+                let
+                    ops $ atom ([])
+                    collect! $ fn (op) (swap! ops conj op)
+                    element $ %{} schema/Element (:name :div) (:coord nil)
+                      :attrs $ []
+                      :style $ []
+                      :event $ {}
+                      :children $ []
+                      :ref nil
+                    old-effect $ effect-watch ([] 1)
+                      fn (_target) nil
+                      %none
+                    new-effect $ effect-watch ([] 1)
+                      fn (_target) nil
+                      %none
+                    old-tree $ %{} schema/Component (:name :watch)
+                      :effects $ [] old-effect
+                      :listeners $ []
+                      :tree element
+                    new-tree $ %{} schema/Component (:name :watch)
+                      :effects $ [] new-effect
+                      :listeners $ []
+                      :tree element
+                  respo.render.effect/collect-updating collect! :before-update ([]) ([]) old-tree new-tree
+                  respo.render.effect/collect-updating collect! :update ([]) ([]) old-tree new-tree
+                  assert |unchanged-effects-produce-no-operations $ empty? @ops
+              :tags $ #{} :unit
             %{} 'TestEntry (:name |handles-effect-list-addition-and-removal)
               :code $ quote
                 let
