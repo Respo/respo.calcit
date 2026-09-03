@@ -76,7 +76,8 @@
                     =< 8 0
                     input $ {} (:value state) (:class-name widget/style-input)
                       :on-input $ fn (e d!)
-                        d! cursor $ option:unwrap (get e :value)
+                        d! $ %:: Op :states cursor
+                          option:unwrap $ get e :value
                     =< 8 0
                     div
                       {} (:class-name widget/style-button)
@@ -159,7 +160,7 @@
                         {} (:class-name widget/style-button)
                           :on-click $ fn (e d!)
                             d! $ %:: Op :add draft
-                            d! cursor $ assoc state :draft |
+                            d! $ %:: Op :states cursor (assoc state :draft |)
                         span $ {} (:on-click nil) (:inner-text |Add)
                       =< 8 0
                       span $ {} (:inner-text |Clear) (:class-name widget/style-button)
@@ -191,7 +192,7 @@
                         div
                           {} (:class-name widget/style-button)
                             :on-click $ fn (e d!)
-                              d! cursor $ update state :locked? not
+                              d! $ %:: Op :states cursor (update state :locked? not)
                           <> (str-spaced |Lock? locked?)
                             {} $ :font-size 13
                         =< 8 0
@@ -845,7 +846,7 @@
         'traverse-and-call $ %{} 'CodeEntry (:doc "|Traverses the rendered tree and invokes component listeners. The dispatch callback intentionally stays at the generic Fn boundary because wrap-dispatch supports multiple operation forms and an optional payload.")
           :code $ quote
             defn traverse-and-call (element event-tuple dispatch!)
-              when (some? element)
+              do $ when (some? element)
                 when (component? element)
                   let
                       listeners $ component-listeners element
@@ -861,6 +862,7 @@
                       let
                           child $ option:unwrap (get pair 1)
                         traverse-and-call child event-tuple dispatch!
+              , &unit
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
@@ -2470,12 +2472,12 @@
               .append-child! $ :: 'Fn
                 {}
                   :generics $ [] 'T
-                  :args $ [] 'T 'respo.dom/DomElement
+                  :args $ [] 'T 'T
                   :return 'respo.dom/DomElement
               .insert-before! $ :: 'Fn
                 {}
                   :generics $ [] 'T
-                  :args $ [] 'T 'respo.dom/DomElement 'respo.dom/DomElement
+                  :args $ [] 'T 'T 'T
                   :return 'respo.dom/DomElement
               .remove! $ :: 'Fn
                 {}
@@ -2652,7 +2654,9 @@
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'js-ffi.browser/DomElementHost)
-              :args $ [] 'respo.dom/DomElement
+              :args $ [] 'T
+              :generics $ [] 'T
+              :where $ {} ('T 'DomElement)
         'narrow-element $ %{} 'CodeEntry (:doc "|Narrow the generic js-ffi DOM host to Respo's richer renderer DOM trait at the sole cross-library object boundary.")
           :code $ quote
             defn narrow-element (host-element) (unsafe-coerce host-element 'respo.dom/DomElement)
@@ -3701,41 +3705,49 @@
                       old-effect-option $ get old-effects idx
                       new-effect-option $ get new-effects idx
                     if-let (old-effect old-effect-option)
-                      if-let (new-effect new-effect-option)
-                        if
-                          = (effect-name old-effect) (effect-name new-effect)
-                          when-not
-                            =seq (effect-args new-effect) (effect-args old-effect)
-                            let
-                                effect $ if (= action :before-update) old-effect new-effect
-                                method $ effect-method effect
-                              collect! $ ::
-                                if (= :update action) :effect-update :effect-before-update
-                                , next-coord n-coord
+                      do
+                        if-let (new-effect new-effect-option)
+                          do
+                            if
+                              = (effect-name old-effect) (effect-name new-effect)
+                              when-not
+                                =seq (effect-args new-effect) (effect-args old-effect)
+                                let
+                                    effect $ if (= action :before-update) old-effect new-effect
+                                    method $ effect-method effect
+                                  collect! $ ::
+                                    if (= :update action) :effect-update :effect-before-update
+                                    , next-coord n-coord
+                                      fn (target)
+                                        method (effect-args effect) ([] action target false)
+                              let
+                                  effect $ if (= action :before-update) old-effect new-effect
+                                  method $ effect-method effect
+                                  lifecycle-action $ if (= action :before-update) :unmount :mount
+                                collect! $ ::
+                                  if (= :update action) :effect-update :effect-before-update
+                                  , next-coord n-coord
+                                    fn (target)
+                                      method (effect-args effect) ([] lifecycle-action target false)
+                            , &unit
+                          do
+                            when (= action :before-update)
+                              let
+                                  method $ effect-method old-effect
+                                collect! $ :: :effect-before-update next-coord n-coord
                                   fn (target)
-                                    method (effect-args effect) ([] action target false)
-                          let
-                              effect $ if (= action :before-update) old-effect new-effect
-                              method $ effect-method effect
-                              lifecycle-action $ if (= action :before-update) :unmount :mount
-                            collect! $ ::
-                              if (= :update action) :effect-update :effect-before-update
-                              , next-coord n-coord
+                                    method (effect-args old-effect) ([] :unmount target false)
+                            , &unit
+                        , &unit
+                      do
+                        when-let (new-effect new-effect-option)
+                          when (= action :update)
+                            let
+                                method $ effect-method new-effect
+                              collect! $ :: :effect-update next-coord n-coord
                                 fn (target)
-                                  method (effect-args effect) ([] lifecycle-action target false)
-                        when (= action :before-update)
-                          let
-                              method $ effect-method old-effect
-                            collect! $ :: :effect-before-update next-coord n-coord
-                              fn (target)
-                                method (effect-args old-effect) ([] :unmount target false)
-                      when-let (new-effect new-effect-option)
-                        when (= action :update)
-                          let
-                              method $ effect-method new-effect
-                            collect! $ :: :effect-update next-coord n-coord
-                              fn (target)
-                                method (effect-args new-effect) ([] :mount target false)
+                                  method (effect-args new-effect) ([] :mount target false)
+                        , &unit
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
@@ -4030,9 +4042,10 @@
                 &doseq (op changes)
                   let-sugar
                       n-coord $ option:unwrap (nth op 2)
-                      target $ find-target
-                        unsafe-coerce (get-root) 'respo.dom/DomElement
-                        , n-coord
+                      target $ option:unwrap
+                        js-nullish->option $ find-target
+                          unsafe-coerce (get-root) 'respo.dom/DomElement
+                          , n-coord
                     match op
                       (:replace-prop _coord _n-coord op-data)
                         replace-prop target
