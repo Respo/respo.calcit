@@ -1442,6 +1442,32 @@
                     [] ([] :cleanup 1 :target) ([] :setup 2 :target)
                     , @log
               :tags $ #{} :unit
+            %{} 'TestEntry (:name |keeps-unchanged-effects-idle)
+              :code $ quote
+                let
+                    ops $ atom ([])
+                    collect! $ fn (op) (swap! ops conj op)
+                    element $ %{} schema/Element (:name :div) (:coord nil)
+                      :attrs $ []
+                      :style $ []
+                      :event $ {}
+                      :children $ []
+                      :ref nil
+                    unchanged-effect $ effect-watch ([] 1)
+                      fn (_target) nil
+                      %none
+                    old-tree $ %{} schema/Component (:name :watch)
+                      :effects $ [] unchanged-effect
+                      :listeners $ []
+                      :tree element
+                    new-tree $ %{} schema/Component (:name :watch)
+                      :effects $ [] unchanged-effect
+                      :listeners $ []
+                      :tree element
+                  respo.render.effect/collect-updating collect! :before-update ([]) ([]) old-tree new-tree
+                  respo.render.effect/collect-updating collect! :update ([]) ([]) old-tree new-tree
+                  assert |unchanged-effects-produce-no-operations $ empty? @ops
+              :tags $ #{} :unit
             %{} 'TestEntry (:name |handles-effect-list-addition-and-removal)
               :code $ quote
                 let
@@ -3721,15 +3747,17 @@
                                     , next-coord n-coord
                                       fn (target)
                                         method (effect-args effect) ([] action target false)
-                              let
-                                  effect $ if (= action :before-update) old-effect new-effect
-                                  method $ effect-method effect
-                                  lifecycle-action $ if (= action :before-update) :unmount :mount
-                                collect! $ ::
-                                  if (= :update action) :effect-update :effect-before-update
-                                  , next-coord n-coord
-                                    fn (target)
-                                      method (effect-args effect) ([] lifecycle-action target false)
+                              when-not
+                                = (effect-name old-effect) (effect-name new-effect)
+                                let
+                                    effect $ if (= action :before-update) old-effect new-effect
+                                    method $ effect-method effect
+                                    lifecycle-action $ if (= action :before-update) :unmount :mount
+                                  collect! $ ::
+                                    if (= :update action) :effect-update :effect-before-update
+                                    , next-coord n-coord
+                                      fn (target)
+                                        method (effect-args effect) ([] lifecycle-action target false)
                             , &unit
                           do
                             when (= action :before-update)
