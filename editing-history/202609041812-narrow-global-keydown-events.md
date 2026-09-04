@@ -18,6 +18,6 @@ This removes the three Calcit 0.13.77 `option:unwrap-or` branch-type warnings se
 - Calcit 0.13.77 check-only, type coverage, weak-type audit, and quality baseline passed.
 - 30 definition-attached tests passed.
 - Typed DOM host test passed.
-- 47 Markdown files / 111 Cirru blocks passed documentation checks.
+- 48 Markdown files / 111 Cirru blocks passed documentation checks.
 - JavaScript generation and Vite production build passed under Node 24.
 - A temporary source link from docs-workflow #717 to this worktree passed check-only with the three dependency warnings removed; published dependency links were restored afterward.
