@@ -5,9 +5,9 @@
 
 ## Change / 修改
 
-`respo.comp.global-keydown/effect-listen-keyboard` now validates the browser-provided `KeyboardEvent.key`, `ctrlKey`, and `metaKey` fields through `js-ffi.contract` before using them as `String` and `Bool` values.
+`respo.comp.global-keydown/effect-listen-keyboard` now validates the browser-provided `KeyboardEvent.key`, `ctrlKey`, and `metaKey` fields through `js-ffi.contract` before boolean short-circuiting or using them as `String` and `Bool` values.
 
-`respo.comp.global-keydown/effect-listen-keyboard` 现在通过 `js-ffi.contract` 验证浏览器提供的 `KeyboardEvent.key`、`ctrlKey` 与 `metaKey` 字段，再将其作为 `String` 和 `Bool` 使用。
+`respo.comp.global-keydown/effect-listen-keyboard` 现在会在布尔短路判断之前，通过 `js-ffi.contract` 验证浏览器提供的 `KeyboardEvent.key`、`ctrlKey` 与 `metaKey` 字段，再将其作为 `String` 和 `Bool` 使用。
 
 This removes the three Calcit 0.13.77 `option:unwrap-or` branch-type warnings seen by docs-workflow without adding local `unsafe-coerce` debt or changing valid keyboard-event behavior.
 

@@ -653,16 +653,16 @@
                         option:unwrap-or (get options :disabled-commands) (#{} |p |s)
                       handler $ fn (event)
                         if (js-present? event)
-                          do
-                            if
-                              and
-                                .includes? disabled-commands $ contract/expect-string |KeyboardEvent.key (.-key event)
-                                or
-                                  contract/expect-bool |KeyboardEvent.ctrlKey $ .-ctrlKey event
-                                  contract/expect-bool |KeyboardEvent.metaKey $ .-metaKey event
-                              .!preventDefault event
-                              %none
-                            .!dispatchEvent el $ new js/KeyboardEvent (.-type event) event
+                          let
+                              key $ contract/expect-string |KeyboardEvent.key (.-key event)
+                              ctrl-key? $ contract/expect-bool |KeyboardEvent.ctrlKey (.-ctrlKey event)
+                              meta-key? $ contract/expect-bool |KeyboardEvent.metaKey (.-metaKey event)
+                            do
+                              if
+                                and (.includes? disabled-commands key) (or ctrl-key? meta-key?)
+                                .!preventDefault event
+                                %none
+                              .!dispatchEvent el $ new js/KeyboardEvent (.-type event) event
                           %none
                     let
                         prev-listener $ aget el dirty-field
