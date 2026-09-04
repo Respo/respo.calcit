@@ -1197,7 +1197,7 @@
                     fn (error) (reset! caught-error error)
                   assert |invalid-keyed-children-report-the-contract $ = "|[Respo/create-list-element] expected keyed child pairs as a list or map" @caught-error
               :tags $ #{} :unit
-        'decorate-defcomp $ %{} 'CodeEntry (:doc "|detect root element under component and add `data-defcomp` mark")
+        'decorate-defcomp $ %{} 'CodeEntry (:doc "|detect root element under component and add `data-comp` attribute")
           :code $ quote
             defn decorate-defcomp (c name)
               update c :tree $ fn (tree)
