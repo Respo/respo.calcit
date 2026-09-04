@@ -656,16 +656,10 @@
                           do
                             if
                               and
-                                .includes? disabled-commands $ option:unwrap-or
-                                  js-nullish->option $ .-key event
-                                  , |
+                                .includes? disabled-commands $ contract/expect-string |KeyboardEvent.key (.-key event)
                                 or
-                                  option:unwrap-or
-                                    js-nullish->option $ .-ctrlKey event
-                                    , false
-                                  option:unwrap-or
-                                    js-nullish->option $ .-metaKey event
-                                    , false
+                                  contract/expect-bool |KeyboardEvent.ctrlKey $ .-ctrlKey event
+                                  contract/expect-bool |KeyboardEvent.metaKey $ .-metaKey event
                               .!preventDefault event
                               %none
                             .!dispatchEvent el $ new js/KeyboardEvent (.-type event) event
@@ -701,6 +695,7 @@
           ns respo.comp.global-keydown $ :require
             respo.core :refer $ defcomp defeffect <> >> div button textarea span input a list->
             js-ffi.browser :as browser
+            js-ffi.contract :as contract
     'respo.comp.inspect $ %{} 'FileEntry
       :defs $ {}
         'comp-inspect $ %{} 'CodeEntry (:doc "|Development helper for visualizing data in the UI.\n\nIt renders a labeled preview of arbitrary data and logs the original value when clicked. This is useful for debugging component props or local state and is usually disabled or removed in production.")
