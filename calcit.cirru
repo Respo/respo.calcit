@@ -1189,7 +1189,7 @@
             %{} 'TestEntry (:name |rejects-invalid-child-collections)
               :code $ quote
                 let
-                    caught-error $ atom nil
+                    caught-error $ atom |
                   try
                     create-list-element :div
                       unsafe-coerce ({}) respo.schema/DomProps
@@ -1197,10 +1197,13 @@
                     fn (error) (reset! caught-error error)
                   assert |invalid-keyed-children-report-the-contract $ = "|[Respo/create-list-element] expected keyed child pairs as a list or map" @caught-error
               :tags $ #{} :unit
-        'decorate-defcomp $ %{} 'CodeEntry (:doc "|detect root element under component and add `data-defcomp` mark")
+        'decorate-defcomp $ %{} 'CodeEntry (:doc "|detect root element under component and add `data-comp` attribute")
           :code $ quote
             defn decorate-defcomp (c name)
               update c :tree $ fn (tree)
+                hint-fn $ {}
+                  :args $ [] (:: 'Optional 'Struct)
+                  :return $ :: 'Optional 'Struct
                 if
                   and (struct? tree)
                     = (&struct:definition tree) schema/Element
@@ -1601,7 +1604,7 @@
                     assert |fallback-result-is-returned $ = |fallback result
                     assert |fallback-receives-the-error @caught?
                   let
-                      caught-error $ atom nil
+                      caught-error $ atom |
                     try
                       error-boundary (unsafe-coerce nil Fn) |child
                       fn (error) (reset! caught-error error)
@@ -1684,7 +1687,7 @@
                         option:unwrap $ first pair
                     assert |all-items-are-rendered $ = 2 (count pairs)
                   let
-                      caught-error $ atom nil
+                      caught-error $ atom |
                     try
                       for-keyed
                         [] $ {} (:id nil)
@@ -1849,7 +1852,7 @@
                     schedule!
                     assert |new-request-can-be-enqueued-after-run $ = 2 (count @tasks)
                   let
-                      caught-error $ atom nil
+                      caught-error $ atom |
                     try
                       make-render-scheduler
                         fn () nil

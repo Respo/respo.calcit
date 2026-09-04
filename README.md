@@ -130,8 +130,8 @@ Rerender on store changes:
 ```cirru
 let
     *store $ atom $ {} (:point 0)
-    render-app! $ fn () nil
-  add-watch *store :changes $ fn ()
+    render-app! $ fn () &unit
+  add-watch *store :changes $ fn (_previous _next)
     render-app!
 ```
 
@@ -165,11 +165,11 @@ Reset virtual DOM caching during hot code swapping, and rerender:
 
 let
     *store $ atom $ {} (:point 0)
-    render-app! $ fn () nil
-  add-watch *store :changes $ fn ()
+    render-app! $ fn () &unit
+  add-watch *store :changes $ fn (_previous _next)
     render-app!
   remove-watch *store :changes
-  add-watch *store :changes $ fn ()
+  add-watch *store :changes $ fn (_previous _next)
     render-app!
   respo.core/clear-cache!
   render-app!
