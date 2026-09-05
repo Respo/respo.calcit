@@ -1,4 +1,5 @@
 import { main_$x_ } from "./js-out/respo.test.dom.mjs"
+import { insert_before_target_$x_ } from "./js-out/respo.render.patch.mjs"
 
 const childrenHost = (children) => ({
   length: children.length,
@@ -17,3 +18,18 @@ const rootHost = elementHost("div", "", [childHost])
 const htmlHost = elementHost("div", "<b>x</b>", [childHost])
 
 main_$x_(rootHost, htmlHost)
+
+const newElement = {}
+const target = {}
+let inserted = false
+target.parentElement = {
+  insertBefore: (actualNewElement, actualTarget) => {
+    if (actualNewElement !== newElement || actualTarget !== target) {
+      throw new Error("insertBefore received unexpected DOM nodes")
+    }
+    inserted = true
+  },
+}
+
+insert_before_target_$x_(target, newElement)
+if (!inserted) throw new Error("typed DOM insertion did not call parentElement.insertBefore")
