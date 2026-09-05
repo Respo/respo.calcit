@@ -2227,7 +2227,7 @@
                         option:unwrap $ get-in @*style-caches ([] style-name :el)
                         , 'respo.dom/DomElement
                       css-block $ render-css-block style-name rules
-                    write-style-content! style-el css-block
+                    respo.dom/set-inner-html! style-el css-block
                     swap! *style-caches assoc-in ([] style-name :rules) rules
                     , style-name
                 let
@@ -2235,7 +2235,7 @@
                   if nodejs? (swap! *style-list-in-nodejs conj css-block)
                     let
                         style-el $ unsafe-coerce (js/document.createElement |style) 'respo.dom/DomElement
-                      write-style-content! style-el css-block
+                      respo.dom/set-inner-html! style-el css-block
                       js-set style-el :id style-name
                       js/document.head.appendChild style-el
                       swap! *style-caches assoc style-name $ {} (:rules rules) (:el style-el)
@@ -2393,14 +2393,6 @@
             %{} 'TestEntry (:name |returns-unit-for-non-enum)
               :code $ quote
                 assert= &unit $ warn-style-literals |plain
-        'write-style-content! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn write-style-content! (style-el content) (js-set style-el :inner-html content) &unit
-          :examples $ []
-          :schema $ :: 'Fn
-            {} (:return 'Unit)
-              :args $ [] 'respo.dom/DomElement 'String
-              :features $ #{} :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote
           ns respo.css $ :require
@@ -2755,6 +2747,14 @@
           :ffi $ {} (:backend :js) (:kind :external-object)
             :names $ {} (:add-event-listener! |addEventListener) (:devtools-formatters |devtoolsFormatters) (:local-storage |localStorage) (:on-before-unload |onbeforeunload) (:remove-event-listener! |removeEventListener) (:set-timeout |setTimeout)
           :schema $ :: 'Trait
+        'set-inner-html! $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defn set-inner-html! (style-el content) (js-set style-el :inner-html content) &unit
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'Unit)
+              :args $ [] 'respo.dom/DomElement 'String
+              :features $ #{} :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote (ns respo.dom)
     'respo.ffi.browser $ %{} 'FileEntry

@@ -2,7 +2,7 @@
 
 - Normalize open property collections before list dispatch and convert CSS maps through a typed helper.
 - Read input values through the existing DOM event/element traits.
-- Use typed DOM field and insertion aliases for style elements and patch operations. Route static CSS writes through a focused helper so generated JavaScript targets `innerHTML`, not an empty custom `inner-html` property.
+- Use typed DOM field and insertion aliases for style elements and patch operations. Route DOM HTML writes through the exported `respo.dom/set-inner-html!` helper so generated JavaScript targets `innerHTML`, not an empty custom `inner-html` property, including across module boundaries.
 - Cover `parentElement.insertBefore` and static style content writes in the Node DOM-host contract; browser smoke tests caught and verified both trait-name mappings used by the generated JavaScript.
 - Compile replacement removal through the `DomElement.remove!` trait alias and exercise the generated helper against a mock browser `remove` method.
 - The exact Calcit 0.13.77 gen-code strict consumer drops from 22 warnings to 11, with no Respo-owned warning remaining.
