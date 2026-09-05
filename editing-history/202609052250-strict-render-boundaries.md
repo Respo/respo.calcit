@@ -4,7 +4,7 @@
 - Read input values through the existing DOM event/element traits.
 - Use typed DOM field and insertion aliases for style elements and patch operations. Route static CSS writes through a focused helper so generated JavaScript targets `innerHTML`, not an empty custom `inner-html` property.
 - Cover `parentElement.insertBefore` and static style content writes in the Node DOM-host contract; browser smoke tests caught and verified both trait-name mappings used by the generated JavaScript.
-- Compile replacement removal through the `DomElement.remove!` trait alias and assert generated JavaScript calls the browser `remove` method.
+- Compile replacement removal through the `DomElement.remove!` trait alias and exercise the generated helper against a mock browser `remove` method.
 - The exact Calcit 0.13.77 gen-code strict consumer drops from 22 warnings to 11, with no Respo-owned warning remaining.
 - Refresh the reviewed quality baseline after unresolved findings fell from 322 to 286; all 38 attached tests, DOM-host contract, docs, JS generation, Vite build, and add/remove browser interactions pass.
 - Tracks `Respo/respo.calcit#137` and `calcit-lang/calcit#871`.

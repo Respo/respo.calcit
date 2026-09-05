@@ -1,7 +1,6 @@
 import { main_$x_ } from "./js-out/respo.test.dom.mjs"
-import { insert_before_target_$x_ } from "./js-out/respo.render.patch.mjs"
+import { insert_before_target_$x_, remove_target_$x_ } from "./js-out/respo.render.patch.mjs"
 import { write_style_content_$x_ } from "./js-out/respo.css.mjs"
-import { readFileSync } from "node:fs"
 
 const childrenHost = (children) => ({
   length: children.length,
@@ -42,7 +41,6 @@ if (styleElement.innerHTML !== ".demo { color: red; }") {
   throw new Error("typed style content did not write the browser innerHTML field")
 }
 
-const patchSource = readFileSync(new URL("./js-out/respo.render.patch.mjs", import.meta.url), "utf8")
-if (!patchSource.includes('target["remove"]()') || patchSource.includes('target["remove!"]()')) {
-  throw new Error("replace-element did not compile the DomElement remove! trait alias to remove")
-}
+let removed = false
+remove_target_$x_({ remove: () => { removed = true } })
+if (!removed) throw new Error("typed DOM removal did not call the browser remove method")

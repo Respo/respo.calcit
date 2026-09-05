@@ -4379,13 +4379,22 @@
             {} (:return 'Unit)
               :args $ [] 'respo.dom/DomElement 'respo.dom/DomElement
               :features $ #{} :js-ffi
+        'remove-target! $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defn remove-target! (target)
+              do (.remove! target) &unit
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'Unit)
+              :args $ [] 'respo.dom/DomElement
+              :features $ #{} :js-ffi
         'replace-element $ %{} 'CodeEntry (:doc "|Replaces a DOM element with a new one created from an operation.")
           :code $ quote
             defn replace-element (target op listener-builder coord)
               let
                   new-element $ make-element op listener-builder coord
                 insert-before-target! target new-element
-                do (.remove! target) &unit
+                remove-target! target
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
