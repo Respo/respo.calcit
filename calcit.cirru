@@ -4371,9 +4371,12 @@
         'insert-before-target! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn insert-before-target! (target new-element)
-              let
-                  parent $ unsafe-coerce (target :parent-element) 'respo.dom/DomElement
-                do (.insert-before! parent new-element target) &unit
+              if-let
+                parent $ js-nullish->option (target :parent-element)
+                let
+                    parent-element $ unsafe-coerce parent (quote respo.dom/DomElement)
+                  do (.insert-before! parent-element new-element target) &unit
+                raise |[Respo/insert-before-target!]-target-has-no-parent-element
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
@@ -5477,9 +5480,13 @@
           :code $ quote
             defn input-event-checked? (event)
               let
-                  input-event $ unsafe-coerce event 'respo.dom/DomInputEvent
-                  target $ unsafe-coerce (.-target input-event) 'respo.dom/DomElement
-                .-checked target
+                  input-event $ unsafe-coerce event (quote respo.dom/DomInputEvent)
+                if-let
+                  target-host $ js-nullish->option (.-target input-event)
+                  let
+                      target $ unsafe-coerce target-host (quote respo.dom/DomElement)
+                    .-checked target
+                  raise |[Respo/input-event-checked?]-event-has-no-target
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Bool)
@@ -5489,9 +5496,13 @@
           :code $ quote
             defn input-event-value (event)
               let
-                  input-event $ unsafe-coerce event 'respo.dom/DomInputEvent
-                  target $ unsafe-coerce (.-target input-event) 'respo.dom/DomElement
-                .-value target
+                  input-event $ unsafe-coerce event (quote respo.dom/DomInputEvent)
+                if-let
+                  target-host $ js-nullish->option (.-target input-event)
+                  let
+                      target $ unsafe-coerce target-host (quote respo.dom/DomElement)
+                    .-value target
+                  raise |[Respo/input-event-value]-event-has-no-target
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Dynamic)
