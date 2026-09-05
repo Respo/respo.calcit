@@ -846,7 +846,7 @@
                   when (component? element)
                     let
                         listeners $ component-listeners element
-                        tree $ component-tree element
+                        tree $ option:unwrap (component-tree element)
                       each listeners $ fn (listener)
                         let
                             handler $ listener-handler listener
@@ -908,6 +908,7 @@
           :schema $ :: 'Fn
             {} (:return 'Fn)
               :args $ [] 'Ref 'Ref
+              :features $ #{} :js-ffi
         'extract-listeners $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn extract-listeners (component-result)
@@ -935,7 +936,7 @@
                   target-element $ loop
                       m $ get-markup-at element coord
                     if (component? m)
-                      recur $ component-tree m
+                      recur $ option:unwrap (component-tree m)
                       , m
                   event-present? $ if (some? target-element)
                     option:fold
@@ -958,7 +959,9 @@
                 () markup
                 (coord-head cs)
                   if (component? markup)
-                    recur (component-tree markup) cs
+                    recur
+                      option:unwrap $ component-tree markup
+                      , cs
                     let
                         children $ element-children markup
                         child-pair-option $ find children
@@ -1139,7 +1142,13 @@
                   children-nodes $ -> children
                     map-indexed $ fn (idx item) (confirm-child item) ([] idx item)
                     filter val-exists?
-                %{} schema/Element (:name tag-name) (:coord nil) (:attrs attrs) (:style styles) (:event event) (:children children-nodes) (:ref ref!)
+                %{} schema/Element (:name tag-name)
+                  :coord $ %none
+                  :attrs attrs
+                  :style styles
+                  :event event
+                  :children children-nodes
+                  :ref $ if (nil? ref!) (%none) (%some ref!)
           :examples $ []
             quote $ create-element :div ({})
             quote $ create-element :span
@@ -1169,9 +1178,13 @@
                         option:unwrap $ first x
                         option:unwrap $ first y
                   event $ pick-event props-map
-                %{} schema/Element (:name tag-name) (:coord nil) (:attrs attrs) (:style styles) (:event event)
+                %{} schema/Element (:name tag-name)
+                  :coord $ %none
+                  :attrs attrs
+                  :style styles
+                  :event event
                   :children $ map child-pairs confirm-child-pair
-                  :ref ref!
+                  :ref $ if (nil? ref!) (%none) (%some ref!)
           :examples $ []
             quote $ create-list-element :div
               {} $ :class-name |list
@@ -1195,16 +1208,17 @@
         'decorate-defcomp $ %{} 'CodeEntry (:doc "|detect root element under component and add `data-comp` attribute")
           :code $ quote
             defn decorate-defcomp (c name)
-              update c :tree $ fn (tree)
+              update c :tree $ fn (tree-option)
                 hint-fn $ {}
-                  :args $ [] (:: 'Optional 'Struct)
-                  :return $ :: 'Optional 'Struct
-                if
-                  and (struct? tree)
-                    = (&struct:definition tree) schema/Element
-                  update tree :attrs $ fn (attrs)
-                    conj attrs $ [] :data-comp name
-                  , tree
+                  :args $ [] (:: 'Option 'Struct)
+                  :return $ :: 'Option 'Struct
+                option:map tree-option $ fn (tree)
+                  if
+                    and (struct? tree)
+                      = (&struct:definition tree) schema/Element
+                    update tree :attrs $ fn (attrs)
+                      conj attrs $ [] :data-comp name
+                    , tree
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'respo.schema/Component)
@@ -1221,7 +1235,8 @@
                     :effects $ []
                     :name $ ~ (turn-tag comp-name)
                     :listeners $ []
-                    :tree $ do (~@ body)
+                    :tree $ %some
+                      do $ ~@ body
                   ~ $ turn-string comp-name
           :examples $ []
             quote $ defcomp comp-demo ()
@@ -1409,12 +1424,13 @@
                               unsafe-coerce run! Fn
                               , target
                           _ nil
-                    element $ %{} schema/Element (:name :div) (:coord nil)
+                    element $ %{} schema/Element (:name :div)
+                      :coord $ %none
                       :attrs $ []
                       :style $ []
                       :event $ {}
                       :children $ []
-                      :ref nil
+                      :ref $ %none
                     old-effect $ effect-watch ([] 1)
                       fn (target)
                         swap! log conj $ [] :setup 1 target
@@ -1428,11 +1444,11 @@
                     old-tree $ %{} schema/Component (:name :watch)
                       :effects $ [] old-effect
                       :listeners $ []
-                      :tree element
+                      :tree $ %some element
                     new-tree $ %{} schema/Component (:name :watch)
                       :effects $ [] new-effect
                       :listeners $ []
-                      :tree element
+                      :tree $ %some element
                   respo.render.effect/collect-updating collect! :before-update ([]) ([]) old-tree new-tree
                   respo.render.effect/collect-updating collect! :update ([]) ([]) old-tree new-tree
                   run-ops! @ops :target
@@ -1445,12 +1461,13 @@
                 let
                     ops $ atom ([])
                     collect! $ fn (op) (swap! ops conj op)
-                    element $ %{} schema/Element (:name :div) (:coord nil)
+                    element $ %{} schema/Element (:name :div)
+                      :coord $ %none
                       :attrs $ []
                       :style $ []
                       :event $ {}
                       :children $ []
-                      :ref nil
+                      :ref $ %none
                     old-effect $ effect-watch ([] 1)
                       fn (_target) nil
                       %none
@@ -1460,11 +1477,11 @@
                     old-tree $ %{} schema/Component (:name :watch)
                       :effects $ [] old-effect
                       :listeners $ []
-                      :tree element
+                      :tree $ %some element
                     new-tree $ %{} schema/Component (:name :watch)
                       :effects $ [] new-effect
                       :listeners $ []
-                      :tree element
+                      :tree $ %some element
                   respo.render.effect/collect-updating collect! :before-update ([]) ([]) old-tree new-tree
                   respo.render.effect/collect-updating collect! :update ([]) ([]) old-tree new-tree
                   assert |unchanged-effects-produce-no-operations $ empty? @ops
@@ -1485,12 +1502,13 @@
                               unsafe-coerce run! Fn
                               , target
                           _ nil
-                    element $ %{} schema/Element (:name :div) (:coord nil)
+                    element $ %{} schema/Element (:name :div)
+                      :coord $ %none
                       :attrs $ []
                       :style $ []
                       :event $ {}
                       :children $ []
-                      :ref nil
+                      :ref $ %none
                     watch $ effect-watch ([])
                       fn (target)
                         swap! log conj $ [] :setup target
@@ -1499,11 +1517,11 @@
                     without-effect $ %{} schema/Component (:name :optional)
                       :effects $ []
                       :listeners $ []
-                      :tree element
+                      :tree $ %some element
                     with-effect $ %{} schema/Component (:name :optional)
                       :effects $ [] watch
                       :listeners $ []
-                      :tree element
+                      :tree $ %some element
                   respo.render.effect/collect-updating collect! :before-update ([]) ([]) without-effect with-effect
                   respo.render.effect/collect-updating collect! :update ([]) ([]) without-effect with-effect
                   run-ops! @ops :target
@@ -1531,12 +1549,13 @@
                               unsafe-coerce run! Fn
                               , target
                           _ nil
-                    element $ %{} schema/Element (:name :div) (:coord nil)
+                    element $ %{} schema/Element (:name :div)
+                      :coord $ %none
                       :attrs $ []
                       :style $ []
                       :event $ {}
                       :children $ []
-                      :ref nil
+                      :ref $ %none
                     old-effect $ effect-watch ([])
                       fn (_target) nil
                       %some $ fn (target)
@@ -1547,11 +1566,11 @@
                     old-tree $ %{} schema/Component (:name :replace)
                       :effects $ [] old-effect
                       :listeners $ []
-                      :tree element
+                      :tree $ %some element
                     new-tree $ %{} schema/Component (:name :replace)
                       :effects $ [] new-effect
                       :listeners $ []
-                      :tree element
+                      :tree $ %some element
                   respo.render.effect/collect-updating collect! :before-update ([]) ([]) old-tree new-tree
                   respo.render.effect/collect-updating collect! :update ([]) ([]) old-tree new-tree
                   run-ops! @ops :target
@@ -1608,20 +1627,26 @@
         'extract-effects-list $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn extract-effects-list (markup)
-              &let (markup-tree markup.:tree)
-                cond
-                    nil? markup-tree
-                    assoc markup :tree $ span ({})
-                  (list? markup-tree)
-                    let
-                        node-tree $ option:unwrap
-                          find markup-tree $ fn (x)
-                            and (struct? x)
-                              or (component? x) (element? x)
-                        effects-list $ -> markup-tree (filter effect?)
-                        listeners-list $ -> markup-tree (filter listener?)
-                      -> markup (assoc :tree node-tree) (assoc :effects effects-list) (assoc :listeners listeners-list)
-                  true markup
+              let
+                  markup-tree-option markup.:tree
+                option:fold markup-tree-option
+                  fn () $ update markup :tree
+                    fn (_tree)
+                      %some $ span ({})
+                  fn (markup-tree)
+                    if (list? markup-tree)
+                      let
+                          node-tree $ option:unwrap
+                            find markup-tree $ fn (x)
+                              and (struct? x)
+                                or (component? x) (element? x)
+                          effects-list $ -> markup-tree (filter effect?)
+                          listeners-list $ -> markup-tree (filter listener?)
+                        -> markup
+                          update :tree $ fn (_tree) (%some node-tree)
+                          assoc :effects effects-list
+                          assoc :listeners listeners-list
+                      , markup
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'respo.schema/Component)
@@ -1671,12 +1696,13 @@
                         fn (item)
                           option:unwrap $ get item :id
                         fn (_item _idx)
-                          %{} schema/Element (:name :div) (:coord nil)
+                          %{} schema/Element (:name :div)
+                            :coord $ %none
                             :attrs $ []
                             :style $ []
                             :event $ {}
                             :children $ []
-                            :ref nil
+                            :ref $ %none
                     assert |keys-preserve-input-order $ = ([] :a :b)
                       map pairs $ fn (pair)
                         option:unwrap $ first pair
@@ -1689,12 +1715,13 @@
                         fn (item)
                           option:unwrap-or (get item :id) nil
                         fn (_item _idx)
-                          %{} schema/Element (:name :div) (:coord nil)
+                          %{} schema/Element (:name :div)
+                            :coord $ %none
                             :attrs $ []
                             :style $ []
                             :event $ {}
                             :children $ []
-                            :ref nil
+                            :ref $ %none
                       fn (error) (reset! caught-error error)
                     assert |nil-key-reports-index $ = "|[Respo/for-keyed] key-fn returned nil at index 0" @caught-error
               :tags $ #{} :unit
@@ -2888,7 +2915,7 @@
                         :name $ turn-tag (str |counted- value)
                         :effects $ []
                         :listeners $ []
-                        :tree nil
+                        :tree $ %none
                   reset-component-caches!
                   begin-memo-frame!
                   let
@@ -3128,12 +3155,13 @@
             %{} 'TestEntry (:name |accepts-list-map-representation-transitions)
               :code $ quote
                 let
-                    child $ %{} respo.schema/Element (:name :div) (:coord nil)
+                    child $ %{} respo.schema/Element (:name :div)
+                      :coord $ %none
                       :attrs $ []
                       :style $ []
                       :event $ {}
                       :children $ []
-                      :ref nil
+                      :ref $ %none
                     effects $ atom ([])
                     collect! $ fn (effect) (swap! effects conj effect)
                     child-list $ [] ([] :a child)
@@ -3161,19 +3189,23 @@
                     if
                       = (component-name old-tree) (component-name new-tree)
                       do (collect-updating collect! :before-update coord n-coord old-tree new-tree)
-                        find-element-diffs collect! next-coord n-coord (component-tree old-tree) (component-tree new-tree)
+                        find-element-diffs collect! next-coord n-coord
+                          option:unwrap $ component-tree old-tree
+                          option:unwrap $ component-tree new-tree
                         collect-updating collect! :update coord n-coord old-tree new-tree
                       do (collect-unmounting collect! coord n-coord old-tree true)
                         collect! $ :: :replace-element coord n-coord new-tree
                         collect-mounting collect! coord n-coord new-tree true
                 (and (component? old-tree) (element? new-tree))
                   do (collect-own-unmounting collect! coord n-coord old-tree true)
-                    recur collect! coord n-coord (component-tree old-tree) new-tree
+                    recur collect! coord n-coord
+                      option:unwrap $ component-tree old-tree
+                      , new-tree
                 (and (element? old-tree) (component? new-tree))
                   let
                       new-coord $ conj coord (component-name new-tree)
                     do
-                      find-element-diffs collect! new-coord n-coord old-tree $ component-tree new-tree
+                      find-element-diffs collect! new-coord n-coord old-tree $ option:unwrap (component-tree new-tree)
                       collect-own-mounting collect! coord n-coord new-tree true
                 (and (element? old-tree) (element? new-tree))
                   if
@@ -3184,16 +3216,19 @@
                     do
                       find-props-diffs collect! coord n-coord (element-attrs old-tree) (element-attrs new-tree)
                       let
-                          old-ref $ element-ref old-tree
-                          new-ref $ element-ref new-tree
-                        when
-                          not $ identical? old-ref new-ref
-                          if (some? old-ref)
-                            collect! $ :: :effect-before-update coord n-coord
-                              fn (_target) (old-ref nil)
-                          if (some? new-ref)
-                            collect! $ :: :effect-update coord n-coord
-                              fn (target) (new-ref target)
+                          old-ref-option $ element-ref old-tree
+                          new-ref-option $ element-ref new-tree
+                        when (not= old-ref-option new-ref-option)
+                          match old-ref-option
+                            (:none) &unit
+                            (:some old-ref!)
+                              collect! $ :: :effect-before-update coord n-coord
+                                fn (_target) (old-ref! nil)
+                          match new-ref-option
+                            (:none) &unit
+                            (:some new-ref!)
+                              collect! $ :: :effect-update coord n-coord
+                                fn (target) (new-ref! target)
                       let
                           old-style $ element-style old-tree
                           new-style $ element-style new-tree
@@ -3235,18 +3270,20 @@
                       swap! log conj $ [] :old target
                     new-ref! $ fn (target)
                       swap! log conj $ [] :new target
-                    old-element $ %{} respo.schema/Element (:name :div) (:coord nil)
+                    old-element $ %{} respo.schema/Element (:name :div)
+                      :coord $ %none
                       :attrs $ []
                       :style $ []
                       :event $ {}
                       :children $ []
-                      :ref old-ref!
-                    new-element $ %{} respo.schema/Element (:name :div) (:coord nil)
+                      :ref $ %some old-ref!
+                    new-element $ %{} respo.schema/Element (:name :div)
+                      :coord $ %none
                       :attrs $ []
                       :style $ []
                       :event $ {}
                       :children $ []
-                      :ref new-ref!
+                      :ref $ %some new-ref!
                     collect! $ fn (op) (swap! ops conj op)
                   find-element-diffs collect! ([]) ([]) old-element new-element
                   &doseq (op @ops)
@@ -3290,19 +3327,22 @@
                               unsafe-coerce run! Fn
                               , target
                           _ nil
-                    plain $ %{} respo.schema/Element (:name :div) (:coord nil)
+                    plain $ %{} respo.schema/Element (:name :div)
+                      :coord $ %none
                       :attrs $ []
                       :style $ []
                       :event $ {}
                       :children $ []
-                      :ref nil
-                    inner $ %{} respo.schema/Element (:name :div) (:coord nil)
+                      :ref $ %none
+                    inner $ %{} respo.schema/Element (:name :div)
+                      :coord $ %none
                       :attrs $ []
                       :style $ []
                       :event $ {}
                       :children $ []
-                      :ref $ fn (target)
-                        swap! log conj $ [] :ref target
+                      :ref $ %some
+                        fn (target)
+                          swap! log conj $ [] :ref target
                     watch $ %{} respo.schema/Effect (:name :effect-watch)
                       :coord $ []
                       :args $ []
@@ -3313,7 +3353,7 @@
                     wrapped $ %{} respo.schema/Component (:name :boundary)
                       :effects $ [] watch
                       :listeners $ []
-                      :tree inner
+                      :tree $ %some inner
                   find-element-diffs collect! ([]) ([]) plain wrapped
                   run-ops! @ops :target
                   assert |entering-wrapper-mounts-ref-and-effect-once $ =
@@ -3452,7 +3492,9 @@
             defn make-element (virtual-element listener-builder coord)
               assert |coord-is-required $ some? coord
               if (component? virtual-element)
-                make-element (component-tree virtual-element) listener-builder $ conj coord (component-name virtual-element)
+                make-element
+                  option:unwrap $ component-tree virtual-element
+                  , listener-builder $ conj coord (component-name virtual-element)
                 let
                     tag-name $ turn-string (element-name virtual-element)
                     attrs $ element-attrs virtual-element
@@ -3573,12 +3615,14 @@
                           collect! $ :: :effect-mount next-coord n-coord
                             fn (target)
                               method (effect-args typed-effect) ([] :mount target at-place?)
-                    recur collect! next-coord n-coord (respo.util.detect/component-tree component-value) false
+                    recur collect! next-coord n-coord
+                      option:unwrap $ respo.util.detect/component-tree component-value
+                      , false
                 (element? tree)
                   do
-                    let
-                        ref! $ element-ref tree
-                      when (some? ref!)
+                    option:fold (element-ref tree)
+                      fn () &unit
+                      fn (ref!)
                         collect! $ :: :effect-mount coord n-coord
                           fn (target)
                             (unsafe-coerce ref! Fn) target
@@ -3610,12 +3654,13 @@
                     log $ atom ([])
                     ops $ atom ([])
                     ref! $ fn (target) (swap! log conj target)
-                    element $ %{} respo.schema/Element (:name :div) (:coord nil)
+                    element $ %{} respo.schema/Element (:name :div)
+                      :coord $ %none
                       :attrs $ []
                       :style $ []
                       :event $ {}
                       :children $ []
-                      :ref ref!
+                      :ref $ %some ref!
                     collect! $ fn (op) (swap! ops conj op)
                   collect-mounting collect! ([]) ([]) element false
                   collect-unmounting collect! ([]) ([]) element false
@@ -3679,7 +3724,9 @@
                       component-value $ as-component tree
                       effects $ component-effects component-value
                       new-coord $ conj coord (component-name component-value)
-                    collect-unmounting collect! new-coord n-coord (respo.util.detect/component-tree component-value) false
+                    collect-unmounting collect! new-coord n-coord
+                      option:unwrap $ respo.util.detect/component-tree component-value
+                      , false
                     when
                       not $ empty? effects
                       &doseq (effect effects)
@@ -3703,13 +3750,12 @@
                           when (some? child)
                             collect-unmounting collect! (conj coord k) (conj n-coord idx) child false
                         recur (rest children) (inc idx)
-                    when
-                      some? $ element-ref tree
-                      collect! $ :: :effect-unmount coord n-coord
-                        fn (_target)
-                          apply
-                            unsafe-coerce (element-ref tree) Fn
-                            [] nil
+                    option:fold (element-ref tree)
+                      fn () &unit
+                      fn (ref!)
+                        collect! $ :: :effect-unmount coord n-coord
+                          fn (_target)
+                            apply (unsafe-coerce ref! Fn) ([] nil)
                 true $ js/console.warn |Unknown-entry-for-unmounting: tree
           :examples $ []
           :schema $ :: 'Fn
@@ -3835,79 +3881,90 @@
               :code $ quote
                 do
                   assert |plain-element $ = "|<div class=\"test\"></div>"
-                    element->string $ %{} respo.schema/Element (:name :div) (:coord nil)
+                    element->string $ %{} respo.schema/Element (:name :div)
+                      :coord $ %none
                       :attrs $ [] ([] :class-name |test)
                       :style $ []
                       :event $ {}
                       :children $ []
-                      :ref nil
+                      :ref $ %none
                   assert |nil-properties-are-omitted $ = "|<script src=\"a.js\"></script>"
-                    element->string $ %{} respo.schema/Element (:name :script) (:coord nil)
+                    element->string $ %{} respo.schema/Element (:name :script)
+                      :coord $ %none
                       :attrs $ [] ([] :src |a.js) ([] :defer nil)
                       :style $ []
                       :event $ {}
                       :children $ []
-                      :ref nil
+                      :ref $ %none
                   assert |textarea-content-is-escaped $ = "|<textarea value=\"a&#13;&#10;&quot;b&quot;\">a&#13;&#10;&quot;b&quot;</textarea>"
-                    element->string $ %{} respo.schema/Element (:name :textarea) (:coord nil)
+                    element->string $ %{} respo.schema/Element (:name :textarea)
+                      :coord $ %none
                       :attrs $ [] ([] :value "|a\n\"b\"")
                       :style $ []
                       :event $ {}
                       :children $ []
-                      :ref nil
+                      :ref $ %none
               :tags $ #{} :unit
             %{} 'TestEntry (:name |serializes-nested-html-document)
               :code $ quote
                 let
                     expected "|<html><head><title>Demo</title><link rel=\"icon\" type=\"image/png\" ><script>{}</script></head><body><div id=\"app\"><div></div></div></body></html>"
-                    title-node $ %{} respo.schema/Element (:name :title) (:coord nil)
+                    title-node $ %{} respo.schema/Element (:name :title)
+                      :coord $ %none
                       :attrs $ [] ([] :innerHTML |Demo)
                       :style $ []
                       :event $ {}
                       :children $ []
-                      :ref nil
-                    link-node $ %{} respo.schema/Element (:name :link) (:coord nil)
+                      :ref $ %none
+                    link-node $ %{} respo.schema/Element (:name :link)
+                      :coord $ %none
                       :attrs $ [] ([] :rel |icon) ([] :type |image/png)
                       :style $ []
                       :event $ {}
                       :children $ []
-                      :ref nil
-                    script-node $ %{} respo.schema/Element (:name :script) (:coord nil)
+                      :ref $ %none
+                    script-node $ %{} respo.schema/Element (:name :script)
+                      :coord $ %none
                       :attrs $ [] ([] :innerHTML |{})
                       :style $ []
                       :event $ {}
                       :children $ []
-                      :ref nil
-                    head-node $ %{} respo.schema/Element (:name :head) (:coord nil)
+                      :ref $ %none
+                    head-node $ %{} respo.schema/Element (:name :head)
+                      :coord $ %none
                       :attrs $ []
                       :style $ []
                       :event $ {}
                       :children $ [] ([] :title title-node) ([] :link link-node) ([] :script script-node)
-                      :ref nil
-                    inner-div $ %{} respo.schema/Element (:name :div) (:coord nil)
+                      :ref $ %none
+                    inner-div $ %{} respo.schema/Element (:name :div)
+                      :coord $ %none
                       :attrs $ []
                       :style $ []
                       :event $ {}
                       :children $ []
-                      :ref nil
-                    app-div $ %{} respo.schema/Element (:name :div) (:coord nil)
+                      :ref $ %none
+                    app-div $ %{} respo.schema/Element (:name :div)
+                      :coord $ %none
                       :attrs $ [] ([] :id |app)
                       :style $ []
                       :event $ {}
                       :children $ [] ([] :inner inner-div)
-                      :ref nil
-                    body-node $ %{} respo.schema/Element (:name :body) (:coord nil)
+                      :ref $ %none
+                    body-node $ %{} respo.schema/Element (:name :body)
+                      :coord $ %none
                       :attrs $ []
                       :style $ []
                       :event $ {}
                       :children $ [] ([] :app app-div)
-                      :ref nil
-                    html-node $ %{} respo.schema/Element (:name :html) (:coord nil)
+                      :ref $ %none
+                    html-node $ %{} respo.schema/Element (:name :html)
+                      :coord $ %none
                       :attrs $ []
                       :style $ []
                       :event $ {}
                       :children $ [] ([] :head head-node) ([] :body body-node)
-                      :ref nil
+                      :ref $ %none
                   assert |nested-document-is-serialized-in-child-order $ = expected (element->string html-node)
               :tags $ #{} :unit
         'entry->html $ %{} 'CodeEntry (:doc |)
@@ -4510,59 +4567,59 @@
             defstruct Component (:name 'Tag)
               :effects $ :: 'List 'respo.schema/Effect
               :listeners $ :: 'List 'respo.schema/RespoListener
-              :tree $ :: 'Optional 'Struct
+              :tree $ :: 'Option 'Struct
           :examples $ []
           :schema $ :: 'Enum
         'DomProps $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstruct DomProps
-              :class-name $ :: 'Optional 'String
-              :style $ :: 'Optional 'Map
-              :value $ :: 'Optional 'Dynamic
-              :inner-text $ :: 'Optional 'Dynamic
-              :id $ :: 'Optional 'String
-              :type $ :: 'Optional 'String
-              :href $ :: 'Optional 'String
-              :src $ :: 'Optional 'String
-              :placeholder $ :: 'Optional 'String
-              :name $ :: 'Optional 'String
-              :title $ :: 'Optional 'String
-              :disabled $ :: 'Optional 'Bool
-              :checked $ :: 'Optional 'Bool
-              :spell-check $ :: 'Optional 'Bool
-              :spellcheck $ :: 'Optional 'Bool
-              :autofocus $ :: 'Optional 'Bool
-              :tab-index $ :: 'Optional 'Number
-              :read-only $ :: 'Optional 'Bool
-              :data-name $ :: 'Optional 'String
-              :data-comp $ :: 'Optional 'String
-              :role $ :: 'Optional 'String
-              :aria-label $ :: 'Optional 'String
-              :aria-labelledby $ :: 'Optional 'String
-              :aria-describedby $ :: 'Optional 'String
-              :aria-hidden $ :: 'Optional 'Bool
-              :selected $ :: 'Optional 'Bool
-              :target $ :: 'Optional 'String
-              :on-click $ :: 'Optional 'respo.schema/EventHandler
-              :on-input $ :: 'Optional 'respo.schema/EventHandler
-              :on-focus $ :: 'Optional 'respo.schema/EventHandler
-              :on-blur $ :: 'Optional 'respo.schema/EventHandler
-              :on-keydown $ :: 'Optional 'respo.schema/EventHandler
-              :on-keyup $ :: 'Optional 'respo.schema/EventHandler
-              :on-change $ :: 'Optional 'respo.schema/EventHandler
-              :on-mousedown $ :: 'Optional 'respo.schema/EventHandler
-              :on-mouseup $ :: 'Optional 'respo.schema/EventHandler
-              :innerHTML $ :: 'Optional 'String
-              :rel $ :: 'Optional 'String
-              :defer $ :: 'Optional 'Bool
-              :on $ :: 'Optional 'Map
-              :alt $ :: 'Optional 'String
-              :draggable $ :: 'Optional 'Bool
-              :content $ :: 'Optional 'String
-              :charset $ :: 'Optional 'String
-              :multiple $ :: 'Optional 'Bool
-              :accept $ :: 'Optional 'String
-              :ref $ :: 'Optional 'Fn
+              :class-name $ :: 'JsNullish 'String
+              :style $ :: 'JsNullish 'Map
+              :value $ :: 'JsNullish 'Dynamic
+              :inner-text $ :: 'JsNullish 'Dynamic
+              :id $ :: 'JsNullish 'String
+              :type $ :: 'JsNullish 'String
+              :href $ :: 'JsNullish 'String
+              :src $ :: 'JsNullish 'String
+              :placeholder $ :: 'JsNullish 'String
+              :name $ :: 'JsNullish 'String
+              :title $ :: 'JsNullish 'String
+              :disabled $ :: 'JsNullish 'Bool
+              :checked $ :: 'JsNullish 'Bool
+              :spell-check $ :: 'JsNullish 'Bool
+              :spellcheck $ :: 'JsNullish 'Bool
+              :autofocus $ :: 'JsNullish 'Bool
+              :tab-index $ :: 'JsNullish 'Number
+              :read-only $ :: 'JsNullish 'Bool
+              :data-name $ :: 'JsNullish 'String
+              :data-comp $ :: 'JsNullish 'String
+              :role $ :: 'JsNullish 'String
+              :aria-label $ :: 'JsNullish 'String
+              :aria-labelledby $ :: 'JsNullish 'String
+              :aria-describedby $ :: 'JsNullish 'String
+              :aria-hidden $ :: 'JsNullish 'Bool
+              :selected $ :: 'JsNullish 'Bool
+              :target $ :: 'JsNullish 'String
+              :on-click $ :: 'JsNullish 'respo.schema/EventHandler
+              :on-input $ :: 'JsNullish 'respo.schema/EventHandler
+              :on-focus $ :: 'JsNullish 'respo.schema/EventHandler
+              :on-blur $ :: 'JsNullish 'respo.schema/EventHandler
+              :on-keydown $ :: 'JsNullish 'respo.schema/EventHandler
+              :on-keyup $ :: 'JsNullish 'respo.schema/EventHandler
+              :on-change $ :: 'JsNullish 'respo.schema/EventHandler
+              :on-mousedown $ :: 'JsNullish 'respo.schema/EventHandler
+              :on-mouseup $ :: 'JsNullish 'respo.schema/EventHandler
+              :innerHTML $ :: 'JsNullish 'String
+              :rel $ :: 'JsNullish 'String
+              :defer $ :: 'JsNullish 'Bool
+              :on $ :: 'JsNullish 'Map
+              :alt $ :: 'JsNullish 'String
+              :draggable $ :: 'JsNullish 'Bool
+              :content $ :: 'JsNullish 'String
+              :charset $ :: 'JsNullish 'String
+              :multiple $ :: 'JsNullish 'Bool
+              :accept $ :: 'JsNullish 'String
+              :ref $ :: 'JsNullish 'Fn
           :examples $ []
           :schema $ :: 'Enum
         'Effect $ %{} 'CodeEntry (:doc |)
@@ -4576,12 +4633,12 @@
         'Element $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstruct Element (:name 'Tag)
-              :coord $ :: 'Optional (:: 'List 'Dynamic)
+              :coord $ :: 'Option (:: 'List 'Dynamic)
               :attrs $ :: 'List (:: 'List 'Dynamic)
               :style $ :: 'List (:: 'List 'Dynamic)
               :event $ :: 'Map 'Tag 'Dynamic
               :children $ :: 'List (:: 'List 'Dynamic)
-              :ref $ :: 'Optional 'Fn
+              :ref $ :: 'Option 'Fn
           :examples $ []
           :schema $ :: 'StructDef
         'EventHandler $ %{} 'CodeEntry (:doc "|Event callback signature. Respo delivers an immutable map produced by event->edn together with the application dispatch function.")
@@ -4595,19 +4652,19 @@
         'RespoEvent $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstruct RespoEvent (:type 'Tag)
-              :value $ :: 'Optional 'Dynamic
-              :checked $ :: 'Optional 'Bool
+              :value $ :: 'JsNullish 'Dynamic
+              :checked $ :: 'JsNullish 'Bool
               :original-event 'Dynamic
               :event 'Dynamic
-              :key $ :: 'Optional 'String
-              :code $ :: 'Optional 'String
-              :key-code $ :: 'Optional 'Number
-              :keycode $ :: 'Optional 'Number
-              :ctrl? $ :: 'Optional 'Bool
-              :meta? $ :: 'Optional 'Bool
-              :alt? $ :: 'Optional 'Bool
-              :shift? $ :: 'Optional 'Bool
-              :msg $ :: 'Optional 'String
+              :key $ :: 'JsNullish 'String
+              :code $ :: 'JsNullish 'String
+              :key-code $ :: 'JsNullish 'Number
+              :keycode $ :: 'JsNullish 'Number
+              :ctrl? $ :: 'JsNullish 'Bool
+              :meta? $ :: 'JsNullish 'Bool
+              :alt? $ :: 'JsNullish 'Bool
+              :shift? $ :: 'JsNullish 'Bool
+              :msg $ :: 'JsNullish 'String
           :examples $ []
           :schema $ :: 'Enum
         'RespoListener $ %{} 'CodeEntry (:doc |)
@@ -4835,8 +4892,9 @@
             defn component-tree (value) (&struct:nth value 3 :tree)
           :examples $ []
           :schema $ :: 'Fn
-            {} (:return 'Dynamic)
+            {}
               :args $ [] 'Dynamic
+              :return $ :: 'Option 'Struct
         'component? $ %{} 'CodeEntry (:doc "|check if value is a Respo component. returns true for component records, false otherwise.")
           :code $ quote
             defn component? (x)
@@ -4918,8 +4976,9 @@
             defn element-ref (value) (&struct:nth value 5 :ref)
           :examples $ []
           :schema $ :: 'Fn
-            {} (:return 'Dynamic)
+            {}
               :args $ [] 'Dynamic
+              :return $ :: 'Option 'Fn
         'element-style $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn element-style (value) (&struct:nth value 6 :style)
@@ -5235,11 +5294,12 @@
                   , nil
                 (component? markup)
                   purify-element $ &let
-                    t $ component-tree markup
+                    t $ option:unwrap (component-tree markup)
                     when (nil? t) (raise |tree-is-empty)
                     , t
                 (element? markup)
-                  -> markup (assoc :ref nil)
+                  -> markup
+                    update :ref $ fn (_ref) (%none)
                     assoc :event $ purify-events (element-event markup)
                     assoc :children $ -> (element-children markup)
                       map $ fn (pair)
@@ -5256,25 +5316,29 @@
             %{} 'TestEntry (:name |removes-live-refs-recursively)
               :code $ quote
                 let
-                    child $ %{} respo.schema/Element (:name :span) (:coord nil)
+                    child $ %{} respo.schema/Element (:name :span)
+                      :coord $ %none
                       :attrs $ []
                       :style $ []
                       :event $ {}
                       :children $ []
-                      :ref $ fn (_target) nil
-                    parent $ %{} respo.schema/Element (:name :div) (:coord nil)
+                      :ref $ %some
+                        fn (_target) nil
+                    parent $ %{} respo.schema/Element (:name :div)
+                      :coord $ %none
                       :attrs $ []
                       :style $ []
                       :event $ {}
                       :children $ [] ([] :child child)
-                      :ref $ fn (_target) nil
+                      :ref $ %some
+                        fn (_target) nil
                     purified $ unsafe-coerce (purify-element parent) 'respo.schema/Element
                     purified-child $ unsafe-coerce
                       option:unwrap $ last
                         option:unwrap $ first (element-children purified)
                       , 'respo.schema/Element
-                  assert |parent-ref-is-removed $ nil? (element-ref purified)
-                  assert |child-ref-is-removed $ nil? (element-ref purified-child)
+                  assert |parent-ref-is-removed $ option:none? (element-ref purified)
+                  assert |child-ref-is-removed $ option:none? (element-ref purified-child)
         'purify-events $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn purify-events (events)
@@ -5359,16 +5423,16 @@
               if (nil? props) ({})
                 merge
                   either (&map:get props :on) ({})
-                  -> props $ map-kv
+                  -> props $ filter-map-kv
                     fn (k v)
                       if
                         and
                           starts-with? (turn-string k) |on-
                           some? v
-                        []
+                        %:: MapEntryDecision :keep
                           turn-tag $ &str:slice (turn-string k) 3
                           , v
-                        , nil
+                        %:: MapEntryDecision :drop
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Map)
