@@ -1235,8 +1235,9 @@
                     :effects $ []
                     :name $ ~ (turn-tag comp-name)
                     :listeners $ []
-                    :tree $ %some
-                      do $ ~@ body
+                    :tree $ let
+                        component-body-result $ do (~@ body)
+                      if (nil? component-body-result) (%none) (%some component-body-result)
                   ~ $ turn-string comp-name
           :examples $ []
             quote $ defcomp comp-demo ()
@@ -1628,7 +1629,7 @@
           :code $ quote
             defn extract-effects-list (markup)
               let
-                  markup-tree-option markup.:tree
+                  markup-tree-option $ component-tree markup
                 option:fold markup-tree-option
                   fn () $ update markup :tree
                     fn (_tree)
@@ -2160,7 +2161,7 @@
             respo.util.list :refer $ pick-attrs pick-event val-exists?
             respo.schema :as schema
             respo.util.dom :refer $ compare-to-dom!
-            respo.util.detect :refer $ component? element? effect? listener? expect-function
+            respo.util.detect :refer $ component? element? effect? listener? expect-function component-tree
             respo.memo :as memo
             js-ffi.shared :as shared
     'respo.css $ %{} 'FileEntry
@@ -4731,6 +4732,27 @@
           :code $ quote (defatom *async-checks 0)
           :examples $ []
           :schema $ :: 'Ref 'Number
+        'effect-list-body-component $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            respo.core/defcomp effect-list-body-component () $ []
+              respo.core/effect-on-mount $ fn (_target) &unit
+              respo.core/span $ {} (:inner-text |ready)
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'respo.schema/Component)
+              :args $ []
+          :tests $ []
+            %{} 'TestEntry (:name |extracts-effects-and-keeps-struct-tree)
+              :code $ quote
+                let
+                    component $ effect-list-body-component
+                    tree-option $ respo.util.detect/component-tree component
+                    tree $ option:unwrap tree-option
+                  assert |effect-list-body-keeps-a-struct-tree $ and (struct? tree)
+                    = :span $ respo.util.detect/element-name tree
+                  assert= 1 $ count (respo.util.detect/component-effects component)
+                  assert= (%some tree) tree-option
+              :tags $ #{} :unit
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn main! () (reset! *async-checks 0)
@@ -4803,6 +4825,24 @@
           :schema $ :: 'Fn
             {} (:return 'Unit)
               :args $ []
+        'nil-body-component $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            respo.core/defcomp nil-body-component () $ &map:get ({}) :missing
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'respo.schema/Component)
+              :args $ []
+          :tests $ []
+            %{} 'TestEntry (:name |normalizes-nil-body-to-renderable-span)
+              :code $ quote
+                let
+                    component $ nil-body-component
+                    tree-option $ respo.util.detect/component-tree component
+                    tree $ option:unwrap tree-option
+                  assert |nil-body-becomes-some-renderable-span $ and (struct? tree)
+                    = :span $ respo.util.detect/element-name tree
+                  assert= (%some tree) tree-option
+              :tags $ #{} :unit
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn reload! () $ println |reload.

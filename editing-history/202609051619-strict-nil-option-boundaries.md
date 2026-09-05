@@ -6,8 +6,8 @@ Issues: `calcit-lang/calcit#859`, `calcit-lang/calcit#864`, `Respo/respo.calcit#
 
 ## Summary / 摘要
 
-- Migrated the closed application-owned absence in `Component.tree`, `Element.coord`, and `Element.ref` from legacy `Optional<T>`/raw nil to `Option<T>`. Render traversal unwraps component trees at the existing invariant boundary; ref mount/unmount still sends the same raw DOM target and raw nil teardown signal to user callbacks.
-- 将 `Component.tree`、`Element.coord`、`Element.ref` 中由应用拥有、可封闭建模的缺省值从旧 `Optional<T>`/裸 nil 迁移到 `Option<T>`。渲染遍历在原有不变量边界解包 component tree；ref 挂载/卸载仍向用户回调传递原有 DOM target 与裸 nil teardown 信号。
+- Migrated the closed application-owned absence in `Component.tree`, `Element.coord`, and `Element.ref` from legacy `Optional<T>`/raw nil to `Option<T>`. `defcomp` normalizes a transient raw-nil body to `%none`, and `extract-effects-list` turns that into a safe empty span; an effect/list body is likewise transient macro input and is reduced to one `Some(Struct)` tree plus extracted effects. Thus the final public `Component.tree` is always `Option<Struct>`. Render traversal unwraps it at the existing invariant boundary; ref mount/unmount still sends the same raw DOM target and raw nil teardown signal to user callbacks.
+- 将 `Component.tree`、`Element.coord`、`Element.ref` 中由应用拥有、可封闭建模的缺省值从旧 `Optional<T>`/裸 nil 迁移到 `Option<T>`。`defcomp` 先把宏 body 的瞬态裸 nil 正规化为 `%none`，再由 `extract-effects-list` 生成安全空 span；effect/list body 同样只是宏内部瞬态输入，最终规约成一个 `Some(Struct)` tree 并提取 effects。因此公开的最终 `Component.tree` 始终是 `Option<Struct>`。渲染遍历在原有不变量边界解包；ref 挂载/卸载仍向用户回调传递原有 DOM target 与裸 nil teardown 信号。
 - Classified browser-owned `DomProps` and `RespoEvent` fields as `JsNullish`: these are host property values whose null/undefined distinction must not be wrapped into a Calcit enum at the DOM boundary.
 - 将浏览器拥有的 `DomProps` 与 `RespoEvent` 字段明确为 `JsNullish`：它们是 host property 值，在 DOM 边界不能包装成 Calcit enum，也必须保留 null/undefined 语义。
 - Replaced `pick-event`'s implicit `map-kv` nil-drop protocol with `filter-map-kv` plus explicit `MapEntryDecision :keep/:drop`. Existing positive and negative tests cover retained handlers, expanded `:on` maps, and nil handler rejection.
@@ -35,10 +35,10 @@ After migration, the project audit reports 46 code-nil hits: 45 unresolved hits 
 ## Evidence / 证据
 
 - Calcit 0.13.77 `--check-only` passes. Exact `--strict-types` now advances past `build-deliver-event` and stops at the pre-existing `E_WHOLE_DYNAMIC_PUBLIC_SCHEMA` for `respo.main/f%`; `E_JS_FFI_FEATURE_REQUIRED` is gone.
-- The full test suite passes 30/30, including Option some/none fixtures, event filtering keep/drop cases, component/element diff boundaries, and ref mount/unmount lifecycle.
+- The full test suite passes 32/32. Focused macro regressions prove that a raw-nil `defcomp` body becomes a renderable `Some(span)` and that an effect/list body ends as `Some(Struct)` with one extracted effect. The suite also covers Option some/none fixtures, event filtering keep/drop cases, component/element diff boundaries, and ref mount/unmount lifecycle.
 - `test-dom-host` passes the typed DOM host contract; JavaScript emission and the Vite production build pass.
-- Browser smoke evidence used a real Vite runtime in a fresh tab: text input `strict nil final` dispatched through Respo, Add produced a task and `Tasks: List/1`, and browser logs contained no errors or warnings.
-- Documentation examples pass 49/49 files and 111/111 blocks.
+- Browser smoke evidence was rerun after the nil-body normalization fix against a fresh Vite runtime/tab: text input `strict nil regression` dispatched through Respo, Add produced a task and `Tasks: List/1`, and warning/error logs were empty.
+- Documentation examples pass 50/50 files and 111/111 blocks.
 
 ## Compatibility decision / 兼容性决策
 
