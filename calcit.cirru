@@ -2616,6 +2616,7 @@
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
             :names $ {} (:inner-html |innerHTML)
+            :writable $ #{} :checked :disabled :inner-html :inner-text :selected
           :schema $ :: 'Trait
         'DomElementCollection $ %{} 'CodeEntry (:doc "|Indexed child element collection returned by the children property.")
           :code $ quote
@@ -3190,6 +3191,7 @@
           :schema $ :: 'Fn
             {} (:return 'Unit)
               :args $ [] 'Fn 'List 'List 'Number 'Dynamic 'Dynamic
+              :features $ #{} :js-ffi
           :tests $ []
             %{} 'TestEntry (:name |accepts-list-map-representation-transitions)
               :code $ quote
@@ -3312,6 +3314,7 @@
           :schema $ :: 'Fn
             {} (:return 'Unit)
               :args $ [] 'Fn 'List (:: 'List 'Number) 'Dynamic 'Dynamic
+              :features $ #{} :js-ffi
           :tests $ []
             %{} 'TestEntry (:name |clears-old-ref-before-setting-new-ref)
               :code $ quote
@@ -3743,6 +3746,7 @@
           :schema $ :: 'Fn
             {} (:return 'Unit)
               :args $ [] 'Fn 'List 'List 'Dynamic 'Bool
+              :features $ #{} :js-ffi
           :tests $ []
             %{} 'TestEntry (:name |runs-ref-mount-and-unmount-lifecycle)
               :code $ quote
@@ -3885,6 +3889,7 @@
           :schema $ :: 'Fn
             {} (:return 'Unit)
               :args $ [] 'Fn 'List 'List 'Dynamic 'Bool
+              :features $ #{} :js-ffi
         'collect-updating $ %{} 'CodeEntry (:doc "|Compares effects between component updates and collects effect actions if arguments change.")
           :code $ quote
             defn collect-updating (collect! action coord n-coord old-tree new-tree)
@@ -4206,6 +4211,7 @@
           :schema $ :: 'Fn
             {} (:return 'Unit)
               :args $ [] 'Dynamic 'Dynamic 'Fn 'List
+              :features $ #{} :js-ffi
         'add-event $ %{} 'CodeEntry (:doc "|Attaches an event listener to a DOM element.")
           :code $ quote
             defn add-event (target event-name listener-builder coord)
@@ -4263,6 +4269,7 @@
           :schema $ :: 'Fn
             {} (:return 'Unit)
               :args $ [] 'respo.dom/DomElement 'Dynamic 'Fn 'List
+              :features $ #{} :js-ffi
         'apply-dom-changes $ %{} 'CodeEntry (:doc "|Internal DOM patch executor.\n\nIt walks collected diff operations, finds the target node by DOM coordinate, and applies prop, style, event, element, and effect changes in order.")
           :code $ quote
             defn apply-dom-changes (changes mount-point listener-builder)
@@ -4321,6 +4328,7 @@
           :schema $ :: 'Fn
             {} (:return 'Unit)
               :args $ [] 'List 'respo.dom/DomElement 'Fn
+              :features $ #{} :js-ffi
         'find-target $ %{} 'CodeEntry (:doc "|Locates a DOM node by traversing children using a coordinate path.")
           :code $ quote
             defn find-target (root coord)
@@ -4353,6 +4361,7 @@
           :schema $ :: 'Fn
             {} (:return 'Unit)
               :args $ [] 'respo.dom/DomElement 'Dynamic 'Fn 'List
+              :features $ #{} :js-ffi
         'replace-prop $ %{} 'CodeEntry (:doc "|Updates a property on a DOM element. Handles data attributes and special cases like 'value'.")
           :code $ quote
             defn replace-prop (target p prop-value)
@@ -4405,6 +4414,7 @@
           :schema $ :: 'Fn
             {} (:return 'Unit)
               :args $ [] (:: 'Option 'respo.dom/DomElement) 'Dynamic
+              :features $ #{} :js-ffi
         'rm-event $ %{} 'CodeEntry (:doc "|Removes an event listener from a DOM element by setting it to nil.")
           :code $ quote
             defn rm-event (target event-name)
@@ -4461,6 +4471,7 @@
           :schema $ :: 'Fn
             {} (:return 'Unit)
               :args $ [] 'Dynamic 'Fn (:: 'List 'Number)
+              :features $ #{} :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote
           ns respo.render.patch $ :require
@@ -4854,6 +4865,9 @@
                 compare-to-dom!
                   div $ {} (:innerHTML |<b>x</b>)
                   , html-host
+              assert= |backgroundColor $ dashed->camel |background-color
+              assert= |fontSize $ dashed->camel |font-size
+              assert= |spellcheck $ dashed->camel |spell-check
               println |typed-DOM-host-contract-ok
               , &unit
           :examples $ []
@@ -4867,6 +4881,7 @@
             respo.core :refer $ div span
             respo.util.dom :refer $ compare-to-dom!
             js-ffi.browser :as browser
+            respo.util.format :refer $ dashed->camel
     'respo.test.main $ %{} 'FileEntry
       :defs $ {}
         '*async-checks $ %{} 'CodeEntry (:doc |)
@@ -5315,9 +5330,7 @@
         'dashed->camel $ %{} 'CodeEntry (:doc "|convert dashed-case CSS property names to camelCase. e.g. \"background-color\" -> \"backgroundColor\".")
           :code $ quote
             defn dashed->camel (x)
-              if (= x |spell-check) |spellcheck $ .!replace x dashed-letter-pattern
-                fn (cc pos prop)
-                  .!toUpperCase $ unsafe-coerce (aget cc 1) JsObject
+              if (= x |spell-check) |spellcheck $ .!replace x dashed-letter-pattern uppercase-dashed-match
           :examples $ []
             quote $ dashed->camel |background-color
             quote $ dashed->camel |font-size
@@ -5441,6 +5454,7 @@
           :schema $ :: 'Fn
             {} (:return 'Map)
               :args $ [] 'respo.dom/DomKeyboardEvent
+              :features $ #{} :js-ffi
         'mute-element $ %{} 'CodeEntry (:doc "|Recursively remove event handlers from a component or element tree.\n\nThis is used in SSR-related flows where the initial HTML should not carry live client event functions.")
           :code $ quote
             defn mute-element (element)
@@ -5493,6 +5507,7 @@
           :schema $ :: 'Fn
             {} (:return 'Dynamic)
               :args $ [] 'Dynamic
+              :features $ #{} :js-ffi
           :tests $ []
             %{} 'TestEntry (:name |removes-live-refs-recursively)
               :code $ quote
@@ -5559,6 +5574,16 @@
             def unitless-props $ {} (|animationDelay true) (|animationDuration true) (|animationIterationCount true) (|aspectRatio true) (|borderImageOutset true) (|borderImageSlice true) (|borderImageWidth true) (|boxFlex true) (|boxFlexGroup true) (|boxOrdinalGroup true) (|columnCount true) (|columns true) (|fillOpacity true) (|flex true) (|flexGrow true) (|flexNegative true) (|flexPositive true) (|flexShrink true) (|floodOpacity true) (|fontSizeAdjust true) (|fontWeight true) (|gridArea true) (|gridColumn true) (|gridColumnEnd true) (|gridColumnSpan true) (|gridColumnStart true) (|gridRow true) (|gridRowEnd true) (|gridRowSpan true) (|gridRowStart true) (|lineClamp true) (|lineHeight true) (|opacity true) (|order true) (|orphans true) (|stopOpacity true) (|strokeDasharray true) (|strokeDashoffset true) (|strokeMiterlimit true) (|strokeOpacity true) (|strokeWidth true) (|tabSize true) (|transitionDelay true) (|transitionDuration true) (|widows true) (|zIndex true) (|zoom true)
           :examples $ []
           :schema $ :: 'Map
+        'uppercase-dashed-match $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defn uppercase-dashed-match (matched _position _source)
+              char-from-code $ -
+                get-char-code $ &str:slice matched 1
+                , 32
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'String)
+              :args $ [] 'String 'Number 'String
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote
           ns respo.util.format $ :require
