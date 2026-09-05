@@ -1,5 +1,6 @@
 import { main_$x_ } from "./js-out/respo.test.dom.mjs"
 import { insert_before_target_$x_ } from "./js-out/respo.render.patch.mjs"
+import { write_style_content_$x_ } from "./js-out/respo.css.mjs"
 
 const childrenHost = (children) => ({
   length: children.length,
@@ -33,3 +34,9 @@ target.parentElement = {
 
 insert_before_target_$x_(target, newElement)
 if (!inserted) throw new Error("typed DOM insertion did not call parentElement.insertBefore")
+
+const styleElement = { innerHTML: "" }
+write_style_content_$x_(styleElement, ".demo { color: red; }")
+if (styleElement.innerHTML !== ".demo { color: red; }") {
+  throw new Error("typed style content did not write the browser innerHTML field")
+}

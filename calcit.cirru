@@ -2227,7 +2227,7 @@
                         option:unwrap $ get-in @*style-caches ([] style-name :el)
                         , 'respo.dom/DomElement
                       css-block $ render-css-block style-name rules
-                    set! (.-inner-html style-el) css-block
+                    write-style-content! style-el css-block
                     swap! *style-caches assoc-in ([] style-name :rules) rules
                     , style-name
                 let
@@ -2235,8 +2235,8 @@
                   if nodejs? (swap! *style-list-in-nodejs conj css-block)
                     let
                         style-el $ unsafe-coerce (js/document.createElement |style) 'respo.dom/DomElement
-                      set! (.-inner-html style-el) css-block
-                      set! (.-id style-el) style-name
+                      write-style-content! style-el css-block
+                      js-set style-el :id style-name
                       js/document.head.appendChild style-el
                       swap! *style-caches assoc style-name $ {} (:rules rules) (:el style-el)
                   , style-name
@@ -2393,6 +2393,14 @@
             %{} 'TestEntry (:name |returns-unit-for-non-enum)
               :code $ quote
                 assert= &unit $ warn-style-literals |plain
+        'write-style-content! $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defn write-style-content! (style-el content) (js-set style-el :inner-html content) &unit
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'Unit)
+              :args $ [] 'respo.dom/DomElement 'String
+              :features $ #{} :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote
           ns respo.css $ :require
