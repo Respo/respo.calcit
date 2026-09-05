@@ -4385,7 +4385,7 @@
               let
                   new-element $ make-element op listener-builder coord
                 insert-before-target! target new-element
-                do (.!remove! target) &unit
+                do (.remove! target) &unit
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
