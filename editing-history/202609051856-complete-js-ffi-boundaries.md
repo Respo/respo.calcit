@@ -8,8 +8,8 @@ Issues: `calcit-lang/calcit#865`
 
 - Declared `:js-ffi` on the two effect-tree collectors and the two shared diff traversals that directly emit browser-console diagnostics.
 - 为两个 effect 树收集器及两个直接输出浏览器控制台诊断的共享 diff 遍历函数声明 `:js-ffi`。
-- Audited the reachable patch and event-format adapters, marking only definitions whose own bodies perform raw or typed external-object operations. The `DomElement` contract now exposes write permission only for the five fields that `rm-prop` clears.
-- 审计可达的 patch 与事件格式适配器，仅标记函数体自身执行原始或类型化外部对象操作的定义；`DomElement` 合约只为 `rm-prop` 实际清空的五个字段开放写权限。
+- Audited the reachable patch and event-format adapters, marking only definitions whose own bodies perform raw or typed external-object operations. The `DomElement` contract now exposes write permission only for the five fields that `rm-prop` clears through direct typed `js-set`; its attribute and dataset removal paths do not require writable-field permission.
+- 审计可达的 patch 与事件格式适配器，仅标记函数体自身执行原始或类型化外部对象操作的定义；`DomElement` 合约只为 `rm-prop` 通过类型化 `js-set` 直接清空的五个字段开放写权限，attribute 与 dataset 删除路径不需要 writable-field 权限。
 - Extracted the native `String.replace` callback from `dashed->camel` into the fully typed, pure `uppercase-dashed-match` helper. It uses Calcit string slicing and character-code conversion, removing the anonymous callback's raw host operation and one `unsafe-coerce`; only the outer `String.replace` adapter retains `:js-ffi`.
 - 将 `dashed->camel` 的原生 `String.replace` 回调抽取为全类型纯函数 `uppercase-dashed-match`；它使用 Calcit 字符串切片与字符码转换，移除了匿名回调中的原始宿主操作及一个 `unsafe-coerce`，仅外层 `String.replace` 适配器保留 `:js-ffi`。
 
