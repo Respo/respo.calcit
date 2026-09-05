@@ -47,6 +47,9 @@ jobs:
       - name: "test typed DOM host"
         run: yarn test-dom-host
 
+      - name: Test nullish DOM props
+        run: node --test test/nullish-props.test.mjs
+
       - name: "check docs markdown"
         run: bash scripts/check-docs-md.sh
 

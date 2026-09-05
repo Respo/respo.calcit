@@ -1972,7 +1972,7 @@
                   {}
                 (struct? props)
                   &map:filter-kv (&struct:to-map props)
-                    fn (_k v) (some? v)
+                    fn (_k v) (js-present? v)
                 (map? props) props
                 true $ raise
                   str |Expected_DOM_props_map_or_record,_got: $ type-of props
