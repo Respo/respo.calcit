@@ -220,10 +220,10 @@
       :codeNil 1
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 2
+      :schemaDynamic 0
       :typeNone 0
       :typeNotFull 1
-      :unresolved 3
+      :unresolved 1
       :unsafeCoerce 1
     |respo.controller.resolve/extract-listeners $ {} (:codeDynamic 0)
       :codeNil 1
@@ -235,13 +235,13 @@
       :unresolved 4
       :unsafeCoerce 0
     |respo.controller.resolve/find-event-target $ {} (:codeDynamic 0)
-      :codeNil 1
+      :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
       :schemaDynamic 3
       :typeNone 0
       :typeNotFull 1
-      :unresolved 4
+      :unresolved 3
       :unsafeCoerce 0
     |respo.controller.resolve/get-markup-at $ {} (:codeDynamic 0)
       :codeNil 0
@@ -361,22 +361,22 @@
       :unresolved 2
       :unsafeCoerce 0
     |respo.core/create-element $ {} (:codeDynamic 0)
-      :codeNil 3
+      :codeNil 2
       :declaredOptional 0
       :deprecatedCalls 0
       :schemaDynamic 1
       :typeNone 0
       :typeNotFull 1
-      :unresolved 4
+      :unresolved 3
       :unsafeCoerce 0
     |respo.core/create-list-element $ {} (:codeDynamic 0)
-      :codeNil 3
+      :codeNil 2
       :declaredOptional 0
       :deprecatedCalls 0
       :schemaDynamic 1
       :typeNone 0
       :typeNotFull 1
-      :unresolved 4
+      :unresolved 3
       :unsafeCoerce 0
     |respo.core/div $ {} (:codeDynamic 0)
       :codeNil 0
@@ -792,6 +792,15 @@
       :typeNotFull 1
       :unresolved 0
       :unsafeCoerce 2
+    |respo.css/map-entries $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 2
+      :typeNone 0
+      :typeNotFull 1
+      :unresolved 2
+      :unsafeCoerce 0
     |respo.css/render-css-block $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -1003,19 +1012,19 @@
       :codeNil 4
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 4
+      :schemaDynamic 0
       :typeNone 0
       :typeNotFull 1
-      :unresolved 8
+      :unresolved 4
       :unsafeCoerce 0
     |respo.render.diff/find-element-diffs $ {} (:codeDynamic 0)
-      :codeNil 3
+      :codeNil 1
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 3
+      :schemaDynamic 0
       :typeNone 0
       :typeNotFull 1
-      :unresolved 6
+      :unresolved 1
       :unsafeCoerce 0
     |respo.render.diff/find-props-diffs $ {} (:codeDynamic 0)
       :codeNil 1
@@ -1035,6 +1044,15 @@
       :typeNotFull 1
       :unresolved 4
       :unsafeCoerce 0
+    |respo.render.diff/props-as-list $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 0
+      :typeNone 0
+      :typeNotFull 1
+      :unresolved 0
+      :unsafeCoerce 1
     |respo.render.dom/make-element $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -1057,10 +1075,10 @@
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 3
+      :schemaDynamic 0
       :typeNone 0
       :typeNotFull 1
-      :unresolved 3
+      :unresolved 0
       :unsafeCoerce 1
     |respo.render.effect/collect-own-mounting $ {} (:codeDynamic 0)
       :codeNil 0
@@ -1084,10 +1102,10 @@
       :codeNil 1
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 3
+      :schemaDynamic 0
       :typeNone 0
       :typeNotFull 1
-      :unresolved 4
+      :unresolved 1
       :unsafeCoerce 1
     |respo.render.effect/collect-updating $ {} (:codeDynamic 0)
       :codeNil 0
@@ -1147,11 +1165,11 @@
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 3
+      :schemaDynamic 0
       :typeNone 0
       :typeNotFull 1
-      :unresolved 3
-      :unsafeCoerce 1
+      :unresolved 0
+      :unsafeCoerce 0
     |respo.render.patch/add-event $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -1183,21 +1201,30 @@
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 2
+      :schemaDynamic 0
       :typeNone 0
       :typeNotFull 1
-      :unresolved 2
+      :unresolved 0
       :unsafeCoerce 0
     |respo.render.patch/apply-dom-changes $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 0
       :typeNone 0
       :typeNotFull 1
-      :unresolved 1
+      :unresolved 0
       :unsafeCoerce 2
     |respo.render.patch/find-target $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 0
+      :typeNone 0
+      :typeNotFull 0
+      :unresolved 0
+      :unsafeCoerce 1
+    |respo.render.patch/insert-before-target! $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
@@ -1210,11 +1237,11 @@
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 2
+      :schemaDynamic 0
       :typeNone 0
       :typeNotFull 1
-      :unresolved 2
-      :unsafeCoerce 1
+      :unresolved 0
+      :unsafeCoerce 0
     |respo.render.patch/replace-prop $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -1237,10 +1264,10 @@
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 0
       :typeNone 0
       :typeNotFull 1
-      :unresolved 1
+      :unresolved 0
       :unsafeCoerce 0
     |respo.render.patch/rm-event $ {} (:codeDynamic 0)
       :codeNil 1
@@ -1273,10 +1300,10 @@
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 0
       :typeNone 0
       :typeNotFull 1
-      :unresolved 1
+      :unresolved 0
       :unsafeCoerce 0
     |respo.resource/load-resource! $ {} (:codeDynamic 0)
       :codeNil 0
@@ -1471,10 +1498,10 @@
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 2
+      :schemaDynamic 1
       :typeNone 0
       :typeNotFull 1
-      :unresolved 2
+      :unresolved 1
       :unsafeCoerce 0
     |respo.util.detect/component? $ {} (:codeDynamic 0)
       :codeNil 0
@@ -1561,10 +1588,10 @@
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 2
+      :schemaDynamic 1
       :typeNone 0
       :typeNotFull 1
-      :unresolved 2
+      :unresolved 1
       :unsafeCoerce 0
     |respo.util.detect/element-style $ {} (:codeDynamic 0)
       :codeNil 0
@@ -1638,15 +1665,6 @@
       :typeNotFull 1
       :unresolved 0
       :unsafeCoerce 0
-    |respo.util.format/dashed->camel $ {} (:codeDynamic 0)
-      :codeNil 0
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 0
-      :typeNone 0
-      :typeNotFull 0
-      :unresolved 0
-      :unsafeCoerce 1
     |respo.util.format/dashed-letter-pattern $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -1664,7 +1682,7 @@
       :typeNone 0
       :typeNotFull 1
       :unresolved 0
-      :unsafeCoerce 6
+      :unsafeCoerce 3
     |respo.util.format/event->prop $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -1692,14 +1710,32 @@
       :typeNotFull 1
       :unresolved 1
       :unsafeCoerce 0
+    |respo.util.format/input-event-checked? $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 0
+      :typeNone 0
+      :typeNotFull 0
+      :unresolved 0
+      :unsafeCoerce 2
+    |respo.util.format/input-event-value $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 0
+      :typeNone 0
+      :typeNotFull 1
+      :unresolved 0
+      :unsafeCoerce 2
     |respo.util.format/map-keyboard-event $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 2
+      :schemaDynamic 0
       :typeNone 0
       :typeNotFull 1
-      :unresolved 2
+      :unresolved 0
       :unsafeCoerce 0
     |respo.util.format/mute-element $ {} (:codeDynamic 0)
       :codeNil 0
@@ -1711,13 +1747,13 @@
       :unresolved 2
       :unsafeCoerce 0
     |respo.util.format/purify-element $ {} (:codeDynamic 0)
-      :codeNil 3
+      :codeNil 2
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 2
+      :schemaDynamic 0
       :typeNone 0
       :typeNotFull 1
-      :unresolved 5
+      :unresolved 2
       :unsafeCoerce 0
     |respo.util.format/purify-events $ {} (:codeDynamic 0)
       :codeNil 0
@@ -1765,13 +1801,13 @@
       :unresolved 3
       :unsafeCoerce 0
     |respo.util.list/pick-event $ {} (:codeDynamic 0)
-      :codeNil 1
+      :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
       :schemaDynamic 4
       :typeNone 0
       :typeNotFull 1
-      :unresolved 5
+      :unresolved 4
       :unsafeCoerce 0
     |respo.util.list/val-exists? $ {} (:codeDynamic 0)
       :codeNil 1
@@ -1792,13 +1828,13 @@
       :unresolved 2
       :unsafeCoerce 0
   :metrics $ {} (:codeDynamic 0)
-    :codeNil 49
+    :codeNil 42
     :declaredOptional 0
     :deprecatedCalls 0
-    :schemaDynamic 277
+    :schemaDynamic 248
     :typeNone 3
-    :typeNotFull 181
-    :unresolved 322
+    :typeNotFull 184
+    :unresolved 286
     :unsafeCoerce 50
   :scope $ {} (:includeDependencies false)
     :namespace nil

@@ -2225,18 +2225,18 @@
                   , style-name $ let
                       style-el $ unsafe-coerce
                         option:unwrap $ get-in @*style-caches ([] style-name :el)
-                        , JsObject
+                        , 'respo.dom/DomElement
                       css-block $ render-css-block style-name rules
-                    set! (.-innerHTML style-el) css-block
+                    respo.dom/set-inner-html! style-el css-block
                     swap! *style-caches assoc-in ([] style-name :rules) rules
                     , style-name
                 let
                     css-block $ render-css-block style-name rules
                   if nodejs? (swap! *style-list-in-nodejs conj css-block)
                     let
-                        style-el $ unsafe-coerce (js/document.createElement |style) JsObject
-                      set! (.-innerHTML style-el) css-block
-                      set! (.-id style-el) style-name
+                        style-el $ unsafe-coerce (js/document.createElement |style) 'respo.dom/DomElement
+                      respo.dom/set-inner-html! style-el css-block
+                      js-set style-el :id style-name
                       js/document.head.appendChild style-el
                       swap! *style-caches assoc style-name $ {} (:rules rules) (:el style-el)
                   , style-name
@@ -2329,6 +2329,14 @@
             {} (:return 'Bool)
               :args $ []
               :features $ #{} :js-ffi
+        'map-entries $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defn map-entries (value)
+              if (map? value) (.to-list value) ([])
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'List)
+              :args $ [] 'Dynamic
         'nodejs? $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def nodejs? $ detect-nodejs?
@@ -2349,7 +2357,7 @@
                         class-rule $ str |. style-name
                         rule-name $ &str:replace (&str:replace k |$0 class-rule) |& class-rule
                         contained $ get v 'contained
-                        css-line $ style->string (.to-list v)
+                        css-line $ style->string (map-entries v)
                       if-let (contained-value contained) (str contained-value "| {" &newline rule-name "| {" &newline css-line &newline |} &newline |}) (str rule-name "| {" &newline css-line &newline |})
                 .to-list
                 .join-str $ str &newline &newline
@@ -2615,8 +2623,8 @@
                   :return 'Unit
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
-            :names $ {} (:inner-html |innerHTML)
-            :writable $ #{} :checked :disabled :inner-html :inner-text :selected
+            :names $ {} (:inner-html |innerHTML) (:insert-before! |insertBefore) (:parent-element |parentElement) (:remove! |remove)
+            :writable $ #{} :checked :disabled :id :inner-html :inner-text :selected
           :schema $ :: 'Trait
         'DomElementCollection $ %{} 'CodeEntry (:doc "|Indexed child element collection returned by the children property.")
           :code $ quote
@@ -2739,6 +2747,14 @@
           :ffi $ {} (:backend :js) (:kind :external-object)
             :names $ {} (:add-event-listener! |addEventListener) (:devtools-formatters |devtoolsFormatters) (:local-storage |localStorage) (:on-before-unload |onbeforeunload) (:remove-event-listener! |removeEventListener) (:set-timeout |setTimeout)
           :schema $ :: 'Trait
+        'set-inner-html! $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defn set-inner-html! (style-el content) (js-set style-el :inner-html content) &unit
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'Unit)
+              :args $ [] 'respo.dom/DomElement 'String
+              :features $ #{} :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote (ns respo.dom)
     'respo.ffi.browser $ %{} 'FileEntry
@@ -3508,9 +3524,7 @@
                           if (not= old-v new-v)
                             collect! $ :: :replace-prop coord n-coord new-pair
                           recur collect! coord n-coord old-follows new-follows
-                recur collect! coord n-coord
-                  if (list? old-props) old-props $ -> old-props .to-list
-                  if (list? new-props) new-props $ -> new-props .to-list
+                recur collect! coord n-coord (props-as-list old-props) (props-as-list new-props)
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
@@ -3576,6 +3590,16 @@
           :schema $ :: 'Fn
             {} (:return 'Unit)
               :args $ [] 'Fn 'List 'List 'List 'List
+        'props-as-list $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defn props-as-list (props)
+              if (list? props) (unsafe-coerce props 'List)
+                if (map? props) (.to-list props) ([])
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'List)
+              :args $ [] 'Dynamic
+              :features $ #{} :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote
           ns respo.render.diff $ :require
@@ -4203,14 +4227,11 @@
             defn add-element (target op listener-builder coord)
               let
                   new-element $ make-element op listener-builder coord
-                ->
-                  unsafe-coerce (.-parentElement target) JsObject
-                  .!insertBefore new-element target
-              do &unit
+                insert-before-target! target new-element
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
-              :args $ [] 'Dynamic 'Dynamic 'Fn 'List
+              :args $ [] 'respo.dom/DomElement 'Dynamic 'Fn 'List
               :features $ #{} :js-ffi
         'add-event $ %{} 'CodeEntry (:doc "|Attaches an event listener to a DOM element.")
           :code $ quote
@@ -4347,16 +4368,36 @@
               :args $ [] 'respo.dom/DomElement (:: 'List 'Number)
               :features $ #{} :js-ffi
               :return $ :: 'JsNullish 'respo.dom/DomElement
+        'insert-before-target! $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defn insert-before-target! (target new-element)
+              if-let
+                parent $ js-nullish->option (target :parent-element)
+                let
+                    parent-element $ unsafe-coerce parent (quote respo.dom/DomElement)
+                  do (.insert-before! parent-element new-element target) &unit
+                raise |[Respo/insert-before-target!]-target-has-no-parent-element
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'Unit)
+              :args $ [] 'respo.dom/DomElement 'respo.dom/DomElement
+              :features $ #{} :js-ffi
+        'remove-target! $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defn remove-target! (target)
+              do (.remove! target) &unit
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'Unit)
+              :args $ [] 'respo.dom/DomElement
+              :features $ #{} :js-ffi
         'replace-element $ %{} 'CodeEntry (:doc "|Replaces a DOM element with a new one created from an operation.")
           :code $ quote
             defn replace-element (target op listener-builder coord)
               let
                   new-element $ make-element op listener-builder coord
-                ->
-                  unsafe-coerce (.-parentElement target) JsObject
-                  .!insertBefore new-element target
-                .!remove target
-              do &unit
+                insert-before-target! target new-element
+                remove-target! target
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
@@ -5365,15 +5406,10 @@
                     map-keyboard-event $ unsafe-coerce event 'respo.dom/DomKeyboardEvent
                     {} $ :type :keyup
                   |input $ {} (:type :input)
-                    :value $ aget
-                      unsafe-coerce (.-target event) JsObject
-                      , |value
-                    :checked $ .-checked
-                      unsafe-coerce (.-target event) JsObject
+                    :value $ input-event-value event
+                    :checked $ input-event-checked? event
                   |change $ {} (:type :change)
-                    :value $ aget
-                      unsafe-coerce (.-target event) JsObject
-                      , |value
+                    :value $ input-event-value event
                   |focus $ {} (:type :focus)
                 assoc :original-event event
                 assoc :event event
@@ -5440,6 +5476,38 @@
           :schema $ :: 'Fn
             {} (:return 'String)
               :args $ [] 'Number 'Number 'Number 'Number
+        'input-event-checked? $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defn input-event-checked? (event)
+              let
+                  input-event $ unsafe-coerce event (quote respo.dom/DomInputEvent)
+                if-let
+                  target-host $ js-nullish->option (.-target input-event)
+                  let
+                      target $ unsafe-coerce target-host (quote respo.dom/DomElement)
+                    .-checked target
+                  raise |[Respo/input-event-checked?]-event-has-no-target
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'Bool)
+              :args $ [] 'respo.dom/DomEvent
+              :features $ #{} :js-ffi
+        'input-event-value $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defn input-event-value (event)
+              let
+                  input-event $ unsafe-coerce event (quote respo.dom/DomInputEvent)
+                if-let
+                  target-host $ js-nullish->option (.-target input-event)
+                  let
+                      target $ unsafe-coerce target-host (quote respo.dom/DomElement)
+                    .-value target
+                  raise |[Respo/input-event-value]-event-has-no-target
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'Dynamic)
+              :args $ [] 'respo.dom/DomEvent
+              :features $ #{} :js-ffi
         'map-keyboard-event $ %{} 'CodeEntry (:doc "|Extracts key information from a JavaScript KeyboardEvent.")
           :code $ quote
             defn map-keyboard-event (event)
