@@ -44,6 +44,9 @@ jobs:
       - name: "test"
         run: calcit calcit.cirru test --require-match --summary-only --format json
 
+      - name: Test nominal DOM patch protocol
+        run: yarn test-dom-patch-types
+
       - name: "test typed DOM host"
         run: yarn test-dom-host
 
