@@ -16,8 +16,9 @@
 
 Validation / 验证：
 
-- Calcit 0.13.77: `--check-only`, 40/40 attached tests, `analyze check-types`, unresolved weak-type audit, and quality baseline all pass; this change reduces unresolved dynamic positions by 12 and schema dynamic positions by 9.
+- Calcit 0.14.0 in temporary compatibility mode: `--check-only`, 40/40 attached tests, `analyze check-types`, unresolved weak-type audit, and quality baseline all pass; this change reduces unresolved dynamic positions by 12 and schema dynamic positions by 9. Strict generated-function schemas remain tracked in calcit-lang/calcit#902, while the DomPatch negative gate stays strict.
 - `yarn test-dom-patch-types`, `yarn test-dom-host`, nullish DOM property tests, 53 Markdown files / 111 checked blocks, JS generation, and the Node 24 Vite production build pass.
 - Real-browser add/order/remove/clear, property/style toggles, component state replacement, focus/selection preservation, and listener single-fire checks pass with zero console errors.
 - The same 41-round browser stress sequence reports baseline 50–91 ms and typed protocol 50–93 ms (both median about 53 ms), ending with the same 11 keyed nodes.
 - Production bundle: baseline 634,912 bytes / 93,440 gzip; typed protocol 647,426 bytes / 94,222 gzip (+12,514 raw, +782 gzip). The increase is nominal enum metadata, with no observed behavior or timing regression.
+- The SSR adoption collector now stores the single nominal `DomPatch` emitted by `collect-mounting`, preventing mount effects and refs from hitting the legacy four-argument callback.

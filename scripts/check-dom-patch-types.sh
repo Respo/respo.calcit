@@ -31,7 +31,7 @@ expect_failure \
 expect_failure \
   'a Recollect-style application Op used as DomPatch' \
   'expects type `list<type respo.schema/DomPatch>`' \
-  "if false (respo.render.patch/apply-dom-changes ([] (respo.app.schema/Op :clear)) (unsafe-coerce nil 'respo.dom/DomElement) (unsafe-coerce nil 'Fn)) &unit"
+  'respo.test.dom/accept-dom-patches ([] (respo.app.schema/Op :clear))'
 
 expect_failure \
   'a non-exhaustive DomPatch match' \

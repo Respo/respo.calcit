@@ -2021,8 +2021,7 @@
               let
                   app-element $ .-firstElementChild target
                   changes $ &buf-list:new
-                  collect! $ fn (op coord n-coord v)
-                    &buf-list:push changes $ [] op coord n-coord v
+                  collect! $ fn (patch) (&buf-list:push changes patch)
                   deliver-event $ build-deliver-event *global-element (atom dispatch!)
                 if (js-nullish? app-element) (raise "|Detected no element from SSR!")
                 compare-to-dom! (purify-element element) (unsafe-coerce app-element 'js-ffi.browser/DomElementHost)
@@ -5019,6 +5018,13 @@
         :code $ quote (ns respo.schema.listener)
     'respo.test.dom $ %{} 'FileEntry
       :defs $ {}
+        'accept-dom-patches $ %{} 'CodeEntry (:doc "|Typed test boundary used by compile-negative checks to prove application operations cannot be passed as DOM patches.")
+          :code $ quote
+            defn accept-dom-patches (patches) &unit
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'Unit)
+              :args $ [] (:: 'List 'respo.schema/DomPatch)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn main! (root-host html-host)
@@ -5040,6 +5046,31 @@
           :schema $ :: 'Fn
             {} (:return 'Unit)
               :args $ [] 'js-ffi.browser/DomElementHost 'js-ffi.browser/DomElementHost
+              :features $ #{} :js-ffi
+        'verify-realize-ssr-ref! $ %{} 'CodeEntry (:doc "|Regression fixture for SSR adoption: a ref-backed component must collect one nominal DomPatch and receive the already-rendered root without callback arity failure.")
+          :code $ quote
+            defn verify-realize-ssr-ref! (mount root)
+              let
+                  refs $ atom ([])
+                  element $ %{} respo.schema/Element (:name :div)
+                    :coord $ %none
+                    :attrs $ []
+                    :style $ []
+                    :event $ {}
+                    :children $ []
+                    :ref $ %some
+                      fn (target) (swap! refs conj target)
+                  component $ %{} respo.schema/Component (:name :ssr-fixture)
+                    :effects $ []
+                    :listeners $ []
+                    :tree $ %some element
+                respo.core/realize-ssr! mount component $ fn (_op) &unit
+                assert |SSR-ref-receives-adopted-root $ = ([] root) @refs
+                , &unit
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'Unit)
+              :args $ [] 'respo.dom/DomElement 'respo.dom/DomElement
               :features $ #{} :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote
