@@ -41,7 +41,9 @@ TOTAL_BLOCKS=0
 while IFS= read -r file; do
   TOTAL=$((TOTAL + 1))
   echo "check-md: $file"
-  cmd=("${CR_CMD[@]}" "$ENTRY" docs check-md --dep ./)
+  # Calcit 0.14 requires compatibility mode until generated snippet functions
+  # can carry schemas (calcit-lang/calcit#902).
+  cmd=("${CR_CMD[@]}" "$ENTRY" --compat-types docs check-md --dep ./)
   if [ "${#EXTRA_DEP_ARGS[@]}" -gt 0 ]; then
     cmd+=("${EXTRA_DEP_ARGS[@]}")
   fi

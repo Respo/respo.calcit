@@ -2021,8 +2021,7 @@
               let
                   app-element $ .-firstElementChild target
                   changes $ &buf-list:new
-                  collect! $ fn (op coord n-coord v)
-                    &buf-list:push changes $ [] op coord n-coord v
+                  collect! $ fn (patch) (&buf-list:push changes patch)
                   deliver-event $ build-deliver-event *global-element (atom dispatch!)
                 if (js-nullish? app-element) (raise "|Detected no element from SSR!")
                 compare-to-dom! (purify-element element) (unsafe-coerce app-element 'js-ffi.browser/DomElementHost)
@@ -3130,7 +3129,7 @@
                           k $ option:unwrap (first pair)
                           element $ option:unwrap (last pair)
                           new-coord $ conj coord k
-                        collect! $ :: :append-element new-coord n-coord element
+                        collect! $ DomPatch :append-element new-coord n-coord element
                         collect-mounting collect! coord (conj n-coord index) element true
                         recur collect! coord n-coord (inc index) ([]) (rest new-children)
                     (and (not was-empty?) now-empty?)
@@ -3141,7 +3140,7 @@
                           new-coord $ conj coord k
                           new-n-coord $ conj n-coord index
                         collect-unmounting collect! coord new-n-coord element true
-                        collect! $ :: :rm-element new-coord new-n-coord nil
+                        collect! $ DomPatch :rm-element new-coord new-n-coord
                         recur collect! coord n-coord index (rest old-children) ([])
                     true $ let
                         old-keys $ -> old-children (take 16)
@@ -3174,7 +3173,7 @@
                               element $ option:unwrap (last pair)
                               new-coord $ conj coord k
                               new-n-coord $ conj n-coord index
-                            collect! $ :: :add-element new-coord new-n-coord element
+                            collect! $ DomPatch :add-element new-coord new-n-coord element
                             collect-mounting collect! coord new-n-coord (val-of-first new-children) true
                             recur collect! coord n-coord (inc index) old-children new-follows
                         (and (not x1-remains?) y1-existed?)
@@ -3185,7 +3184,7 @@
                               new-coord $ conj coord k
                               new-n-coord $ conj n-coord index
                             collect-unmounting collect! coord new-n-coord element true
-                            collect! $ :: :rm-element new-coord new-n-coord nil
+                            collect! $ DomPatch :rm-element new-coord new-n-coord
                             recur collect! coord n-coord index old-follows new-children
                         true $ let
                             xi $ option:unwrap-or (index-of new-keys x1) 16
@@ -3196,17 +3195,20 @@
                             let
                                 new-element $ val-of-first new-children
                                 new-coord $ conj coord y1
-                              collect! $ :: :add-element new-coord new-n-coord new-element
+                              collect! $ DomPatch :add-element new-coord new-n-coord new-element
                               collect-mounting collect! coord new-n-coord new-element true
                               recur collect! coord n-coord (inc index) old-children new-follows
                             do
                               collect-unmounting collect! coord new-n-coord (val-of-first old-children) true
-                              collect! $ :: :rm-element (conj coord x1) new-n-coord nil
+                              collect! $ DomPatch :rm-element (conj coord x1) new-n-coord
                               recur collect! coord n-coord index old-follows new-children
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
-              :args $ [] 'Fn 'List 'List 'Number 'Dynamic 'Dynamic
+              :args $ []
+                :: 'Fn $ {} (:return 'Unit)
+                  :args $ [] 'respo.schema/DomPatch
+                , 'List (:: 'List 'Number) 'Number 'Dynamic 'Dynamic
               :features $ #{} :js-ffi
           :tests $ []
             %{} 'TestEntry (:name |accepts-list-map-representation-transitions)
@@ -3237,11 +3239,11 @@
                     , legacy-nil
                   (and (nil? old-tree) (some? new-tree))
                     do
-                      collect! $ :: :add-element coord n-coord new-tree
+                      collect! $ DomPatch :add-element coord n-coord new-tree
                       collect-mounting collect! coord n-coord new-tree true
                   (and (some? old-tree) (nil? new-tree))
                     do (collect-unmounting collect! coord n-coord old-tree true)
-                      collect! $ :: :rm-element coord n-coord legacy-nil
+                      collect! $ DomPatch :rm-element coord n-coord
                   (and (component? old-tree) (component? new-tree))
                     let
                         next-coord $ conj coord (component-name new-tree)
@@ -3262,7 +3264,7 @@
                                   (:some new-child-tree) (find-element-diffs collect! next-coord n-coord old-child-tree new-child-tree)
                           collect-updating collect! :update coord n-coord old-tree new-tree
                         do (collect-unmounting collect! coord n-coord old-tree true)
-                          collect! $ :: :replace-element coord n-coord new-tree
+                          collect! $ DomPatch :replace-element coord n-coord new-tree
                           collect-mounting collect! coord n-coord new-tree true
                   (and (component? old-tree) (element? new-tree))
                     do (collect-own-unmounting collect! coord n-coord old-tree true)
@@ -3281,7 +3283,7 @@
                     if
                       not= (element-name old-tree) (element-name new-tree)
                       do (collect-unmounting collect! coord n-coord old-tree true)
-                        collect! $ :: :replace-element coord n-coord new-tree
+                        collect! $ DomPatch :replace-element coord n-coord new-tree
                         collect-mounting collect! coord n-coord new-tree true
                       do
                         find-props-diffs collect! coord n-coord (element-attrs old-tree) (element-attrs new-tree)
@@ -3292,12 +3294,12 @@
                             match old-ref-option
                               (:none) &unit
                               (:some old-ref!)
-                                collect! $ :: :effect-before-update coord n-coord
+                                collect! $ DomPatch :effect-before-update coord n-coord
                                   fn (_target) (old-ref! legacy-nil)
                             match new-ref-option
                               (:none) &unit
                               (:some new-ref!)
-                                collect! $ :: :effect-update coord n-coord
+                                collect! $ DomPatch :effect-update coord n-coord
                                   fn (target) (new-ref! target)
                         let
                             old-style $ element-style old-tree
@@ -3313,9 +3315,9 @@
                                 added-events $ difference new-events old-events
                                 removed-events $ difference old-events new-events
                               &doseq (event-name added-events)
-                                collect! $ :: :set-event coord n-coord event-name
+                                collect! $ DomPatch :set-event coord n-coord event-name
                               &doseq (event-name removed-events)
-                                collect! $ :: :rm-event coord n-coord event-name
+                                collect! $ DomPatch :rm-event coord n-coord event-name
                         let
                             old-children $ element-children old-tree
                             new-children $ element-children new-tree
@@ -3329,7 +3331,10 @@
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
-              :args $ [] 'Fn 'List (:: 'List 'Number) 'Dynamic 'Dynamic
+              :args $ []
+                :: 'Fn $ {} (:return 'Unit)
+                  :args $ [] 'respo.schema/DomPatch
+                , 'List (:: 'List 'Number) 'Dynamic 'Dynamic
               :features $ #{} :js-ffi
           :tests $ []
             %{} 'TestEntry (:name |clears-old-ref-before-setting-new-ref)
@@ -3472,7 +3477,7 @@
                     op-kind $ fn (op)
                       match op
                         (:add-element _coord _n-coord _tree) :add
-                        (:rm-element _coord _n-coord _payload) :remove
+                        (:rm-element _coord _n-coord) :remove
                         _ :other
                   find-element-diffs collect! ([]) ([]) empty-old empty-new
                   assert |none-to-none-does-not-touch-dom $ empty? @ops
@@ -3481,6 +3486,21 @@
                   find-element-diffs collect! ([]) ([]) empty-old plain
                   find-element-diffs collect! ([]) ([]) plain empty-new
                   assert= ([] :add :remove :add :remove) (map @ops op-kind)
+              :tags $ #{} :unit
+            %{} 'TestEntry (:name |identical-tree-produces-no-patches)
+              :code $ quote
+                let
+                    ops $ atom ([])
+                    collect! $ fn (op) (swap! ops conj op)
+                    tree $ %{} respo.schema/Element (:name :div)
+                      :coord $ %none
+                      :attrs $ [] ([] :inner-text |same)
+                      :style $ []
+                      :event $ {}
+                      :children $ []
+                      :ref $ %none
+                  find-element-diffs collect! ([]) ([]) tree tree
+                  assert |identical-tree-emits-no-dom-mutation $ empty? @ops
               :tags $ #{} :unit
         'find-props-diffs $ %{} 'CodeEntry (:doc "|Compares old and new sorted property lists to identify additions, removals, and updates.")
           :code $ quote
@@ -3496,13 +3516,15 @@
                     (and was-empty? (not now-empty?))
                       let
                           new-pair $ option:unwrap (first new-props)
-                        collect! $ :: :add-prop coord n-coord new-pair
+                        collect! $ DomPatch :add-prop coord n-coord
+                          option:unwrap $ first new-pair
+                          option:unwrap $ last new-pair
                         recur collect! coord n-coord old-props $ rest new-props
                     (and (not was-empty?) now-empty?)
                       let
                           old-pair $ option:unwrap (first old-props)
                           old-k $ option:unwrap (first old-pair)
-                        collect! $ :: :rm-prop coord n-coord old-k
+                        collect! $ DomPatch :rm-prop coord n-coord old-k
                         recur collect! coord n-coord (rest old-props) new-props
                     true $ let
                         old-pair $ option:unwrap (first old-props)
@@ -3515,20 +3537,27 @@
                         new-follows $ rest new-props
                       case-default (&compare old-k new-k) (eprintln |[Respo]-unknown-compare-result-for-props-keys)
                         -1 $ do
-                          collect! $ :: :rm-prop coord n-coord old-k
+                          collect! $ DomPatch :rm-prop coord n-coord old-k
                           recur collect! coord n-coord old-follows new-props
                         1 $ do
-                          collect! $ :: :add-prop coord n-coord new-pair
+                          collect! $ DomPatch :add-prop coord n-coord
+                            option:unwrap $ first new-pair
+                            option:unwrap $ last new-pair
                           recur collect! coord n-coord old-props new-follows
                         0 $ do
                           if (not= old-v new-v)
-                            collect! $ :: :replace-prop coord n-coord new-pair
+                            collect! $ DomPatch :replace-prop coord n-coord
+                              option:unwrap $ first new-pair
+                              option:unwrap $ last new-pair
                           recur collect! coord n-coord old-follows new-follows
                 recur collect! coord n-coord (props-as-list old-props) (props-as-list new-props)
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
-              :args $ [] 'Fn 'List 'List 'Dynamic 'Dynamic
+              :args $ []
+                :: 'Fn $ {} (:return 'Unit)
+                  :args $ [] 'respo.schema/DomPatch
+                , 'List (:: 'List 'Number) 'Dynamic 'Dynamic
           :tests $ []
             %{} 'TestEntry (:name |reports-property-changes)
               :code $ quote
@@ -3539,9 +3568,9 @@
                     [] $ [] :class-name |old
                     [] $ [] :class-name |new
                   assert |one-replacement-is-produced $ = 1 (count @effects)
-                  assert |replacement-carries-the-new-pair $ =
+                  assert |replacement-carries-typed-key-and-value $ =
                     option:unwrap $ first @effects
-                    :: :replace-prop ([]) ([]) ([] :class-name |new)
+                    DomPatch :replace-prop ([]) ([]) :class-name |new
               :tags $ #{} :unit
         'find-style-diffs $ %{} 'CodeEntry (:doc "|Compares two style maps and collects effects for additions, removals, or updates.")
           :code $ quote
@@ -3556,14 +3585,16 @@
                     let
                         entry $ option:unwrap (first new-style)
                         follows $ rest new-style
-                      collect! $ :: :add-style c-coord coord entry
+                      collect! $ DomPatch :add-style c-coord coord
+                        option:unwrap $ first entry
+                        option:unwrap $ last entry
                       recur collect! c-coord coord old-style follows
                   (and (not was-empty?) now-empty?)
                     let
                         entry $ option:unwrap (first old-style)
                         follows $ rest old-style
                         k $ option:unwrap (first entry)
-                      collect! $ :: :rm-style c-coord coord k
+                      collect! $ DomPatch :rm-style c-coord coord k
                       recur collect! c-coord coord follows new-style
                   true $ let
                       old-entry $ option:unwrap (first old-style)
@@ -3576,20 +3607,23 @@
                       new-follows $ rest new-style
                     case-default (&compare old-k new-k) (eprintln |[Respo]-unknown-compare-result-for-style-keys)
                       -1 $ do
-                        collect! $ :: :rm-style c-coord coord old-k
+                        collect! $ DomPatch :rm-style c-coord coord old-k
                         recur collect! c-coord coord old-follows new-style
                       1 $ do
-                        collect! $ :: :add-style c-coord coord new-entry
+                        collect! $ DomPatch :add-style c-coord coord new-k new-v
                         recur collect! c-coord coord old-style new-follows
                       0 $ do
                         if
                           not $ identical? old-v new-v
-                          collect! $ :: :replace-style c-coord coord new-entry
+                          collect! $ DomPatch :replace-style c-coord coord new-k new-v
                         recur collect! c-coord coord old-follows new-follows
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
-              :args $ [] 'Fn 'List 'List 'List 'List
+              :args $ []
+                :: 'Fn $ {} (:return 'Unit)
+                  :args $ [] 'respo.schema/DomPatch
+                , 'List (:: 'List 'Number) (:: 'List 'List) (:: 'List 'List)
         'props-as-list $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn props-as-list (props)
@@ -3607,7 +3641,7 @@
             respo.util.detect :refer $ component? element? component-name component-tree element-name element-attrs element-ref element-style element-event element-children
             respo.render.effect :refer $ collect-mounting collect-updating collect-unmounting collect-own-mounting collect-own-unmounting
             respo.util.list :refer $ val-of-first
-            respo.schema :refer $ dev?
+            respo.schema :refer $ dev? DomPatch
     'respo.render.dom $ %{} 'FileEntry
       :defs $ {}
         'make-element $ %{} 'CodeEntry (:doc "|internal function to create a DOM element from a virtual element. handles properties, styles, events, and recursively creates child elements.")
@@ -3735,7 +3769,7 @@
                         let
                             typed-effect $ as-effect effect
                             method $ effect-method typed-effect
-                          collect! $ :: :effect-mount next-coord n-coord
+                          collect! $ DomPatch :effect-mount next-coord n-coord
                             fn (target)
                               method (effect-args typed-effect) ([] :mount target at-place?)
                     option:fold (respo.util.detect/component-tree component-value)
@@ -3746,7 +3780,7 @@
                     option:fold (element-ref tree)
                       fn () &unit
                       fn (ref!)
-                        collect! $ :: :effect-mount coord n-coord
+                        collect! $ DomPatch :effect-mount coord n-coord
                           fn (target)
                             (unsafe-coerce ref! Fn) target
                     loop
@@ -3769,7 +3803,10 @@
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
-              :args $ [] 'Fn 'List 'List 'Dynamic 'Bool
+              :args $ []
+                :: 'Fn $ {} (:return 'Unit)
+                  :args $ [] 'respo.schema/DomPatch
+                , 'List (:: 'List 'Number) 'Struct 'Bool
               :features $ #{} :js-ffi
           :tests $ []
             %{} 'TestEntry (:name |runs-ref-mount-and-unmount-lifecycle)
@@ -3839,13 +3876,16 @@
                 &doseq (effect effects)
                   let
                       method $ effect-method effect
-                    collect! $ :: :effect-mount next-coord n-coord
+                    collect! $ DomPatch :effect-mount next-coord n-coord
                       fn (target)
                         method (effect-args effect) ([] :mount target at-place?)
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
-              :args $ [] 'Fn 'List 'List 'Dynamic 'Bool
+              :args $ []
+                :: 'Fn $ {} (:return 'Unit)
+                  :args $ [] 'respo.schema/DomPatch
+                , 'List (:: 'List 'Number) 'respo.schema/Component 'Bool
           :tags $ #{} :internal
         'collect-own-unmounting $ %{} 'CodeEntry (:doc |)
           :code $ quote
@@ -3859,13 +3899,16 @@
                 &doseq (effect effects)
                   let
                       method $ effect-method effect
-                    collect! $ :: :effect-unmount next-coord n-coord
+                    collect! $ DomPatch :effect-unmount next-coord n-coord
                       fn (target)
                         method (effect-args effect) ([] :unmount target at-place?)
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
-              :args $ [] 'Fn 'List 'List 'Dynamic 'Bool
+              :args $ []
+                :: 'Fn $ {} (:return 'Unit)
+                  :args $ [] 'respo.schema/DomPatch
+                , 'List (:: 'List 'Number) 'respo.schema/Component 'Bool
           :tags $ #{} :internal
         'collect-unmounting $ %{} 'CodeEntry (:doc "|internal function to collect unmounting effects from component tree. recursively traverses the virtual DOM and collects effect:unmount callbacks.")
           :code $ quote
@@ -3885,7 +3928,7 @@
                         let
                             typed-effect $ as-effect effect
                             method $ effect-method typed-effect
-                          collect! $ :: :effect-unmount new-coord n-coord
+                          collect! $ DomPatch :effect-unmount new-coord n-coord
                             fn (target)
                               method (effect-args typed-effect) ([] :unmount target at-place?)
                 (element? tree)
@@ -3905,14 +3948,17 @@
                     option:fold (element-ref tree)
                       fn () &unit
                       fn (ref!)
-                        collect! $ :: :effect-unmount coord n-coord
+                        collect! $ DomPatch :effect-unmount coord n-coord
                           fn (_target)
                             apply (unsafe-coerce ref! Fn) ([] nil)
                 true $ js/console.warn |Unknown-entry-for-unmounting: tree
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
-              :args $ [] 'Fn 'List 'List 'Dynamic 'Bool
+              :args $ []
+                :: 'Fn $ {} (:return 'Unit)
+                  :args $ [] 'respo.schema/DomPatch
+                , 'List (:: 'List 'Number) 'Struct 'Bool
               :features $ #{} :js-ffi
         'collect-updating $ %{} 'CodeEntry (:doc "|Compares effects between component updates and collects effect actions if arguments change.")
           :code $ quote
@@ -3942,26 +3988,26 @@
                                 let
                                     effect $ if (= action :before-update) old-effect new-effect
                                     method $ effect-method effect
-                                  collect! $ ::
-                                    if (= :update action) :effect-update :effect-before-update
-                                    , next-coord n-coord
-                                      fn (target)
-                                        method (effect-args effect) ([] action target false)
+                                  collect! $ if (= :update action)
+                                    DomPatch :effect-update next-coord n-coord $ fn (target)
+                                      method (effect-args effect) ([] action target false)
+                                    DomPatch :effect-before-update next-coord n-coord $ fn (target)
+                                      method (effect-args effect) ([] action target false)
                               let
                                   effect $ if (= action :before-update) old-effect new-effect
                                   method $ effect-method effect
                                   lifecycle-action $ if (= action :before-update) :unmount :mount
-                                collect! $ ::
-                                  if (= :update action) :effect-update :effect-before-update
-                                  , next-coord n-coord
-                                    fn (target)
-                                      method (effect-args effect) ([] lifecycle-action target false)
+                                collect! $ if (= :update action)
+                                  DomPatch :effect-update next-coord n-coord $ fn (target)
+                                    method (effect-args effect) ([] lifecycle-action target false)
+                                  DomPatch :effect-before-update next-coord n-coord $ fn (target)
+                                    method (effect-args effect) ([] lifecycle-action target false)
                             , &unit
                           do
                             when (= action :before-update)
                               let
                                   method $ effect-method old-effect
-                                collect! $ :: :effect-before-update next-coord n-coord
+                                collect! $ DomPatch :effect-before-update next-coord n-coord
                                   fn (target)
                                     method (effect-args old-effect) ([] :unmount target false)
                             , &unit
@@ -3971,7 +4017,7 @@
                           when (= action :update)
                             let
                                 method $ effect-method new-effect
-                              collect! $ :: :effect-update next-coord n-coord
+                              collect! $ DomPatch :effect-update next-coord n-coord
                                 fn (target)
                                   method (effect-args new-effect) ([] :mount target false)
                         , &unit
@@ -3980,13 +4026,14 @@
             {} (:return 'Unit)
               :args $ []
                 :: 'Fn $ {} (:return 'Unit)
-                  :args $ [] 'Enum
-                , 'Tag 'List 'List 'Dynamic 'Dynamic
+                  :args $ [] 'respo.schema/DomPatch
+                , 'Tag 'List (:: 'List 'Number) 'respo.schema/Component 'respo.schema/Component
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote
           ns respo.render.effect $ :require (respo.schema.op :as op)
             respo.util.detect :refer $ component? element? =seq as-component as-element as-effect component-name component-effects component-tree effect-name effect-method effect-args element-children element-ref
             respo.util.list :refer $ val-of-first
+            respo.schema :refer $ DomPatch
     'respo.render.html $ %{} 'FileEntry
       :defs $ {}
         'element->string $ %{} 'CodeEntry (:doc "|which is actually `element->html`")
@@ -4297,58 +4344,78 @@
               let
                   get-root $ fn ()
                     unsafe-coerce (.-firstElementChild mount-point) 'respo.dom/DomElement
+                  find-target-at $ fn (n-coord)
+                    js-nullish->option $ find-target
+                      unsafe-coerce (get-root) 'respo.dom/DomElement
+                      , n-coord
                 &doseq (op changes)
-                  let-sugar
-                      n-coord $ option:unwrap (nth op 2)
-                      target $ js-nullish->option
-                        find-target
-                          unsafe-coerce (get-root) 'respo.dom/DomElement
-                          , n-coord
-                    match op
-                      (:replace-prop _coord _n-coord op-data)
-                        replace-prop (option:unwrap target)
-                          option:unwrap $ nth op-data 0
-                          option:unwrap $ nth op-data 1
-                      (:add-prop _coord _n-coord op-data)
-                        add-prop (option:unwrap target)
-                          option:unwrap $ nth op-data 0
-                          option:unwrap $ nth op-data 1
-                      (:rm-prop _coord _n-coord op-data)
-                        rm-prop (option:unwrap target) op-data
-                      (:add-style _coord _n-coord op-data)
-                        add-style (option:unwrap target)
-                          option:unwrap $ nth op-data 0
-                          option:unwrap $ nth op-data 1
-                      (:replace-style _coord _n-coord op-data)
-                        replace-style (option:unwrap target)
-                          option:unwrap $ nth op-data 0
-                          option:unwrap $ nth op-data 1
-                      (:rm-style _coord _n-coord op-data)
-                        rm-style (option:unwrap target) op-data
-                      (:set-event coord _n-coord op-data)
-                        add-event (option:unwrap target) op-data listener-builder coord
-                      (:rm-event _coord _n-coord op-data)
-                        rm-event (option:unwrap target) op-data
-                      (:add-element coord _n-coord op-data)
-                        add-element (option:unwrap target) op-data listener-builder coord
-                      (:rm-element _coord _n-coord op-data) (rm-element target op-data)
-                      (:replace-element coord _n-coord op-data)
-                        replace-element (option:unwrap target) op-data listener-builder coord
-                      (:append-element coord _n-coord op-data)
-                        append-element (option:unwrap target) op-data listener-builder coord
-                      (:effect-mount _coord n-coord op-data)
-                        run-effect (option:unwrap target) op-data n-coord
-                      (:effect-unmount _coord n-coord op-data)
-                        run-effect (option:unwrap target) op-data n-coord
-                      (:effect-update _coord n-coord op-data)
-                        run-effect (option:unwrap target) op-data n-coord
-                      (:effect-before-update _coord n-coord op-data)
-                        run-effect (option:unwrap target) op-data n-coord
-                      _ $ eprintln |not-implemented: op
+                  match op
+                    (:replace-prop _coord n-coord key value)
+                      replace-prop
+                        option:unwrap $ find-target-at n-coord
+                        , key value
+                    (:add-prop _coord n-coord key value)
+                      add-prop
+                        option:unwrap $ find-target-at n-coord
+                        , key value
+                    (:rm-prop _coord n-coord key)
+                      rm-prop
+                        option:unwrap $ find-target-at n-coord
+                        , key
+                    (:add-style _coord n-coord key value)
+                      add-style
+                        option:unwrap $ find-target-at n-coord
+                        , key value
+                    (:replace-style _coord n-coord key value)
+                      replace-style
+                        option:unwrap $ find-target-at n-coord
+                        , key value
+                    (:rm-style _coord n-coord key)
+                      rm-style
+                        option:unwrap $ find-target-at n-coord
+                        , key
+                    (:set-event coord n-coord event-name)
+                      add-event
+                        option:unwrap $ find-target-at n-coord
+                        , event-name listener-builder coord
+                    (:rm-event _coord n-coord event-name)
+                      rm-event
+                        option:unwrap $ find-target-at n-coord
+                        , event-name
+                    (:add-element coord n-coord element)
+                      add-element
+                        option:unwrap $ find-target-at n-coord
+                        , element listener-builder coord
+                    (:rm-element _coord n-coord)
+                      rm-element $ find-target-at n-coord
+                    (:replace-element coord n-coord element)
+                      replace-element
+                        option:unwrap $ find-target-at n-coord
+                        , element listener-builder coord
+                    (:append-element coord n-coord element)
+                      append-element
+                        option:unwrap $ find-target-at n-coord
+                        , element listener-builder coord
+                    (:effect-mount _coord n-coord run!)
+                      run-effect
+                        option:unwrap $ find-target-at n-coord
+                        , run! n-coord
+                    (:effect-unmount _coord n-coord run!)
+                      run-effect
+                        option:unwrap $ find-target-at n-coord
+                        , run! n-coord
+                    (:effect-update _coord n-coord run!)
+                      run-effect
+                        option:unwrap $ find-target-at n-coord
+                        , run! n-coord
+                    (:effect-before-update _coord n-coord run!)
+                      run-effect
+                        option:unwrap $ find-target-at n-coord
+                        , run! n-coord
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
-              :args $ [] 'List 'respo.dom/DomElement 'Fn
+              :args $ [] (:: 'List 'respo.schema/DomPatch) 'respo.dom/DomElement 'Fn
               :features $ #{} :js-ffi
         'find-target $ %{} 'CodeEntry (:doc "|Locates a DOM node by traversing children using a coordinate path.")
           :code $ quote
@@ -4446,7 +4513,7 @@
               :features $ #{} :js-ffi
         'rm-element $ %{} 'CodeEntry (:doc "|Removes the DOM element from the document.")
           :code $ quote
-            defn rm-element (target op)
+            defn rm-element (target)
               match target
                 (:some element) (.remove! element)
                 (:none) (js/console.warn |Respo:-Element-already-removed!-Probably-by-:inner-text.)
@@ -4454,7 +4521,7 @@
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
-              :args $ [] (:: 'Option 'respo.dom/DomElement) 'Dynamic
+              :args $ [] (:: 'Option 'respo.dom/DomElement)
               :features $ #{} :js-ffi
         'rm-event $ %{} 'CodeEntry (:doc "|Removes an event listener from a DOM element by setting it to nil.")
           :code $ quote
@@ -4520,6 +4587,7 @@
             respo.render.dom :refer $ make-element style->string
             respo.schema.op :as op
             respo.dom :refer $ DomElement
+            respo.schema :refer $ DomPatch
     'respo.resource $ %{} 'FileEntry
       :defs $ {}
         '*resource-id $ %{} 'CodeEntry (:doc |)
@@ -4764,6 +4832,62 @@
               :tree $ :: 'Option 'Struct
           :examples $ []
           :schema $ :: 'Enum
+        'DomPatch $ %{} 'CodeEntry (:doc "|Nominal internal command protocol shared by Respo's virtual-tree diff producers and sole DOM patch consumer.")
+          :code $ quote
+            defenum DomPatch
+              :replace-prop (:: 'List 'Dynamic) (:: 'List 'Number) 'Tag 'Dynamic
+              :add-prop (:: 'List 'Dynamic) (:: 'List 'Number) 'Tag 'Dynamic
+              :rm-prop (:: 'List 'Dynamic) (:: 'List 'Number) 'Tag
+              :add-style (:: 'List 'Dynamic) (:: 'List 'Number) 'Tag 'Dynamic
+              :replace-style (:: 'List 'Dynamic) (:: 'List 'Number) 'Tag 'Dynamic
+              :rm-style (:: 'List 'Dynamic) (:: 'List 'Number) 'Tag
+              :set-event (:: 'List 'Dynamic) (:: 'List 'Number) 'Tag
+              :rm-event (:: 'List 'Dynamic) (:: 'List 'Number) 'Tag
+              :add-element (:: 'List 'Dynamic) (:: 'List 'Number) 'Struct
+              :rm-element (:: 'List 'Dynamic) (:: 'List 'Number)
+              :replace-element (:: 'List 'Dynamic) (:: 'List 'Number) 'Struct
+              :append-element (:: 'List 'Dynamic) (:: 'List 'Number) 'Struct
+              :effect-mount (:: 'List 'Dynamic) (:: 'List 'Number) 'Fn
+              :effect-unmount (:: 'List 'Dynamic) (:: 'List 'Number) 'Fn
+              :effect-update (:: 'List 'Dynamic) (:: 'List 'Number) 'Fn
+              :effect-before-update (:: 'List 'Dynamic) (:: 'List 'Number) 'Fn
+          :examples $ []
+          :schema $ :: 'EnumDef
+          :tests $ []
+            %{} 'TestEntry (:name |constructs-and-exhaustively-matches-all-variants)
+              :code $ quote
+                let
+                    coord $ [] :root
+                    n-coord $ [] 0
+                    element $ %{} Element (:name :div)
+                      :coord $ %none
+                      :attrs $ []
+                      :style $ []
+                      :event $ {}
+                      :children $ []
+                      :ref $ %none
+                    run! $ fn (_target) &unit
+                    patches $ [] (DomPatch :replace-prop coord n-coord :title |next) (DomPatch :add-prop coord n-coord :title |new) (DomPatch :rm-prop coord n-coord :title) (DomPatch :add-style coord n-coord :color |red) (DomPatch :replace-style coord n-coord :color |blue) (DomPatch :rm-style coord n-coord :color) (DomPatch :set-event coord n-coord :click) (DomPatch :rm-event coord n-coord :click) (DomPatch :add-element coord n-coord element) (DomPatch :rm-element coord n-coord) (DomPatch :replace-element coord n-coord element) (DomPatch :append-element coord n-coord element) (DomPatch :effect-mount coord n-coord run!) (DomPatch :effect-unmount coord n-coord run!) (DomPatch :effect-update coord n-coord run!) (DomPatch :effect-before-update coord n-coord run!)
+                    variant-name $ fn (patch)
+                      match patch
+                        (:replace-prop _coord _n-coord _key _value) :replace-prop
+                        (:add-prop _coord _n-coord _key _value) :add-prop
+                        (:rm-prop _coord _n-coord _key) :rm-prop
+                        (:add-style _coord _n-coord _key _value) :add-style
+                        (:replace-style _coord _n-coord _key _value) :replace-style
+                        (:rm-style _coord _n-coord _key) :rm-style
+                        (:set-event _coord _n-coord _event-name) :set-event
+                        (:rm-event _coord _n-coord _event-name) :rm-event
+                        (:add-element _coord _n-coord _element) :add-element
+                        (:rm-element _coord _n-coord) :rm-element
+                        (:replace-element _coord _n-coord _element) :replace-element
+                        (:append-element _coord _n-coord _element) :append-element
+                        (:effect-mount _coord _n-coord _run!) :effect-mount
+                        (:effect-unmount _coord _n-coord _run!) :effect-unmount
+                        (:effect-update _coord _n-coord _run!) :effect-update
+                        (:effect-before-update _coord _n-coord _run!) :effect-before-update
+                  assert= ([] :replace-prop :add-prop :rm-prop :add-style :replace-style :rm-style :set-event :rm-event :add-element :rm-element :replace-element :append-element :effect-mount :effect-unmount :effect-update :effect-before-update) (map patches variant-name)
+              :tags $ #{} :unit
         'DomProps $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstruct DomProps
@@ -4894,6 +5018,13 @@
         :code $ quote (ns respo.schema.listener)
     'respo.test.dom $ %{} 'FileEntry
       :defs $ {}
+        'accept-dom-patches $ %{} 'CodeEntry (:doc "|Typed test boundary used by compile-negative checks to prove application operations cannot be passed as DOM patches.")
+          :code $ quote
+            defn accept-dom-patches (patches) &unit
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'Unit)
+              :args $ [] (:: 'List 'respo.schema/DomPatch)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn main! (root-host html-host)
@@ -4915,6 +5046,31 @@
           :schema $ :: 'Fn
             {} (:return 'Unit)
               :args $ [] 'js-ffi.browser/DomElementHost 'js-ffi.browser/DomElementHost
+              :features $ #{} :js-ffi
+        'verify-realize-ssr-ref! $ %{} 'CodeEntry (:doc "|Regression fixture for SSR adoption: a ref-backed component must collect one nominal DomPatch and receive the already-rendered root without callback arity failure.")
+          :code $ quote
+            defn verify-realize-ssr-ref! (mount root)
+              let
+                  refs $ atom ([])
+                  element $ %{} respo.schema/Element (:name :div)
+                    :coord $ %none
+                    :attrs $ []
+                    :style $ []
+                    :event $ {}
+                    :children $ []
+                    :ref $ %some
+                      fn (target) (swap! refs conj target)
+                  component $ %{} respo.schema/Component (:name :ssr-fixture)
+                    :effects $ []
+                    :listeners $ []
+                    :tree $ %some element
+                respo.core/realize-ssr! mount component $ fn (_op) &unit
+                assert |SSR-ref-receives-adopted-root $ = ([] root) @refs
+                , &unit
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'Unit)
+              :args $ [] 'respo.dom/DomElement 'respo.dom/DomElement
               :features $ #{} :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote

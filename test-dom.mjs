@@ -1,25 +1,37 @@
-import { main_$x_ } from "./js-out/respo.test.dom.mjs"
-import { insert_before_target_$x_, remove_target_$x_ } from "./js-out/respo.render.patch.mjs"
-import { set_inner_html_$x_ } from "./js-out/respo.dom.mjs"
-import { input_event_checked_$q_, input_event_value } from "./js-out/respo.util.format.mjs"
-
 const childrenHost = (children) => ({
   length: children.length,
   item: (index) => children[index],
 })
 
-const elementHost = (localName, innerHTML, children) => ({
-  localName,
-  innerHTML,
-  childElementCount: children.length,
-  children: childrenHost(children),
-})
+class FakeElement {
+  constructor(localName, innerHTML = "", children = []) {
+    this.localName = localName
+    this.innerHTML = innerHTML
+    this.childElementCount = children.length
+    this.children = childrenHost(children)
+    this.firstElementChild = children[0] ?? null
+  }
+}
+
+globalThis.Element = FakeElement
+
+const { main_$x_, verify_realize_ssr_ref_$x_ } = await import("./js-out/respo.test.dom.mjs")
+const { insert_before_target_$x_, remove_target_$x_ } = await import("./js-out/respo.render.patch.mjs")
+const { set_inner_html_$x_ } = await import("./js-out/respo.dom.mjs")
+const { input_event_checked_$q_, input_event_value } = await import("./js-out/respo.util.format.mjs")
+
+const elementHost = (localName, innerHTML, children) => new FakeElement(localName, innerHTML, children)
 
 const childHost = elementHost("span", "", [])
 const rootHost = elementHost("div", "", [childHost])
 const htmlHost = elementHost("div", "<b>x</b>", [childHost])
 
 main_$x_(rootHost, htmlHost)
+
+const ssrRoot = elementHost("div", "", [])
+const ssrMount = elementHost("main", "", [ssrRoot])
+verify_realize_ssr_ref_$x_(ssrMount, ssrRoot)
+console.log("typed-SSR-ref-contract-ok")
 
 const newElement = {}
 const target = {}
