@@ -1164,7 +1164,7 @@
               {} (:href |https://example.com) (:inner-text "|Visit Example")
           :schema $ :: 'Fn
             {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-              :args $ [] 'Dynamic
+              :args $ [] 'respo.schema/DomProps
         'append-dynamic! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn append-dynamic! (target value)
@@ -1182,7 +1182,7 @@
           :examples $ []
           :schema $ :: 'Fn
             {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-              :args $ [] 'Dynamic
+              :args $ [] 'respo.schema/DomProps
         'body $ %{} 'CodeEntry (:doc "|create a body element with properties and children. first argument is a hashmap for properties, rest arguments are children elements.")
           :code $ quote
             defn body (props & children) (create-element :body props & children)
@@ -1194,7 +1194,7 @@
                 {} $ :margin |0
           :schema $ :: 'Fn
             {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-              :args $ [] 'Dynamic
+              :args $ [] 'respo.schema/DomProps
         'build-effect $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn build-effect (name deps method)
@@ -1229,7 +1229,7 @@
               <> "|Click me"
           :schema $ :: 'Fn
             {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-              :args $ [] 'Dynamic
+              :args $ [] 'respo.schema/DomProps
         'clear-cache! $ %{} 'CodeEntry (:doc "|Clear memoized render caches used by Respo.\n\nThis is mainly useful during hot reloading or code swapping, where mounted DOM may stay in place but cached render results must be dropped before the next render.")
           :code $ quote
             defn clear-cache! () $ memo/reset-component-caches!
@@ -1243,7 +1243,7 @@
           :examples $ []
           :schema $ :: 'Fn
             {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-              :args $ [] 'Dynamic
+              :args $ [] 'respo.schema/DomProps
         'confirm-child $ %{} 'CodeEntry (:doc "|Validates if the item is a valid Respo node (element, component, or nil). Returns the item.")
           :code $ quote
             defn confirm-child (x)
@@ -1314,7 +1314,7 @@
               <> |Home
           :schema $ :: 'Fn
             {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-              :args $ [] 'Tag 'Dynamic
+              :args $ [] 'Tag 'respo.schema/DomProps
         'create-list-element $ %{} 'CodeEntry (:doc "|Creates a virtual DOM element for keyed list rendering. child-pairs may be an ordered list or a map of [key child] pairs; invalid collections fail at this API boundary.")
           :code $ quote
             defn create-list-element (tag-name props child-pairs)
@@ -1482,7 +1482,7 @@
               div ({}) (<> |child2)
           :schema $ :: 'Fn
             {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-              :args $ [] 'Dynamic
+              :args $ [] 'respo.schema/DomProps
         'effect-on-mount $ %{} 'CodeEntry (:doc "|Creates a component effect that calls mount! with the real DOM target after mounting.")
           :code $ quote
             defn effect-on-mount (mount!)
@@ -1917,56 +1917,56 @@
           :examples $ []
           :schema $ :: 'Fn
             {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-              :args $ [] 'Dynamic
+              :args $ [] 'respo.schema/DomProps
         'h2 $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn h2 (props & children) (create-element :h2 props & children)
           :examples $ []
           :schema $ :: 'Fn
             {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-              :args $ [] 'Dynamic
+              :args $ [] 'respo.schema/DomProps
         'h3 $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn h3 (props & children) (create-element :h3 props & children)
           :examples $ []
           :schema $ :: 'Fn
             {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-              :args $ [] 'Dynamic
+              :args $ [] 'respo.schema/DomProps
         'h4 $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn h4 (props & children) (create-element :h4 props & children)
           :examples $ []
           :schema $ :: 'Fn
             {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-              :args $ [] 'Dynamic
+              :args $ [] 'respo.schema/DomProps
         'h5 $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn h5 (props & children) (create-element :h5 props & children)
           :examples $ []
           :schema $ :: 'Fn
             {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-              :args $ [] 'Dynamic
+              :args $ [] 'respo.schema/DomProps
         'h6 $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn h6 (props & children) (create-element :h6 props & children)
           :examples $ []
           :schema $ :: 'Fn
             {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-              :args $ [] 'Dynamic
+              :args $ [] 'respo.schema/DomProps
         'head $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn head (props & children) (create-element :head props & children)
           :examples $ []
           :schema $ :: 'Fn
             {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-              :args $ [] 'Dynamic
+              :args $ [] 'respo.schema/DomProps
         'hr $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn hr (props) (create-element :hr props)
           :examples $ []
           :schema $ :: 'Fn
             {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-              :args $ [] 'Dynamic
+              :args $ [] 'respo.schema/DomProps
         'html $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn html (props & children)
@@ -1974,14 +1974,14 @@
           :examples $ []
           :schema $ :: 'Fn
             {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-              :args $ [] 'Dynamic
+              :args $ [] 'respo.schema/DomProps
         'img $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn img (props & children) (create-element :img props & children)
           :examples $ []
           :schema $ :: 'Fn
             {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-              :args $ [] 'Dynamic
+              :args $ [] 'respo.schema/DomProps
         'input $ %{} 'CodeEntry (:doc "|Creates HTML input element (input tag).\n\nParameters:\n  props - Attribute map, can include standard HTML attributes and event handlers like type, value, placeholder, on-input, etc.\n  & children - Variable arguments for child elements, usually empty since input is self-closing\n\nReturns:\n  Created input element component\n\nUsed to create various form input controls, supports text, password, number and other input types.")
           :code $ quote
             defn input (props & children) (create-element :input props & children)
@@ -1990,21 +1990,21 @@
               {} (:type |text) (:placeholder "|Enter your name")
           :schema $ :: 'Fn
             {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-              :args $ [] 'Dynamic
+              :args $ [] 'respo.schema/DomProps
         'li $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn li (props & children) (create-element :li props & children)
           :examples $ []
           :schema $ :: 'Fn
             {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-              :args $ [] 'Dynamic
+              :args $ [] 'respo.schema/DomProps
         'link $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn link (props & children) (create-element :link props & children)
           :examples $ []
           :schema $ :: 'Fn
             {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-              :args $ [] 'Dynamic
+              :args $ [] 'respo.schema/DomProps
         'list-> $ %{} 'CodeEntry (:doc "|Render keyed children inside a `<div>`.\n\nPass an optional props map and a keyed children collection of `[key child]` pairs so diffing can reconcile inserts, removals, and reordering by key.")
           :code $ quote
             defn list-> (props children) (create-list-element :div props children)
@@ -2014,7 +2014,7 @@
                 div $ {}
           :schema $ :: 'Fn
             {} (:return 'respo.schema/Element)
-              :args $ [] 'Dynamic
+              :args $ [] 'respo.schema/DomProps
                 :: 'List $ :: 'List 'Dynamic
         'make-render-scheduler $ %{} 'CodeEntry (:doc "|Returns a zero-argument scheduler. The default queueMicrotask implementation coalesces repeated requests before its callback runs; a custom enqueue! owns timing semantics. It stores only queued metadata, never application state.")
           :code $ quote
@@ -2151,21 +2151,21 @@
           :examples $ []
           :schema $ :: 'Fn
             {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-              :args $ [] 'Dynamic
+              :args $ [] 'respo.schema/DomProps
         'option $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn option (props & children) (create-element :option props & children)
           :examples $ []
           :schema $ :: 'Fn
             {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-              :args $ [] 'Dynamic
+              :args $ [] 'respo.schema/DomProps
         'p $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn p (props & children) (create-element :p props & children)
           :examples $ []
           :schema $ :: 'Fn
             {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-              :args $ [] 'Dynamic
+              :args $ [] 'respo.schema/DomProps
         'pre $ %{} 'CodeEntry (:doc "|Renders a <pre> element. Wrapper around create-element.")
           :code $ quote
             defn pre (props & children) (create-element :pre props & children)
@@ -2176,7 +2176,7 @@
               <> "|Code block"
           :schema $ :: 'Fn
             {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-              :args $ [] 'Dynamic
+              :args $ [] 'respo.schema/DomProps
         'realize-ssr! $ %{} 'CodeEntry (:doc "|Adopt server-rendered DOM before the first client render.\n\nIt compares the incoming component tree to the existing HTML, mounts effects, registers listeners, and records a muted virtual tree in `*global-element` so later `render!` calls can patch instead of remounting.")
           :code $ quote
             defn realize-ssr! (target element dispatch!)
@@ -2320,14 +2320,14 @@
           :examples $ []
           :schema $ :: 'Fn
             {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-              :args $ [] 'Dynamic
+              :args $ [] 'respo.schema/DomProps
         'select $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn select (props & children) (create-element :select props & children)
           :examples $ []
           :schema $ :: 'Fn
             {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-              :args $ [] 'Dynamic
+              :args $ [] 'respo.schema/DomProps
         'show $ %{} 'CodeEntry (:doc "|Conditional rendering macro. Accepts one child and an optional fallback without introducing hidden component state.")
           :code $ quote
             defmacro show (condition & branches)
@@ -2399,14 +2399,14 @@
               <> |Blue
           :schema $ :: 'Fn
             {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-              :args $ [] 'Dynamic
+              :args $ [] 'respo.schema/DomProps
         'strong $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn strong (props & children) (create-element :strong props & children)
           :examples $ []
           :schema $ :: 'Fn
             {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-              :args $ [] 'Dynamic
+              :args $ [] 'respo.schema/DomProps
         'style $ %{} 'CodeEntry (:doc "|Creates HTML style element for defining CSS styles.\n\nParameters:\n  props - Attribute map, can include standard HTML attributes for style elements\n  & children - Variable arguments for child elements, typically CSS style content\n\nReturns:\n  Created style element component\n\nUsed to dynamically define CSS styles within components, supports nested and dynamic style generation.")
           :code $ quote
             defn style (props & children) (create-element :style props & children)
@@ -2415,7 +2415,7 @@
               {} $ :innerHTML "|body { margin: 0; padding: 0; }"
           :schema $ :: 'Fn
             {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-              :args $ [] 'Dynamic
+              :args $ [] 'respo.schema/DomProps
         'textarea $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn textarea (props & children)
@@ -2423,21 +2423,21 @@
           :examples $ []
           :schema $ :: 'Fn
             {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-              :args $ [] 'Dynamic
+              :args $ [] 'respo.schema/DomProps
         'title $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn title (props & children) (create-element :title props & children)
           :examples $ []
           :schema $ :: 'Fn
             {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-              :args $ [] 'Dynamic
+              :args $ [] 'respo.schema/DomProps
         'ul $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn ul (props & children) (create-element :ul props & children)
           :examples $ []
           :schema $ :: 'Fn
             {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-              :args $ [] 'Dynamic
+              :args $ [] 'respo.schema/DomProps
       :ns $ %{} 'NsEntry (:doc "|provide core APIs for Respo, many of them are elements. if expected element is not defined yet, use `create-element :tag-name ...` to use it dynamically.\n")
         :code $ quote
           ns respo.core $ :require
