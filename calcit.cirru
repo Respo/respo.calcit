@@ -2125,7 +2125,17 @@
               cond
                   nil? props
                   {}
-                (struct? props) (&struct:to-map props)
+                (struct? props)
+                  let
+                      filter-present $ assert-type &map:filter-kv
+                        :: 'Fn $ {}
+                          :args $ [] (:: 'Map 'Tag 'Dynamic)
+                            :: 'Fn $ {}
+                              :args $ [] 'Tag 'Dynamic
+                              :return 'Bool
+                          :return $ :: 'Map 'Tag 'Dynamic
+                    filter-present (&struct:to-map props)
+                      fn (_k v) (js-present? v)
                 (map? props) props
                 true $ raise
                   str |Expected_DOM_props_map_or_record,_got: $ type-of props
@@ -2133,6 +2143,7 @@
           :schema $ :: 'Fn
             {}
               :args $ [] 'Dynamic
+              :features $ #{} :js-ffi
               :return $ :: 'Map 'Tag 'Dynamic
         'ol $ %{} 'CodeEntry (:doc |)
           :code $ quote
