@@ -64,8 +64,7 @@ let
     comp-list $ fn ()
       respo.core/list->
         {}
-        {}
-          :a $ respo.core/div ({})
+        [] $ [] :a $ respo.core/div ({})
 ```
 
 Text Node:
@@ -109,6 +108,9 @@ App initialization:
 let
     *store $ atom $ {} (:point 0) (:states {})
     updater $ fn (store op)
+      hint-fn $ {}
+        :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic
+        :return $ :: 'Map 'Tag 'Dynamic
       match op
         (:TODO a b) store
         _ store
@@ -186,7 +188,7 @@ let
       fn (action parent-element at-place?)
         println action
         ; action could be :mount :update :amount
-        when (= :mount action) nil
+        when (&= :mount action) nil
     comp-a $ fn (text)
       []
         effect-a text
@@ -204,7 +206,7 @@ let
       %::
         %{} :PluginX
           :render $ fn (self) (nth self 1)
-          :show $ fn (self d! ? text) nil
+          :show $ fn (self d! text) nil
         , :plugin-name
         respo.core/div ({}) (respo.core/<> "|Demo")
 ```

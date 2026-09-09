@@ -22,10 +22,10 @@
       :codeNil 4
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 0
       :typeNone 0
-      :typeNotFull 1
-      :unresolved 5
+      :typeNotFull 0
+      :unresolved 4
       :unsafeCoerce 0
     |respo.app.comp.todolist/comp-todolist $ {} (:codeDynamic 0)
       :codeNil 1
@@ -36,6 +36,15 @@
       :typeNotFull 1
       :unresolved 2
       :unsafeCoerce 0
+    |respo.app.comp.todolist/effect-focus $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 0
+      :typeNone 0
+      :typeNotFull 0
+      :unresolved 0
+      :unsafeCoerce 1
     |respo.app.comp.todolist/on-focus $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -49,10 +58,10 @@
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 0
       :typeNone 0
       :typeNotFull 1
-      :unresolved 1
+      :unresolved 0
       :unsafeCoerce 0
     |respo.app.comp.todolist/on-test $ {} (:codeDynamic 0)
       :codeNil 0
@@ -87,19 +96,10 @@
       :deprecatedCalls 0
       :schemaDynamic 0
       :typeNone 0
-      :typeNotFull 0
+      :typeNotFull 1
       :unresolved 0
       :unsafeCoerce 2
     |respo.app.comp.wrap/comp-wrap $ {} (:codeDynamic 0)
-      :codeNil 0
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 1
-      :typeNone 0
-      :typeNotFull 1
-      :unresolved 1
-      :unsafeCoerce 0
-    |respo.app.core/*store $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
@@ -143,7 +143,16 @@
       :typeNone 0
       :typeNotFull 1
       :unresolved 1
-      :unsafeCoerce 6
+      :unsafeCoerce 0
+    |respo.app.task/normalize-tasks $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 1
+      :typeNone 0
+      :typeNotFull 1
+      :unresolved 1
+      :unsafeCoerce 0
     |respo.comp.global-keydown/effect-listen-keyboard $ {} (:codeDynamic 0)
       :codeNil 1
       :declaredOptional 0
@@ -189,42 +198,51 @@
       :typeNotFull 1
       :unresolved 2
       :unsafeCoerce 0
-    |respo.controller.client/patch-instance! $ {} (:codeDynamic 0)
+    |respo.controller.client/activate-instance! $ {} (:codeDynamic 0)
       :codeNil 0
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 1
-      :typeNone 0
-      :typeNotFull 1
-      :unresolved 1
-      :unsafeCoerce 1
-    |respo.controller.client/traverse-and-call $ {} (:codeDynamic 0)
-      :codeNil 0
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 1
-      :typeNone 0
-      :typeNotFull 1
-      :unresolved 1
-      :unsafeCoerce 0
-    |respo.controller.client/wrap-dispatch $ {} (:codeDynamic 0)
-      :codeNil 0
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 1
-      :typeNone 0
-      :typeNotFull 1
-      :unresolved 1
-      :unsafeCoerce 0
-    |respo.controller.resolve/build-deliver-event $ {} (:codeDynamic 0)
-      :codeNil 1
       :declaredOptional 0
       :deprecatedCalls 0
       :schemaDynamic 0
       :typeNone 0
       :typeNotFull 1
-      :unresolved 1
+      :unresolved 0
+      :unsafeCoerce 0
+    |respo.controller.client/build-listener $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 0
+      :typeNone 0
+      :typeNotFull 1
+      :unresolved 0
+      :unsafeCoerce 0
+    |respo.controller.client/patch-instance! $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 0
+      :typeNone 0
+      :typeNotFull 1
+      :unresolved 0
       :unsafeCoerce 1
+    |respo.controller.client/wrap-dispatch $ {} (:codeDynamic 0)
+      :codeNil 1
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 3
+      :typeNone 0
+      :typeNotFull 1
+      :unresolved 4
+      :unsafeCoerce 0
+    |respo.controller.resolve/build-deliver-event $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 0
+      :typeNone 0
+      :typeNotFull 1
+      :unresolved 0
+      :unsafeCoerce 0
     |respo.controller.resolve/extract-listeners $ {} (:codeDynamic 0)
       :codeNil 1
       :declaredOptional 0
@@ -234,43 +252,34 @@
       :typeNotFull 1
       :unresolved 4
       :unsafeCoerce 0
+    |respo.controller.resolve/find-child-by-key $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 2
+      :typeNone 0
+      :typeNotFull 1
+      :unresolved 2
+      :unsafeCoerce 0
     |respo.controller.resolve/find-event-target $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 3
+      :schemaDynamic 1
       :typeNone 0
       :typeNotFull 1
-      :unresolved 3
+      :unresolved 1
       :unsafeCoerce 0
     |respo.controller.resolve/get-markup-at $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 3
+      :schemaDynamic 1
       :typeNone 0
       :typeNotFull 1
-      :unresolved 3
+      :unresolved 1
       :unsafeCoerce 0
     |respo.core/*dispatch-fn $ {} (:codeDynamic 0)
-      :codeNil 1
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 1
-      :typeNone 0
-      :typeNotFull 1
-      :unresolved 2
-      :unsafeCoerce 0
-    |respo.core/*global-element $ {} (:codeDynamic 0)
-      :codeNil 1
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 1
-      :typeNone 0
-      :typeNotFull 1
-      :unresolved 2
-      :unsafeCoerce 0
-    |respo.core/<> $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
@@ -278,69 +287,87 @@
       :typeNone 0
       :typeNotFull 1
       :unresolved 1
+      :unsafeCoerce 0
+    |respo.core/<> $ {} (:codeDynamic 0)
+      :codeNil 1
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 1
+      :typeNone 0
+      :typeNotFull 1
+      :unresolved 2
       :unsafeCoerce 0
     |respo.core/>> $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 5
+      :schemaDynamic 0
       :typeNone 0
       :typeNotFull 1
-      :unresolved 5
-      :unsafeCoerce 0
+      :unresolved 0
+      :unsafeCoerce 1
     |respo.core/a $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 2
       :typeNone 0
       :typeNotFull 1
-      :unresolved 1
+      :unresolved 2
+      :unsafeCoerce 0
+    |respo.core/append-dynamic! $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 2
+      :typeNone 0
+      :typeNotFull 1
+      :unresolved 2
       :unsafeCoerce 0
     |respo.core/blockquote $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 2
       :typeNone 0
       :typeNotFull 1
-      :unresolved 1
+      :unresolved 2
       :unsafeCoerce 0
     |respo.core/body $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 2
       :typeNone 0
       :typeNotFull 1
-      :unresolved 1
+      :unresolved 2
       :unsafeCoerce 0
     |respo.core/build-effect $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 3
       :typeNone 0
       :typeNotFull 1
-      :unresolved 1
+      :unresolved 3
       :unsafeCoerce 0
     |respo.core/button $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 2
       :typeNone 0
       :typeNotFull 1
-      :unresolved 1
+      :unresolved 2
       :unsafeCoerce 0
     |respo.core/code $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 2
       :typeNone 0
       :typeNotFull 1
-      :unresolved 1
+      :unresolved 2
       :unsafeCoerce 0
     |respo.core/confirm-child $ {} (:codeDynamic 0)
       :codeNil 0
@@ -361,50 +388,59 @@
       :unresolved 2
       :unsafeCoerce 0
     |respo.core/create-element $ {} (:codeDynamic 0)
-      :codeNil 2
+      :codeNil 1
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 2
       :typeNone 0
       :typeNotFull 1
       :unresolved 3
       :unsafeCoerce 0
     |respo.core/create-list-element $ {} (:codeDynamic 0)
-      :codeNil 2
+      :codeNil 1
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 2
       :typeNone 0
       :typeNotFull 1
       :unresolved 3
+      :unsafeCoerce 0
+    |respo.core/create-list-element-open $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 0
+      :typeNone 0
+      :typeNotFull 1
+      :unresolved 0
       :unsafeCoerce 0
     |respo.core/div $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 2
       :typeNone 0
       :typeNotFull 1
-      :unresolved 1
+      :unresolved 2
       :unsafeCoerce 0
     |respo.core/effect-on-update $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 2
       :typeNone 0
       :typeNotFull 1
-      :unresolved 1
+      :unresolved 2
       :unsafeCoerce 0
     |respo.core/effect-watch $ {} (:codeDynamic 0)
-      :codeNil 3
+      :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 3
       :typeNone 0
       :typeNotFull 1
-      :unresolved 4
-      :unsafeCoerce 2
+      :unresolved 3
+      :unsafeCoerce 0
     |respo.core/element-type $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -423,6 +459,15 @@
       :typeNotFull 1
       :unresolved 0
       :unsafeCoerce 0
+    |respo.core/extract-effects-list $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 0
+      :typeNone 0
+      :typeNotFull 1
+      :unresolved 0
+      :unsafeCoerce 1
     |respo.core/for-keyed $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -436,137 +481,128 @@
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 2
       :typeNone 0
       :typeNotFull 1
-      :unresolved 1
+      :unresolved 2
       :unsafeCoerce 0
     |respo.core/h2 $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 2
       :typeNone 0
       :typeNotFull 1
-      :unresolved 1
+      :unresolved 2
       :unsafeCoerce 0
     |respo.core/h3 $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 2
       :typeNone 0
       :typeNotFull 1
-      :unresolved 1
+      :unresolved 2
       :unsafeCoerce 0
     |respo.core/h4 $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 2
       :typeNone 0
       :typeNotFull 1
-      :unresolved 1
+      :unresolved 2
       :unsafeCoerce 0
     |respo.core/h5 $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 2
       :typeNone 0
       :typeNotFull 1
-      :unresolved 1
+      :unresolved 2
       :unsafeCoerce 0
     |respo.core/h6 $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 2
       :typeNone 0
       :typeNotFull 1
-      :unresolved 1
+      :unresolved 2
       :unsafeCoerce 0
     |respo.core/head $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 2
       :typeNone 0
       :typeNotFull 1
-      :unresolved 1
+      :unresolved 2
       :unsafeCoerce 0
     |respo.core/hr $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 2
       :typeNone 0
       :typeNotFull 1
-      :unresolved 1
+      :unresolved 2
       :unsafeCoerce 0
     |respo.core/html $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 2
       :typeNone 0
       :typeNotFull 1
-      :unresolved 1
+      :unresolved 2
       :unsafeCoerce 0
     |respo.core/img $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 2
       :typeNone 0
       :typeNotFull 1
-      :unresolved 1
+      :unresolved 2
       :unsafeCoerce 0
     |respo.core/input $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 2
       :typeNone 0
       :typeNotFull 1
-      :unresolved 1
+      :unresolved 2
       :unsafeCoerce 0
     |respo.core/li $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 2
       :typeNone 0
       :typeNotFull 1
-      :unresolved 1
+      :unresolved 2
       :unsafeCoerce 0
     |respo.core/link $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 2
       :typeNone 0
       :typeNotFull 1
-      :unresolved 1
+      :unresolved 2
       :unsafeCoerce 0
     |respo.core/list-> $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 2
       :typeNone 0
       :typeNotFull 1
-      :unresolved 1
+      :unresolved 2
       :unsafeCoerce 0
-    |respo.core/make-render-scheduler $ {} (:codeDynamic 0)
-      :codeNil 0
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 0
-      :typeNone 0
-      :typeNotFull 0
-      :unresolved 0
-      :unsafeCoerce 2
     |respo.core/memo-comp-by $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -607,37 +643,37 @@
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 2
       :typeNone 0
       :typeNotFull 1
-      :unresolved 1
+      :unresolved 2
       :unsafeCoerce 0
     |respo.core/option $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 2
       :typeNone 0
       :typeNotFull 1
-      :unresolved 1
+      :unresolved 2
       :unsafeCoerce 0
     |respo.core/p $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 2
       :typeNone 0
       :typeNotFull 1
-      :unresolved 1
+      :unresolved 2
       :unsafeCoerce 0
     |respo.core/pre $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 2
       :typeNone 0
       :typeNotFull 1
-      :unresolved 1
+      :unresolved 2
       :unsafeCoerce 0
     |respo.core/realize-ssr! $ {} (:codeDynamic 0)
       :codeNil 0
@@ -674,8 +710,26 @@
       :typeNone 0
       :typeNotFull 1
       :unresolved 0
-      :unsafeCoerce 1
+      :unsafeCoerce 0
     |respo.core/resolve-element-constructor $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 0
+      :typeNone 0
+      :typeNotFull 1
+      :unresolved 0
+      :unsafeCoerce 0
+    |respo.core/run-effect-ops! $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 0
+      :typeNone 0
+      :typeNotFull 1
+      :unresolved 0
+      :unsafeCoerce 0
+    |respo.core/run-first-task! $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
@@ -688,19 +742,19 @@
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 2
       :typeNone 0
       :typeNotFull 1
-      :unresolved 1
+      :unresolved 2
       :unsafeCoerce 0
     |respo.core/select $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 2
       :typeNone 0
       :typeNotFull 1
-      :unresolved 1
+      :unresolved 2
       :unsafeCoerce 0
     |respo.core/show $ {} (:codeDynamic 0)
       :codeNil 1
@@ -711,77 +765,68 @@
       :typeNotFull 1
       :unresolved 1
       :unsafeCoerce 0
+    |respo.core/some-effect-callback $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 2
+      :typeNone 0
+      :typeNotFull 1
+      :unresolved 2
+      :unsafeCoerce 0
     |respo.core/span $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 2
       :typeNone 0
       :typeNotFull 1
-      :unresolved 1
+      :unresolved 2
       :unsafeCoerce 0
     |respo.core/strong $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 2
       :typeNone 0
       :typeNotFull 1
-      :unresolved 1
+      :unresolved 2
       :unsafeCoerce 0
     |respo.core/style $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 2
       :typeNone 0
       :typeNotFull 1
-      :unresolved 1
+      :unresolved 2
       :unsafeCoerce 0
     |respo.core/textarea $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 2
       :typeNone 0
       :typeNotFull 1
-      :unresolved 1
+      :unresolved 2
       :unsafeCoerce 0
     |respo.core/title $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 2
       :typeNone 0
       :typeNotFull 1
-      :unresolved 1
+      :unresolved 2
       :unsafeCoerce 0
     |respo.core/ul $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 2
       :typeNone 0
       :typeNotFull 1
-      :unresolved 1
-      :unsafeCoerce 0
-    |respo.css/*style-caches $ {} (:codeDynamic 0)
-      :codeNil 0
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 1
-      :typeNone 0
-      :typeNotFull 1
-      :unresolved 1
-      :unsafeCoerce 0
-    |respo.css/*style-list-in-nodejs $ {} (:codeDynamic 0)
-      :codeNil 0
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 1
-      :typeNone 0
-      :typeNotFull 1
-      :unresolved 1
+      :unresolved 2
       :unsafeCoerce 0
     |respo.css/create-style! $ {} (:codeDynamic 0)
       :codeNil 0
@@ -805,55 +850,73 @@
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 2
+      :schemaDynamic 0
       :typeNone 0
       :typeNotFull 1
-      :unresolved 2
-      :unsafeCoerce 0
+      :unresolved 0
+      :unsafeCoerce 3
     |respo.css/warn-style-literals $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 0
+      :typeNone 0
+      :typeNotFull 1
+      :unresolved 0
+      :unsafeCoerce 0
+    |respo.cursor/coerce-cursor-test-state $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 0
+      :typeNone 0
+      :typeNotFull 1
+      :unresolved 0
+      :unsafeCoerce 0
+    |respo.cursor/get-state-at $ {} (:codeDynamic 0)
+      :codeNil 1
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 0
       :typeNone 0
       :typeNotFull 1
       :unresolved 1
-      :unsafeCoerce 0
+      :unsafeCoerce 1
     |respo.cursor/update-state-tree $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 5
+      :schemaDynamic 0
       :typeNone 0
       :typeNotFull 1
-      :unresolved 5
-      :unsafeCoerce 0
+      :unresolved 0
+      :unsafeCoerce 1
     |respo.cursor/update-state-tree-kv $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 5
+      :schemaDynamic 0
       :typeNone 0
       :typeNotFull 1
-      :unresolved 5
-      :unsafeCoerce 0
+      :unresolved 0
+      :unsafeCoerce 4
     |respo.cursor/update-state-tree-merge $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 7
+      :schemaDynamic 0
       :typeNone 0
       :typeNotFull 1
-      :unresolved 7
-      :unsafeCoerce 0
+      :unresolved 0
+      :unsafeCoerce 6
     |respo.cursor/update-states $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 5
+      :schemaDynamic 0
       :typeNone 0
       :typeNotFull 1
-      :unresolved 5
+      :unresolved 0
       :unsafeCoerce 0
     |respo.cursor/update-states-kv $ {} (:codeDynamic 0)
       :codeNil 0
@@ -868,10 +931,10 @@
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 7
+      :schemaDynamic 0
       :typeNone 0
       :typeNotFull 1
-      :unresolved 7
+      :unresolved 0
       :unsafeCoerce 0
     |respo.ffi.browser/host-element $ {} (:codeDynamic 0)
       :codeNil 0
@@ -899,7 +962,7 @@
       :typeNone 0
       :typeNotFull 0
       :unresolved 0
-      :unsafeCoerce 3
+      :unsafeCoerce 2
     |respo.main/query-mount-target $ {} (:codeDynamic 0)
       :codeNil 1
       :declaredOptional 0
@@ -907,42 +970,6 @@
       :schemaDynamic 0
       :typeNone 0
       :typeNotFull 0
-      :unresolved 1
-      :unsafeCoerce 0
-    |respo.main/save-store! $ {} (:codeDynamic 0)
-      :codeNil 0
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 0
-      :typeNone 0
-      :typeNotFull 0
-      :unresolved 0
-      :unsafeCoerce 1
-    |respo.memo/*component-caches $ {} (:codeDynamic 0)
-      :codeNil 0
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 1
-      :typeNone 0
-      :typeNotFull 1
-      :unresolved 1
-      :unsafeCoerce 0
-    |respo.memo/*frame-component-caches $ {} (:codeDynamic 0)
-      :codeNil 0
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 1
-      :typeNone 0
-      :typeNotFull 1
-      :unresolved 1
-      :unsafeCoerce 0
-    |respo.memo/*memo-frame-active? $ {} (:codeDynamic 0)
-      :codeNil 0
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 1
-      :typeNone 0
-      :typeNotFull 1
       :unresolved 1
       :unsafeCoerce 0
     |respo.memo/call-component $ {} (:codeDynamic 0)
@@ -976,19 +1003,19 @@
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 2
+      :schemaDynamic 1
       :typeNone 0
       :typeNotFull 1
-      :unresolved 2
+      :unresolved 1
       :unsafeCoerce 0
     |respo.memo/memo-entry-value $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 2
+      :schemaDynamic 1
       :typeNone 0
       :typeNotFull 1
-      :unresolved 2
+      :unresolved 1
       :unsafeCoerce 0
     |respo.memo/memo-value-by $ {} (:codeDynamic 0)
       :codeNil 0
@@ -1009,13 +1036,13 @@
       :unresolved 1
       :unsafeCoerce 0
     |respo.render.diff/find-children-diffs $ {} (:codeDynamic 0)
-      :codeNil 4
+      :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
       :schemaDynamic 0
       :typeNone 0
       :typeNotFull 1
-      :unresolved 4
+      :unresolved 0
       :unsafeCoerce 0
     |respo.render.diff/find-element-diffs $ {} (:codeDynamic 0)
       :codeNil 1
@@ -1027,22 +1054,22 @@
       :unresolved 1
       :unsafeCoerce 0
     |respo.render.diff/find-props-diffs $ {} (:codeDynamic 0)
-      :codeNil 1
+      :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 4
+      :schemaDynamic 3
       :typeNone 0
       :typeNotFull 1
-      :unresolved 5
+      :unresolved 3
       :unsafeCoerce 0
     |respo.render.diff/find-style-diffs $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 4
+      :schemaDynamic 3
       :typeNone 0
       :typeNotFull 1
-      :unresolved 4
+      :unresolved 3
       :unsafeCoerce 0
     |respo.render.diff/props-as-list $ {} (:codeDynamic 0)
       :codeNil 0
@@ -1079,24 +1106,24 @@
       :typeNone 0
       :typeNotFull 1
       :unresolved 0
-      :unsafeCoerce 1
+      :unsafeCoerce 0
     |respo.render.effect/collect-own-mounting $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 3
+      :schemaDynamic 1
       :typeNone 0
       :typeNotFull 1
-      :unresolved 3
+      :unresolved 1
       :unsafeCoerce 0
     |respo.render.effect/collect-own-unmounting $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 3
+      :schemaDynamic 1
       :typeNone 0
       :typeNotFull 1
-      :unresolved 3
+      :unresolved 1
       :unsafeCoerce 0
     |respo.render.effect/collect-unmounting $ {} (:codeDynamic 0)
       :codeNil 1
@@ -1106,15 +1133,33 @@
       :typeNone 0
       :typeNotFull 1
       :unresolved 1
-      :unsafeCoerce 1
+      :unsafeCoerce 0
     |respo.render.effect/collect-updating $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 4
+      :schemaDynamic 1
       :typeNone 0
       :typeNotFull 1
-      :unresolved 4
+      :unresolved 1
+      :unsafeCoerce 0
+    |respo.render.html/coerce-pairs $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 0
+      :typeNone 0
+      :typeNotFull 1
+      :unresolved 0
+      :unsafeCoerce 0
+    |respo.render.html/element-content $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 1
+      :typeNone 0
+      :typeNotFull 1
+      :unresolved 1
       :unsafeCoerce 0
     |respo.render.html/entry->html $ {} (:codeDynamic 0)
       :codeNil 0
@@ -1212,18 +1257,18 @@
       :deprecatedCalls 0
       :schemaDynamic 0
       :typeNone 0
-      :typeNotFull 1
+      :typeNotFull 0
       :unresolved 0
       :unsafeCoerce 2
     |respo.render.patch/find-target $ {} (:codeDynamic 0)
-      :codeNil 0
+      :codeNil 1
       :declaredOptional 0
       :deprecatedCalls 0
       :schemaDynamic 0
       :typeNone 0
       :typeNotFull 0
-      :unresolved 0
-      :unsafeCoerce 1
+      :unresolved 1
+      :unsafeCoerce 2
     |respo.render.patch/insert-before-target! $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -1260,15 +1305,6 @@
       :typeNotFull 1
       :unresolved 0
       :unsafeCoerce 1
-    |respo.render.patch/rm-element $ {} (:codeDynamic 0)
-      :codeNil 0
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 0
-      :typeNone 0
-      :typeNotFull 1
-      :unresolved 0
-      :unsafeCoerce 0
     |respo.render.patch/rm-event $ {} (:codeDynamic 0)
       :codeNil 1
       :declaredOptional 0
@@ -1384,7 +1420,7 @@
       :schemaDynamic 2
       :typeNone 0
       :typeNotFull 1
-      :unresolved 3
+      :unresolved 2
       :unsafeCoerce 0
     |respo.schema/cache-info $ {} (:codeDynamic 0)
       :codeNil 3
@@ -1459,24 +1495,6 @@
       :unresolved 1
       :unsafeCoerce 0
     |respo.util.detect/as-listener $ {} (:codeDynamic 0)
-      :codeNil 0
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 1
-      :typeNone 0
-      :typeNotFull 1
-      :unresolved 1
-      :unsafeCoerce 0
-    |respo.util.detect/component-effects $ {} (:codeDynamic 0)
-      :codeNil 0
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 1
-      :typeNone 0
-      :typeNotFull 1
-      :unresolved 1
-      :unsafeCoerce 0
-    |respo.util.detect/component-listeners $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
@@ -1570,21 +1588,12 @@
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 2
-      :typeNone 0
-      :typeNotFull 1
-      :unresolved 2
-      :unsafeCoerce 0
-    |respo.util.detect/element-name $ {} (:codeDynamic 0)
-      :codeNil 0
-      :declaredOptional 0
-      :deprecatedCalls 0
       :schemaDynamic 1
       :typeNone 0
       :typeNotFull 1
       :unresolved 1
       :unsafeCoerce 0
-    |respo.util.detect/element-ref $ {} (:codeDynamic 0)
+    |respo.util.detect/element-name $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
@@ -1655,7 +1664,16 @@
       :typeNone 0
       :typeNotFull 0
       :unresolved 0
-      :unsafeCoerce 3
+      :unsafeCoerce 2
+    |respo.util.format/coerce-element $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 0
+      :typeNone 0
+      :typeNotFull 1
+      :unresolved 0
+      :unsafeCoerce 0
     |respo.util.format/create-dashed-letter-pattern $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -1755,6 +1773,15 @@
       :typeNotFull 1
       :unresolved 2
       :unsafeCoerce 0
+    |respo.util.format/purify-element-node $ {} (:codeDynamic 0)
+      :codeNil 1
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 0
+      :typeNone 0
+      :typeNotFull 1
+      :unresolved 1
+      :unsafeCoerce 0
     |respo.util.format/purify-events $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -1782,7 +1809,52 @@
       :typeNotFull 1
       :unresolved 2
       :unsafeCoerce 0
+    |respo.util.list/first-pair $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 2
+      :typeNone 0
+      :typeNotFull 1
+      :unresolved 2
+      :unsafeCoerce 0
+    |respo.util.list/index-of-dynamic $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 2
+      :typeNone 0
+      :typeNotFull 1
+      :unresolved 2
+      :unsafeCoerce 0
     |respo.util.list/map-with-idx $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 2
+      :typeNone 0
+      :typeNotFull 1
+      :unresolved 2
+      :unsafeCoerce 0
+    |respo.util.list/pair-first $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 2
+      :typeNone 0
+      :typeNotFull 1
+      :unresolved 2
+      :unsafeCoerce 0
+    |respo.util.list/pair-key $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 1
+      :typeNone 0
+      :typeNotFull 1
+      :unresolved 1
+      :unsafeCoerce 0
+    |respo.util.list/pair-value $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
@@ -1795,20 +1867,20 @@
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 3
+      :schemaDynamic 2
       :typeNone 0
       :typeNotFull 1
-      :unresolved 3
+      :unresolved 2
       :unsafeCoerce 0
     |respo.util.list/pick-event $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 4
+      :schemaDynamic 0
       :typeNone 0
       :typeNotFull 1
-      :unresolved 4
-      :unsafeCoerce 0
+      :unresolved 0
+      :unsafeCoerce 2
     |respo.util.list/val-exists? $ {} (:codeDynamic 0)
       :codeNil 1
       :declaredOptional 0
@@ -1828,14 +1900,14 @@
       :unresolved 2
       :unsafeCoerce 0
   :metrics $ {} (:codeDynamic 0)
-    :codeNil 42
+    :codeNil 34
     :declaredOptional 0
     :deprecatedCalls 0
-    :schemaDynamic 248
+    :schemaDynamic 234
     :typeNone 3
-    :typeNotFull 184
-    :unresolved 286
-    :unsafeCoerce 50
+    :typeNotFull 192
+    :unresolved 263
+    :unsafeCoerce 54
   :scope $ {} (:includeDependencies false)
     :namespace nil
     :namespacePrefix nil
