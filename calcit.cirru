@@ -586,53 +586,52 @@
         'updater $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn updater (store op op-id)
-              do (assert-type store 'respo.app.schema/Store)
-                match op
-                  (:states cursor s)
-                    assoc store :states $ update-state-tree (:states store) cursor s
-                  (:states-kv cursor k v)
-                    assoc store :states $ update-state-tree-kv (:states store) cursor k v
-                  (:states-merge cursor s o)
-                    assoc store :states $ update-state-tree-merge (:states store) cursor s o
-                  (:add text)
-                    assoc store :tasks $ conj (:tasks store)
-                      %{} respo.app.schema/Task (:text text) (:id op-id) (:done? false)
-                  (:remove task-id)
-                    assoc store :tasks $ filter (:tasks store)
-                      fn (task)
-                        hint-fn $ {}
-                          :args $ [] 'respo.app.schema/Task
-                          :return 'Bool
-                        not $ = (:id task) task-id
-                  (:clear)
-                    assoc store :tasks $ []
-                  (:update task-id text)
-                    assoc store :tasks $ map (:tasks store)
-                      fn (task)
-                        hint-fn $ {}
-                          :args $ [] 'respo.app.schema/Task
-                          :return 'respo.app.schema/Task
-                        if
-                          = (:id task) task-id
-                          assoc task :text text
-                          , task
-                  (:hit-first rd)
-                    let
-                        tasks $ :tasks store
-                      if (empty? tasks) store $ let
-                          first-task $ assert-type (&list:first tasks) 'respo.app.schema/Task
-                        assoc store :tasks $ &list:assoc tasks 0 (assoc first-task :text rd)
-                  (:toggle task-id)
-                    assoc store :tasks $ map (:tasks store)
-                      fn (task)
-                        hint-fn $ {}
-                          :args $ [] 'respo.app.schema/Task
-                          :return 'respo.app.schema/Task
-                        if
-                          = (:id task) task-id
-                          assoc task :done? $ not (:done? task)
-                          , task
-                  _ $ do (eprintln |Unknown-op: op) store
+              match op
+                (:states cursor s)
+                  assoc store :states $ update-state-tree (:states store) cursor s
+                (:states-kv cursor k v)
+                  assoc store :states $ update-state-tree-kv (:states store) cursor k v
+                (:states-merge cursor s o)
+                  assoc store :states $ update-state-tree-merge (:states store) cursor s o
+                (:add text)
+                  assoc store :tasks $ conj (:tasks store)
+                    %{} respo.app.schema/Task (:text text) (:id op-id) (:done? false)
+                (:remove task-id)
+                  assoc store :tasks $ filter (:tasks store)
+                    fn (task)
+                      hint-fn $ {}
+                        :args $ [] 'respo.app.schema/Task
+                        :return 'Bool
+                      not $ = (:id task) task-id
+                (:clear)
+                  assoc store :tasks $ []
+                (:update task-id text)
+                  assoc store :tasks $ map (:tasks store)
+                    fn (task)
+                      hint-fn $ {}
+                        :args $ [] 'respo.app.schema/Task
+                        :return 'respo.app.schema/Task
+                      if
+                        = (:id task) task-id
+                        assoc task :text text
+                        , task
+                (:hit-first rd)
+                  let
+                      tasks $ :tasks store
+                    if (empty? tasks) store $ let
+                        first-task $ assert-type (&list:first tasks) 'respo.app.schema/Task
+                      assoc store :tasks $ &list:assoc tasks 0 (assoc first-task :text rd)
+                (:toggle task-id)
+                  assoc store :tasks $ map (:tasks store)
+                    fn (task)
+                      hint-fn $ {}
+                        :args $ [] 'respo.app.schema/Task
+                        :return 'respo.app.schema/Task
+                      if
+                        = (:id task) task-id
+                        assoc task :done? $ not (:done? task)
+                        , task
+                _ $ do (eprintln |Unknown-op: op) store
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'respo.app.schema/Store)
@@ -1565,18 +1564,25 @@
         'effect-watch $ %{} 'CodeEntry (:doc "|Creates a dependency-aware effect. setup! runs on mount and after dependency changes; cleanup! runs before a changed setup and on unmount. Cleanup uses the old render closure.")
           :code $ quote
             defn effect-watch (deps setup! cleanup-option)
-              build-effect :effect-watch deps $ fn (_args params)
-                let[] (action target _at-place?) params $ case-default action &unit
-                  :mount $ do (setup! target) &unit
-                  :before-update $ match cleanup-option
-                    (:none) &unit
-                    (:some cleanup!)
-                      do (cleanup! target) &unit
-                  :update $ do (setup! target) &unit
-                  :unmount $ match cleanup-option
-                    (:none) &unit
-                    (:some cleanup!)
-                      do (cleanup! target) &unit
+              do
+                if (list? deps) &unit $ raise |[Respo/effect-watch]-expected-dependencies-as-a-list
+                if (fn? setup!) &unit $ raise |[Respo/effect-watch]-expected-setup-callback
+                match cleanup-option
+                  (:none) &unit
+                  (:some cleanup!)
+                    if (fn? cleanup!) &unit $ raise |[Respo/effect-watch]-expected-cleanup-callback
+                build-effect :effect-watch deps $ fn (_args params)
+                  let[] (action target _at-place?) params $ case-default action &unit
+                    :mount $ do (setup! target) &unit
+                    :before-update $ match cleanup-option
+                      (:none) &unit
+                      (:some cleanup!)
+                        do (cleanup! target) &unit
+                    :update $ do (setup! target) &unit
+                    :unmount $ match cleanup-option
+                      (:none) &unit
+                      (:some cleanup!)
+                        do (cleanup! target) &unit
           :examples $ []
             quote $ effect-watch ([] 1)
               fn (_target) nil
