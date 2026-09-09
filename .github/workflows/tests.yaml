@@ -36,14 +36,13 @@ jobs:
         run: |
           calcit calcit.cirru edit format
           git diff --exit-code -- calcit.cirru
-          # Temporary for Calcit 0.14 generated functions: calcit-lang/calcit#902.
-          calcit calcit.cirru --compat-types --check-only
-          calcit calcit.cirru --compat-types analyze check-types --summary-only --format json
-          calcit calcit.cirru --compat-types analyze weak-types --only schema-dynamic,code-dynamic --intent unresolved --summary-only --format json
-          calcit calcit.cirru --compat-types analyze quality --baseline config/calcit-quality.cirru --format json
+          calcit calcit.cirru --check-only
+          calcit calcit.cirru analyze check-types --summary-only --format json
+          calcit calcit.cirru analyze weak-types --only schema-dynamic,code-dynamic --intent unresolved --summary-only --format json
+          calcit calcit.cirru analyze quality --baseline config/calcit-quality.cirru --format json
 
       - name: "test"
-        run: calcit calcit.cirru --compat-types test --require-match --summary-only --format json
+        run: calcit calcit.cirru test --require-match --summary-only --format json
 
       - name: Test nominal DOM patch protocol
         run: yarn test-dom-patch-types
@@ -59,7 +58,7 @@ jobs:
 
       - name: "build js"
         run: >
-          calcit calcit.cirru --compat-types js
+          calcit calcit.cirru js
           && yarn vite build --base=./
 
       - name: Deploy to server

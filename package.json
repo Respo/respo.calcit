@@ -1,11 +1,11 @@
 {
   "dependencies": {
-    "@calcit/procs": "0.14.0"
+    "@calcit/procs": "0.14.5"
   },
   "scripts": {
-    "test": "calcit calcit.cirru --compat-types test --require-match --summary-only --format json",
+    "test": "calcit calcit.cirru test --require-match --summary-only --format json",
     "test-dom-patch-types": "bash scripts/check-dom-patch-types.sh",
-    "test-dom-host": "calcit --compat-types --init-fn respo.test.dom/main! calcit.cirru js && node test-dom.mjs",
+    "test-dom-host": "calcit --init-fn respo.test.dom/main! --reload-fn respo.test.dom/verify-realize-ssr-ref! calcit.cirru js && node test-dom.mjs",
     "check-docs": "bash scripts/check-docs-md.sh",
     "check-quality": "calcit calcit.cirru analyze quality --baseline config/calcit-quality.cirru"
   },
