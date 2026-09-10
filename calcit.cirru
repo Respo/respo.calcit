@@ -929,15 +929,14 @@
         'wrap-dispatch $ %{} 'CodeEntry (:doc "|Wraps a raw dispatch function to automatically handle different operation types (list, tag, or direct).")
           :code $ quote
             defn wrap-dispatch (*dispatch-fn)
-              fn (op data)
+              fn (op & data)
                 hint-fn $ {}
-                  :args $ [] 'Dynamic (:: 'Option 'Dynamic)
+                  :args $ [] 'Dynamic
+                  :rest 'Dynamic
                   :return 'Unit
                 let
                     dispatch! $ deref *dispatch-fn
-                    payload $ match data
-                      (:some value) value
-                      (:none) nil
+                    payload $ if (empty? data) nil (&list:nth data 0)
                   if (list? op)
                     dispatch! $ :: :states op payload
                     if (tag? op)
@@ -951,8 +950,27 @@
                   {} (:return 'Unit)
                     :args $ [] 'Dynamic
               :return $ :: 'Fn
-                {} (:return 'Unit)
-                  :args $ [] 'Dynamic (:: 'Option 'Dynamic)
+                {} (:rest 'Dynamic) (:return 'Unit)
+                  :args $ [] 'Dynamic
+          :tests $ []
+            %{} 'TestEntry (:name |handles-legacy-data-and-single-enum)
+              :code $ quote
+                let
+                    received $ atom |
+                    dispatch-ref $ atom
+                      fn (op)
+                        reset! received $ str op
+                        , &unit
+                    wrapped $ wrap-dispatch dispatch-ref
+                  wrapped ([] :field) :value
+                  assert |legacy-two-argument-state-dispatch $ =
+                    str $ :: :states ([] :field) :value
+                    , @received
+                  wrapped $ :: :direct
+                  assert |single-enum-dispatch $ =
+                    str $ :: :direct
+                    , @received
+              :tags $ #{} :unit
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote
           ns respo.controller.client $ :require
