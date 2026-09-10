@@ -15,10 +15,36 @@ class FakeElement {
 
 globalThis.Element = FakeElement
 
+let canvasGetContextCalls = 0
+const canvasContext = {
+  font: "",
+  measureText: (content) => ({ width: content.length * 8 }),
+}
+globalThis.document = {
+  createElement(tagName) {
+    if (tagName !== "canvas") throw new Error(`unexpected element creation: ${tagName}`)
+    return {
+      getContext(contextName) {
+        if (contextName !== "2d") throw new Error(`unexpected canvas context: ${contextName}`)
+        canvasGetContextCalls += 1
+        return canvasContext
+      },
+    }
+  },
+}
+
 const { main_$x_, verify_realize_ssr_ref_$x_ } = await import("./js-out/respo.test.dom.mjs")
 const { insert_before_target_$x_, remove_target_$x_ } = await import("./js-out/respo.render.patch.mjs")
 const { set_inner_html_$x_ } = await import("./js-out/respo.dom.mjs")
 const { input_event_checked_$q_, input_event_value } = await import("./js-out/respo.util.format.mjs")
+const { shared_canvas_context, text_width } = await import("./js-out/respo.util.dom.mjs")
+
+if (canvasGetContextCalls !== 1 || shared_canvas_context !== canvasContext) {
+  throw new Error("shared canvas context did not call the native getContext method")
+}
+if (text_width("typed", 14, "sans-serif") !== 40) {
+  throw new Error("text width did not use the shared native canvas context")
+}
 
 const elementHost = (localName, innerHTML, children) => new FakeElement(localName, innerHTML, children)
 

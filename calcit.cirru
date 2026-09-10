@@ -5749,7 +5749,7 @@
         'create-shared-canvas-context $ %{} 'CodeEntry (:doc "|Creates the shared Canvas context behind an explicit JavaScript FFI boundary.")
           :code $ quote
             defn create-shared-canvas-context () $ if (browser/document-available?)
-              .get-context
+              .!getContext
                 unsafe-coerce (browser/create-element |canvas) 'respo.dom/DomCanvasElement
                 , |2d
               , nil
