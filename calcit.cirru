@@ -940,7 +940,9 @@
                   if (list? op)
                     dispatch! $ :: :states op payload
                     if (tag? op)
-                      dispatch! $ :: op payload
+                      if (nil? payload)
+                        dispatch! $ :: op
+                        dispatch! $ :: op payload
                       dispatch! op
           :examples $ []
           :schema $ :: 'Fn
@@ -965,6 +967,10 @@
                   wrapped ([] :field) :value
                   assert |legacy-two-argument-state-dispatch $ =
                     str $ :: :states ([] :field) :value
+                    , @received
+                  wrapped :effect/persist nil
+                  assert |legacy-nil-tag-dispatch $ =
+                    str $ :: :effect/persist
                     , @received
                   wrapped $ :: :direct
                   assert |single-enum-dispatch $ =
