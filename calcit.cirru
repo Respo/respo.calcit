@@ -654,9 +654,11 @@
             cond
                 or (= action :mount) (= action :update)
                 let
-                    disabled-commands $ noted "|copied event does not support `event.preventDefault()`, so we need to pass a set of configs" $ option:unwrap-or
-                      get options :disabled-commands
-                      #{} |p |s
+                    disabled-commands $ let
+                        raw-disabled $ option:unwrap-or
+                          get options :disabled-commands
+                          #{} |p |s
+                      assert-type raw-disabled $ :: 'Set 'String
                     handler $ fn (event)
                       if (js-present? event)
                         let
@@ -2084,7 +2086,8 @@
                             :return 'Bool
                         :return $ :: 'Map 'Tag 'Dynamic
                   filter-present (&struct:to-map props)
-                    fn (_k v) (some? v)
+                    fn (_k v)
+                      and (some? v) (not= v js/undefined)
               (map? props) props
               true $ raise $ str |Expected_DOM_props_map_or_record,_got: (type-of props)
           :examples $ []
@@ -4096,10 +4099,8 @@
               &doseq
                 idx $ range effect-count
                 let
-                    old-effect-option $ assert-type (&list:nth old-effects idx)
-                      :: 'Option 'respo.schema/Effect
-                    new-effect-option $ assert-type (&list:nth new-effects idx)
-                      :: 'Option 'respo.schema/Effect
+                    old-effect-option $ nth old-effects idx
+                    new-effect-option $ nth new-effects idx
                   if-let
                     old-effect old-effect-option
                     do
@@ -4303,7 +4304,8 @@
         'props->html $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn props->html (props)
             let
-                pairs $ &map:to-list props
+                pairs $ assert-type (&map:to-list props)
+                  :: 'List $ :: 'List 'Dynamic
                 visible $ filter pairs $ fn (pair)
                   hint-fn $ {}
                     :args $ [] $ :: 'List 'Dynamic
