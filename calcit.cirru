@@ -2084,7 +2084,8 @@
                             :return 'Bool
                         :return $ :: 'Map 'Tag 'Dynamic
                   filter-present (&struct:to-map props)
-                    fn (_k v) (some? v)
+                    fn (_k v)
+                      and (some? v) (not= v js/undefined)
               (map? props) props
               true $ raise $ str |Expected_DOM_props_map_or_record,_got: (type-of props)
           :examples $ []
