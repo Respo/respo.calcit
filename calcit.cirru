@@ -4096,10 +4096,8 @@
               &doseq
                 idx $ range effect-count
                 let
-                    old-effect-option $ assert-type (&list:nth old-effects idx)
-                      :: 'Option 'respo.schema/Effect
-                    new-effect-option $ assert-type (&list:nth new-effects idx)
-                      :: 'Option 'respo.schema/Effect
+                    old-effect-option $ nth old-effects idx
+                    new-effect-option $ nth new-effects idx
                   if-let
                     old-effect old-effect-option
                     do
@@ -4303,7 +4301,8 @@
         'props->html $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn props->html (props)
             let
-                pairs $ &map:to-list props
+                pairs $ assert-type (&map:to-list props)
+                  :: 'List $ :: 'List 'Dynamic
                 visible $ filter pairs $ fn (pair)
                   hint-fn $ {}
                     :args $ [] $ :: 'List 'Dynamic
