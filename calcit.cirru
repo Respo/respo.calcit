@@ -654,9 +654,11 @@
             cond
                 or (= action :mount) (= action :update)
                 let
-                    disabled-commands $ noted "|copied event does not support `event.preventDefault()`, so we need to pass a set of configs" $ option:unwrap-or
-                      get options :disabled-commands
-                      #{} |p |s
+                    disabled-commands $ assert-type
+                      noted "|copied event does not support `event.preventDefault()`, so we need to pass a set of configs" $ option:unwrap-or
+                        get options :disabled-commands
+                        #{} |p |s
+                      , :: 'Set 'String
                     handler $ fn (event)
                       if (js-present? event)
                         let
