@@ -2084,7 +2084,7 @@
                             :return 'Bool
                         :return $ :: 'Map 'Tag 'Dynamic
                   filter-present (&struct:to-map props)
-                    fn (_k v) (js-present? v)
+                    fn (_k v) (some? v)
               (map? props) props
               true $ raise $ str |Expected_DOM_props_map_or_record,_got: (type-of props)
           :examples $ []
@@ -2519,7 +2519,7 @@
                     contained $ &map:get styles-map :contained
                     css-line $ style->string $ unsafe-coerce (&map:to-list styles-map)
                       :: 'List $ :: 'List 'Dynamic
-                    block $ if (js-present? contained)
+                    block $ if (some? contained)
                       str contained (char-from-code 32) |{ &newline rule-name (char-from-code 32) |{ &newline css-line &newline |} &newline |}
                       str rule-name (char-from-code 32) |{ &newline css-line &newline |}
                     next-acc $ if (empty? acc) block $ str acc &newline &newline block
@@ -2612,7 +2612,7 @@
                 typed-cursor $ unsafe-coerce cursor $ :: List Tag
                 path $ concat typed-cursor $ [] :data
                 state $ get-state-at states path
-              if (js-present? state)
+              if (some? state)
                 if (map? state)
                   let
                       state-map $ unsafe-coerce state $ :: Map Dynamic Dynamic
@@ -3817,7 +3817,7 @@
                       prop-str $ turn-string $ respo.util.list/pair-first entry
                       v $ respo.util.list/pair-value entry
                     if (.!startsWith prop-str |data-)
-                      if (js-present? v)
+                      if (some? v)
                         js-set
                           browser/element-dataset $ host-element element
                           .!slice prop-str 5
@@ -3827,7 +3827,7 @@
                           .!slice prop-str 5
                       let
                           k $ dashed->camel prop-str
-                        if (js-present? v) (aset element k v)
+                        if (some? v) (aset element k v)
                 each style $ fn (entry)
                   hint-fn $ {}
                     :args $ [] $ :: 'List 'Dynamic
@@ -3842,7 +3842,7 @@
                 &doseq (entry events)
                   let
                       event-handler $ respo.util.list/pair-value entry
-                    when (js-present? event-handler)
+                    when (some? event-handler)
                       let
                           event-name $ respo.util.list/pair-key entry
                           name-in-string $ event->prop event-name
@@ -3929,7 +3929,7 @@
                           pair $ respo.util.list/first-pair children
                           k $ respo.util.list/pair-first pair
                           child $ respo.util.list/pair-value pair
-                        when (js-present? child)
+                        when (some? child)
                           collect-mounting collect! (append coord k) (append n-coord idx) (assert-type child 'Struct) false
                       recur (&list:rest children) (inc idx)
               true $ js/console.warn |Unknown-entry-for-mounting: tree
@@ -4063,7 +4063,7 @@
                           pair $ respo.util.list/first-pair children
                           k $ respo.util.list/pair-first pair
                           child $ respo.util.list/pair-value pair
-                        when (js-present? child)
+                        when (some? child)
                           collect-unmounting collect! (append coord k) (append n-coord idx) (assert-type child 'Struct) false
                       recur (&list:rest children) (inc idx)
                   match
@@ -4096,9 +4096,9 @@
               &doseq
                 idx $ range effect-count
                 let
-                    old-effect-option $ assert-type (get old-effects idx)
+                    old-effect-option $ assert-type (&list:nth old-effects idx)
                       :: 'Option 'respo.schema/Effect
-                    new-effect-option $ assert-type (get new-effects idx)
+                    new-effect-option $ assert-type (&list:nth new-effects idx)
                       :: 'Option 'respo.schema/Effect
                   if-let
                     old-effect old-effect-option
@@ -4237,15 +4237,15 @@
             if (= tag-name :textarea)
               let
                   value $ &map:get attrs :value
-                if (js-present? value)
+                if (some? value)
                   escape-html $ turn-string value
                   join-str children |
               let
                   html $ &map:get attrs :innerHTML
-                if (js-present? html) (turn-string html)
+                if (some? html) (turn-string html)
                   let
                       text $ &map:get attrs :inner-text
-                    if (js-present? text) (text->html text) (join-str children |)
+                    if (some? text) (text->html text) (join-str children |)
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'String)
             :args $ [] 'Tag (:: 'Map 'Tag 'Dynamic) (:: 'List 'String)
@@ -5516,7 +5516,7 @@
                   maybe-html $ &map:get
                     pairs-map $ :attrs vdom
                     , :innerHTML
-                if (js-present? maybe-html)
+                if (some? maybe-html)
                   when
                     not= (turn-string maybe-html) (element :inner-html)
                     js/console.warn "|SSR checking: noticed dom containing innerHTML:" element
@@ -6028,7 +6028,7 @@
                     next-acc $ if
                       and
                         starts-with? (turn-string k) |on-
-                        js-present? v
+                        some? v
                       &map:assoc acc
                         turn-tag $ &str:slice (turn-string k) 3
                         assert-type v respo.schema/EventHandler
