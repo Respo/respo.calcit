@@ -4096,9 +4096,9 @@
               &doseq
                 idx $ range effect-count
                 let
-                    old-effect-option $ assert-type (&list:nth old-effects idx)
+                    old-effect-option $ assert-type (get old-effects idx)
                       :: 'Option 'respo.schema/Effect
-                    new-effect-option $ assert-type (&list:nth new-effects idx)
+                    new-effect-option $ assert-type (get new-effects idx)
                       :: 'Option 'respo.schema/Effect
                   if-let
                     old-effect old-effect-option
