@@ -624,25 +624,26 @@
                         raw-disabled $ option:unwrap-or (get options :disabled-commands) (#{} |p |s)
                       assert-type raw-disabled $ :: 'Set 'String
                     handler $ fn (event)
-                      if (js-present? event)
-                        let
-                            key $ contract/expect-string |KeyboardEvent.key $ .-key event
-                            ctrl-key? $ contract/expect-bool |KeyboardEvent.ctrlKey $ .-ctrlKey event
-                            meta-key? $ contract/expect-bool |KeyboardEvent.metaKey $ .-metaKey event
-                          do
-                            if
-                              and (.includes? disabled-commands key) (or ctrl-key? meta-key?)
-                              .!preventDefault event
-                              %none
-                            .!dispatchEvent el $ new js/KeyboardEvent (.-type event) event
-                        %none
+                      hint-fn $ {}
+                        :args $ [] 'js-ffi.browser/EventHost
+                        :return 'Unit
+                      let
+                          key $ contract/expect-string |KeyboardEvent.key $ .-key event
+                          ctrl-key? $ contract/expect-bool |KeyboardEvent.ctrlKey $ .-ctrlKey event
+                          meta-key? $ contract/expect-bool |KeyboardEvent.metaKey $ .-metaKey event
+                        do
+                          if
+                            and (contains? disabled-commands key) (or ctrl-key? meta-key?)
+                            .!preventDefault event
+                            %none
+                          .!dispatchEvent el $ new js/KeyboardEvent (.-type event) event
                   let
                       prev-listener $ aget el dirty-field
                       listener $ unsafe-coerce prev-listener $ :: 'Fn
                         {}
                           :args $ [] 'js-ffi.browser/EventHost
                           :return 'Unit
-                    if (js-present? prev-listener) (browser/remove-event-listener! event-name listener)
+                    if (some? prev-listener) (browser/remove-event-listener! event-name listener)
                   aset el dirty-field handler
                   browser/add-event-listener! event-name handler
               (= action :unmount)
@@ -652,7 +653,7 @@
                       {}
                         :args $ [] 'js-ffi.browser/EventHost
                         :return 'Unit
-                  if (js-present? handler) (browser/remove-event-listener! event-name listener)
+                  if (some? handler) (browser/remove-event-listener! event-name listener)
                   js-delete el dirty-field
               true nil
           :examples $ []
@@ -952,8 +953,9 @@
                 :listeners $ []
                 :element component-result
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Map)
+          :schema $ :: 'Fn $ {}
             :args $ [] 'Dynamic
+            :return $ :: 'Map 'Tag 'Dynamic
         'find-child-by-key $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn find-child-by-key (children expected-key)
             loop
@@ -1813,7 +1815,7 @@
         'hr $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn hr (props) (create-element :hr props)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/Element)
             :args $ [] 'respo.schema/DomProps
         'html $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn html (props & children)
@@ -2336,10 +2338,11 @@
             :features $ #{} :js-ffi
         'map-entries $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn map-entries (value)
-            if (map? value) (.to-list value) ([])
+            if (map? value) (&map:to-list value) ([])
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'List)
+          :schema $ :: 'Fn $ {}
             :args $ [] 'Dynamic
+            :return $ :: 'List 'Dynamic
         'nodejs? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def nodejs? (detect-nodejs?)
           :examples $ []
@@ -2522,9 +2525,10 @@
               option:unwrap-or (get store :states) ({})
               , cursor k v
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Map)
-            :args $ [] 'Map 'List 'K 'V
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) (:: 'List 'Tag) 'K 'V
             :generics $ [] 'K 'V
+            :return $ :: 'Map 'Tag 'Dynamic
         'update-states-merge $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn update-states-merge (store cursor state0 changes)
             let
@@ -4431,22 +4435,30 @@
               emit-action! $ resource-started request-id
               try
                 let
-                    promise $ unsafe-coerce
-                      js/Promise.resolve $ do $ fetch-resource
-                      , JsObject
-                    handled $ unsafe-coerce
-                      .!then promise $ fn (value)
-                        emit-action! $ resource-ready request-id value
-                      , JsObject
-                  .!catch handled $ fn (error)
-                    emit-action! $ resource-failed request-id error
+                    value $ do $ fetch-resource
+                  shared/promise-observe! value
+                    fn (ready-value)
+                      hint-fn $ {}
+                        :args $ [] 'Dynamic
+                        :return 'Unit
+                      emit-action! $ resource-ready request-id ready-value
+                    fn (error)
+                      hint-fn $ {}
+                        :args $ [] 'Dynamic
+                        :return 'Unit
+                      emit-action! $ resource-failed request-id error
                 fn (error)
                   emit-action! $ resource-failed request-id error
               , request-id
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Number)
-            :args $ [] 'Fn 'Fn
+            :args $ []
+              :: 'Fn $ {} (:return 'T)
+                :args $ []
+              :: 'Fn $ {} (:return 'Unit)
+                :args $ [] 'respo.resource/ResourceAction
             :features $ #{} :js-ffi
+            :generics $ [] 'T
         'next-resource-id! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn next-resource-id! ()
             let
@@ -4613,7 +4625,9 @@
       :ns $ %{} 'NsEntry
         :doc "|Immutable async resource helpers. Network completion emits ResourceAction values; applications keep ResourceState in their own store and apply resource-reducer from the updater."
         :code $ quote $ ns respo.resource
-          :require $ respo.util.detect :refer $ expect-function
+          :require
+            respo.util.detect :refer $ expect-function
+            js-ffi.shared :as shared
     'respo.schema $ %{} 'FileEntry
       :defs $ {}
         '*dispatch-op $ %{} 'CodeEntry (:doc |)
@@ -4891,22 +4905,26 @@
                   %none
               schedule!
               schedule!
-              js/queueMicrotask $ fn () (swap! *async-checks inc)
+              shared/queue-microtask! $ fn () (swap! *async-checks inc)
                 assert |default-JS-scheduler-coalesces-microtasks $ = 1 @render-count
             let
                 calls $ atom 0
-                actions $ atom $ []
+                actions $ atom $ assert-type ([]) (:: 'List 'respo.resource/ResourceAction)
                 request-id $ load-resource!
                   fn () (swap! calls inc) |ready
                   fn (action) (swap! actions conj action)
               assert |resource-fetcher-runs-once $ = 1 @calls
               assert |resource-load-starts-synchronously $ = (resource-started request-id)
-                option:unwrap $ first @actions
-              js/queueMicrotask $ fn () (swap! *async-checks inc)
+                assert-type
+                  option:unwrap $ first @actions
+                  , 'respo.resource/ResourceAction
+              shared/queue-microtask! $ fn () (swap! *async-checks inc)
                 assert |resolved-resource-emits-ready $ = (resource-ready request-id |ready)
-                  option:unwrap $ get @actions 1
+                  assert-type
+                    option:unwrap $ get @actions 1
+                    , 'respo.resource/ResourceAction
             let
-                actions $ atom $ []
+                actions $ atom $ assert-type ([]) (:: 'List 'respo.resource/ResourceAction)
                 request-id $ load-resource!
                   fn () $ raise |offline
                   fn (action) (swap! actions conj action)
@@ -4916,26 +4934,26 @@
                 (:failed failed-id error)
                   do
                     assert |failed-action-keeps-request-id $ = request-id failed-id
-                    assert |sync-failure-keeps-error-message $ = |offline $ .-message error
+                    assert |sync-failure-keeps-error-message $ = |offline $ :message (shared/normalize-error error)
                 _ $ assert |expected-failed-resource-action false
             let
-                actions $ atom $ []
+                actions $ atom $ assert-type ([]) (:: 'List 'respo.resource/ResourceAction)
                 request-id $ load-resource!
                   fn () |ready
                   fn (action) (swap! actions conj action)
                     match action
                       (:ready _id _value) (raise |emit-ready-failed)
                       _ nil
-              js/queueMicrotask $ fn () $ js/queueMicrotask
+              shared/queue-microtask! $ fn () $ shared/queue-microtask!
                 fn () (swap! *async-checks inc)
                   match
                     option:unwrap $ last @actions
                     (:failed failed-id error)
                       do
                         assert |emitter-failure-keeps-request-id $ = request-id failed-id
-                        assert |emitter-failure-is-dispatched $ = |emit-ready-failed $ .-message error
+                        assert |emitter-failure-is-dispatched $ = |emit-ready-failed $ :message (shared/normalize-error error)
                     _ $ assert |expected-emitter-failure-action false
-            js/setTimeout
+            browser/set-timeout!
               fn () $ assert |all-async-checks-ran $ = 3 @*async-checks
               , 0
             , &unit
@@ -4969,6 +4987,8 @@
             respo.render.html :refer $ make-string
             respo.util.dom :refer $ text-width
             respo.resource :refer $ load-resource! resource-started resource-ready
+            js-ffi.shared :as shared
+            js-ffi.browser :as browser
     'respo.util.detect $ %{} 'FileEntry
       :defs $ {}
         '=seq $ %{} 'CodeEntry (:doc "|Recursively checks if two sequences are equal.")
