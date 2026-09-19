@@ -643,7 +643,7 @@
                         {}
                           :args $ [] 'js-ffi.browser/EventHost
                           :return 'Unit
-                    if (some? prev-listener) (browser/remove-event-listener! event-name listener)
+                    if (js-present? prev-listener) (browser/remove-event-listener! event-name listener)
                   aset el dirty-field handler
                   browser/add-event-listener! event-name handler
               (= action :unmount)
@@ -653,7 +653,7 @@
                       {}
                         :args $ [] 'js-ffi.browser/EventHost
                         :return 'Unit
-                  if (some? handler) (browser/remove-event-listener! event-name listener)
+                  if (js-present? handler) (browser/remove-event-listener! event-name listener)
                   js-delete el dirty-field
               true nil
           :examples $ []
@@ -5319,32 +5319,31 @@
           :schema $ :: 'Dynamic
         'event->edn $ %{} 'CodeEntry
           :doc "|Converts a native DOM event into a Respo EDN event structure."
-          :code $ quote $ defn event->edn (event) (; js/console.log "|simplify event:" event)
-            ->
-              case-default (.-type event)
-                {}
-                  :type $ .-type event
-                  :msg $ str "|Unhandled event: " $ .-type event
-                |click $ {} $ :type :click
-                |keydown $ &merge
-                  map-keyboard-event $ unsafe-coerce event 'respo.dom/DomKeyboardEvent
-                  {} (:type :keydown)
-                    :key-code $ .-keyCode event
-                    :keycode $ .-keyCode event
-                |keypress $ &merge
-                  map-keyboard-event $ unsafe-coerce event 'respo.dom/DomKeyboardEvent
-                  {} $ :type :keypress
-                |keyup $ &merge
-                  map-keyboard-event $ unsafe-coerce event 'respo.dom/DomKeyboardEvent
-                  {} $ :type :keyup
-                |input $ {} (:type :input)
-                  :value $ input-event-value event
-                  :checked $ input-event-checked? event
-                |change $ {} (:type :change)
-                  :value $ input-event-value event
-                |focus $ {} $ :type :focus
-              assoc :original-event event
-              assoc :event event
+          :code $ quote $ defn event->edn (event)
+            let
+                event-type $ event.:type
+                keyboard-event $ unsafe-coerce event 'respo.dom/DomKeyboardEvent
+              ->
+                case-default event-type
+                  {} (:type event-type)
+                    :msg $ str "|Unhandled event: " event-type
+                  |click $ {} $ :type :click
+                  |keydown $ &merge (map-keyboard-event keyboard-event)
+                    {} (:type :keydown)
+                      :key-code $ keyboard-event.:key-code
+                      :keycode $ keyboard-event.:key-code
+                  |keypress $ &merge (map-keyboard-event keyboard-event)
+                    {} $ :type :keypress
+                  |keyup $ &merge (map-keyboard-event keyboard-event)
+                    {} $ :type :keyup
+                  |input $ {} (:type :input)
+                    :value $ input-event-value event
+                    :checked $ input-event-checked? event
+                  |change $ {} (:type :change)
+                    :value $ input-event-value event
+                  |focus $ {} $ :type :focus
+                assoc :original-event event
+                assoc :event event
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] 'respo.dom/DomEvent
@@ -5405,13 +5404,10 @@
             let
                 input-event $ unsafe-coerce event 'respo.dom/DomInputEvent
               match
-                js-nullish->option $ .-target input-event
+                js-nullish->option $ input-event.:target
                 (:none)
                   raise |[Respo/input-event-checked?]-event-has-no-target
-                (:some target-host)
-                  let
-                      target $ unsafe-coerce target-host 'respo.dom/DomElement
-                    assert-type (.-checked target) 'Bool
+                (:some target) (target.:checked)
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Bool)
             :args $ [] 'respo.dom/DomEvent
@@ -5421,12 +5417,9 @@
             let
                 input-event $ unsafe-coerce event 'respo.dom/DomInputEvent
               match
-                js-nullish->option $ .-target input-event
+                js-nullish->option $ input-event.:target
                 (:none) (raise |[Respo/input-event-value]-event-has-no-target)
-                (:some target-host)
-                  let
-                      target $ unsafe-coerce target-host 'respo.dom/DomElement
-                    .-value target
+                (:some target) (target.:value)
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Dynamic)
             :args $ [] 'respo.dom/DomEvent
@@ -5435,12 +5428,12 @@
           :doc "|Extracts key information from a JavaScript KeyboardEvent."
           :code $ quote $ defn map-keyboard-event (event)
             {}
-              :key $ .-key event
-              :code $ .-code event
-              :ctrl? $ .-ctrlKey event
-              :meta? $ .-metaKey event
-              :alt? $ .-altKey event
-              :shift? $ .-shiftKey event
+              :key $ event.:key
+              :code $ event.:code
+              :ctrl? $ event.:ctrl-key
+              :meta? $ event.:meta-key
+              :alt? $ event.:alt-key
+              :shift? $ event.:shift-key
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] 'respo.dom/DomKeyboardEvent
