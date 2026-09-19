@@ -4248,7 +4248,8 @@
               (index xss)
                 let
                     children $ root.:children
-                  match (children .item index)
+                  match
+                    js-nullish->option $ children .item index
                     (:none) nil
                     (:some child) (find-target child xss)
           :examples $ []
