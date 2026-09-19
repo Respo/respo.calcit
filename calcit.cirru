@@ -2760,7 +2760,7 @@
             :names $ {} (:add-event-listener! |addEventListener) (:devtools-formatters |devtoolsFormatters) (:local-storage |localStorage) (:on-before-unload |onbeforeunload) (:remove-event-listener! |removeEventListener) (:set-timeout |setTimeout)
           :schema $ :: 'Trait
         'set-inner-html! $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn set-inner-html! (style-el content) (js-set style-el :inner-html content) &unit
+          :code $ quote $ defn set-inner-html! (style-el content) (set! style-el.:inner-html content) &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'respo.dom/DomElement 'String
@@ -4359,18 +4359,17 @@
               let
                   prop-str $ turn-string op
                 if (.!startsWith prop-str |data-)
-                  js-delete (target :dataset) (.!slice prop-str 5)
+                  js-delete (target.:dataset) (.!slice prop-str 5)
                   let
                       k $ dashed->camel prop-str
-                      ; ks $ prop->attr prop-str
                     aset target k nil
               :class-name $ target .remove-attribute! |class
               :href $ target .remove-attribute! |href
-              :inner-text $ js-set target :inner-text |
-              :innerHTML $ js-set target :inner-html |
-              :checked $ js-set target :checked false
-              :disabled $ js-set target :disabled false
-              :selected $ js-set target :selected false
+              :inner-text $ set! target.:inner-text |
+              :innerHTML $ set! target.:inner-html |
+              :checked $ set! target.:checked false
+              :disabled $ set! target.:disabled false
+              :selected $ set! target.:selected false
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'respo.dom/DomElement 'Tag
