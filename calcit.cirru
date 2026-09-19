@@ -4246,13 +4246,11 @@
             list-match coord
               () root
               (index xss)
-                match
-                  js-nullish->option $ aget
-                    unsafe-coerce (.-children root) 'JsObject
-                    , index
-                  (:none) nil
-                  (:some child)
-                    find-target (unsafe-coerce child 'respo.dom/DomElement) xss
+                let
+                    children $ root.:children
+                  match (children .item index)
+                    (:none) nil
+                    (:some child) (find-target child xss)
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] 'respo.dom/DomElement $ :: 'List 'Number
@@ -5250,9 +5248,8 @@
           :doc "|Creates the shared Canvas context behind an explicit JavaScript FFI boundary."
           :code $ quote $ defn create-shared-canvas-context ()
             if (browser/document-available?)
-              .!getContext
-                unsafe-coerce (browser/create-element |canvas) 'respo.dom/DomCanvasElement
-                , |2d
+              (unsafe-coerce (browser/create-element |canvas) 'respo.dom/DomCanvasElement)
+                , .get-context |2d
               , nil
           :examples $ []
           :schema $ :: 'Fn $ {}
@@ -5270,10 +5267,10 @@
             if (js-present? shared-canvas-context)
               let
                   context $ unsafe-coerce shared-canvas-context 'respo.dom/DomCanvasContext
-                js-set context :font $ str font-size |px (char-from-code 32) font-family
+                set! context.:font $ str font-size |px (char-from-code 32) font-family
                 let
-                    metrics $ .measure-text context content
-                  unsafe-coerce (.-width metrics) 'Number
+                    metrics $ context .measure-text content
+                  metrics.:width
               , 0
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Number)
