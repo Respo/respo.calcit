@@ -4789,7 +4789,7 @@
         'dev? $ %{} 'CodeEntry
           :doc "|Boolean flag indicating if the application is running in development mode."
           :code $ quote $ def dev?
-            &= |dev $ unsafe-coerce (&get-env |mode |release) String
+            &= |dev $ option:unwrap-or (get-env |mode) |release
           :examples $ []
           :schema $ :: 'Bool
         'effect $ %{} 'CodeEntry (:doc |)
