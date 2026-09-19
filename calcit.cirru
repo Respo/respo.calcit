@@ -762,8 +762,8 @@
           :code $ quote $ defn activate-instance! (entire-dom mount-point deliver-event)
             let
                 listener-builder $ fn (event-name) (build-listener event-name deliver-event)
-              set! (.-innerHTML mount-point) |
-              .!appendChild mount-point $ make-element entire-dom listener-builder $ []
+              set! mount-point.:inner-html |
+              mount-point .append-child! $ make-element entire-dom listener-builder $ []
             do &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
@@ -2808,11 +2808,11 @@
                 let
                     event $ unsafe-coerce raw-event 'respo.dom/DomKeyboardEvent
                     event-tuple $ :: :keydown $ {}
-                      :key $ .-key event
-                      :ctrl $ .-ctrlKey event
-                      :shift $ .-shiftKey event
-                      :alt $ .-altKey event
-                      :meta $ .-metaKey event
+                      :key $ event.:key
+                      :ctrl $ event.:ctrl-key
+                      :shift $ event.:shift-key
+                      :alt $ event.:alt-key
+                      :meta $ event.:meta-key
                   send-to-component! event-tuple
               add-watch *store :rerender $ fn (_store _prev) (render-app! mount-target)
               println |Loaded.
