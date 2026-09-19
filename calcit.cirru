@@ -643,7 +643,7 @@
                         {}
                           :args $ [] 'js-ffi.browser/EventHost
                           :return 'Unit
-                    if (some? prev-listener) (browser/remove-event-listener! event-name listener)
+                    if (js-present? prev-listener) (browser/remove-event-listener! event-name listener)
                   aset el dirty-field handler
                   browser/add-event-listener! event-name handler
               (= action :unmount)
@@ -653,7 +653,7 @@
                       {}
                         :args $ [] 'js-ffi.browser/EventHost
                         :return 'Unit
-                  if (some? handler) (browser/remove-event-listener! event-name listener)
+                  if (js-present? handler) (browser/remove-event-listener! event-name listener)
                   js-delete el dirty-field
               true nil
           :examples $ []
@@ -762,8 +762,8 @@
           :code $ quote $ defn activate-instance! (entire-dom mount-point deliver-event)
             let
                 listener-builder $ fn (event-name) (build-listener event-name deliver-event)
-              set! (.-innerHTML mount-point) |
-              .!appendChild mount-point $ make-element entire-dom listener-builder $ []
+              set! mount-point.:inner-html |
+              mount-point .append-child! $ make-element entire-dom listener-builder $ []
             do &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
@@ -2760,7 +2760,7 @@
             :names $ {} (:add-event-listener! |addEventListener) (:devtools-formatters |devtoolsFormatters) (:local-storage |localStorage) (:on-before-unload |onbeforeunload) (:remove-event-listener! |removeEventListener) (:set-timeout |setTimeout)
           :schema $ :: 'Trait
         'set-inner-html! $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn set-inner-html! (style-el content) (js-set style-el :inner-html content) &unit
+          :code $ quote $ defn set-inner-html! (style-el content) (set! style-el.:inner-html content) &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'respo.dom/DomElement 'String
@@ -2808,11 +2808,11 @@
                 let
                     event $ unsafe-coerce raw-event 'respo.dom/DomKeyboardEvent
                     event-tuple $ :: :keydown $ {}
-                      :key $ .-key event
-                      :ctrl $ .-ctrlKey event
-                      :shift $ .-shiftKey event
-                      :alt $ .-altKey event
-                      :meta $ .-metaKey event
+                      :key $ event.:key
+                      :ctrl $ event.:ctrl-key
+                      :shift $ event.:shift-key
+                      :alt $ event.:alt-key
+                      :meta $ event.:meta-key
                   send-to-component! event-tuple
               add-watch *store :rerender $ fn (_store _prev) (render-app! mount-target)
               println |Loaded.
@@ -4246,13 +4246,12 @@
             list-match coord
               () root
               (index xss)
-                match
-                  js-nullish->option $ aget
-                    unsafe-coerce (.-children root) 'JsObject
-                    , index
-                  (:none) nil
-                  (:some child)
-                    find-target (unsafe-coerce child 'respo.dom/DomElement) xss
+                let
+                    children $ root.:children
+                  match
+                    js-nullish->option $ children .item index
+                    (:none) nil
+                    (:some child) (find-target child xss)
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] 'respo.dom/DomElement $ :: 'List 'Number
@@ -4361,18 +4360,17 @@
               let
                   prop-str $ turn-string op
                 if (.!startsWith prop-str |data-)
-                  js-delete (target :dataset) (.!slice prop-str 5)
+                  js-delete (target.:dataset) (.!slice prop-str 5)
                   let
                       k $ dashed->camel prop-str
-                      ; ks $ prop->attr prop-str
                     aset target k nil
               :class-name $ target .remove-attribute! |class
               :href $ target .remove-attribute! |href
-              :inner-text $ js-set target :inner-text |
-              :innerHTML $ js-set target :inner-html |
-              :checked $ js-set target :checked false
-              :disabled $ js-set target :disabled false
-              :selected $ js-set target :selected false
+              :inner-text $ set! target.:inner-text |
+              :innerHTML $ set! target.:inner-html |
+              :checked $ set! target.:checked false
+              :disabled $ set! target.:disabled false
+              :selected $ set! target.:selected false
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'respo.dom/DomElement 'Tag
@@ -4789,7 +4787,7 @@
         'dev? $ %{} 'CodeEntry
           :doc "|Boolean flag indicating if the application is running in development mode."
           :code $ quote $ def dev?
-            &= |dev $ unsafe-coerce (&get-env |mode |release) String
+            &= |dev $ option:unwrap-or (get-env |mode) |release
           :examples $ []
           :schema $ :: 'Bool
         'effect $ %{} 'CodeEntry (:doc |)
@@ -5250,9 +5248,8 @@
           :doc "|Creates the shared Canvas context behind an explicit JavaScript FFI boundary."
           :code $ quote $ defn create-shared-canvas-context ()
             if (browser/document-available?)
-              .!getContext
-                unsafe-coerce (browser/create-element |canvas) 'respo.dom/DomCanvasElement
-                , |2d
+              (unsafe-coerce (browser/create-element |canvas) 'respo.dom/DomCanvasElement)
+                , .get-context |2d
               , nil
           :examples $ []
           :schema $ :: 'Fn $ {}
@@ -5270,10 +5267,10 @@
             if (js-present? shared-canvas-context)
               let
                   context $ unsafe-coerce shared-canvas-context 'respo.dom/DomCanvasContext
-                js-set context :font $ str font-size |px (char-from-code 32) font-family
+                set! context.:font $ str font-size |px (char-from-code 32) font-family
                 let
-                    metrics $ .measure-text context content
-                  unsafe-coerce (.-width metrics) 'Number
+                    metrics $ context .measure-text content
+                  metrics.:width
               , 0
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Number)
@@ -5319,32 +5316,31 @@
           :schema $ :: 'Dynamic
         'event->edn $ %{} 'CodeEntry
           :doc "|Converts a native DOM event into a Respo EDN event structure."
-          :code $ quote $ defn event->edn (event) (; js/console.log "|simplify event:" event)
-            ->
-              case-default (.-type event)
-                {}
-                  :type $ .-type event
-                  :msg $ str "|Unhandled event: " $ .-type event
-                |click $ {} $ :type :click
-                |keydown $ &merge
-                  map-keyboard-event $ unsafe-coerce event 'respo.dom/DomKeyboardEvent
-                  {} (:type :keydown)
-                    :key-code $ .-keyCode event
-                    :keycode $ .-keyCode event
-                |keypress $ &merge
-                  map-keyboard-event $ unsafe-coerce event 'respo.dom/DomKeyboardEvent
-                  {} $ :type :keypress
-                |keyup $ &merge
-                  map-keyboard-event $ unsafe-coerce event 'respo.dom/DomKeyboardEvent
-                  {} $ :type :keyup
-                |input $ {} (:type :input)
-                  :value $ input-event-value event
-                  :checked $ input-event-checked? event
-                |change $ {} (:type :change)
-                  :value $ input-event-value event
-                |focus $ {} $ :type :focus
-              assoc :original-event event
-              assoc :event event
+          :code $ quote $ defn event->edn (event)
+            let
+                event-type $ event.:type
+                keyboard-event $ unsafe-coerce event 'respo.dom/DomKeyboardEvent
+              ->
+                case-default event-type
+                  {} (:type event-type)
+                    :msg $ str "|Unhandled event: " event-type
+                  |click $ {} $ :type :click
+                  |keydown $ &merge (map-keyboard-event keyboard-event)
+                    {} (:type :keydown)
+                      :key-code $ keyboard-event.:key-code
+                      :keycode $ keyboard-event.:key-code
+                  |keypress $ &merge (map-keyboard-event keyboard-event)
+                    {} $ :type :keypress
+                  |keyup $ &merge (map-keyboard-event keyboard-event)
+                    {} $ :type :keyup
+                  |input $ {} (:type :input)
+                    :value $ input-event-value event
+                    :checked $ input-event-checked? event
+                  |change $ {} (:type :change)
+                    :value $ input-event-value event
+                  |focus $ {} $ :type :focus
+                assoc :original-event event
+                assoc :event event
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] 'respo.dom/DomEvent
@@ -5405,13 +5401,10 @@
             let
                 input-event $ unsafe-coerce event 'respo.dom/DomInputEvent
               match
-                js-nullish->option $ .-target input-event
+                js-nullish->option $ input-event.:target
                 (:none)
                   raise |[Respo/input-event-checked?]-event-has-no-target
-                (:some target-host)
-                  let
-                      target $ unsafe-coerce target-host 'respo.dom/DomElement
-                    assert-type (.-checked target) 'Bool
+                (:some target) (target.:checked)
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Bool)
             :args $ [] 'respo.dom/DomEvent
@@ -5421,12 +5414,9 @@
             let
                 input-event $ unsafe-coerce event 'respo.dom/DomInputEvent
               match
-                js-nullish->option $ .-target input-event
+                js-nullish->option $ input-event.:target
                 (:none) (raise |[Respo/input-event-value]-event-has-no-target)
-                (:some target-host)
-                  let
-                      target $ unsafe-coerce target-host 'respo.dom/DomElement
-                    .-value target
+                (:some target) (target.:value)
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Dynamic)
             :args $ [] 'respo.dom/DomEvent
@@ -5435,12 +5425,12 @@
           :doc "|Extracts key information from a JavaScript KeyboardEvent."
           :code $ quote $ defn map-keyboard-event (event)
             {}
-              :key $ .-key event
-              :code $ .-code event
-              :ctrl? $ .-ctrlKey event
-              :meta? $ .-metaKey event
-              :alt? $ .-altKey event
-              :shift? $ .-shiftKey event
+              :key $ event.:key
+              :code $ event.:code
+              :ctrl? $ event.:ctrl-key
+              :meta? $ event.:meta-key
+              :alt? $ event.:alt-key
+              :shift? $ event.:shift-key
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] 'respo.dom/DomKeyboardEvent
