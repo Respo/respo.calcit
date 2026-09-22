@@ -496,7 +496,7 @@
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] 'Dynamic
-            :return $ :: 'Option 'respo.app.schema/Task
+            :return $ :: 'calcit.core/Option 'respo.app.schema/Task
           :tests $ [] $ %{} 'TestEntry (:name |restores-valid-task-data)
             :code $ quote $ do
               let
@@ -934,7 +934,7 @@
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ []
-              :: 'Ref $ :: 'Option 'respo.schema/Component
+              :: 'Ref $ :: 'calcit.core/Option 'respo.schema/Component
               :: 'Ref $ :: 'Fn $ {} (:return 'Unit)
                 :args $ [] 'Dynamic
             :features $ #{} :js-ffi
@@ -972,7 +972,7 @@
             :args $ []
               :: 'List $ :: 'List 'Dynamic
               , 'Dynamic
-            :return $ :: 'Option 'Struct
+            :return $ :: 'calcit.core/Option 'Struct
         'find-event-target $ %{} 'CodeEntry
           :doc "|Traverses the virtual DOM to find the element that should handle a specific event."
           :code $ quote $ defn find-event-target (element coord event-name)
@@ -1000,7 +1000,7 @@
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] 'Struct (:: 'List 'Dynamic) 'Tag
-            :return $ :: 'Option 'Struct
+            :return $ :: 'calcit.core/Option 'Struct
           :tests $ [] $ %{} 'TestEntry (:name |returns-none-through-empty-component-tree)
             :code $ quote $ let
                 component $ %{} respo.schema/Component (:name :empty)
@@ -1029,7 +1029,7 @@
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] 'Struct $ :: 'List 'Dynamic
-            :return $ :: 'Option 'Struct
+            :return $ :: 'calcit.core/Option 'Struct
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.controller.resolve
           :require
@@ -1042,7 +1042,7 @@
           :code $ quote $ defatom *changes-logger (%none)
           :examples $ [] $ quote
             reset! *changes-logger $ fn (old new changes) (println changes)
-          :schema $ :: 'Ref $ :: 'Option
+          :schema $ :: 'Ref $ :: 'calcit.core/Option
             :: 'Fn $ {} (:return 'Unit)
               :args $ [] 'respo.schema/Component 'respo.schema/Component $ :: 'List 'respo.schema/DomPatch
         '*dispatch-fn $ %{} 'CodeEntry
@@ -1057,7 +1057,7 @@
           :doc "|internal atom storing the current virtual DOM tree. used by render! to track and update the application state."
           :code $ quote $ defatom *global-element (%none)
           :examples $ []
-          :schema $ :: 'Ref $ :: 'Option 'respo.schema/Component
+          :schema $ :: 'Ref $ :: 'calcit.core/Option 'respo.schema/Component
         '<> $ %{} 'CodeEntry
           :doc "|Create a text node with `span`.\n\nThe first argument is the content string. The optional second argument can be a style map or a class-name string."
           :code $ quote $ defn <> (content & styles)
@@ -1126,10 +1126,7 @@
               raise "|[Respo/build-effect] expected dependencies as a list"
             let
                 method-fn $ expect-function method "|[Respo/build-effect] expected a lifecycle method function"
-              %{} schema/Effect (:name name)
-                :coord $ []
-                :args deps
-                :method method-fn
+              schema/Effect :name name :coord ([]) :args deps :method method-fn
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Effect)
             :args $ [] 'Tag (:: 'List 'Dynamic)
@@ -1209,13 +1206,7 @@
                         , acc
                       &list:rest xs
                       inc idx
-              %{} schema/Element (:name tag-name)
-                :coord $ %none
-                :attrs attrs
-                :style styles
-                :event event
-                :children children-nodes
-                :ref ref!
+              schema/Element :name tag-name :coord (%none) :attrs attrs :style styles :event event :children children-nodes :ref ref!
           :examples $ []
             quote $ create-element :div $ {}
             quote $ create-element :span $ {} (:class-name |text)
@@ -1246,13 +1237,7 @@
                   fn (x y)
                     &compare (&list:first x) (&list:first y)
                 event $ pick-event props-map
-              %{} schema/Element (:name tag-name)
-                :coord $ %none
-                :attrs attrs
-                :style styles
-                :event event
-                :children $ map child-pairs confirm-child-pair
-                :ref ref!
+              schema/Element :name tag-name :coord (%none) :attrs attrs :style styles :event event :children (map child-pairs confirm-child-pair) :ref ref!
           :examples $ [] $ quote
             create-list-element :div
               {} $ :class-name |list
@@ -1445,25 +1430,24 @@
         'effect-watch $ %{} 'CodeEntry
           :doc "|Creates a dependency-aware effect. setup! runs on mount and after dependency changes; cleanup! runs before a changed setup and on unmount. Cleanup uses the old render closure."
           :code $ quote $ defn effect-watch (deps setup! cleanup-option)
-            do
-              if (list? deps) &unit $ raise |[Respo/effect-watch]-expected-dependencies-as-a-list
-              if (fn? setup!) &unit $ raise |[Respo/effect-watch]-expected-setup-callback
-              match cleanup-option
-                (:none) &unit
-                (:some cleanup!)
-                  if (fn? cleanup!) &unit $ raise |[Respo/effect-watch]-expected-cleanup-callback
-              build-effect :effect-watch deps $ fn (_args params)
-                let[] (action target _at-place?) params $ case-default action &unit
-                  :mount $ do (setup! target) &unit
-                  :before-update $ match cleanup-option
-                    (:none) &unit
-                    (:some cleanup!)
-                      do (cleanup! target) &unit
-                  :update $ do (setup! target) &unit
-                  :unmount $ match cleanup-option
-                    (:none) &unit
-                    (:some cleanup!)
-                      do (cleanup! target) &unit
+            if (list? deps) &unit $ raise |[Respo/effect-watch]-expected-dependencies-as-a-list
+            if (fn? setup!) &unit $ raise |[Respo/effect-watch]-expected-setup-callback
+            match cleanup-option
+              (:none) &unit
+              (:some cleanup!)
+                if (fn? cleanup!) &unit $ raise |[Respo/effect-watch]-expected-cleanup-callback
+            build-effect :effect-watch deps $ fn (_args params)
+              let[] (action target _at-place?) params $ case-default action &unit
+                :mount $ do (setup! target) &unit
+                :before-update $ match cleanup-option
+                  (:none) &unit
+                  (:some cleanup!)
+                    do (cleanup! target) &unit
+                :update $ do (setup! target) &unit
+                :unmount $ match cleanup-option
+                  (:none) &unit
+                  (:some cleanup!)
+                    do (cleanup! target) &unit
           :examples $ [] $ quote
             effect-watch ([] 1)
               fn (_target) nil
@@ -1472,7 +1456,7 @@
             :args $ [] (:: 'List 'Dynamic)
               :: 'Fn $ {} (:return 'Unit)
                 :args $ [] 'Dynamic
-              :: 'Option $ :: 'Fn $ {} (:return 'Unit)
+              :: 'calcit.core/Option $ :: 'Fn $ {} (:return 'Unit)
                 :args $ [] 'Dynamic
           :tests $ []
             %{} 'TestEntry (:name |cleans-old-closure-before-new-setup)
@@ -1655,11 +1639,7 @@
         'extract-effects-list $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn extract-effects-list (component-name markup-tree)
             if (nil? markup-tree)
-              %{} schema/Component
-                :effects $ []
-                :name component-name
-                :listeners $ []
-                :tree $ %some $ span ({})
+              schema/Component :effects ([]) :name component-name :listeners ([]) :tree $ %some $ span ({})
               if (list? markup-tree)
                 let
                     items $ unsafe-coerce markup-tree $ :: List Dynamic
@@ -1672,8 +1652,7 @@
                       match node-option
                         (:none) (raise |expected-render-node)
                         (:some node-tree)
-                          %{} schema/Component (:effects effects) (:name component-name) (:listeners listeners)
-                            :tree $ %some $ assert-type node-tree Struct
+                          schema/Component :effects effects :name component-name :listeners listeners :tree $ %some $ assert-type node-tree Struct
                       let
                           item $ &list:first xs
                           next-node $ if
@@ -1689,11 +1668,7 @@
                             , listeners
                         recur next-node next-effects next-listeners $ &list:rest xs
                 if (struct? markup-tree)
-                  %{} schema/Component
-                    :effects $ []
-                    :name component-name
-                    :listeners $ []
-                    :tree $ %some $ assert-type markup-tree Struct
+                  schema/Component :effects ([]) :name component-name :listeners ([]) :tree $ %some $ assert-type markup-tree Struct
                   raise |invalid-component-tree
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
@@ -1861,7 +1836,7 @@
                   (:none) shared/queue-microtask!
                   (:some enqueue!) enqueue!
                 *queued? $ atom false
-              fn () $ do
+              fn ()
                 when (not @*queued?) (reset! *queued? true)
                   queue! $ fn () (reset! *queued? false) (render!)
                 , &unit
@@ -1873,7 +1848,7 @@
             :args $ []
               :: 'Fn $ {} (:return 'Unit)
                 :args $ []
-              :: 'Option $ :: 'Fn $ {} (:return 'Unit)
+              :: 'calcit.core/Option $ :: 'Fn $ {} (:return 'Unit)
                 :args $ [] $ :: 'Fn
                   {} (:return 'Unit)
                     :args $ []
@@ -1944,7 +1919,7 @@
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ []
-            :return $ :: 'Option 'Struct
+            :return $ :: 'calcit.core/Option 'Struct
         'normalize-dom-props $ %{} 'CodeEntry
           :doc "|Normalize nil, map, or DomProps record input into a map. This isolates the intentionally dynamic public props boundary before typed DOM processing."
           :code $ quote $ defn normalize-dom-props (props)
@@ -2077,7 +2052,7 @@
         'resolve-element-constructor $ %{} 'CodeEntry
           :doc "|Resolves the browser Element constructor behind an explicit JavaScript FFI function so element-type remains a value rather than a zero-argument function."
           :code $ quote $ defn resolve-element-constructor ()
-            if (exists? js/Element) js/Element js/Error
+            if (exists? js/globalThis.Element) js/globalThis.Element js/Error
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Dynamic)
             :args $ []
@@ -2166,7 +2141,7 @@
             :args $ [] $ :: 'Fn
               {} (:return 'Unit)
                 :args $ [] 'Dynamic
-            :return $ :: 'Option $ :: 'Fn
+            :return $ :: 'calcit.core/Option $ :: 'Fn
               {} (:return 'Unit)
                 :args $ [] 'Dynamic
         'some-enqueue $ %{} 'CodeEntry (:doc |)
@@ -2178,7 +2153,7 @@
                 :args $ [] $ :: 'Fn
                   {} (:return 'Unit)
                     :args $ []
-            :return $ :: 'Option $ :: 'Fn
+            :return $ :: 'calcit.core/Option $ :: 'Fn
               {} (:return 'Unit)
                 :args $ [] $ :: 'Fn
                   {} (:return 'Unit)
@@ -2911,7 +2886,7 @@
               , value
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] 'Fn 'List
+            :args $ [] 'Fn $ :: 'List 'Dynamic
         'call-value $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-value (f args)
             when
@@ -4342,7 +4317,7 @@
             do &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] $ :: 'Option 'respo.dom/DomElement
+            :args $ [] $ :: 'calcit.core/Option 'respo.dom/DomElement
             :features $ #{} :js-ffi
         'rm-event $ %{} 'CodeEntry
           :doc "|Removes an event listener from a DOM element by setting it to nil."
@@ -4495,7 +4470,7 @@
           :examples $ [] $ quote
             resource-idle $ {} $ :items ([])
           :schema $ :: 'Fn $ {} (:return 'respo.resource/ResourceState)
-            :args $ [] $ :: 'Option 'Dynamic
+            :args $ [] $ :: 'calcit.core/Option 'Dynamic
         'resource-loading? $ %{} 'CodeEntry
           :doc "|Returns true for :pending and :refreshing ResourceState values."
           :code $ quote $ defn resource-loading? (state)
@@ -5058,7 +5033,7 @@
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] 'Dynamic
-            :return $ :: 'Option 'Struct
+            :return $ :: 'calcit.core/Option 'Struct
         'component? $ %{} 'CodeEntry
           :doc "|check if value is a Respo component. returns true for component records, false otherwise."
           :code $ quote $ defn component? (x)
@@ -5584,7 +5559,7 @@
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] (:: 'List 'Dynamic) 'Dynamic
-            :return $ :: 'Option 'Number
+            :return $ :: 'calcit.core/Option 'Number
         'map-with-idx $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn map-with-idx (xs f)
             assert (fn? f) "|expects function"
