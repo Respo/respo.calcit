@@ -11,7 +11,8 @@ tmp/
 
 draft/
 
-.yarn/*.gz
+.yarn/
+.pnp.*
 
 .calcit-snippets/
 .calcit/
