@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs"
+
 const childrenHost = (children) => ({
   length: children.length,
   item: (index) => children[index],
@@ -38,6 +40,26 @@ const { insert_before_target_$x_, remove_target_$x_ } = await import("./js-out/r
 const { set_inner_html_$x_ } = await import("./js-out/respo.dom.mjs")
 const { input_event_checked_$q_, input_event_value } = await import("./js-out/respo.util.format.mjs")
 const { shared_canvas_context, text_width } = await import("./js-out/respo.util.dom.mjs")
+const { document_available_$q_ } = await import("./js-out/js-ffi.browser.mjs")
+
+const jsFfiModule = readFileSync(new URL("./js-out/js-ffi.browser.mjs", import.meta.url), "utf8")
+if (!jsFfiModule.includes("JS FFI: js-ffi.browser/document-available?")) {
+  throw new Error("js-ffi file expression was not embedded in its Calcit module")
+}
+if (!jsFfiModule.includes("calcit://js-ffi@0.2.0-alpha.3/js-ffi.browser/document-available%3F/file/js-ffi-assets/document-available.js")) {
+  throw new Error("js-ffi source provenance lost the installed module version or file path")
+}
+if (/^import\s+.*js-ffi-assets\//m.test(jsFfiModule)) {
+  throw new Error("js-ffi generated a separate snippet import")
+}
+if (!document_available_$q_()) throw new Error("js-ffi document guard failed in Respo's browser host")
+const availableDocument = globalThis.document
+try {
+  Reflect.deleteProperty(globalThis, "document")
+  if (document_available_$q_()) throw new Error("js-ffi document guard failed without a browser host")
+} finally {
+  globalThis.document = availableDocument
+}
 
 if (canvasGetContextCalls !== 1 || shared_canvas_context !== canvasContext) {
   throw new Error("shared canvas context did not call the native getContext method")
