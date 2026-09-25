@@ -2,7 +2,7 @@
 
 ### JS FFI 文件模块试验
 
-Respo `0.16.114-alpha.1` 使用 Calcit `0.22.0-alpha.3` 与 js-ffi `0.2.0-alpha.5`，通过普通 `:modules` 和 `:require` 调用 `js-ffi.browser/document-available?`。该实现由 js-ffi 模块携带单表达式 JS 文件，Respo 不引用文件路径，也不安装片段专用 npm 包。运行 `caps deps.cirru --strict --ci`、`yarn install --immutable` 和 `yarn test-dom-host`，可验证干净安装、生成模块中的内嵌实现及有无 `document` 时的行为。文件修改后需显式重新构建；此 alpha 验证不改变 Respo 的稳定版发布策略。
+Respo `0.16.114-alpha.1` 使用 Calcit `0.22.0` 与 js-ffi `0.2.0`，通过普通 `:modules` 和 `:require` 调用 `js-ffi.browser/document-available?`。该实现由 js-ffi 模块携带单表达式 JS 文件，Respo 不引用文件路径，也不安装片段专用 npm 包。运行 `caps deps.cirru --strict --ci`、`yarn install --immutable` 和 `yarn test-dom-host`，可验证干净安装、生成模块中的内嵌实现及有无 `document` 时的行为。文件修改后需显式重新构建；Respo 仍为自己的 alpha 版本，此处验证的是 Calcit 与 js-ffi 的公开稳定包。
 
 > Inspired by React and Reagent. Previously [Respo/respo.cljs](https://github.com/Respo/respo.cljs).
 
