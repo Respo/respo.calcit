@@ -1,4 +1,4 @@
-# 资源 ID helper：普通方法与候选类型推断验收
+# 资源 ID helper：普通方法与公开版本类型推断验收
 
 本例对应 [Calcit #1306](https://github.com/calcit-lang/calcit/issues/1306) 和
 [#1307](https://github.com/calcit-lang/calcit/issues/1307)，在实际 Respo 代码中验证小步改进，
@@ -20,30 +20,29 @@ calcit js
 ```
 
 Number 查询给出 `.add` 的 `proven` 契约：一个 Number 参数，返回 Number。
-当前提交仍保留 `Fn () -> Number` schema，并继续固定 Calcit / `@calcit/procs` 0.22.0、
-js-ffi 0.2.0。没有把未发布版本写入正式依赖。
-
-## 候选编译器验证：省略重复 schema
-
-2026-09-26 使用 Calcit main `2e8b4b6689ab14e8e420d0ad68cd4163d04ffdb2`
-构建的候选 CLI（版本字段 0.22.1，**该构建未发布**），在项目 `.calcit/inference-validation/`
-中的独立 Snapshot 副本执行 `edit schema ... --clear`。副本单独声明候选工具版本，
-复用已安装的模块，但不修改模块源码；正式 Snapshot 和依赖版本不受影响。
-
-删除声明前后 helper 函数体完全相同。已有入口严格检查和 definition 测试通过；
+当前固定公开发布的 Calcit / `@calcit/procs` 0.23.1、js-ffi 0.2.0。
+通过 Calcit CLI 清除了重复的 `Fn () -> Number` 根 schema，函数体和 `:tests` 不变。
 `query context --format edn` 显示 `:schema nil`、`:inferred-schema` 为 `Fn () -> Number`，
-并报告 `I_SCHEMA_INFERRED`。候选生成的 JS 两次直接调用仍连续递增。
-这里使用已发布的 `@calcit/procs` 0.22.0，启动时明确报告与候选 CLI 0.22.1 的版本不一致警告；
-仅将结果视为本次 helper 的候选兼容证据，不作为匹配版本工具链的正式发布验收。
-收益是这个 helper 可以省去重复 root schema，而非从一次测试猜测公共签名。
+并报告 `I_SCHEMA_INFERRED`；推断只服务编译与查询，不把 schema 写回源码。
 
-候选编译整个示例应用，Vite 构建后在受控浏览器执行输入和 Add 操作，
-页面从 `Tasks: List/0` 变为 `Tasks: List/1`，内容为输入值；未出现 JS 异常。
+## 匹配公开包的验证
+
+2026-09-26 从 crates.io 安装 Calcit 0.23.1，从 npm 安装 `@calcit/procs` 0.23.1，
+`caps verify --toolchain` 确认版本匹配。入口严格检查、42 个 definition 测试、
+DomPatch 正反类型用例、typed DOM/SSR host、nullish props、JS 编译及 Vite 构建通过。
+
+0.23.0 的首次公开包验收暴露了质量分析误报：[Calcit #1392](https://github.com/calcit-lang/calcit/issues/1392)。
+0.23.1 让既有分析复用编译器证明，因此原 `config/calcit-quality.cirru` 无需放宽，
+删除 schema 后全部指标 delta 仍为 0。没有为了通过 CI 恢复冗余声明或增加 Dynamic。
+
+公开版本编译整个示例应用，在受控浏览器执行输入和 Add 操作，
+页面从 `Tasks: List/0` 变为 `Tasks: List/1`，内容为输入值；直接调用生成的 helper 得到
+`0 → 1 → 2`，检查 Ref 等于最后结果并恢复原值。未出现 JS 异常。
 唯一控制台 error 是 `/favicon.ico` 404，网络记录已确认是图标缺失。
 页面 smoke 不替代 helper 的直接语义断言，也不声称覆盖所有资源异步分支。
 
-稳定版验证另外通过：42 个 definition 测试、DomPatch 正反类型用例、typed DOM/SSR host、
-nullish props 测试和文档 57 文件 / 111 代码块。浏览器使用 Node 24.4.1 和 Vite 8.2.2。
+浏览器使用 Node 24.4.1 和 Vite 8.2.2。文档示例使用 `yarn check-docs` 回归。
+此前的候选副本验证只作为探索记录；当前验收不再依赖未发布 CLI 或版本不匹配的 runtime。
 
 ## 实际操作中遇到的边界
 
@@ -53,8 +52,8 @@ nullish props 测试和文档 57 文件 / 111 代码块。浏览器使用 Node 2
 - `test` 当前结构化输出仅支持 JSON，使用显式 `--format json`；类型/上下文查询仍优先 EDN。
 - 本机浏览器 CLI 在 Node 20 下启动失败，切到已安装的 Node 24 后正常；未因此更换依赖或隐藏错误。
 
-## 后续发布边界
+## 验收边界
 
-候选验证不等于稳定迁移已交付。待包含推断能力的 Calcit 版本正式发布后，
-再更新明确版本的依赖、在正式 Snapshot 清除该 schema，并重跑上述测试与浏览器 smoke。
-因此 Calcit #1306/#1307 在公开包复测完成前保持开放。本例不扩大到递归、FFI 或未知参数推断。
+收益是这个封闭 helper 可以省去重复 root schema，而不是从某一次测试或调用猜测公共签名。
+本例不扩大到递归、FFI 或未知参数推断。Calcit #1306/#1307 的最终状态还需结合迁移 PR
+及其合并后的 CI；候选或本地通过不能替代公开包、PR 与目标执行证据。
