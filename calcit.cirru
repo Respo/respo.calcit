@@ -4439,8 +4439,6 @@
               reset! *resource-id request-id
               , request-id
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Number)
-            :args $ []
           :tags $ #{} :internal
           :tests $ [] $ %{} 'TestEntry (:name |consecutive-ids)
             :code $ quote $ let
