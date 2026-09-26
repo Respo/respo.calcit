@@ -41,7 +41,7 @@ TOTAL_BLOCKS=0
 while IFS= read -r file; do
   TOTAL=$((TOTAL + 1))
   echo "check-md: $file"
-  # Validate snippets with the pinned CLI's default strict preprocessing.
+  # Validate snippets with the selected CLI's default strict preprocessing.
   cmd=("${CR_CMD[@]}" "$ENTRY" docs check-md --dep ./)
   if [ "${#EXTRA_DEP_ARGS[@]}" -gt 0 ]; then
     cmd+=("${EXTRA_DEP_ARGS[@]}")
