@@ -4435,13 +4435,23 @@
         'next-resource-id! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn next-resource-id! ()
             let
-                request-id $ inc @*resource-id
+                request-id $ .add @*resource-id 1
               reset! *resource-id request-id
               , request-id
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Number)
             :args $ []
           :tags $ #{} :internal
+          :tests $ [] $ %{} 'TestEntry (:name |consecutive-ids)
+            :code $ quote $ let
+                before @*resource-id
+                first-id $ next-resource-id!
+                second-id $ next-resource-id!
+              assert= (.add before 1) first-id
+              assert= (.add first-id 1) second-id
+              assert= second-id @*resource-id
+              reset! *resource-id before
+            :tags $ #{} :resource :unit
         'resource-action? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn resource-action? (x)
             and (enum? x)
