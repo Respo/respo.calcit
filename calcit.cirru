@@ -2574,6 +2574,7 @@
             :children 'respo.dom/DomElementCollection
             :first-element-child $ :: 'JsNullish 'respo.dom/DomElement
             :tag-name 'String
+            :namespace-uri 'String
             .matches? $ :: 'Fn $ {}
               :generics $ [] 'T
               :args $ [] 'T 'String
@@ -2624,7 +2625,7 @@
               :return 'Unit
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
-            :names $ {} (:inner-html |innerHTML) (:insert-before! |insertBefore) (:parent-element |parentElement) (:remove! |remove)
+            :names $ {} (:inner-html |innerHTML) (:insert-before! |insertBefore) (:namespace-uri |namespaceURI) (:parent-element |parentElement) (:remove! |remove)
             :writable $ #{} :checked :disabled :id :inner-html :inner-text :selected
           :schema $ :: 'Trait
         'DomElementCollection $ %{} 'CodeEntry
@@ -3517,19 +3518,24 @@
       :defs $ {}
         'make-element $ %{} 'CodeEntry
           :doc "|internal function to create a DOM element from a virtual element. handles properties, styles, events, and recursively creates child elements."
-          :code $ quote $ defn make-element (virtual-element listener-builder coord)
+          :code $ quote $ defn make-element (virtual-element listener-builder coord & svg-context)
             assert |coord-is-required $ some? coord
             if (component? virtual-element)
               make-element
                 option:unwrap $ component-tree virtual-element
-                , listener-builder $ append coord $ component-name virtual-element
+                , listener-builder
+                  append coord $ component-name virtual-element
+                  if (empty? svg-context) false $ &list:first svg-context
               let
                   tag-name $ turn-string $ element-name virtual-element
+                  svg? $ or (= tag-name |svg)
+                    if (empty? svg-context) false $ &list:first svg-context
+                  child-svg? $ and svg? $ not= tag-name |foreignObject
                   attrs $ element-attrs virtual-element
                   style $ element-style virtual-element
                   events $ element-event virtual-element
                   children $ element-children virtual-element
-                  element $ narrow-element $ browser/create-element tag-name
+                  element $ narrow-element $ if svg? (browser/create-element-ns |http://www.w3.org/2000/svg tag-name) (browser/create-element tag-name)
                   child-elements $ map children $ fn (pair)
                     assert |expect-pair-of-key/element $ and (list? pair)
                       &= 2 $ count pair
@@ -3538,7 +3544,7 @@
                         child $ &list:nth pair 1
                       when (nil? k) (js/console.warn |nil-key-is-bad-for-Respo)
                       when (some? child)
-                        make-element child listener-builder $ append coord k
+                        make-element child listener-builder (append coord k) child-svg?
                 each attrs $ fn (entry)
                   hint-fn $ {}
                     :args $ [] $ :: 'List 'Dynamic
@@ -3555,9 +3561,12 @@
                         js-delete
                           browser/element-dataset $ host-element element
                           .!slice prop-str 5
-                      let
-                          k $ dashed->camel prop-str
-                        if (some? v) (aset element k v)
+                      if svg?
+                        when (some? v)
+                          browser/element-set-attribute! (host-element element) (svg-attr-name prop-str) (turn-string v)
+                        let
+                            k $ dashed->camel prop-str
+                          if (some? v) (aset element k v)
                 each style $ fn (entry)
                   hint-fn $ {}
                     :args $ [] $ :: 'List 'Dynamic
@@ -3584,7 +3593,7 @@
                     browser/append-child! (host-element element) (host-element child-element)
                 , element
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.dom/DomElement)
+          :schema $ :: 'Fn $ {} (:rest 'Bool) (:return 'respo.dom/DomElement)
             :args $ [] 'Struct
               :: 'Fn $ {}
                 :args $ [] 'Tag
@@ -3613,7 +3622,7 @@
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.render.dom
           :require
-            respo.util.format :refer $ dashed->camel event->prop get-style-value
+            respo.util.format :refer $ dashed->camel event->prop get-style-value svg-attr-name
             respo.util.detect :refer $ component? component-tree component-name element-name element-attrs element-style element-event element-children
             js-ffi.browser :as browser
             respo.ffi.browser :refer $ narrow-element host-element
@@ -4062,7 +4071,7 @@
           :doc "|Inserts a new DOM element before a target element."
           :code $ quote $ defn add-element (target op listener-builder coord)
             let
-                new-element $ make-element op listener-builder coord
+                new-element $ make-element op listener-builder coord $ svg-parent? target
               insert-before-target! target new-element
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
@@ -4098,13 +4107,17 @@
                 if (some? prop-value)
                   -> target .-dataset $ js-set (.!slice prop-str 5) prop-value
                   -> target .-dataset $ js-delete $ .!slice prop-str 5
-                let
-                    prop-name $ dashed->camel prop-str
-                  case-default prop-name (js-set target prop-name prop-value)
-                    |style $ js-set target prop-name $ style->string prop-value
+                if (svg-target? target)
+                  set-svg-prop! target p $ if (some? prop-value)
+                    %some $ turn-string prop-value
+                    %none
+                  let
+                      prop-name $ dashed->camel prop-str
+                    case-default prop-name (js-set target prop-name prop-value)
+                      |style $ js-set target prop-name $ style->string prop-value
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'Dynamic 'Tag 'Dynamic
+            :args $ [] 'respo.dom/DomElement 'Tag 'Dynamic
             :features $ #{} :js-ffi
         'add-style $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn add-style (target p v)
@@ -4123,7 +4136,7 @@
           :doc "|Appends a new DOM element to the target container."
           :code $ quote $ defn append-element (target op listener-builder coord)
             &let
-              new-element $ make-element op listener-builder coord
+              new-element $ make-element op listener-builder coord $ svg-children? target
               .append-child! target new-element
             do &unit
           :examples $ []
@@ -4257,7 +4270,7 @@
           :doc "|Replaces a DOM element with a new one created from an operation."
           :code $ quote $ defn replace-element (target op listener-builder coord)
             let
-                new-element $ make-element op listener-builder coord
+                new-element $ make-element op listener-builder coord $ svg-parent? target
               insert-before-target! target new-element
               remove-target! target
           :examples $ []
@@ -4283,17 +4296,21 @@
                       not $ &= prop-value $ aget dataset name
                       js-set dataset name prop-value
                     js-delete dataset name
-                let
-                    prop-name $ dashed->camel prop-str
-                  if (identical? prop-name |value)
-                    if
-                      not $ &= prop-value $ .-value target
+                if (svg-target? target)
+                  set-svg-prop! target p $ if (some? prop-value)
+                    %some $ turn-string prop-value
+                    %none
+                  let
+                      prop-name $ dashed->camel prop-str
+                    if (identical? prop-name |value)
+                      if
+                        not $ &= prop-value $ .-value target
+                        js-set target prop-name prop-value
                       js-set target prop-name prop-value
-                    js-set target prop-name prop-value
               do &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'Dynamic 'Tag 'Dynamic
+            :args $ [] 'respo.dom/DomElement 'Tag 'Dynamic
             :features $ #{} :js-ffi
         'replace-style $ %{} 'CodeEntry
           :doc "|Updates a single style property on a DOM element."
@@ -4331,21 +4348,23 @@
             :features $ #{} :js-ffi
         'rm-prop $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn rm-prop (target op)
-            case-default op
-              let
-                  prop-str $ turn-string op
-                if (.!startsWith prop-str |data-)
-                  js-delete (target.:dataset) (.!slice prop-str 5)
-                  let
-                      k $ dashed->camel prop-str
-                    aset target k nil
-              :class-name $ target .remove-attribute! |class
-              :href $ target .remove-attribute! |href
-              :inner-text $ set! target.:inner-text |
-              :innerHTML $ set! target.:inner-html |
-              :checked $ set! target.:checked false
-              :disabled $ set! target.:disabled false
-              :selected $ set! target.:selected false
+            if (svg-target? target)
+              set-svg-prop! target op $ %none
+              case-default op
+                let
+                    prop-str $ turn-string op
+                  if (.!startsWith prop-str |data-)
+                    js-delete (target.:dataset) (.!slice prop-str 5)
+                    let
+                        k $ dashed->camel prop-str
+                      aset target k nil
+                :class-name $ target .remove-attribute! |class
+                :href $ target .remove-attribute! |href
+                :inner-text $ set! target.:inner-text |
+                :innerHTML $ set! target.:inner-html |
+                :checked $ set! target.:checked false
+                :disabled $ set! target.:disabled false
+                :selected $ set! target.:selected false
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'respo.dom/DomElement 'Tag
@@ -4369,14 +4388,50 @@
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'Dynamic 'Fn $ :: 'List 'Number
             :features $ #{} :js-ffi
+        'set-svg-prop! $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn set-svg-prop! (target p value)
+            let
+                attr $ svg-attr-name $ turn-string p
+              match value
+                (:some text)
+                  browser/element-set-attribute! (host-element target) attr text
+                (:none)
+                  browser/element-remove-attribute! (host-element target) attr
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ [] 'respo.dom/DomElement 'Tag $ :: 'Option 'String
+        'svg-children? $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn svg-children? (target)
+            and (svg-target? target) (not= target.:tag-name |foreignObject)
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Bool)
+            :args $ [] 'respo.dom/DomElement
+            :features $ #{} :js-ffi
+        'svg-parent? $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn svg-parent? (target)
+            match (js-nullish->option target.:parent-element)
+              (:some parent) (svg-children? parent)
+              (:none) false
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Bool)
+            :args $ [] 'respo.dom/DomElement
+            :features $ #{} :js-ffi
+        'svg-target? $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn svg-target? (target) (= target.:namespace-uri |http://www.w3.org/2000/svg)
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Bool)
+            :args $ [] 'respo.dom/DomElement
+            :features $ #{} :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.render.patch
           :require
-            respo.util.format :refer $ dashed->camel event->prop get-style-value prop->attr
+            respo.util.format :refer $ dashed->camel event->prop get-style-value prop->attr svg-attr-name
             respo.render.dom :refer $ make-element style->string
             respo.schema.op :as op
             respo.dom :refer $ DomElement
             respo.schema :refer $ DomPatch
+            js-ffi.browser :as browser
+            respo.ffi.browser :refer $ host-element
     'respo.resource $ %{} 'FileEntry
       :defs $ {}
         '*resource-id $ %{} 'CodeEntry (:doc |)
@@ -4814,6 +4869,36 @@
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'js-ffi.browser/DomElementHost 'js-ffi.browser/DomElementHost
             :features $ #{} :js-ffi
+        'svg-host-smoke! $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn svg-host-smoke! ()
+            let
+                child $ create-element :rect $ assert-type
+                  {} (:fill |red) (:strokeWidth 2)
+                  , respo.schema/DomProps
+                root $ create-element :svg
+                  assert-type
+                    {} $ :width 320
+                    , respo.schema/DomProps
+                  , child $ create-element :foreignObject
+                    assert-type ({}) respo.schema/DomProps
+                    create-element :div $ assert-type ({}) respo.schema/DomProps
+              let
+                  host $ make-element root
+                    fn (_name)
+                      fn (_event _coord) &unit
+                    []
+                append-element host
+                  create-element :circle $ assert-type
+                    {} $ :r 5
+                    , respo.schema/DomProps
+                  fn (_name)
+                    fn (_event _coord) &unit
+                  []
+                , host
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'respo.dom/DomElement)
+            :args $ []
+            :features $ #{} :js-ffi
         'verify-realize-ssr-ref! $ %{} 'CodeEntry
           :doc "|Regression fixture for SSR adoption: a ref-backed component must collect one nominal DomPatch and receive the already-rendered root without callback arity failure."
           :code $ quote $ defn verify-realize-ssr-ref! (mount root)
@@ -4840,10 +4925,12 @@
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.test.dom
           :require
-            respo.core :refer $ div span
+            respo.core :refer $ div span create-element
             respo.util.dom :refer $ compare-to-dom!
             js-ffi.browser :as browser
             respo.util.format :refer $ dashed->camel
+            respo.render.dom :refer $ make-element
+            respo.render.patch :refer $ append-element
     'respo.test.main $ %{} 'FileEntry
       :defs $ {}
         '*async-checks $ %{} 'CodeEntry (:doc |)
@@ -5519,6 +5606,20 @@
           :schema $ :: 'Fn $ {}
             :args $ [] $ :: 'Map 'Tag 'Dynamic
             :return $ :: 'List 'Tag
+        'svg-attr-name $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn svg-attr-name (x)
+            case-default x x (|strokeWidth |stroke-width) (|strokeLinecap |stroke-linecap) (|strokeLinejoin |stroke-linejoin) (|strokeDasharray |stroke-dasharray) (|strokeDashoffset |stroke-dashoffset) (|fillRule |fill-rule) (|fillOpacity |fill-opacity) (|clipPath |clip-path) (|stopColor |stop-color) (|stopOpacity |stop-opacity) (|class-name |class)
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'String)
+            :args $ [] 'String
+          :tests $ []
+            %{} 'TestEntry (:name |svg-attribute-cases)
+              :code $ quote $ do
+                assert= |stroke-width $ svg-attr-name |strokeWidth
+                assert= |fill $ svg-attr-name |fill
+                assert= |clip-path $ svg-attr-name |clipPath
+            %{} 'TestEntry (:name |class-attribute)
+              :code $ quote $ assert= |class (svg-attr-name |class-name)
         'text->html $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn text->html (x)
             if (nil? x) | $ &str:replace
