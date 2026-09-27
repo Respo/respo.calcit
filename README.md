@@ -49,6 +49,12 @@ let
         respo.core/div $ {}
 ```
 
+### SVG 渲染
+
+`create-element` 创建的 `:svg` 会为自身及其子节点使用 SVG 命名空间；进入 `:foreignObject` 后，子节点恢复 HTML 命名空间。SVG 的普通属性在首次渲染及后续补丁中都以 DOM attribute 写入、更新和移除，`strokeWidth` 等常见驼峰名称会转为 `stroke-width`。事件、`data-*` 和样式仍沿用 Respo 的现有处理路径。
+
+本仓库的 `yarn test-dom-host` 覆盖 SVG 初次创建及属性增删改；消费者可用 Cross Stitch 页面验证图案显示及点击后的增量更新。
+
 More examples adapted from `calcit.cirru`:
 
 ```cirru.no-run

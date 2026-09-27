@@ -15,6 +15,36 @@ class FakeElement {
   }
 }
 
+class FakeSvgElement extends FakeElement {
+  constructor(tagName, namespaceURI) {
+    super(tagName)
+    this.tagName = tagName
+    this.namespaceURI = namespaceURI
+    this.attributes = new Map()
+    this.childNodes = []
+    this.dataset = {}
+    this.style = {}
+  }
+
+  setAttribute(name, value) {
+    this.attributes.set(name, value)
+  }
+
+  getAttribute(name) {
+    return this.attributes.get(name) ?? null
+  }
+
+  removeAttribute(name) {
+    this.attributes.delete(name)
+  }
+
+  appendChild(child) {
+    child.parentElement = this
+    this.childNodes.push(child)
+    return child
+  }
+}
+
 globalThis.Element = FakeElement
 
 let canvasGetContextCalls = 0
@@ -24,6 +54,7 @@ const canvasContext = {
 }
 globalThis.document = {
   createElement(tagName) {
+    if (tagName === "div") return new FakeSvgElement(tagName, "http://www.w3.org/1999/xhtml")
     if (tagName !== "canvas") throw new Error(`unexpected element creation: ${tagName}`)
     return {
       getContext(contextName) {
@@ -33,10 +64,14 @@ globalThis.document = {
       },
     }
   },
+  createElementNS(namespaceURI, tagName) {
+    return new FakeSvgElement(tagName, namespaceURI)
+  },
 }
 
-const { main_$x_, verify_realize_ssr_ref_$x_ } = await import("./js-out/respo.test.dom.mjs")
-const { insert_before_target_$x_, remove_target_$x_ } = await import("./js-out/respo.render.patch.mjs")
+const { main_$x_, svg_host_smoke_$x_, verify_realize_ssr_ref_$x_ } = await import("./js-out/respo.test.dom.mjs")
+const { add_prop, insert_before_target_$x_, remove_target_$x_, replace_prop, rm_prop } = await import("./js-out/respo.render.patch.mjs")
+const { init_tags } = await import("@calcit/procs")
 const { set_inner_html_$x_ } = await import("./js-out/respo.dom.mjs")
 const { input_event_checked_$q_, input_event_value } = await import("./js-out/respo.util.format.mjs")
 const { shared_canvas_context, text_width } = await import("./js-out/respo.util.dom.mjs")
@@ -107,6 +142,34 @@ try {
 }
 if (!detachedInsertionFailed) {
   throw new Error("detached insertion should fail at the explicit parentElement boundary")
+}
+
+const svg = svg_host_smoke_$x_()
+const rect = svg.childNodes[0]
+const foreignObject = svg.childNodes[1]
+const appendedCircle = svg.childNodes[2]
+const svgNamespace = "http://www.w3.org/2000/svg"
+if (svg.namespaceURI !== svgNamespace || rect.namespaceURI !== svgNamespace) {
+  throw new Error("SVG children were not created with the SVG namespace")
+}
+if (foreignObject.namespaceURI !== svgNamespace || foreignObject.childNodes[0].namespaceURI !== "http://www.w3.org/1999/xhtml") {
+  throw new Error("foreignObject children did not return to the HTML namespace")
+}
+if (appendedCircle.namespaceURI !== svgNamespace || appendedCircle.getAttribute("r") !== "5") {
+  throw new Error("incrementally appended SVG child lost its namespace or attributes")
+}
+if (svg.getAttribute("width") !== "320" || rect.getAttribute("fill") !== "red" || rect.getAttribute("stroke-width") !== "2") {
+  throw new Error("initial SVG attributes were not set")
+}
+const svgTags = init_tags(["opacity", "strokeWidth"])
+add_prop(rect, svgTags.opacity, 1)
+replace_prop(rect, svgTags.strokeWidth, 3)
+if (rect.getAttribute("opacity") !== "1" || rect.getAttribute("stroke-width") !== "3") {
+  throw new Error("incremental SVG attributes were not updated")
+}
+rm_prop(rect, svgTags.opacity)
+if (rect.getAttribute("opacity") !== null) {
+  throw new Error("removed SVG attribute remained on the element")
 }
 
 const inputTarget = { checked: true, value: "typed-value" }
