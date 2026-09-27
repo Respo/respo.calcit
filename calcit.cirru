@@ -922,11 +922,13 @@
                   target-element-option $ find-event-target
                     option:unwrap $ deref *global-element
                     , coord event-name
-                  target-listener-option $ match target-element-option
-                    (:none)
-                      do (js/console.warn |found-no-element coord event-name) (%none)
-                    (:some target-element)
-                      get (element-event target-element) event-name
+                  target-listener-option $ assert-type
+                    match target-element-option
+                      (:none)
+                        do (js/console.warn |found-no-element coord event-name) (%none)
+                      (:some target-element)
+                        get (element-event target-element) event-name
+                    :: 'Option 'respo.schema/EventHandler
                   dispatch-wrap $ wrap-dispatch *dispatch-fn
                 match target-listener-option
                   (:none) &unit
@@ -987,8 +989,8 @@
                       (:some m)
                         if (component? m)
                           recur $ component-tree m
-                          %some $ assert-type m 'Struct
-                  :: 'Option 'Struct
+                          %some $ assert-type m 'respo.schema/Element
+                  :: 'Option 'respo.schema/Element
                 event-present? $ option:fold target-element-option
                   fn () false
                   fn (target-element)
@@ -1000,7 +1002,7 @@
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] 'Struct (:: 'List 'Dynamic) 'Tag
-            :return $ :: 'calcit.core/Option 'Struct
+            :return $ :: 'calcit.core/Option 'respo.schema/Element
           :tests $ [] $ %{} 'TestEntry (:name |returns-none-through-empty-component-tree)
             :code $ quote $ let
                 component $ %{} respo.schema/Component (:name :empty)
