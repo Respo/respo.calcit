@@ -4887,14 +4887,24 @@
               let
                   host $ make-element root
                     fn (_name)
-                      fn (_event _coord) &unit
+                      fn (_event _coord)
+                        hint-fn $ {}
+                          :args $ [] (quote respo.dom/DomEvent)
+                            :: (quote List) (quote Dynamic)
+                          :return $ quote Unit
+                        , &unit
                     []
                 append-element host
                   create-element :circle $ assert-type
                     {} $ :r 5
                     , respo.schema/DomProps
                   fn (_name)
-                    fn (_event _coord) &unit
+                    fn (_event _coord)
+                      hint-fn $ {}
+                        :args $ [] (quote respo.dom/DomEvent)
+                          :: (quote List) (quote Dynamic)
+                        :return $ quote Unit
+                      , &unit
                   []
                 , host
           :examples $ []
@@ -5013,7 +5023,7 @@
                   fn (action) (swap! actions conj action)
                     match action
                       (:ready _id _value) (raise |emit-ready-failed)
-                      _ nil
+                      _ &unit
               shared/queue-microtask! $ fn () $ shared/queue-microtask!
                 fn () (swap! *async-checks inc)
                   match
@@ -5512,18 +5522,45 @@
           :doc "|Recursively remove event handlers from a component or element tree.\n\nThis is used in SSR-related flows where the initial HTML should not carry live client event functions."
           :code $ quote $ defn mute-element (element)
             if (component? element)
-              update element :tree $ fn (tree-option) (option:map tree-option mute-element)
-              -> element
-                assoc :event $ {}
-                update :children $ fn (children)
-                  -> children $ map $ fn (entry)
+              let
+                  component $ assert-type element 'respo.schema/Component
+                respo.schema/Component :name (:name component) :effects (:effects component) :listeners (:listeners component) :tree $ option:map (:tree component) mute-element
+              let
+                  node $ assert-type element 'respo.schema/Element
+                respo.schema/Element :name (:name node) :coord (:coord node) :attrs (:attrs node) :style (:style node) :event ({}) :ref (:ref node) :children $ map (:children node)
+                  fn (entry)
                     let
                         k $ option:unwrap $ first entry
-                        child $ option:unwrap $ last entry
+                        child $ assert-type
+                          option:unwrap $ last entry
+                          , 'Struct
                       [] k $ mute-element child
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ [] 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Struct)
+            :args $ [] 'Struct
+          :tests $ [] $ %{} 'TestEntry (:name |clears-events-through-component-tree)
+            :code $ quote $ let
+                leaf $ respo.schema/Element :name :span :coord (%none) :attrs ([]) :style ([]) :children ([]) :ref nil :event $ {}
+                  :click $ fn (_event _dispatch!) &unit
+                root $ respo.schema/Element :name :div :coord (%none) :attrs ([]) :style ([]) :children
+                  [] $ [] :child leaf
+                  , :ref nil :event $ {}
+                    :click $ fn (_event _dispatch!) &unit
+                component $ respo.schema/Component :name :root :effects ([]) :listeners ([]) :tree $ %some root
+                muted $ assert-type (mute-element component) 'respo.schema/Component
+                muted-root $ assert-type
+                  option:unwrap $ :tree muted
+                  , 'respo.schema/Element
+                child-pair $ option:unwrap $ first (:children muted-root)
+                muted-child $ assert-type
+                  option:unwrap $ last child-pair
+                  , 'respo.schema/Element
+              assert= 1 $ count $ :event root
+              assert= 1 $ count $ :event leaf
+              assert= ({}) (:event muted-root)
+              assert= ({}) (:event muted-child)
+              assert= :root $ :name muted
+            :tags $ #{} :unit
         'prop->attr $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn prop->attr (x)
             when (includes? x |?) (println "|[Respo] warning: property includes `?` in" x)
@@ -5678,8 +5715,12 @@
             map-indexed xs $ fn (idx x)
               [] idx $ f x
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'List)
-            :args $ [] 'List 'Fn
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'List 'A)
+              :: 'Fn $ {} (:return 'B)
+                :args $ [] 'A
+            :generics $ [] 'A 'B
+            :return $ :: 'List $ :: 'List 'Dynamic
         'pair-first $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn pair-first (pair) (&list:nth pair 0)
           :examples $ []
