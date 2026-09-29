@@ -5531,10 +5531,10 @@
                   fn (entry)
                     let
                         k $ option:unwrap $ first entry
-                        child $ assert-type
-                          option:unwrap $ last entry
-                          , 'Struct
-                      [] k $ mute-element child
+                        child $ option:unwrap $ last entry
+                      [] k $ if (struct? child)
+                        mute-element $ assert-type child 'Struct
+                        , child
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Struct)
             :args $ [] 'Struct
@@ -5543,7 +5543,7 @@
                 leaf $ respo.schema/Element :name :span :coord (%none) :attrs ([]) :style ([]) :children ([]) :ref nil :event $ {}
                   :click $ fn (_event _dispatch!) &unit
                 root $ respo.schema/Element :name :div :coord (%none) :attrs ([]) :style ([]) :children
-                  [] $ [] :child leaf
+                  [] ([] :child leaf) ([] :empty nil)
                   , :ref nil :event $ {}
                     :click $ fn (_event _dispatch!) &unit
                 component $ respo.schema/Component :name :root :effects ([]) :listeners ([]) :tree $ %some root
@@ -5555,11 +5555,14 @@
                 muted-child $ assert-type
                   option:unwrap $ last child-pair
                   , 'respo.schema/Element
+                nil-pair $ option:unwrap $ last (:children muted-root)
               assert= 1 $ count $ :event root
               assert= 1 $ count $ :event leaf
               assert= ({}) (:event muted-root)
               assert= ({}) (:event muted-child)
               assert= :root $ :name muted
+              assert= :empty $ option:unwrap $ first nil-pair
+              assert= nil $ option:unwrap $ last nil-pair
             :tags $ #{} :unit
         'prop->attr $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn prop->attr (x)
