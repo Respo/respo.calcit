@@ -1423,13 +1423,13 @@
       :unresolved 3
       :unsafeCoerce 0
     |respo.test.main/main! $ {} (:codeDynamic 0)
-      :codeNil 2
+      :codeNil 1
       :declaredOptional 0
       :deprecatedCalls 0
       :schemaDynamic 0
       :typeNone 0
       :typeNotFull 0
-      :unresolved 2
+      :unresolved 1
       :unsafeCoerce 0
     |respo.util.detect/=seq $ {} (:codeDynamic 0)
       :codeNil 0
@@ -1728,15 +1728,6 @@
       :typeNotFull 1
       :unresolved 0
       :unsafeCoerce 0
-    |respo.util.format/mute-element $ {} (:codeDynamic 0)
-      :codeNil 0
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 2
-      :typeNone 0
-      :typeNotFull 1
-      :unresolved 2
-      :unsafeCoerce 0
     |respo.util.format/purify-element $ {} (:codeDynamic 0)
       :codeNil 2
       :declaredOptional 0
@@ -1756,6 +1747,15 @@
       :unresolved 1
       :unsafeCoerce 0
     |respo.util.format/purify-events $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 1
+      :typeNone 0
+      :typeNotFull 1
+      :unresolved 1
+      :unsafeCoerce 0
+    |respo.util.format/scalar-attribute-text $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
@@ -1804,10 +1804,10 @@
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 2
+      :schemaDynamic 1
       :typeNone 0
       :typeNotFull 1
-      :unresolved 2
+      :unresolved 1
       :unsafeCoerce 0
     |respo.util.list/pair-first $ {} (:codeDynamic 0)
       :codeNil 0
@@ -1853,7 +1853,7 @@
       :typeNone 0
       :typeNotFull 1
       :unresolved 0
-      :unsafeCoerce 2
+      :unsafeCoerce 1
     |respo.util.list/val-exists? $ {} (:codeDynamic 0)
       :codeNil 1
       :declaredOptional 0
@@ -1873,14 +1873,14 @@
       :unresolved 2
       :unsafeCoerce 0
   :metrics $ {} (:codeDynamic 0)
-    :codeNil 34
+    :codeNil 33
     :declaredOptional 0
     :deprecatedCalls 0
-    :schemaDynamic 194
+    :schemaDynamic 192
     :typeNone 3
     :typeNotFull 191
-    :unresolved 223
-    :unsafeCoerce 44
+    :unresolved 220
+    :unsafeCoerce 43
   :scope $ {} (:includeDependencies false)
     :namespace nil
     :namespacePrefix nil
