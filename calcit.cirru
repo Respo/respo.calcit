@@ -2420,7 +2420,7 @@
                 typed-cursor $ unsafe-coerce cursor $ :: List Tag
                 path $ concat typed-cursor $ [] :data
                 state $ get-state-at states path
-              if (some? state)
+              if (calcit.core/non-nil? state)
                 if (map? state)
                   let
                       state-map $ unsafe-coerce state $ :: Map Dynamic Dynamic
@@ -3092,7 +3092,7 @@
                       let
                           old-element $ val-of-first old-children
                           new-element $ val-of-first new-children
-                          next-index $ if (some? new-element) (inc index) index
+                          next-index $ if (calcit.core/non-nil? new-element) (inc index) index
                         find-element-diffs collect! (append coord x1) (append n-coord index) old-element new-element
                         recur collect! coord n-coord next-index old-follows new-follows
                     (and x1-remains? (not y1-existed?))
@@ -3541,7 +3541,7 @@
                       prop-str $ turn-string $ respo.util.list/pair-first entry
                       v $ respo.util.list/pair-value entry
                     if (.!startsWith prop-str |data-)
-                      if (some? v)
+                      if (calcit.core/non-nil? v)
                         js-set
                           browser/element-dataset $ host-element element
                           .!slice prop-str 5
@@ -3554,7 +3554,7 @@
                           browser/element-set-attribute! (host-element element) (svg-attr-name prop-str) (respo.util.format/scalar-attribute-text v)
                         let
                             k $ dashed->camel prop-str
-                          if (some? v) (aset element k v)
+                          if (calcit.core/non-nil? v) (aset element k v)
                 each style $ fn (entry)
                   hint-fn $ {}
                     :args $ [] $ :: 'List 'Dynamic
@@ -3577,7 +3577,7 @@
                           (listener-builder event-name) event coord
                           .!stopPropagation event
                 each child-elements $ fn (child-element)
-                  if (some? child-element)
+                  if (calcit.core/non-nil? child-element)
                     browser/append-child! (host-element element) (host-element child-element)
                 , element
           :examples $ []
@@ -3957,15 +3957,15 @@
             if (= tag-name :textarea)
               let
                   value $ &map:get attrs :value
-                if (some? value)
+                if (calcit.core/non-nil? value)
                   escape-html $ respo.util.format/scalar-attribute-text value
                   join-str children |
               let
                   html $ &map:get attrs :innerHTML
-                if (some? html) (respo.util.format/scalar-attribute-text html)
+                if (calcit.core/non-nil? html) (respo.util.format/scalar-attribute-text html)
                   let
                       text $ &map:get attrs :inner-text
-                    if (some? text) (text->html text) (join-str children |)
+                    if (calcit.core/non-nil? text) (text->html text) (join-str children |)
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'String)
             :args $ [] 'Tag (:: 'Map 'Tag 'Dynamic) (:: 'List 'String)
@@ -3980,7 +3980,7 @@
                   (string? v) (escape-html v)
                   true $ respo.util.format/scalar-attribute-text v
               str
-                prop->attr $ turn-string k
+                prop->attr $ calcit.core/to-string k
                 , |= $ &str:escape value-text
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'String)
@@ -4103,11 +4103,11 @@
             let
                 prop-str $ turn-string p
               if (.!startsWith prop-str |data-)
-                if (some? prop-value)
+                if (calcit.core/non-nil? prop-value)
                   -> target .-dataset $ js-set (.!slice prop-str 5) prop-value
                   -> target .-dataset $ js-delete $ .!slice prop-str 5
                 if (svg-target? target)
-                  set-svg-prop! target p $ if (some? prop-value)
+                  set-svg-prop! target p $ if (calcit.core/non-nil? prop-value)
                     Option :some $ respo.util.format/scalar-attribute-text prop-value
                     Option :none
                   let
@@ -4290,13 +4290,13 @@
                 let
                     name $ .!slice prop-str 5
                     dataset $ unsafe-coerce (.-dataset target) JsObject
-                  if (some? prop-value)
+                  if (calcit.core/non-nil? prop-value)
                     if
                       not $ &= prop-value $ aget dataset name
                       js-set dataset name prop-value
                     js-delete dataset name
                 if (svg-target? target)
-                  set-svg-prop! target p $ if (some? prop-value)
+                  set-svg-prop! target p $ if (calcit.core/non-nil? prop-value)
                     Option :some $ respo.util.format/scalar-attribute-text prop-value
                     Option :none
                   let
@@ -4382,7 +4382,7 @@
         'run-effect $ %{} 'CodeEntry
           :doc "|Runs side effect functions.\n\nParameters:\n  target - Target DOM element or component instance, nil if target not found\n  method - Method function to execute on the target\n  coord - Coordinate information for identifying location in console warnings\n\nFunctionality:\n  If target exists, calls method function on target; if target is nil, outputs warning to console.\n  Mainly used to execute various side effects during rendering patch process, such as event listening, DOM operations, etc."
           :code $ quote $ defn run-effect (target method coord)
-            if (some? target) (method target) (js/console.warn "|Unknown effects target:" coord)
+            if (calcit.core/non-nil? target) (method target) (js/console.warn "|Unknown effects target:" coord)
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'Dynamic 'Fn $ :: 'List 'Number
@@ -5284,7 +5284,7 @@
                   maybe-html $ &map:get
                     pairs-map $ :attrs vdom
                     , :innerHTML
-                if (some? maybe-html)
+                if (calcit.core/non-nil? maybe-html)
                   when
                     not= (respo.util.format/scalar-attribute-text maybe-html) (element :inner-html)
                     js/console.warn "|SSR checking: noticed dom containing innerHTML:" element
