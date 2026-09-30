@@ -4108,7 +4108,7 @@
                   -> target .-dataset $ js-delete $ .!slice prop-str 5
                 if (svg-target? target)
                   set-svg-prop! target p $ if (some? prop-value)
-                    Option :some $ turn-string prop-value
+                    Option :some $ respo.util.format/scalar-attribute-text prop-value
                     Option :none
                   let
                       prop-name $ dashed->camel prop-str
@@ -4297,7 +4297,7 @@
                     js-delete dataset name
                 if (svg-target? target)
                   set-svg-prop! target p $ if (some? prop-value)
-                    Option :some $ turn-string prop-value
+                    Option :some $ respo.util.format/scalar-attribute-text prop-value
                     Option :none
                   let
                       prop-name $ dashed->camel prop-str

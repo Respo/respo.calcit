@@ -71,7 +71,7 @@ globalThis.document = {
 
 const { main_$x_, svg_host_smoke_$x_, verify_realize_ssr_ref_$x_ } = await import("./js-out/respo.test.dom.mjs")
 const { add_prop, insert_before_target_$x_, remove_target_$x_, replace_prop, rm_prop } = await import("./js-out/respo.render.patch.mjs")
-const { init_tags } = await import("@calcit/procs")
+const { CalcitSliceList, init_tags } = await import("@calcit/procs")
 const { set_inner_html_$x_ } = await import("./js-out/respo.dom.mjs")
 const { input_event_checked_$q_, input_event_value } = await import("./js-out/respo.util.format.mjs")
 const { shared_canvas_context, text_width } = await import("./js-out/respo.util.dom.mjs")
@@ -166,6 +166,17 @@ add_prop(rect, svgTags.opacity, 1)
 replace_prop(rect, svgTags.strokeWidth, 3)
 if (rect.getAttribute("opacity") !== "1" || rect.getAttribute("stroke-width") !== "3") {
   throw new Error("incremental SVG attributes were not updated")
+}
+for (const [name, update] of [["add-prop", add_prop], ["replace-prop", replace_prop]]) {
+  try {
+    update(rect, svgTags.strokeWidth, new CalcitSliceList([1, 2]))
+    throw new Error(`${name} accepted a non-scalar SVG attribute`)
+  } catch (error) {
+    if (!String(error).includes("Attribute value must be a scalar")) throw error
+  }
+  if (rect.getAttribute("stroke-width") !== "3") {
+    throw new Error(`${name} changed the SVG attribute before rejecting its value`)
+  }
 }
 rm_prop(rect, svgTags.opacity)
 if (rect.getAttribute("opacity") !== null) {
