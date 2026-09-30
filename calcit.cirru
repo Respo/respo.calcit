@@ -70,16 +70,16 @@
                     :on-input $ fn (e d!)
                       let
                           text $ str $ assert-type (&map:get e :value) String
-                        d! $ %:: Op :update task-id text
+                        d! $ Op :update task-id text
                   =< 8 0
                   input $ {} (:value state) (:class-name widget/style-input)
                     :on-input $ fn (e d!)
-                      d! $ %:: Op :states cursor $ &map:get e :value
+                      d! $ Op :states cursor $ &map:get e :value
                   =< 8 0
                   div
                     {} (:class-name widget/style-button)
                       :on-click $ fn (e d!)
-                        d! $ %:: Op :remove task-id
+                        d! $ Op :remove task-id
                     <> |Remove
                   =< 8 0
                   div ({}) (<> state)
@@ -126,8 +126,7 @@
             let
                 cursor $ either (&map:get states :cursor) ([])
                 state $ assert-type
-                  either (&map:get states :data)
-                    %{} respo.app.schema/TodoState (:draft |) (:locked? false) (:message "|Press Ctrl+M to change message")
+                  either (&map:get states :data) (respo.app.schema/TodoState :draft | :locked? false :message "|Press Ctrl+M to change message")
                   , respo.app.schema/TodoState
                 draft $ :draft state
                 locked? $ :locked? state
@@ -144,20 +143,20 @@
                       :style $ {} $ :width
                         &max 200 $ + 24 $ text-width draft 16 |BlinkMacSystemFont
                       :on-input $ fn (e d!)
-                        d! $ %:: Op :states-merge cursor state $ {}
+                        d! $ Op :states-merge cursor state $ {}
                           :draft $ assert-type (&map:get e :value) String
                       :on-focus on-focus
                     =< 8 0
                     span
                       {} (:class-name widget/style-button)
                         :on-click $ fn (e d!)
-                          d! $ %:: Op :add draft
-                          d! $ %:: Op :states cursor $ assoc state :draft |
+                          d! $ Op :add draft
+                          d! $ Op :states cursor $ assoc state :draft |
                       span $ {} (:on-click nil) (:inner-text |Add)
                     =< 8 0
                     span $ {} (:inner-text |Clear) (:class-name widget/style-button)
                       :on-click $ fn (e d!)
-                        d! $ %:: Op :clear
+                        d! $ Op :clear
                     =< 8 0
                     div ({})
                       div
@@ -181,13 +180,13 @@
                         {} (:class-name widget/style-button)
                           :on-click $ if (not locked?)
                             fn (e d!)
-                              d! $ %:: Op :clear
+                              d! $ Op :clear
                         <> |Clear2
                       =< 8 0
                       div
                         {} (:class-name widget/style-button)
                           :on-click $ fn (e d!)
-                            d! $ %:: Op :states cursor $ assoc state :locked?
+                            d! $ Op :states cursor $ assoc state :locked?
                               not $ :locked? state
                         <> (str-spaced |Lock? locked?)
                           {} $ :font-size 13
@@ -228,19 +227,18 @@
         'on-keydown $ %{} 'CodeEntry
           :doc "|Creates a keyboard listener for Ctrl+M shortcut. This function demonstrates how to create component-local listeners that can access component state through closures. Returns a RespoListener that updates the message state when Ctrl+M is pressed."
           :code $ quote $ defn on-keydown (cursor state)
-            %{} respo.schema/RespoListener (:name :on-keydown)
-              :handler $ fn (event dispatch!)
-                match event $
-                  :keydown info
-                  when
-                    and
-                      &= |m $ &map:get info :key
-                      identical? true $ &map:get info :ctrl
-                    do
-                      dispatch! $ %:: Op :states cursor $ assoc state :message "|Message changed by Ctrl+M!"
-                      js/window.setTimeout
-                        fn () $ dispatch! $ %:: Op :states cursor (assoc state :message "|Press Ctrl+M to change message")
-                        , 2000
+            respo.schema/RespoListener :name :on-keydown :handler $ fn (event dispatch!)
+              match event $
+                :keydown info
+                when
+                  and
+                    &= |m $ &map:get info :key
+                    identical? true $ &map:get info :ctrl
+                  do
+                    dispatch! $ Op :states cursor $ assoc state :message "|Message changed by Ctrl+M!"
+                    js/window.setTimeout
+                      fn () $ dispatch! $ Op :states cursor (assoc state :message "|Press Ctrl+M to change message")
+                      , 2000
           :examples $ [] $ quote (on-keydown cursor state)
           :schema $ :: 'Fn $ {} (:return 'respo.schema/RespoListener)
             :args $ [] (:: 'List 'Dynamic) 'respo.app.schema/TodoState
@@ -288,21 +286,21 @@
           :code $ quote $ defn try-test! (dispatch! acc)
             let
                 started $ unsafe-coerce (js/Date.now) Number
-              dispatch! $ %:: Op :clear
+              dispatch! $ Op :clear
               loop
                   x 20
-                dispatch! $ %:: Op :add |empty
+                dispatch! $ Op :add |empty
                 if (> x 0)
                   recur $ dec x
               loop
                   x 20
-                dispatch! $ %:: Op :hit-first $ str (js/Math.random)
+                dispatch! $ Op :hit-first $ str (js/Math.random)
                 if (> x 0)
                   recur $ dec x
-              dispatch! $ %:: Op :clear
+              dispatch! $ Op :clear
               loop
                   x 10
-                dispatch! $ %:: Op :add "|only 10 items"
+                dispatch! $ Op :add "|only 10 items"
                 if (> x 0)
                   recur $ dec x
               let
@@ -435,16 +433,12 @@
         'store $ %{} 'CodeEntry
           :doc "|Default immutable Store record value used by the example application."
           :code $ quote $ def store
-            %{} Store
-              :tasks $ []
-              :states $ {}
-              :cursor $ []
+            Store :tasks ([]) :states ({}) :cursor $ []
           :examples $ []
           :schema $ :: 'respo.app.schema/Store
         'task $ %{} 'CodeEntry
           :doc "|Default immutable Task record value used when constructing example tasks."
-          :code $ quote $ def task
-            %{} Task (:id |) (:text |) (:done? false)
+          :code $ quote $ def task (Task :id | :text | :done? false)
           :examples $ []
           :schema $ :: 'respo.app.schema/Task
       :ns $ %{} 'NsEntry (:doc |)
@@ -487,12 +481,12 @@
                 struct? data
                 let
                     task $ assert-type data 'respo.app.schema/Task
-                  %some task
+                  Option :some task
               (map? data)
                 match (try-decode-map-as data 'respo.app.schema/Task)
-                  (:ok task) (%some task)
-                  (:err _) (%none)
-              true $ %none
+                  (:ok task) (Option :some task)
+                  (:err _) (Option :none)
+              true $ Option :none
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] 'Dynamic
@@ -541,8 +535,7 @@
               (:states-merge cursor s o)
                 assoc store :states $ update-state-tree-merge (:states store) cursor s o
               (:add text)
-                assoc store :tasks $ conj (:tasks store)
-                  %{} respo.app.schema/Task (:text text) (:id op-id) (:done? false)
+                assoc store :tasks $ conj (:tasks store) (respo.app.schema/Task :text text :id op-id :done? false)
               (:remove task-id)
                 assoc store :tasks $ filter (:tasks store)
                   fn (task)
@@ -631,12 +624,11 @@
                           key $ contract/expect-string |KeyboardEvent.key $ .-key event
                           ctrl-key? $ contract/expect-bool |KeyboardEvent.ctrlKey $ .-ctrlKey event
                           meta-key? $ contract/expect-bool |KeyboardEvent.metaKey $ .-metaKey event
-                        do
-                          if
-                            and (contains? disabled-commands key) (or ctrl-key? meta-key?)
-                            .!preventDefault event
-                            %none
-                          .!dispatchEvent el $ new js/KeyboardEvent (.-type event) event
+                        if
+                          and (contains? disabled-commands key) (or ctrl-key? meta-key?)
+                          .!preventDefault event
+                          Option :none
+                        .!dispatchEvent el $ new js/KeyboardEvent (.-type event) event
                   let
                       prev-listener $ aget el dirty-field
                       listener $ unsafe-coerce prev-listener $ :: 'Fn
@@ -681,10 +673,9 @@
                 :inner-text $ str tip "|: " $ grab-info data
                 :style style-map
                 :on-click $ fn (e d!)
-                  do
-                    if (js-present? js/window.devtoolsFormatters) (js/console.log data)
-                      js/console.log $ to-js-data data
-                    , &unit
+                  if (js-present? js/window.devtoolsFormatters) (js/console.log data)
+                    js/console.log $ to-js-data data
+                  , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
             :args $ [] 'Dynamic 'Dynamic 'Dynamic
@@ -764,7 +755,7 @@
                 listener-builder $ fn (event-name) (build-listener event-name deliver-event)
               set! mount-point.:inner-html |
               mount-point .append-child! $ make-element entire-dom listener-builder $ []
-            do &unit
+            , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'respo.schema/Component 'respo.dom/DomElement $ :: 'Fn
@@ -812,30 +803,29 @@
         'traverse-and-call $ %{} 'CodeEntry
           :doc "|Traverses the rendered tree and invokes component listeners. The dispatch callback intentionally stays at the generic Fn boundary because wrap-dispatch supports multiple operation forms and an optional payload."
           :code $ quote $ defn traverse-and-call (element event-tuple dispatch!)
-            do
-              when (component? element)
-                let
-                    listeners $ component-listeners element
-                  each listeners $ fn (listener)
-                    hint-fn $ {}
-                      :args $ [] 'respo.schema/RespoListener
-                      :return 'Unit
-                    let
-                        handler $ listener-handler listener
-                      handler event-tuple dispatch!
-                  match (component-tree element)
-                    (:none) &unit
-                    (:some tree) (traverse-and-call tree event-tuple dispatch!)
-              when (element? element)
-                each (element-children element)
-                  fn (pair)
-                    hint-fn $ {}
-                      :args $ [] $ :: 'List 'Dynamic
-                      :return 'Unit
-                    let
-                        child $ assert-type (&list:nth pair 1) 'Struct
-                      traverse-and-call child event-tuple dispatch!
-              , &unit
+            when (component? element)
+              let
+                  listeners $ component-listeners element
+                each listeners $ fn (listener)
+                  hint-fn $ {}
+                    :args $ [] 'respo.schema/RespoListener
+                    :return 'Unit
+                  let
+                      handler $ listener-handler listener
+                    handler event-tuple dispatch!
+                match (component-tree element)
+                  (:none) &unit
+                  (:some tree) (traverse-and-call tree event-tuple dispatch!)
+            when (element? element)
+              each (element-children element)
+                fn (pair)
+                  hint-fn $ {}
+                    :args $ [] $ :: 'List 'Dynamic
+                    :return 'Unit
+                  let
+                      child $ assert-type (&list:nth pair 1) 'Struct
+                    traverse-and-call child event-tuple dispatch!
+            , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'Struct 'Enum 'Fn
@@ -925,7 +915,7 @@
                   target-listener-option $ assert-type
                     match target-element-option
                       (:none)
-                        do (js/console.warn |found-no-element coord event-name) (%none)
+                        do (js/console.warn |found-no-element coord event-name) (Option :none)
                       (:some target-element)
                         get (element-event target-element) event-name
                     :: 'Option 'respo.schema/EventHandler
@@ -962,12 +952,12 @@
           :code $ quote $ defn find-child-by-key (children expected-key)
             loop
                 xs children
-              if (empty? xs) (%none)
+              if (empty? xs) (Option :none)
                 let
                     pair $ respo.util.list/first-pair xs
                     key $ respo.util.list/pair-first pair
                   if (&= key expected-key)
-                    %some $ assert-type (respo.util.list/pair-value pair) 'Struct
+                    Option :some $ assert-type (respo.util.list/pair-value pair) 'Struct
                     recur $ &list:rest xs
           :examples $ []
           :schema $ :: 'Fn $ {}
@@ -985,17 +975,17 @@
                   loop
                       m-option $ get-markup-at element coord
                     match m-option
-                      (:none) (%none)
+                      (:none) (Option :none)
                       (:some m)
                         if (component? m)
                           recur $ component-tree m
-                          %some $ assert-type m 'respo.schema/Element
+                          Option :some $ assert-type m 'respo.schema/Element
                   :: 'Option 'respo.schema/Element
                 event-present? $ option:fold target-element-option
                   fn () false
                   fn (target-element)
                     contains? (element-event target-element) event-name
-              if event-present? target-element-option $ if (empty? coord) (%none)
+              if event-present? target-element-option $ if (empty? coord) (Option :none)
                 recur element
                   slice coord 0 $ - (count coord) 1
                   , event-name
@@ -1016,11 +1006,11 @@
           :doc "|Retrieves the virtual DOM element at the specified coordinate."
           :code $ quote $ defn get-markup-at (markup coord)
             list-match coord
-              () $ %some markup
+              () $ Option :some markup
               (coord-head cs)
                 if (component? markup)
                   match (component-tree markup)
-                    (:none) (%none)
+                    (:none) (Option :none)
                     (:some tree) (recur tree cs)
                   let
                       children $ element-children markup
@@ -1041,7 +1031,7 @@
       :defs $ {}
         '*changes-logger $ %{} 'CodeEntry
           :doc "|Atom to hold a logging function for observing changes during rerenders. Function signature: (old-tree new-tree changes)."
-          :code $ quote $ defatom *changes-logger (%none)
+          :code $ quote $ defatom *changes-logger (Option :none)
           :examples $ [] $ quote
             reset! *changes-logger $ fn (old new changes) (println changes)
           :schema $ :: 'Ref $ :: 'calcit.core/Option
@@ -1057,7 +1047,7 @@
               :args $ [] 'Dynamic
         '*global-element $ %{} 'CodeEntry
           :doc "|internal atom storing the current virtual DOM tree. used by render! to track and update the application state."
-          :code $ quote $ defatom *global-element (%none)
+          :code $ quote $ defatom *global-element (Option :none)
           :examples $ []
           :schema $ :: 'Ref $ :: 'calcit.core/Option 'respo.schema/Component
         '<> $ %{} 'CodeEntry
@@ -1208,7 +1198,7 @@
                         , acc
                       &list:rest xs
                       inc idx
-              schema/Element :name tag-name :coord (%none) :attrs attrs :style styles :event event :children children-nodes :ref ref!
+              schema/Element :name tag-name :coord (Option :none) :attrs attrs :style styles :event event :children children-nodes :ref ref!
           :examples $ []
             quote $ create-element :div $ {}
             quote $ create-element :span $ {} (:class-name |text)
@@ -1239,7 +1229,7 @@
                   fn (x y)
                     &compare (&list:first x) (&list:first y)
                 event $ pick-event props-map
-              schema/Element :name tag-name :coord (%none) :attrs attrs :style styles :event event :children (map child-pairs confirm-child-pair) :ref ref!
+              schema/Element :name tag-name :coord (Option :none) :attrs attrs :style styles :event event :children (map child-pairs confirm-child-pair) :ref ref!
           :examples $ [] $ quote
             create-list-element :div
               {} $ :class-name |list
@@ -1275,7 +1265,7 @@
                       updated $ assert-type
                         assoc element :attrs $ append (:attrs element) ([] :data-comp name)
                         , 'Struct
-                    &struct:assoc c :tree $ %some updated
+                    &struct:assoc c :tree $ Option :some updated
                   , c
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
@@ -1641,7 +1631,7 @@
         'extract-effects-list $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn extract-effects-list (component-name markup-tree)
             if (nil? markup-tree)
-              schema/Component :effects ([]) :name component-name :listeners ([]) :tree $ %some $ span ({})
+              schema/Component :effects ([]) :name component-name :listeners ([]) :tree $ Option :some $ span ({})
               if (list? markup-tree)
                 let
                     items $ unsafe-coerce markup-tree $ :: List Dynamic
@@ -1654,13 +1644,13 @@
                       match node-option
                         (:none) (raise |expected-render-node)
                         (:some node-tree)
-                          schema/Component :effects effects :name component-name :listeners listeners :tree $ %some $ assert-type node-tree Struct
+                          schema/Component :effects effects :name component-name :listeners listeners :tree $ Option :some $ assert-type node-tree Struct
                       let
                           item $ &list:first xs
                           next-node $ if
                             and (struct? item)
                               or (component? item) (element? item)
-                            %some $ assert-type item Struct
+                            Option :some $ assert-type item Struct
                             , node-option
                           next-effects $ if (effect? item)
                             append effects $ respo.util.detect/as-effect item
@@ -1670,7 +1660,7 @@
                             , listeners
                         recur next-node next-effects next-listeners $ &list:rest xs
                 if (struct? markup-tree)
-                  schema/Component :effects ([]) :name component-name :listeners ([]) :tree $ %some $ assert-type markup-tree Struct
+                  schema/Component :effects ([]) :name component-name :listeners ([]) :tree $ Option :some $ assert-type markup-tree Struct
                   raise |invalid-component-tree
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
@@ -1905,7 +1895,7 @@
               ; println "|mount app"
               activate-instance! element target deliver-event
               collect-mounting collect! ([]) ([]) element true
-              reset! *global-element $ %some element
+              reset! *global-element $ Option :some element
               patch-instance!
                 assert-type (&buf-list:to-list changes) (:: List respo.schema/DomPatch)
                 , target deliver-event
@@ -1917,7 +1907,7 @@
                 :args $ [] 'Dynamic
             :features $ #{} :js-ffi
         'none-struct $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn none-struct () (%none)
+          :code $ quote $ defn none-struct () (Option :none)
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ []
@@ -1986,7 +1976,7 @@
                 respo.util.format/coerce-element $ purify-element element
                 unsafe-coerce app-element 'js-ffi.browser/DomElementHost
               collect-mounting collect! ([]) ([]) element true
-              reset! *global-element $ %some element
+              reset! *global-element $ Option :some element
               patch-instance!
                 assert-type (&buf-list:to-list changes) (:: List respo.schema/DomPatch)
                 , target deliver-event
@@ -2042,7 +2032,7 @@
                     match @*changes-logger
                       (:none) &unit
                       (:some logger) (logger old-element element changes-list)
-                    reset! *global-element $ %some element
+                    reset! *global-element $ Option :some element
                     patch-instance! changes-list target deliver-event
           :examples $ [] $ quote
             rerender-app! mount-target (comp-demo) *dispatch-fn
@@ -2137,7 +2127,7 @@
               assert |false-selects-fallback $ = |fallback $ show false |child |fallback
             :tags $ #{} :unit
         'some-effect-callback $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn some-effect-callback (callback) (%some callback)
+          :code $ quote $ defn some-effect-callback (callback) (Option :some callback)
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] $ :: 'Fn
@@ -2147,7 +2137,7 @@
               {} (:return 'Unit)
                 :args $ [] 'Dynamic
         'some-enqueue $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn some-enqueue (enqueue!) (%some enqueue!)
+          :code $ quote $ defn some-enqueue (enqueue!) (Option :some enqueue!)
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] $ :: 'Fn
@@ -2231,31 +2221,30 @@
           :schema $ :: 'StructDef
         'create-style! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn create-style! (style-name rules)
-            do
-              assert |expected-rules-in-map $ map? rules
-              match (get @*style-caches style-name)
-                (:some cached)
-                  let
-                      cached-entry $ assert-type cached 'respo.css/StyleCacheEntry
-                    if
-                      &= rules $ :rules cached-entry
-                      , style-name $ let
-                          style-el $ unsafe-coerce (:el cached-entry) 'respo.dom/DomElement
-                          css-block $ render-css-block style-name rules
-                        respo.dom/set-inner-html! style-el css-block
-                        swap! *style-caches assoc style-name $ %{} StyleCacheEntry (:rules rules) (:el style-el)
-                        , style-name
-                (:none)
-                  let
-                      css-block $ render-css-block style-name rules
-                    if nodejs? (swap! *style-list-in-nodejs conj css-block)
-                      let
-                          style-el $ unsafe-coerce (js/document.createElement |style) 'respo.dom/DomElement
-                        respo.dom/set-inner-html! style-el css-block
-                        js-set style-el :id style-name
-                        js/document.head.appendChild style-el
-                        swap! *style-caches assoc style-name $ %{} StyleCacheEntry (:rules rules) (:el style-el)
-                    , style-name
+            assert |expected-rules-in-map $ map? rules
+            match (get @*style-caches style-name)
+              (:some cached)
+                let
+                    cached-entry $ assert-type cached 'respo.css/StyleCacheEntry
+                  if
+                    &= rules $ :rules cached-entry
+                    , style-name $ let
+                        style-el $ unsafe-coerce (:el cached-entry) 'respo.dom/DomElement
+                        css-block $ render-css-block style-name rules
+                      respo.dom/set-inner-html! style-el css-block
+                      swap! *style-caches assoc style-name $ StyleCacheEntry :rules rules :el style-el
+                      , style-name
+              (:none)
+                let
+                    css-block $ render-css-block style-name rules
+                  if nodejs? (swap! *style-list-in-nodejs conj css-block)
+                    let
+                        style-el $ unsafe-coerce (js/document.createElement |style) 'respo.dom/DomElement
+                      respo.dom/set-inner-html! style-el css-block
+                      js-set style-el :id style-name
+                      js/document.head.appendChild style-el
+                      swap! *style-caches assoc style-name $ StyleCacheEntry :rules rules :el style-el
+                  , style-name
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'String)
             :args $ [] 'String 'Dynamic
@@ -2768,33 +2757,32 @@
       :defs $ {}
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
-            do
-              match (browser/storage-get |respo.calcit)
-                (:none) &unit
-                (:some raw)
-                  let
-                      decoded $ parse-cirru-edn raw
-                    when
-                      not $ list? decoded
-                      raise |[Respo/main!]-expected-saved-tasks-as-a-list
-                    let
-                        tasks $ unsafe-coerce decoded $ :: 'List 'Dynamic
-                        restored $ respo.app.task/normalize-tasks tasks
-                      reset! *store $ assoc @*store :tasks restored
-              render-app! mount-target
-              browser/add-event-listener! |keydown $ fn (raw-event)
+            match (browser/storage-get |respo.calcit)
+              (:none) &unit
+              (:some raw)
                 let
-                    event $ unsafe-coerce raw-event 'respo.dom/DomKeyboardEvent
-                    event-tuple $ :: :keydown $ {}
-                      :key $ event.:key
-                      :ctrl $ event.:ctrl-key
-                      :shift $ event.:shift-key
-                      :alt $ event.:alt-key
-                      :meta $ event.:meta-key
-                  send-to-component! event-tuple
-              add-watch *store :rerender $ fn (_store _prev) (render-app! mount-target)
-              println |Loaded.
-              browser/set-before-unload! $ fn (_event) (save-store!)
+                    decoded $ parse-cirru-edn raw
+                  when
+                    not $ list? decoded
+                    raise |[Respo/main!]-expected-saved-tasks-as-a-list
+                  let
+                      tasks $ unsafe-coerce decoded $ :: 'List 'Dynamic
+                      restored $ respo.app.task/normalize-tasks tasks
+                    reset! *store $ assoc @*store :tasks restored
+            render-app! mount-target
+            browser/add-event-listener! |keydown $ fn (raw-event)
+              let
+                  event $ unsafe-coerce raw-event 'respo.dom/DomKeyboardEvent
+                  event-tuple $ :: :keydown $ {}
+                    :key $ event.:key
+                    :ctrl $ event.:ctrl-key
+                    :shift $ event.:shift-key
+                    :alt $ event.:alt-key
+                    :meta $ event.:meta-key
+                send-to-component! event-tuple
+            add-watch *store :rerender $ fn (_store _prev) (render-app! mount-target)
+            println |Loaded.
+            browser/set-before-unload! $ fn (_event) (save-store!)
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
@@ -2967,7 +2955,7 @@
                   frame-entry-option $ get @*frame-component-caches cache-key
                   entry-option $ match frame-entry-option
                     (:none) (get @*component-caches cache-key)
-                    (:some entry) (%some entry)
+                    (:some entry) (Option :some entry)
                   hit? $ match entry-option
                     (:none) false
                     (:some entry)
@@ -3218,11 +3206,10 @@
                 (and (element? old-tree) (component? new-tree))
                   let
                       new-coord $ append coord $ component-name new-tree
-                    do
-                      match (component-tree new-tree)
-                        (:none) (find-element-diffs collect! new-coord n-coord old-tree legacy-nil)
-                        (:some new-child-tree) (find-element-diffs collect! new-coord n-coord old-tree new-child-tree)
-                      collect-own-mounting collect! coord n-coord new-tree true
+                    match (component-tree new-tree)
+                      (:none) (find-element-diffs collect! new-coord n-coord old-tree legacy-nil)
+                      (:some new-child-tree) (find-element-diffs collect! new-coord n-coord old-tree new-child-tree)
+                    collect-own-mounting collect! coord n-coord new-tree true
                 (and (element? old-tree) (element? new-tree))
                   if
                     not= (element-name old-tree) (element-name new-tree)
@@ -4111,8 +4098,8 @@
                   -> target .-dataset $ js-delete $ .!slice prop-str 5
                 if (svg-target? target)
                   set-svg-prop! target p $ if (some? prop-value)
-                    %some $ turn-string prop-value
-                    %none
+                    Option :some $ turn-string prop-value
+                    Option :none
                   let
                       prop-name $ dashed->camel prop-str
                     case-default prop-name (js-set target prop-name prop-value)
@@ -4129,7 +4116,7 @@
               aset
                 unsafe-coerce (.-style target) JsObject
                 , style-name style-value
-            do &unit
+            , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'Dynamic 'Tag 'Dynamic
@@ -4140,7 +4127,7 @@
             &let
               new-element $ make-element op listener-builder coord $ svg-children? target
               .append-child! target new-element
-            do &unit
+            , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'respo.dom/DomElement 'Struct
@@ -4256,14 +4243,14 @@
               (:some parent)
                 let
                     parent-element $ unsafe-coerce parent 'respo.dom/DomElement
-                  do (.insert-before! parent-element new-element target) &unit
+                  .insert-before! parent-element new-element target
+                  , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'respo.dom/DomElement 'respo.dom/DomElement
             :features $ #{} :js-ffi
         'remove-target! $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn remove-target! (target)
-            do (.remove! target) &unit
+          :code $ quote $ defn remove-target! (target) (.remove! target) &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'respo.dom/DomElement
@@ -4300,8 +4287,8 @@
                     js-delete dataset name
                 if (svg-target? target)
                   set-svg-prop! target p $ if (some? prop-value)
-                    %some $ turn-string prop-value
-                    %none
+                    Option :some $ turn-string prop-value
+                    Option :none
                   let
                       prop-name $ dashed->camel prop-str
                     if (identical? prop-name |value)
@@ -4309,7 +4296,7 @@
                         not $ &= prop-value $ .-value target
                         js-set target prop-name prop-value
                       js-set target prop-name prop-value
-              do &unit
+              , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'respo.dom/DomElement 'Tag 'Dynamic
@@ -4322,7 +4309,7 @@
               aset
                 unsafe-coerce (.-style target) JsObject
                 , style-name $ get-style-value v style-name
-            do &unit
+            , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'Dynamic 'Tag 'Dynamic
@@ -4333,7 +4320,7 @@
               (:some element) (.remove! element)
               (:none)
                 js/console.warn |Respo:-Element-already-removed!-Probably-by-:inner-text.
-            do &unit
+            , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] $ :: 'calcit.core/Option 'respo.dom/DomElement
@@ -4351,7 +4338,7 @@
         'rm-prop $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn rm-prop (target op)
             if (svg-target? target)
-              set-svg-prop! target op $ %none
+              set-svg-prop! target op $ Option :none
               case-default op
                 let
                     prop-str $ turn-string op
@@ -4465,7 +4452,7 @@
               emit-action! $ resource-started request-id
               try
                 let
-                    value $ do $ fetch-resource
+                    value $ fetch-resource
                   shared/promise-observe! value
                     fn (ready-value)
                       hint-fn $ {}
@@ -4521,17 +4508,14 @@
             when
               not $ number? request-id
               raise "|[Respo/resource-failed] expected a numeric request id"
-            %:: ResourceAction :failed request-id error
+            ResourceAction :failed request-id error
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.resource/ResourceAction)
             :args $ [] 'Number 'Dynamic
         'resource-idle $ %{} 'CodeEntry
           :doc "|Creates an immutable idle ResourceState with optional initial data."
           :code $ quote $ defn resource-idle (initial-data-option)
-            %{} ResourceState (:status :idle)
-              :request-id $ %none
-              :data $ option:unwrap-or initial-data-option nil
-              :error nil
+            ResourceState :status :idle :request-id (Option :none) :data (option:unwrap-or initial-data-option nil) :error nil
           :examples $ [] $ quote
             resource-idle $ {} $ :items ([])
           :schema $ :: 'Fn $ {} (:return 'respo.resource/ResourceState)
@@ -4555,7 +4539,7 @@
             when
               not $ number? request-id
               raise "|[Respo/resource-ready] expected a numeric request id"
-            %:: ResourceAction :ready request-id data
+            ResourceAction :ready request-id data
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.resource/ResourceAction)
             :args $ [] 'Number 'Dynamic
@@ -4570,30 +4554,26 @@
               raise "|[Respo/resource-reducer] expected ResourceAction as the second argument"
             match action
               (:started request-id)
-                %{} ResourceState
-                  :status $ let
+                ResourceState :status
+                  let
                       status $ :status state
                     if
                       or (= :ready status) (= :refreshing status)
                       , :refreshing :pending
-                  :request-id $ %some request-id
-                  :data $ :data state
-                  :error nil
+                  , :request-id (Option :some request-id) :data (:data state) :error nil
               (:ready request-id data)
                 if
-                  = (:request-id state) (%some request-id)
-                  %{} ResourceState (:status :ready)
-                    :request-id $ %some request-id
-                    :data data
-                    :error nil
+                  match (:request-id state)
+                    (:some current-id) (= current-id request-id)
+                    (:none) false
+                  ResourceState :status :ready :request-id (Option :some request-id) :data data :error nil
                   , state
               (:failed request-id error)
                 if
-                  = (:request-id state) (%some request-id)
-                  %{} ResourceState (:status :error)
-                    :request-id $ %some request-id
-                    :data $ :data state
-                    :error error
+                  match (:request-id state)
+                    (:some current-id) (= current-id request-id)
+                    (:none) false
+                  ResourceState :status :error :request-id (Option :some request-id) :data (:data state) :error error
                   , state
           :examples $ [] $ quote
             let
@@ -4648,7 +4628,7 @@
             when
               not $ number? request-id
               raise "|[Respo/resource-started] expected a numeric request id"
-            %:: ResourceAction :started request-id
+            ResourceAction :started request-id
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.resource/ResourceAction)
             :args $ [] 'Number
@@ -4916,17 +4896,8 @@
           :code $ quote $ defn verify-realize-ssr-ref! (mount root)
             let
                 refs $ atom $ []
-                element $ %{} respo.schema/Element (:name :div)
-                  :coord $ %none
-                  :attrs $ []
-                  :style $ []
-                  :event $ {}
-                  :children $ []
-                  :ref $ fn (target) (respo.core/append-dynamic! refs target)
-                component $ %{} respo.schema/Component (:name :ssr-fixture)
-                  :effects $ []
-                  :listeners $ []
-                  :tree $ %some element
+                element $ respo.schema/Element :name :div :coord (Option :none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref $ fn (target) (respo.core/append-dynamic! refs target)
+                component $ respo.schema/Component :name :ssr-fixture :effects ([]) :listeners ([]) :tree $ Option :some element
               respo.core/realize-ssr! mount component $ fn (_op) &unit
               assert |SSR-ref-receives-adopted-root $ &= ([] root) @refs
               , &unit
@@ -4982,7 +4953,7 @@
                 render-count $ atom 0
                 schedule! $ make-render-scheduler
                   fn () $ swap! render-count inc
-                  %none
+                  Option :none
               schedule!
               schedule!
               shared/queue-microtask! $ fn () (swap! *async-checks inc)
@@ -5702,10 +5673,10 @@
             loop
                 rest-xs xs
                 idx 0
-              if (empty? rest-xs) (%none)
+              if (empty? rest-xs) (Option :none)
                 if
                   &= (&list:first rest-xs) needle
-                  %some $ assert-type idx 'Number
+                  Option :some $ assert-type idx 'Number
                   recur (&list:rest rest-xs) (inc idx)
           :examples $ []
           :schema $ :: 'Fn $ {}
