@@ -6,6 +6,8 @@ Respo 的开发版本以 `deps.cirru` 固定 Calcit 与 js-ffi 依赖，通过�
 
 资源 ID helper 已省去可由编译器证明的重复 schema，普通 `.add` 和既有测试保持不变；见[推断验收记录](docs/guide/resource-helper-validation.md)。
 
+升级时同时固定 `deps.cirru :calcit-version` 和 `package.json` 的 `@calcit/procs` 为同一精确版本，并执行 `yarn install --immutable`。只更新 CLI 而沿用旧 JS runtime，可能在运行时缺失新的 trait 实现；编译成功不能代替 DOM/SSR 测试。核心 API 改写先用 `calcit fix --preset core-api-0.28-v1 --format edn` 预览，只有可证明安全的建议自动应用，剩余开放类型和 macro 建议保留人工审阅。
+
 > Inspired by React and Reagent. Previously [Respo/respo.cljs](https://github.com/Respo/respo.cljs).
 
 - Home http://respo-mvc.org
