@@ -2256,12 +2256,11 @@
             warn-style-literals rules
             , &unit &unit
               let
+                  style-ns $ &map:get (&extract-code-into-edn style-name) :ns
+                  ns-str $ if (string? style-ns) style-ns $ raise "|defstyle expected a namespaced symbol"
                   style-name-str $ str
                     -> (turn-string style-name) (&str:replace |! |_EX_) (&str:replace |? |_QU_)
-                    , |__ $ ->
-                      &map:get (&extract-code-into-edn style-name) :ns
-                      turn-string
-                      &str:replace |. |_
+                    , |__ $ -> ns-str (&str:replace |. |_)
                 quasiquote $ def ~style-name $ create-style! ~style-name-str ~rules
           :examples $ []
             quote $ defstyle style-button $ {}
@@ -3552,7 +3551,7 @@
                           .!slice prop-str 5
                       if svg?
                         when (some? v)
-                          browser/element-set-attribute! (host-element element) (svg-attr-name prop-str) (turn-string v)
+                          browser/element-set-attribute! (host-element element) (svg-attr-name prop-str) (respo.util.format/scalar-attribute-text v)
                         let
                             k $ dashed->camel prop-str
                           if (some? v) (aset element k v)
@@ -3602,12 +3601,24 @@
                 if (symbol? k)
                   recur acc $ &list:rest xs
                   let
-                      style-name $ turn-string k
+                      style-name $ cond
+                          tag? k
+                          turn-string k
+                        (string? k) k
+                        true $ raise "|style->string expected a tag or string key"
                       v $ get-style-value (respo.util.list/pair-value entry) style-name
                     recur (str acc style-name |: v |;) (&list:rest xs)
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'String)
             :args $ [] $ :: 'List (:: 'List 'Dynamic)
+          :tests $ [] $ %{} 'TestEntry (:name |formats-typed-keys-and-rejects-invalid-key)
+            :code $ quote $ do
+              assert= |color:red; $ style->string $ [] ([] :color :red)
+              assert= |display:block; $ style->string $ [] ([] |display :block)
+              assert= "|style->string expected a tag or string key" $ try
+                style->string $ [] $ [] 1 :red
+                fn (error) error
+            :tags $ #{} :unit
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.render.dom
           :require
@@ -3947,11 +3958,11 @@
               let
                   value $ &map:get attrs :value
                 if (some? value)
-                  escape-html $ turn-string value
+                  escape-html $ respo.util.format/scalar-attribute-text value
                   join-str children |
               let
                   html $ &map:get attrs :innerHTML
-                if (some? html) (turn-string html)
+                if (some? html) (respo.util.format/scalar-attribute-text html)
                   let
                       text $ &map:get attrs :inner-text
                     if (some? text) (text->html text) (join-str children |)
@@ -3966,9 +3977,8 @@
                 value-text $ cond
                     = k :style
                     style->html $ coerce-pairs v
-                  (tag? v) (turn-string v)
                   (string? v) (escape-html v)
-                  true $ turn-string v
+                  true $ respo.util.format/scalar-attribute-text v
               str
                 prop->attr $ turn-string k
                 , |= $ &str:escape value-text
@@ -4098,7 +4108,7 @@
                   -> target .-dataset $ js-delete $ .!slice prop-str 5
                 if (svg-target? target)
                   set-svg-prop! target p $ if (some? prop-value)
-                    Option :some $ turn-string prop-value
+                    Option :some $ respo.util.format/scalar-attribute-text prop-value
                     Option :none
                   let
                       prop-name $ dashed->camel prop-str
@@ -4287,7 +4297,7 @@
                     js-delete dataset name
                 if (svg-target? target)
                   set-svg-prop! target p $ if (some? prop-value)
-                    Option :some $ turn-string prop-value
+                    Option :some $ respo.util.format/scalar-attribute-text prop-value
                     Option :none
                   let
                       prop-name $ dashed->camel prop-str
@@ -5276,7 +5286,7 @@
                     , :innerHTML
                 if (some? maybe-html)
                   when
-                    not= (turn-string maybe-html) (element :inner-html)
+                    not= (respo.util.format/scalar-attribute-text maybe-html) (element :inner-html)
                     js/console.warn "|SSR checking: noticed dom containing innerHTML:" element
                   do (js/console.error "|SSR checking: children sizes do not match!")
                     js/console.log |virtual: $ -> (:children vdom) (map last) (map :name) to-lispy-string
@@ -5619,6 +5629,33 @@
           :schema $ :: 'Fn $ {}
             :args $ [] $ :: 'Map 'Tag 'Dynamic
             :return $ :: 'List 'Tag
+        'scalar-attribute-text $ %{} 'CodeEntry (:doc "|将 DOM/SSR 属性值边界内已识别的标量转换为文本；拒绝集合及任意宿主对象。")
+          :code $ quote $ defn scalar-attribute-text (x)
+            cond
+                string? x
+                , x
+              (tag? x) (turn-string x)
+              (symbol? x) (turn-string x)
+              (number? x) (turn-string x)
+              (bool? x) (turn-string x)
+              true $ raise "|Attribute value must be a scalar"
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'String)
+            :args $ [] 'Dynamic
+          :tests $ []
+            %{} 'TestEntry (:name |accepts-supported-scalars)
+              :code $ quote $ do
+                assert= |value $ scalar-attribute-text |value
+                assert= |red $ scalar-attribute-text :red
+                assert= |12 $ scalar-attribute-text 12
+                assert= |true $ scalar-attribute-text true
+              :tags $ #{} :unit
+            %{} 'TestEntry (:name |rejects-collections)
+              :code $ quote $ assert= "|Attribute value must be a scalar"
+                try
+                  scalar-attribute-text $ [] 1 2
+                  fn (error) error
+              :tags $ #{} :unit
         'svg-attr-name $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn svg-attr-name (x)
             case-default x x (|strokeWidth |stroke-width) (|strokeLinecap |stroke-linecap) (|strokeLinejoin |stroke-linejoin) (|strokeDasharray |stroke-dasharray) (|strokeDashoffset |stroke-dashoffset) (|fillRule |fill-rule) (|fillOpacity |fill-opacity) (|clipPath |clip-path) (|stopColor |stop-color) (|stopOpacity |stop-opacity) (|class-name |class)
@@ -5715,13 +5752,11 @@
           :doc "|Extracts HTML attributes from a properties map, filtering out internal keys like :on, :event, :style."
           :code $ quote $ defn pick-attrs (props)
             if (nil? props) ([])
-              -> props (&map:dissoc :on) (&map:dissoc :style) (&map:dissoc :ref) (&map:to-list)
-                filter $ fn (pair)
-                  let
-                      k $ &list:nth pair 0
-                      v $ &list:nth pair 1
-                    and (some? v)
-                      not $ starts-with? (turn-string k) |on-
+              -> props (&map:dissoc :on) (&map:dissoc :style) (&map:dissoc :ref)
+                &map:filter-kv $ fn (k v)
+                  and (some? v)
+                    not $ starts-with? (turn-string k) |on-
+                &map:to-list
                 sort $ fn (x y)
                   &compare (&list:nth x 0) (&list:nth y 0)
           :examples $ []
@@ -5747,24 +5782,16 @@
                 base-events $ if (map? raw-on)
                   unsafe-coerce raw-on $ :: Map Tag respo.schema/EventHandler
                   {}
-                entries $ unsafe-coerce (&map:to-list props)
-                  :: List $ :: List Dynamic
-              loop
-                  acc base-events
-                  xs entries
-                if (empty? xs) acc $ let
-                    pair $ respo.util.list/first-pair xs
-                    k $ &list:nth pair 0
-                    v $ &list:nth pair 1
-                    next-acc $ if
-                      and
-                        starts-with? (turn-string k) |on-
-                        some? v
-                      &map:assoc acc
-                        turn-tag $ &str:slice (turn-string k) 3
-                        assert-type v respo.schema/EventHandler
-                      , acc
-                  recur next-acc $ &list:rest xs
+                property-events $ filter-map-kv props $ fn (k v)
+                  if
+                    and
+                      starts-with? (turn-string k) |on-
+                      some? v
+                    %:: MapEntryDecision :keep
+                      turn-tag $ &str:slice (turn-string k) 3
+                      assert-type v respo.schema/EventHandler
+                    %:: MapEntryDecision :drop
+              merge base-events property-events
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] $ :: 'Map 'Tag 'Dynamic
