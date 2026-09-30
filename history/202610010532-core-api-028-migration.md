@@ -13,3 +13,5 @@
 上述发布包本地复验已完成：正式 crates.io CLI 与实际 npm runtime 同为 `0.28.0-alpha.2`，caps 严格依赖/工具链验证与 Yarn immutable 安装通过。48 个附带测试、DOM patch/DOM/SSR、nullish props、原类型/质量门禁、59 个 Markdown 文件的 111 个代码块、实际生成 JS 与 Vite 生产构建全部通过，重复 preset 仍无自动改写。远程 PR CI 与完成覆盖最新 HEAD 的 review 是独立合并门禁，尚不能用本地结果代替。
 
 `program-diff` 对相同 git ref 自比较仍报告未变 FFI 的 runtime-boundary 差异，已独立记录在 calcit#1582。该误报不能作为修改 FFI 的理由；本次通过实际 Snapshot diff 确认只有上述 15 个代码叶子改变。
+
+review 要求避免 CI 执行可移动 tag。本仓库 checkout、Node 和部署 action 已采用不可变 revision，setup action 按同一供应链约定固定为正式 `v1.5.0` 注释标签 peel 后的提交 `ca701be5a471759e442aa053cd100720bbe1f09f`，并保留版本注释。已核对上游正式 Release、tag object 与 commit。该 SHA 仅固定 CI action 的执行来源，不替代 `deps.cirru` 或 npm 中的精确发布版本，也不使用未发布 revision。
