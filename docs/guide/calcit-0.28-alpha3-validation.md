@@ -23,7 +23,7 @@ yarn vite build
 calcit fix --preset core-api-0.28-v1 --format edn
 ```
 
-`yarn test` 执行 Snapshot 自身的全部附带测试，不以单独的 `unit` tag 子集代替完整验收。DOM/SSR smoke 验证真实生成模块和明确的测试宿主，不把它描述为真实浏览器执行；js-ffi 的 Chromium 测试覆盖模块自己的浏览器契约，Respo 实际应用的浏览器回归仍待验证，不能用模块测试替代。
+`yarn test` 执行 Snapshot 自身的全部附带测试，不以单独的 `unit` tag 子集代替完整验收。DOM/SSR smoke 验证真实生成模块和明确的测试宿主，不把它描述为真实浏览器执行；js-ffi 的 Chromium 测试覆盖模块自己的浏览器契约，不能用模块测试替代 Respo 应用回归。下面另列本次实际运行的 demo smoke，不把它扩大为完整应用回归。
 
 保留既有人工审阅建议，不为让预览清零而扩大 Dynamic、添加 unsafe、修改预期或以 native call 替代方法。依赖升级不改变 Snapshot 语义、事件 dispatch type slot 或 Respo 自身模块版本；未来发布 Respo 时仍需单独版本、tag 与精确 main 门禁。
 
@@ -31,6 +31,7 @@ calcit fix --preset core-api-0.28-v1 --format edn
 
 - 全部附带测试：48 项选中、48 项执行、48 项通过；DOM patch 类型脚本以及 DOM/SSR 测试宿主契约通过；另有 3 项 nullish props 测试通过。
 - 文档：60 个 Markdown 文件、111 个代码块检查通过。默认入口的严格检查、JavaScript 生成和 Vite 构建通过。
+- 真实浏览器 demo smoke：用 Chrome 154 打开 Vite 构建预览，验证输入更新、添加任务（0 → 1）、切换完成状态、编辑文本与删除任务（1 → 0），每步核对实际页面状态。没有新增应用脚本错误；唯一资源错误是既有 `favicon.ico` 404。范围仅为这些 demo 交互，不涵盖全部组件、异步效果、性能或外部业务应用的完整回归。
 - 核心 API preset：没有可自动应用的建议，30 项跨 macro 的建议仍为 `requires-review`，预览前后 revision 一致；本次没有执行空自动改写，也没有修改 Snapshot。
 - 公开定义检查：在仅用于审计的 Snapshot 副本中通过 CLI 明确设置 `browser` target，检查 `respo.core`、`respo.dom`、`respo.schema`、`respo.render.patch` 四个命名空间，120/120 项定义通过，无诊断。原项目没有声明 target，因此不能直接把默认入口的检查当作全公开 API 的验收；这也不是全部命名空间的证明。
 - 既有质量 baseline 的各项增量均为零，没有放宽阈值。不过默认类型汇总仍有 188 项部分标注、3 项未标注；测试通过不代表 Dynamic 或 runtime 动态方法调用已经消除。
