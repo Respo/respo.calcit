@@ -71,4 +71,13 @@ defn event->edn (event)
 
 Events are bound directly on the elements for simplicity and consistency. And it stops propagation when event is triggered.
 
+`DomProps` supports `:on-paste` with the same nullable `EventHandler` type as other event fields. For example:
+
+```cirru
+respo.core/textarea $ {}
+  :on-paste $ fn (event dispatch!) &unit
+```
+
+Paste follows the existing generic event conversion: `:type` is the string `"paste"`, and both `:original-event` and `:event` hold the native event. Read clipboard data from the native event's `clipboardData` at the browser boundary. Respo stops propagation and leaves the browser's default paste action enabled; call `preventDefault` on the original event when the application needs to override it. Removing `:on-paste` removes the DOM handler.
+
 When a position switches between a `defcomp` component and a plain element, Respo refreshes event coordinates throughout the resulting subtree. Root and descendant events resolve the current handlers, including descendants whose virtual nodes are reused unchanged. Removing an event prop still removes its DOM handler.

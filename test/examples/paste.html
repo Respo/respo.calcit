@@ -1,0 +1,22 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="icon" href="data:,"><title>Paste event regression</title></head>
+<body><div id="app"></div><pre id="result"></pre>
+<script type="module">
+import { verifyPasteEvents } from '../paste-fixture.mjs';
+const mount = document.querySelector('#app');
+window.regressionResult = verifyPasteEvents(mount, html => {
+  mount.innerHTML = html;
+  return mount.firstElementChild;
+}, (target, value) => {
+  const data = new DataTransfer();
+  data.setData('text/plain', value);
+  const event = new ClipboardEvent('paste', { clipboardData: data, bubbles: true, cancelable: true });
+  let bubbled = false;
+  const listener = () => { bubbled = true; };
+  mount.addEventListener('paste', listener);
+  target.dispatchEvent(event);
+  mount.removeEventListener('paste', listener);
+  if (bubbled || event.defaultPrevented) throw new Error('Paste changed default event behavior');
+});
+document.querySelector('#result').textContent = JSON.stringify(window.regressionResult);
+</script></body></html>

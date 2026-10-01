@@ -152,6 +152,22 @@ verifyDataCompUpdates(decoratedMount, () => {
 })
 console.log("data-comp-attrs-contract-ok")
 
+const { verifyPasteEvents } = await import("./test/paste-fixture.mjs")
+const pasteRoot = elementHost("textarea", "", [])
+const pasteMount = elementHost("main", "", [pasteRoot])
+verifyPasteEvents(pasteMount, () => {
+  pasteRoot.dataset.comp = "comp-event-shell"
+  return pasteRoot
+}, (target, value) => {
+  let stopped = false
+  target.onpaste({ type: "paste", target,
+    clipboardData: { getData: () => value },
+    stopPropagation: () => { stopped = true },
+  })
+  if (!stopped) throw new Error("Paste event did not stop propagation")
+})
+console.log("paste-event-contract-ok")
+
 const newElement = {}
 const target = {}
 let inserted = false
