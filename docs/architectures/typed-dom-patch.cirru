@@ -1,7 +1,7 @@
 {}
   :schema-version 1
   :feature 'typed-dom-patch
-  :doc "|Replace Respo's anonymous Tag-plus-positional-tuple DOM command protocol with one nominal DomPatch enum. Producer inventory: find-element-diffs emits add/rm/replace-element, set/rm-event, and ref effect-before-update/effect-update; find-children-diffs emits add/rm/append-element; find-props-diffs emits add/rm/replace-prop; find-style-diffs emits add/rm/replace-style; collect-mounting and collect-own-mounting emit effect-mount; collect-unmounting and collect-own-unmounting emit effect-unmount; collect-updating emits effect-before-update/effect-update. apply-dom-changes is the sole exhaustive consumer and preserves the existing operation order. Logical coordinates remain List<Dynamic>, DOM coordinates remain List<Number>, virtual nodes narrow to Struct, event/property/style names narrow to Tag, heterogeneous DOM values remain Dynamic only at the host-property boundary, and lifecycle callbacks remain Fn only at the final DOM adapter boundary."
+  :doc "|Replace Respo's anonymous Tag-plus-positional-tuple DOM command protocol with one nominal DomPatch enum. Producer inventory: find-element-diffs emits add/rm/replace-element, set/rm-event, and ref effect-before-update/effect-update; find-children-diffs emits add/rm/append/move-element; find-props-diffs emits add/rm/replace-prop; find-style-diffs emits add/rm/replace-style; collect-mounting and collect-own-mounting emit effect-mount; collect-unmounting and collect-own-unmounting emit effect-unmount; collect-updating emits effect-before-update/effect-update. apply-dom-changes is the sole exhaustive consumer and preserves the existing operation order. Logical coordinates remain List<Dynamic>, DOM coordinates remain List<Number>, virtual nodes narrow to Struct, event/property/style names narrow to Tag, heterogeneous DOM values remain Dynamic only at the host-property boundary, and lifecycle callbacks remain Fn only at the final DOM adapter boundary."
   :roots $ #{} 'respo.render.patch/apply-dom-changes
   :definitions $ {}
     'respo.schema/DomPatch $ {}
@@ -23,6 +23,7 @@
           (:rm-element (:: 'List 'Dynamic) (:: 'List 'Number))
           (:replace-element (:: 'List 'Dynamic) (:: 'List 'Number) 'Struct)
           (:append-element (:: 'List 'Dynamic) (:: 'List 'Number) 'Struct)
+          (:move-element (:: 'List 'Number) 'Number (:: 'Option 'Number))
           (:effect-mount (:: 'List 'Dynamic) (:: 'List 'Number) 'Fn)
           (:effect-unmount (:: 'List 'Dynamic) (:: 'List 'Number) 'Fn)
           (:effect-update (:: 'List 'Dynamic) (:: 'List 'Number) 'Fn)
@@ -45,7 +46,7 @@
     'respo.render.diff/find-children-diffs $ {}
       :mode :external
       :kind :fn
-      :doc "|Produce typed keyed-child insertion, append, and removal patches while preserving identity and order."
+      :doc "|Produce typed keyed-child insertion, append, removal, and LIS-minimized move patches while preserving identity and order."
       :schema $ :: :fn
         {}
           :return 'Unit

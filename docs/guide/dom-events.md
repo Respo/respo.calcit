@@ -69,14 +69,15 @@ defn event->edn (event)
   assoc :original-event event
 ```
 
-By default, events are bound through each element's `on*` property, and Respo
-calls `stopPropagation` after delivering the event. Browser default actions remain
-enabled. This preserves the existing behavior for applications that do not configure events.
+默认通过元素的 `on*` 属性绑定事件，Respo 在交付事件后调用 `stopPropagation`。
+浏览器默认行为保持启用；没有配置事件的应用沿用原有行为。
 
-### Mount-time event configuration
+<a id="mount-time-event-configuration"></a>
 
-Call `respo.core/configure-events!` before the first `render!`, `render-with!`, or
-`realize-ssr!`. It accepts a typed `respo.schema/EventConfig`:
+### 挂载前配置事件
+
+在首次 `render!`、`render-with!` 或 `realize-ssr!` 前调用
+`respo.core/configure-events!`，参数为 `respo.schema/EventConfig`：
 
 ```cirru
 respo.core/configure-events! $ %{} respo.schema/EventConfig
@@ -84,23 +85,19 @@ respo.core/configure-events! $ %{} respo.schema/EventConfig
   :listener-mode $ respo.schema/ListenerMode :add-event-listener
 ```
 
-| Option | Default | Effect |
+| 选项 | 默认值 | 行为 |
 | --- | --- | --- |
-| `:stop-propagation?` | `true` | `false` permits bubbling to ancestor and document listeners, unless the application handler stops propagation itself. |
-| `:listener-mode` | `ListenerMode :property` | `ListenerMode :add-event-listener` attaches independent native listeners and preserves user `on*` properties. |
+| `:stop-propagation?` | `true` | 设为 `false` 时允许冒泡到祖先和 document，应用处理器仍可自行阻止传播。 |
+| `:listener-mode` | `ListenerMode :property` | `ListenerMode :add-event-listener` 注册独立原生监听器，保留用户的 `on*` 属性。 |
 
-Use `:stop-propagation? false` for document-level integrations such as outside-click
-detection. Respo ancestor handlers also receive bubbling events in that mode.
-Choose `:add-event-listener` when other code owns handlers on the same DOM node.
-Respo updates or removes only its own registered callback; user property handlers
-and independently registered listeners keep working. SSR adoption uses the same
-configuration and preserves preexisting property handlers in this mode.
+document 级的外部点击检测等集成可使用 `:stop-propagation? false`；此时 Respo
+祖先节点的处理器也会接收冒泡事件。其他代码需要在同一节点处理事件时，可选择
+`:add-event-listener`。Respo 更新和移除时只处理自己注册的回调，用户属性处理器和
+其他原生监听器继续工作。SSR 接管也使用相同配置，并在独立模式下保留原有属性处理器。
 
-Configuration is fixed once the tree is mounted. Later calls to `configure-events!`
-raise `[Respo/configure-events!]-configure-before-mount`; hot reload keeps the
-original options. Put configuration in startup setup, before the initial render,
-and omit it from the reload callback. Event handlers can still call
-`preventDefault` or `stopPropagation` on `:original-event` for a particular event.
+挂载后配置固定，再次调用会抛出 `[Respo/configure-events!]-configure-before-mount`。
+热更新保留初始配置：应在启动时、首次渲染前配置，不要放入 reload 回调。
+处理单个事件时仍可对 `:original-event` 调用 `preventDefault` 或 `stopPropagation`。
 
 `DomProps` supports `:on-paste` with the same nullable `EventHandler` type as other event fields. For example:
 

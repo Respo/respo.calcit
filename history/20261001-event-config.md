@@ -57,3 +57,13 @@ yarn vite --host 127.0.0.1
 
 The DOM events guide documents options, bubbling through Respo ancestors, startup
 placement, SSR coexistence, and the unchanged default actions.
+
+## 合入主分支后的冲突验证
+
+合入 `main` 的 `55c0e35`，保留 `DomElement` 的独立事件回调存储字段，以及主分支
+新增的 keyed 移动、焦点和滚动 FFI 字段。通过 Calcit CLI 维护快照，规范格式检查通过。
+
+- 严格编译、66 项原生测试、18 项 Node 回归及质量门禁通过。
+- Node 回归包含事件配置、keyed 移动、memo、nullish props 和 SSR。
+- Chrome 154 的八组普通挂载/SSR × 监听模式 × 传播设置回归通过。
+- 基准原始 JSON 保留供复核，并标记为 generated；没有新增大 JSON 产物。

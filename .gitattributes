@@ -2,3 +2,7 @@
 yarn.lock -diff linguist-generated
 llms/*.md -diff linguist-generated
 config/calcit-quality.cirru text -diff linguist-generated
+
+# 保留基准原始样本供复核，GitHub 将其视为生成文件。
+history/*-bench.json linguist-generated=true
+history/20261001-event-config-results.json linguist-generated=true
