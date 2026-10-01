@@ -224,14 +224,22 @@ let
         render-with! mount-target
           fn () (comp-container @*store)
           , dispatch!
-  add-watch *store :changes $ fn ()
+      %:: Option :none
+  add-watch *store :changes $ fn (_current _previous)
     schedule-render!
   schedule-render!
 ```
 
 默认使用 `queueMicrotask` 调度。在排队的回调执行前，多次调度调用合并为一次渲染。调度器只持有排队标记；真实数据仍在 `*store` 中，渲染回调执行时读取最新的不可变值。
 
-可选的 `enqueue!` 回调能够替换 `queueMicrotask`，用于确定性测试或宿主专用调度器。自定义实现控制回调时机，也可以同步执行，因此不保证默认的微任务批处理行为。
+传入 `Option :some enqueue!` 可替换 `queueMicrotask`，用于确定性测试或宿主专用调度器。
+自定义实现控制回调时机，也可以同步执行，因此不保证默认的微任务批处理行为。
+末尾的 Option 参数可以省略，以使用默认队列。
+
+`render!` 和 `render-with!` 仍同步执行；需要立即读取更新后的 DOM 时，直接调用它们，
+或使用同步 store watch。调度测试应等待微任务或清空注入的队列。每次注册 watch
+复用一个调度器，热更新替换 watch 时应让旧队列中的回调失效；
+[入门指南](../beginner-guide.md#rerender-on-updates)展示了这个保护逻辑。
 
 <a id="error-behavior"></a>
 

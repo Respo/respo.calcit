@@ -1,0 +1,42 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Demo scheduler regression and benchmark</title>
+<div class="app"></div>
+<pre id="result">Running…</pre>
+<script type="module">
+  import { render_app_$x_ } from '/js-out/respo.app.core.mjs';
+  import { watch_render_$x_ } from '/js-out/respo.app.scheduler.mjs';
+  import { main_$x_, reload_$x_ } from '/js-out/respo.main.mjs';
+  import { clear_cache_$x_ } from '/js-out/respo.core.mjs';
+  import { verifyDemoScheduler, benchmarkDemoScheduler, stopWatching, clearTasks, addTask } from '/test/demo-scheduler-fixture.mjs';
+
+  const mount = document.querySelector('.app');
+  const render = () => render_app_$x_(mount);
+  // Real initial mount installs the same scheduler tested by the shared fixture.
+  main_$x_();
+  window.schedulerResult = await verifyDemoScheduler(render);
+  if (!mount.textContent.includes('Tasks: List/23')) throw new Error('scheduled render did not update the real DOM');
+
+  stopWatching();
+  clearTasks();
+  render();
+  addTask('synchronous DOM check');
+  if (!mount.textContent.includes('Tasks: List/0')) throw new Error('unexpected implicit render');
+  render();
+  if (!mount.textContent.includes('Tasks: List/1')) throw new Error('direct rendering is not synchronous');
+  window.schedulerResult.synchronousDom = true;
+
+  watch_render_$x_(render);
+  reload_$x_();
+  addTask('pending before hot reload');
+  reload_$x_();
+  await Promise.resolve();
+  if (!mount.textContent.includes('Tasks: List/2')) throw new Error('reload lost latest state');
+  window.schedulerResult.hotReload = true;
+
+  clear_cache_$x_();
+  window.schedulerBench = await benchmarkDemoScheduler(render);
+  if (!mount.textContent.includes('Tasks: List/20')) throw new Error('benchmark final DOM mismatch');
+  stopWatching();
+  document.querySelector('#result').textContent = JSON.stringify({ regression: window.schedulerResult, benchmark: window.schedulerBench }, null, 2);
+</script>
