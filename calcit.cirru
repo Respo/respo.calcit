@@ -1159,6 +1159,7 @@
           :code $ quote $ defn confirm-child-pair (pair)
             assert "|expected pair" $ and (list? pair)
               &= 2 $ count pair
+            assert "|[Respo] keyed child requires a non-nil key" $ some? $ &list:first pair
             &let
               x $ &list:nth pair 1
               assert "|Invalid data in elements tree: " $ or (nil? x) (element? x) (component? x)
@@ -1208,7 +1209,7 @@
           :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
             :args $ [] 'Tag 'respo.schema/DomProps
         'create-list-element $ %{} 'CodeEntry
-          :doc "|Creates a virtual DOM element for keyed list rendering. child-pairs may be an ordered list or a map of [key child] pairs; invalid collections fail at this API boundary."
+          :doc "|Creates an element for ordered keyed children. Validates each [key child] pair before omitting nil-valued children, matching ordinary element children. Keys must be non-nil, including for omitted children."
           :code $ quote $ defn create-list-element (tag-name props child-pairs)
             when
               not $ list? child-pairs
@@ -1229,21 +1230,79 @@
                   fn (x y)
                     &compare (&list:first x) (&list:first y)
                 event $ pick-event props-map
-              schema/Element :name tag-name :coord (Option :none) :attrs attrs :style styles :event event :children (map child-pairs confirm-child-pair) :ref ref!
+              schema/Element :name tag-name :coord (Option :none) :attrs attrs :style styles :event event :children
+                filter (map child-pairs confirm-child-pair)
+                  fn (pair)
+                    some? $ respo.util.list/pair-value pair
+                , :ref ref!
           :examples $ [] $ quote
             create-list-element :div
               {} $ :class-name |list
               [] $ [] :item-1 $ span ({})
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Element)
             :args $ [] 'Tag 'Dynamic $ :: 'List (:: 'List 'Dynamic)
-          :tests $ [] $ %{} 'TestEntry (:name |rejects-invalid-child-collections)
-            :code $ quote $ let
-                caught? $ atom false
-              try
-                create-list-element-open :div ({}) :invalid
-                fn (_error) (reset! caught? true)
-              assert |invalid-keyed-children-report-the-contract @caught?
-            :tags $ #{} :unit
+          :tests $ []
+            %{} 'TestEntry (:name |rejects-invalid-child-collections)
+              :code $ quote $ let
+                  caught? $ atom false
+                try
+                  create-list-element-open :div ({}) :invalid
+                  fn (_error) (reset! caught? true)
+                assert |invalid-keyed-children-report-the-contract @caught?
+              :tags $ #{} :unit
+            %{} 'TestEntry (:name |ignores-new-nil-child)
+              :code $ quote $ let
+                  patches $ atom $ []
+                  collect! $ fn (patch) (append-dynamic! patches patch)
+                  empty-tree $ list-> ({}) ([])
+                  nil-tree $ list-> ({})
+                    [] $ [] :missing nil
+                respo.render.diff/find-element-diffs collect! ([]) ([]) empty-tree nil-tree
+                assert= ([]) @patches
+              :tags $ #{} :unit
+            %{} 'TestEntry (:name |replaces-and-removes-nil-children)
+              :code $ quote $ let
+                  patches $ atom $ []
+                  collect! $ fn (patch) (append-dynamic! patches patch)
+                  child $ span $ {}
+                  live-tree $ list-> ({})
+                    [] $ [] :live child
+                  nil-tree $ list-> ({})
+                    [] $ [] :live nil
+                  empty-tree $ list-> ({}) ([])
+                respo.render.diff/find-element-diffs collect! ([]) ([]) live-tree nil-tree
+                assert=
+                  [] $ schema/DomPatch :rm-element ([] :live) ([] 0)
+                  , @patches
+                reset! patches $ []
+                respo.render.diff/find-element-diffs collect! ([]) ([]) nil-tree empty-tree
+                assert= ([]) @patches
+                respo.render.diff/find-element-diffs collect! ([]) ([]) nil-tree live-tree
+                assert=
+                  [] $ schema/DomPatch :append-element ([] :live) ([]) child
+                  , @patches
+              :tags $ #{} :unit
+            %{} 'TestEntry (:name |validates-before-omitting-nil-pairs)
+              :code $ quote $ let
+                  child $ span $ {}
+                  tree $ list-> ({})
+                    [] ([] :nil-before nil) ([] :live child) ([] :nil-after nil)
+                  caught-key? $ atom false
+                  caught-child? $ atom false
+                assert=
+                  [] $ [] :live child
+                  :children tree
+                try
+                  list-> ({})
+                    [] $ [] nil nil
+                  fn (_error) (reset! caught-key? true)
+                try
+                  list-> ({})
+                    [] $ [] :invalid false
+                  fn (_error) (reset! caught-child? true)
+                assert |nil-key-is-rejected-before-filtering @caught-key?
+                assert |invalid-child-is-not-filtered @caught-child?
+              :tags $ #{} :unit
         'create-list-element-open $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn create-list-element-open (name attrs children)
             create-list-element name attrs $ assert-type children $ :: 'List (:: 'List 'Dynamic)

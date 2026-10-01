@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en">
+  <head><title>Keyed nil children regression</title><link rel="icon" href="data:,"></head>
+  <body>
+    <main id="mount"></main>
+    <p id="result">Running keyed nil regression</p>
+    <script type="module">
+      import { verifyKeyedNilChildren } from '../keyed-nil-fixture.mjs';
+      const result = verifyKeyedNilChildren(document.getElementById('mount'));
+      document.getElementById('result').textContent = 'Passed: ' + JSON.stringify(result);
+      window.keyedNilResult = result;
+    </script>
+  </body>
+</html>
