@@ -163,7 +163,7 @@
     'respo.render.patch/apply-dom-changes $ {}
       :mode :external
       :kind :fn
-      :doc "|Exhaustively consume DomPatch values at the DOM host boundary without a catch-all branch."
+      :doc "|Exhaustively consume DomPatch values at the DOM host boundary without a catch-all branch. Reuse located coordinate prefixes within one application; after child structure changes retain only unchanged ancestors, and after lifecycle callbacks clear all targets."
       :schema $ :: :fn
         {}
           :return 'Unit

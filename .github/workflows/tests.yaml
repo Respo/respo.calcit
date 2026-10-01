@@ -75,6 +75,9 @@ jobs:
       - name: Test keyed node moves
         run: yarn test-keyed-moves
 
+      - name: Test patch lookup and duplicate keys
+        run: yarn test-patch-lookup
+
       - name: "check docs markdown"
         run: bash scripts/check-docs-md.sh
 
