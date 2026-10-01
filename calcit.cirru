@@ -2132,12 +2132,14 @@
                 :args $ [] 'Dynamic
             :features $ #{} :js-ffi
         'render-with! $ %{} 'CodeEntry
-          :doc "|Build a Component tree inside a managed memo frame, prune inactive component keys, then render it. Pass a zero-argument tree builder so memo calls happen inside the frame."
+          :doc "|Build a Component tree inside a managed memo frame, prune inactive component keys, then render it. Pass a zero-argument tree builder so memo calls happen inside the frame. A tree construction failure aborts the frame without committing partial entries and rethrows the error."
           :code $ quote $ defn render-with! (target render-tree dispatch!) (memo/begin-memo-frame!)
-            let
-                element $ render-tree
-              memo/finish-memo-frame!
-              render! target element dispatch!
+            try
+              let
+                  element $ render-tree
+                memo/finish-memo-frame!
+                render! target element dispatch!
+              fn (error) (memo/abort-memo-frame!) (raise error)
           :examples $ [] $ quote
             render-with! mount-target
               fn () $ comp-container @*store
@@ -3029,6 +3031,42 @@
             :children $ :: 'Set 'respo.memo/MemoCacheKey
           :examples $ []
           :schema $ :: 'Enum
+        'abort-memo-frame! $ %{} 'CodeEntry
+          :doc "|Discard a failed render frame and its dependency stack without changing the last successfully committed cache."
+          :code $ quote $ defn abort-memo-frame! () (reset! *memo-frame-active? false)
+            reset! *frame-component-caches $ {}
+            reset! *memo-dependency-stack $ []
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ []
+          :tags $ #{} :internal
+          :tests $ [] $ %{} 'TestEntry (:name |discards-only-failed-frame)
+            :code $ quote $ let
+                calls $ atom 0
+                derive $ fn (value) (swap! calls inc) value
+              reset-component-caches!
+              begin-memo-frame!
+              memo-value-by :committed derive 1
+              finish-memo-frame!
+              begin-memo-frame!
+              memo-value-by :partial derive 2
+              abort-memo-frame!
+              assert= false @*memo-frame-active?
+              assert= ({}) @*frame-component-caches
+              assert= ([]) @*memo-dependency-stack
+              assert= 1 $ component-cache-size
+              memo-value-by :committed derive 1
+              memo-value-by :partial derive 2
+              assert= 4 @calls
+              begin-memo-frame!
+              memo-value-by :committed derive 1
+              assert= 4 @calls
+              memo-value-by :partial derive 2
+              assert= 5 @calls
+              finish-memo-frame!
+              assert= 2 $ component-cache-size
+              reset-component-caches!
+            :tags $ #{} :unit
         'begin-memo-frame! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn begin-memo-frame! ()
             reset! *frame-component-caches $ {}
