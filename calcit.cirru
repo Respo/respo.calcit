@@ -4325,6 +4325,7 @@
               aset target event-prop $ fn (event)
                 (listener-builder event-name) event coord
                 .!stopPropagation event
+            , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'respo.dom/DomElement 'Tag
