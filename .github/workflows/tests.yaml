@@ -66,6 +66,9 @@ jobs:
       - name: Test SSR escaping and Node styles
         run: yarn test-ssr
 
+      - name: Test memo frame lifecycle
+        run: yarn test-memo
+
       - name: Test keyed node moves
         run: yarn test-keyed-moves
 

@@ -2132,12 +2132,14 @@
                 :args $ [] 'Dynamic
             :features $ #{} :js-ffi
         'render-with! $ %{} 'CodeEntry
-          :doc "|Build a Component tree inside a managed memo frame, prune inactive component keys, then render it. Pass a zero-argument tree builder so memo calls happen inside the frame."
+          :doc "|在受管理的 memo 帧中构建 Component 树，清理不再活跃的组件 key，然后渲染。传入零参数树构建函数，使 memo 调用位于帧内。向外传播的渲染错误会中止当前帧并重新抛出，保留上次成功提交的缓存。"
           :code $ quote $ defn render-with! (target render-tree dispatch!) (memo/begin-memo-frame!)
-            let
-                element $ render-tree
-              memo/finish-memo-frame!
-              render! target element dispatch!
+            try
+              let
+                  element $ render-tree
+                memo/finish-memo-frame!
+                render! target element dispatch!
+              fn (error) (memo/abort-memo-frame!) (raise error)
           :examples $ [] $ quote
             render-with! mount-target
               fn () $ comp-container @*store
@@ -3020,6 +3022,10 @@
           :code $ quote $ defatom *frame-component-caches ({})
           :examples $ []
           :schema $ :: 'Ref $ :: 'Map 'respo.memo/MemoCacheKey 'respo.memo/MemoEntry
+        '*memo-dependency-stack $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defatom *memo-dependency-stack ([])
+          :examples $ []
+          :schema $ :: 'Ref $ :: 'List (:: 'Set 'respo.memo/MemoCacheKey)
         '*memo-frame-active? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defatom *memo-frame-active? false
           :examples $ []
@@ -3032,12 +3038,49 @@
           :code $ quote $ defstruct MemoEntry
             :args $ :: 'List 'Dynamic
             :value 'Dynamic
+            :children $ :: 'Set 'respo.memo/MemoCacheKey
           :examples $ []
           :schema $ :: 'Enum
+        'abort-memo-frame! $ %{} 'CodeEntry (:doc "|丢弃失败渲染帧的临时条目和依赖栈，保留上一次成功提交的缓存。")
+          :code $ quote $ defn abort-memo-frame! () (reset! *memo-frame-active? false)
+            reset! *frame-component-caches $ {}
+            reset! *memo-dependency-stack $ []
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ []
+          :tags $ #{} :internal
+          :tests $ [] $ %{} 'TestEntry (:name |discards-only-failed-frame)
+            :code $ quote $ let
+                calls $ atom 0
+                derive $ fn (value) (swap! calls inc) value
+              reset-component-caches!
+              begin-memo-frame!
+              memo-value-by :committed derive 1
+              finish-memo-frame!
+              begin-memo-frame!
+              memo-value-by :partial derive 2
+              abort-memo-frame!
+              assert= false @*memo-frame-active?
+              assert= ({}) @*frame-component-caches
+              assert= ([]) @*memo-dependency-stack
+              assert= 1 $ component-cache-size
+              memo-value-by :committed derive 1
+              memo-value-by :partial derive 2
+              assert= 4 @calls
+              begin-memo-frame!
+              memo-value-by :committed derive 1
+              assert= 4 @calls
+              memo-value-by :partial derive 2
+              assert= 5 @calls
+              finish-memo-frame!
+              assert= 2 $ component-cache-size
+              reset-component-caches!
+            :tags $ #{} :unit
         'begin-memo-frame! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn begin-memo-frame! ()
             reset! *frame-component-caches $ {}
             reset! *memo-frame-active? true
+            reset! *memo-dependency-stack $ []
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
@@ -3067,11 +3110,29 @@
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Number)
             :args $ []
+        'compute-memo-entry $ %{} 'CodeEntry
+          :doc "|内部 memo 未命中计算器。记录直接嵌套的 memo key，并在回调成功或抛错后恢复依赖栈。"
+          :code $ quote $ defn compute-memo-entry (f args)
+            let
+                previous-stack @*memo-dependency-stack
+              swap! *memo-dependency-stack conj $ assert-type (#{}) (:: Set MemoCacheKey)
+              let
+                  value $ try (call-value f args)
+                    fn (error) (reset! *memo-dependency-stack previous-stack) (raise error)
+                  children $ assert-type (&list:last @*memo-dependency-stack) (:: Set MemoCacheKey)
+                reset! *memo-dependency-stack previous-stack
+                %{} MemoEntry (:args args) (:value value) (:children children)
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'respo.memo/MemoEntry)
+            :args $ [] 'Fn $ :: 'List 'A
+            :generics $ [] 'A
+          :tags $ #{} :internal
         'finish-memo-frame! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn finish-memo-frame! ()
             when @*memo-frame-active? $ reset! *component-caches @*frame-component-caches
             reset! *memo-frame-active? false
             reset! *frame-component-caches $ {}
+            reset! *memo-dependency-stack $ []
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
@@ -3121,77 +3182,221 @@
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Dynamic)
             :args $ [] 'respo.memo/MemoEntry
-        'memo-value-by $ %{} 'CodeEntry (:doc |)
+        'memo-value-by $ %{} 'CodeEntry
+          :doc "|在受管理的渲染帧中，按回调、key 和完整参数列表的深度相等关系缓存不可变值。外层命中时递归保留已记录的嵌套依赖，未命中时替换依赖集合。nil key 或非活跃帧直接计算，不读取或增加缓存。"
           :code $ quote $ defn memo-value-by (key f & args)
-            if (nil? key) (call-value f args)
+            if
+              or (nil? key) (not @*memo-frame-active?)
+              call-value f args
               let
                   cache-key $ %{} MemoCacheKey (:callback f) (:key key)
-                  frame-entry-option $ get @*frame-component-caches cache-key
-                  entry-option $ match frame-entry-option
-                    (:none) (get @*component-caches cache-key)
-                    (:some entry) (Option :some entry)
-                  hit? $ match entry-option
-                    (:none) false
-                    (:some entry)
-                      &= args $ memo-entry-args $ assert-type entry respo.memo/MemoEntry
-                  resolved-entry $ if hit?
-                    match entry-option
-                      (:none) (raise |missing-memo-entry)
-                      (:some entry) entry
-                    %{} MemoEntry (:args args)
-                      :value $ call-value f args
-                if @*memo-frame-active? (swap! *frame-component-caches assoc cache-key resolved-entry)
-                  when (not hit?) (swap! *component-caches assoc cache-key resolved-entry)
-                memo-entry-value $ assert-type resolved-entry respo.memo/MemoEntry
+                record-memo-child! cache-key
+                let
+                    frame-entry-option $ get @*frame-component-caches cache-key
+                    entry-option $ match frame-entry-option
+                      (:none) (get @*component-caches cache-key)
+                      (:some entry) (Option :some entry)
+                    hit? $ match entry-option
+                      (:none) false
+                      (:some entry)
+                        &= args $ memo-entry-args entry
+                    resolved-entry $ if hit?
+                      match entry-option
+                        (:none) (raise |missing-memo-entry)
+                        (:some entry) entry
+                      compute-memo-entry f args
+                  swap! *frame-component-caches assoc cache-key resolved-entry
+                  when hit? $ retain-memo-children! resolved-entry
+                  memo-entry-value resolved-entry
           :examples $ []
           :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'Dynamic)
             :args $ [] 'Dynamic 'Fn
-          :tests $ [] $ %{} 'TestEntry (:name |caches-values-and-prunes-frames)
-            :code $ quote $ let
-                calls $ atom 0
-                derive $ fn (value) (swap! calls inc)
-                  {} $ :value value
-              reset-component-caches!
-              begin-memo-frame!
+          :tests $ []
+            %{} 'TestEntry (:name |caches-values-and-prunes-frames)
+              :code $ quote $ let
+                  calls $ atom 0
+                  derive $ fn (value) (swap! calls inc)
+                    {} $ :value value
+                reset-component-caches!
+                begin-memo-frame!
+                let
+                    first-value $ memo-value-by :same derive 1
+                    second-value $ memo-value-by :same derive 1
+                    changed-value $ memo-value-by :same derive 2
+                  assert |same-key-and-args-reuse-identity $ identical? first-value second-value
+                  assert |changed-args-recompute $ not $ identical? second-value changed-value
+                  assert |changed-value-is-returned $ &=
+                    {} $ :value 2
+                    , changed-value
+                  assert |only-misses-call-the-function $ = 2 @calls
+                finish-memo-frame!
+                reset-component-caches!
+                reset! calls 0
+                begin-memo-frame!
+                memo-value-by nil derive 1
+                memo-value-by nil derive 1
+                finish-memo-frame!
+                assert |nil-key-bypasses-cache $ = 2 @calls
+                assert |nil-key-is-not-retained $ = 0 $ component-cache-size
+                reset-component-caches!
+                begin-memo-frame!
+                memo-value-by :a derive 1
+                memo-value-by :b derive 2
+                finish-memo-frame!
+                assert |first-frame-retains-two-keys $ = 2 $ component-cache-size
+                begin-memo-frame!
+                memo-value-by :b derive 2
+                finish-memo-frame!
+                assert |inactive-key-is-pruned $ = 1 $ component-cache-size
+                reset-component-caches!
+              :tags $ #{} :unit
+            %{} 'TestEntry (:name |nested-hits-retain-transitive-children)
+              :code $ quote $ let
+                  inner-calls $ atom 0
+                  outer-calls $ atom 0
+                  inner $ fn (value) (swap! inner-calls inc)
+                    {} $ :value value
+                  middle $ fn (value) (memo-value-by :inner inner value)
+                  outer $ fn (version) (swap! outer-calls inc) (memo-value-by :middle middle 7)
+                reset-component-caches!
+                begin-memo-frame!
+                memo-value-by :outer outer 0
+                finish-memo-frame!
+                &doseq
+                  frame $ range 4
+                  begin-memo-frame!
+                  memo-value-by :outer outer 0
+                  finish-memo-frame!
+                  assert= 3 $ component-cache-size
+                begin-memo-frame!
+                memo-value-by :outer outer 1
+                finish-memo-frame!
+                assert= 2 @outer-calls
+                assert= 1 @inner-calls
+                begin-memo-frame!
+                finish-memo-frame!
+                assert= 0 $ component-cache-size
+                reset-component-caches!
+              :tags $ #{} :unit
+            %{} 'TestEntry (:name |outside-frames-do-not-grow-cache)
+              :code $ quote $ let
+                  calls $ atom 0
+                  derive $ fn (value) (swap! calls inc)
+                    {} $ :value value
+                reset-component-caches!
+                &doseq
+                  key $ range 40
+                  memo-value-by key derive key
+                assert= 40 @calls
+                assert= 0 $ component-cache-size
+                begin-memo-frame!
+                memo-value-by :existing derive 1
+                finish-memo-frame!
+                memo-value-by :existing derive 1
+                assert= 42 @calls
+                assert= 1 $ component-cache-size
+                begin-memo-frame!
+                memo-value-by :existing derive 1
+                finish-memo-frame!
+                assert= 42 @calls
+                reset-component-caches!
+              :tags $ #{} :unit
+            %{} 'TestEntry (:name |changed-parent-prunes-removed-dependencies)
+              :code $ quote $ let
+                  inner $ fn (value) value
+                  outer $ fn (visible?)
+                    if visible? (memo-value-by :inner inner 1) 0
+                reset-component-caches!
+                begin-memo-frame!
+                memo-value-by :outer outer true
+                finish-memo-frame!
+                assert= 2 $ component-cache-size
+                begin-memo-frame!
+                memo-value-by :outer outer false
+                finish-memo-frame!
+                assert= 1 $ component-cache-size
+                begin-memo-frame!
+                memo-value-by :outer outer false
+                finish-memo-frame!
+                assert= 1 $ component-cache-size
+                reset-component-caches!
+              :tags $ #{} :unit
+            %{} 'TestEntry (:name |failed-callback-restores-dependency-stack)
+              :code $ quote $ let
+                  bad $ fn () $ raise |memo-failure
+                  good $ fn (value) value
+                reset-component-caches!
+                begin-memo-frame!
+                try (memo-value-by :bad bad)
+                  fn (error) (assert= |memo-failure error)
+                assert= ([]) @*memo-dependency-stack
+                memo-value-by :good good 1
+                finish-memo-frame!
+                assert= 1 $ component-cache-size
+                begin-memo-frame!
+                memo-value-by :good good 1
+                finish-memo-frame!
+                assert= 1 $ component-cache-size
+                reset-component-caches!
+              :tags $ #{} :unit
+            %{} 'TestEntry (:name |parent-hit-keeps-current-frame-child)
+              :code $ quote $ let
+                  calls $ atom 0
+                  child $ fn (value) (swap! calls inc) value
+                  outer $ fn () $ memo-value-by :child child 1
+                reset-component-caches!
+                begin-memo-frame!
+                memo-value-by :outer outer
+                finish-memo-frame!
+                begin-memo-frame!
+                memo-value-by :child child 2
+                memo-value-by :outer outer
+                finish-memo-frame!
+                assert= 2 @calls
+                begin-memo-frame!
+                assert= 2 $ memo-value-by :child child 2
+                finish-memo-frame!
+                assert= 2 @calls
+                reset-component-caches!
+              :tags $ #{} :unit
+        'record-memo-child! $ %{} 'CodeEntry (:doc "|内部依赖记录器，将带 key 的 memo 调用加入当前最内层正在计算的回调依赖中。")
+          :code $ quote $ defn record-memo-child! (cache-key)
+            when
+              not $ empty? @*memo-dependency-stack
               let
-                  first-value $ memo-value-by :same derive 1
-                  second-value $ memo-value-by :same derive 1
-                  changed-value $ memo-value-by :same derive 2
-                assert |same-key-and-args-reuse-identity $ identical? first-value second-value
-                assert |changed-args-recompute $ not $ identical? second-value changed-value
-                assert |changed-value-is-returned $ &=
-                  {} $ :value 2
-                  , changed-value
-                assert |only-misses-call-the-function $ = 2 @calls
-              finish-memo-frame!
-              reset-component-caches!
-              reset! calls 0
-              begin-memo-frame!
-              memo-value-by nil derive 1
-              memo-value-by nil derive 1
-              finish-memo-frame!
-              assert |nil-key-bypasses-cache $ = 2 @calls
-              assert |nil-key-is-not-retained $ = 0 $ component-cache-size
-              reset-component-caches!
-              begin-memo-frame!
-              memo-value-by :a derive 1
-              memo-value-by :b derive 2
-              finish-memo-frame!
-              assert |first-frame-retains-two-keys $ = 2 $ component-cache-size
-              begin-memo-frame!
-              memo-value-by :b derive 2
-              finish-memo-frame!
-              assert |inactive-key-is-pruned $ = 1 $ component-cache-size
-              reset-component-caches!
-            :tags $ #{} :unit
+                  index $ dec $ count @*memo-dependency-stack
+                  children $ assert-type (&list:nth @*memo-dependency-stack index) (:: Set MemoCacheKey)
+                reset! *memo-dependency-stack $ assoc @*memo-dependency-stack index $ include children cache-key
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ [] 'respo.memo/MemoCacheKey
+          :tags $ #{} :internal
         'reset-component-caches! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reset-component-caches! ()
             reset! *component-caches $ {}
             reset! *frame-component-caches $ {}
             reset! *memo-frame-active? false
+            reset! *memo-dependency-stack $ []
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
+        'retain-memo-children! $ %{} 'CodeEntry
+          :doc "|内部缓存命中依赖遍历。递归提升旧缓存中的子条目，优先保留当前帧已计算的条目；已访问 key 阻止共享路径和依赖环的重复处理。"
+          :code $ quote $ defn retain-memo-children! (entry)
+            &doseq
+              key $ :children entry
+              let
+                  child-key $ assert-type key MemoCacheKey
+                when
+                  not $ contains? @*frame-component-caches child-key
+                  match (get @*component-caches child-key)
+                    (:none) &unit
+                    (:some child)
+                      do (swap! *frame-component-caches assoc child-key child) (retain-memo-children! child)
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ [] 'respo.memo/MemoEntry
+          :tags $ #{} :internal
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.memo
           :require $ respo.util.detect :refer $ component?
