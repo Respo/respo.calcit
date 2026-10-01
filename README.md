@@ -257,6 +257,7 @@ This index helps LLM tools automatically fetch and reference documentation using
 | Typed Dispatch    | [docs/guide/type-slots.md](docs/guide/type-slots.md)               | Entry-level `Op` binding and checks                        |
 | Styles            | [docs/guide/styles.md](docs/guide/styles.md)                       | CSS and styling approach                                   |
 | Render Lists      | [docs/guide/render-list.md](docs/guide/render-list.md)             | Efficient list rendering                                   |
+| Renderer Upgrades | [docs/guide/upgrade.md](docs/guide/upgrade.md)                     | Internal patch protocol changes                            |
 | Common Primitives | [docs/guide/common-primitives.md](docs/guide/common-primitives.md) | Conditional UI, lifecycle, resources, errors, and batching |
 | Hot Swapping      | [docs/guide/hot-swapping.md](docs/guide/hot-swapping.md)           | Hot code reloading setup                                   |
 | Server Rendering  | [docs/guide/server-rendering.md](docs/guide/server-rendering.md)   | SSR capabilities                                           |

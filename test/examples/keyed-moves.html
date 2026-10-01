@@ -1,0 +1,8 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="icon" href="data:,"><title>Keyed move regression</title></head>
+<body><div id="app"></div><pre id="result"></pre>
+<script type="module">
+import { verifyKeyedMoves } from '../keyed-moves-fixture.mjs';
+window.regressionResult = verifyKeyedMoves(document.querySelector('#app'), location.search.includes('fallback'));
+document.querySelector('#result').textContent = JSON.stringify(window.regressionResult);
+</script></body></html>
