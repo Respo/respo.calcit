@@ -55,6 +55,8 @@ Virtual DOM can be rendered on a server, use it like in JavaScript.
 `respo.render.html/make-string` is the function to render HTML. `respo.core/realize-ssr!` is also useful to make first screen look smoother; make sure it is called before `respo.core/render!`.
 
 `make-string` serializes the component tree without event handlers. On the client, `realize-ssr!` attaches those handlers while adopting the existing HTML.
+
+Text and attribute values escape ampersands before other HTML characters, so literal entities such as `&amp;` keep their original text after the browser parses the SSR output. Explicit `:innerHTML` content is inserted as HTML.
 Without `respo.core/realize-ssr!`, `respo.core/render!` will remove existing DOM and mount the whole tree.
 
 ### `realize-ssr!` solution
