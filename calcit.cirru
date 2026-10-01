@@ -1252,7 +1252,7 @@
             :args $ [] 'Tag (:: 'Map 'Tag 'Dynamic) 'Dynamic
             :features $ #{} :js-ffi
         'decorate-defcomp $ %{} 'CodeEntry
-          :doc "|detect root element under component and add `data-comp` attribute"
+          :doc "|Add the component name to the root element as one data-comp attribute at its sorted position. Preserves the property ordering required by the merge diff, replacing an existing marker when necessary."
           :code $ quote $ defn decorate-defcomp (c name)
             match (:tree c)
               (:none) c
@@ -1263,13 +1263,84 @@
                   let
                       element $ assert-type tree 'respo.schema/Element
                       updated $ assert-type
-                        assoc element :attrs $ append (:attrs element) ([] :data-comp name)
+                        assoc element :attrs $ loop
+                            before $ []
+                            remaining $ :attrs element
+                          if (empty? remaining)
+                            append before $ [] :data-comp name
+                            let
+                                pair $ respo.util.list/first-pair remaining
+                                order $ &compare (respo.util.list/pair-key pair) :data-comp
+                              if (&< order 0)
+                                recur (append before pair) (&list:rest remaining)
+                                concat (assert-type before 'List)
+                                  [] $ [] :data-comp name
+                                  if (&= order 0) (&list:rest remaining) remaining
                         , 'Struct
                     &struct:assoc c :tree $ Option :some updated
                   , c
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
             :args $ [] 'respo.schema/Component 'String
+          :tests $ []
+            %{} 'TestEntry (:name |title-removal-keeps-component-marker)
+              :code $ quote $ let
+                  patches $ atom $ []
+                  collect! $ fn (patch) (append-dynamic! patches patch)
+                  old-component $ decorate-defcomp
+                    schema/Component :name :link :effects ([]) :listeners ([]) :tree $ Option :some $ div
+                      {} (:href |/page) (:title |title)
+                    , |comp-link
+                  new-component $ decorate-defcomp
+                    schema/Component :name :link :effects ([]) :listeners ([]) :tree $ Option :some $ div
+                      {} $ :href |/page
+                    , |comp-link
+                respo.render.diff/find-props-diffs collect! ([]) ([])
+                  respo.util.detect/element-attrs $ option:unwrap $ :tree old-component
+                  respo.util.detect/element-attrs $ option:unwrap $ :tree new-component
+                assert=
+                  [] $ schema/DomPatch :rm-prop ([]) ([]) :title
+                  , @patches
+              :tags $ #{} :unit
+            %{} 'TestEntry
+              :name |property-addition-and-update-keep-component-marker
+              :code $ quote $ let
+                  patches $ atom $ []
+                  collect! $ fn (patch) (append-dynamic! patches patch)
+                  old-component $ decorate-defcomp
+                    schema/Component :name :link :effects ([]) :listeners ([]) :tree $ Option :some $ div
+                      {} $ :href |/old
+                    , |comp-link
+                  new-component $ decorate-defcomp
+                    schema/Component :name :link :effects ([]) :listeners ([]) :tree $ Option :some $ div
+                      {} (:class-name |styled) (:href |/new) (:id |link)
+                    , |comp-link
+                respo.render.diff/find-props-diffs collect! ([]) ([])
+                  respo.util.detect/element-attrs $ option:unwrap $ :tree old-component
+                  respo.util.detect/element-attrs $ option:unwrap $ :tree new-component
+                assert=
+                  []
+                    schema/DomPatch :add-prop ([]) ([]) :class-name |styled
+                    schema/DomPatch :replace-prop ([]) ([]) :href |/new
+                    schema/DomPatch :add-prop ([]) ([]) :id |link
+                  , @patches
+              :tags $ #{} :unit
+            %{} 'TestEntry (:name |marker-is-unique-and-sorted)
+              :code $ quote $ let
+                  component $ schema/Component :name :link :effects ([]) :listeners ([]) :tree $ Option :some
+                    div $ {} (:class-name |styled) (:data-comp |old) (:href |/page)
+                  decorated $ decorate-defcomp (decorate-defcomp component |first) |final
+                  class-only $ decorate-defcomp
+                    schema/Component :name :link :effects ([]) :listeners ([]) :tree $ Option :some $ div
+                      {} $ :class-name |styled
+                    , |comp-link
+                assert=
+                  [] ([] :class-name |styled) ([] :data-comp |final) ([] :href |/page)
+                  respo.util.detect/element-attrs $ option:unwrap $ :tree decorated
+                assert=
+                  [] ([] :class-name |styled) ([] :data-comp |comp-link)
+                  respo.util.detect/element-attrs $ option:unwrap $ :tree class-only
+              :tags $ #{} :unit
         'defcomp $ %{} 'CodeEntry
           :doc "|Macro for defining a Respo component.\n\n`defcomp` expands to a function that returns a `respo.schema/Component`, decorates the component name, and extracts component effects declared from the render result. Use it for reusable view functions that accept props or state cursors and return virtual DOM."
           :code $ quote $ defmacro defcomp (comp-name params & body)

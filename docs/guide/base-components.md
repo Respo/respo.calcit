@@ -53,3 +53,5 @@ comp-global-keydown
 ```
 
 Internally it listens events on `window` and dispatches events to a `<span/>` element.
+
+`defcomp` adds the component name to its root element as `data-comp`. This marker stays in the sorted attribute list used by property diffing, so adding, changing, or removing other props preserves it. Decorating the same root again updates the existing marker instead of adding a duplicate.
