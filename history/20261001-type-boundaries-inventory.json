@@ -1,0 +1,2144 @@
+{
+  "baselineCommit": "3847003",
+  "counts": {
+    "unsafe-coerce": 43,
+    "assert-type": 87
+  },
+  "calls": [
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.cursor/update-state-tree-merge",
+      "path": "code@3.1.0.1.0",
+      "expression": [
+        "unsafe-coerce",
+        "cursor",
+        [
+          "::",
+          "List",
+          "Tag"
+        ]
+      ],
+      "plan": "Removed: use the actual generic cursor list directly; no List<Tag> coercion."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.cursor/update-state-tree-merge",
+      "path": "code@3.2.2.1.0.1.0",
+      "expression": [
+        "unsafe-coerce",
+        "changes",
+        [
+          "::",
+          "Map",
+          "Dynamic",
+          "Dynamic"
+        ]
+      ],
+      "plan": "Keep heterogeneous application state representation; use generic path keys and narrow Map/Struct payloads only at their runtime boundary."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.cursor/update-state-tree-merge",
+      "path": "code@3.2.2.1.1.1.0",
+      "expression": [
+        "unsafe-coerce",
+        [
+          "&map:to-list",
+          "changes-map"
+        ],
+        [
+          "::",
+          "List",
+          [
+            "::",
+            "List",
+            "Dynamic"
+          ]
+        ]
+      ],
+      "plan": "Keep heterogeneous application state representation; use generic path keys and narrow Map/Struct payloads only at their runtime boundary."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.cursor/update-state-tree-merge",
+      "path": "code@3.2.2.2.2.3.1.3.1.2.1.0",
+      "expression": [
+        "unsafe-coerce",
+        "updated",
+        [
+          "::",
+          "Map",
+          "Dynamic",
+          "Dynamic"
+        ]
+      ],
+      "plan": "Keep heterogeneous application state representation; use generic path keys and narrow Map/Struct payloads only at their runtime boundary."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.cursor/update-state-tree-merge",
+      "path": "code@3.2.2.2.2.3.1.3.1.3.2.1.0",
+      "expression": [
+        "unsafe-coerce",
+        "updated",
+        "Struct"
+      ],
+      "plan": "Keep heterogeneous application state representation; use generic path keys and narrow Map/Struct payloads only at their runtime boundary."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.cursor/update-state-tree-merge",
+      "path": "code@3.2.2.2.2.3.1.3.1.3.2.2.0",
+      "expression": [
+        "unsafe-coerce",
+        "k",
+        "Tag"
+      ],
+      "plan": "Keep heterogeneous application state representation; use generic path keys and narrow Map/Struct payloads only at their runtime boundary."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.cursor/update-state-tree-kv",
+      "path": "code@3.1.0.1.0",
+      "expression": [
+        "unsafe-coerce",
+        "cursor",
+        [
+          "::",
+          "List",
+          "Tag"
+        ]
+      ],
+      "plan": "Removed: use the actual generic cursor list directly; no List<Tag> coercion."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.cursor/update-state-tree-kv",
+      "path": "code@3.2.2.2.1.0.1.0",
+      "expression": [
+        "unsafe-coerce",
+        "state",
+        [
+          "::",
+          "Map",
+          "Dynamic",
+          "Dynamic"
+        ]
+      ],
+      "plan": "Keep heterogeneous application state representation; use generic path keys and narrow Map/Struct payloads only at their runtime boundary."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.cursor/update-state-tree-kv",
+      "path": "code@3.2.2.3.2.3.1.0",
+      "expression": [
+        "unsafe-coerce",
+        "state",
+        "Struct"
+      ],
+      "plan": "Keep heterogeneous application state representation; use generic path keys and narrow Map/Struct payloads only at their runtime boundary."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.cursor/update-state-tree-kv",
+      "path": "code@3.2.2.3.2.3.2.0",
+      "expression": [
+        "unsafe-coerce",
+        "k",
+        "Tag"
+      ],
+      "plan": "Keep heterogeneous application state representation; use generic path keys and narrow Map/Struct payloads only at their runtime boundary."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.css/render-css-block",
+      "path": "code@3.1.0.1.0",
+      "expression": [
+        "unsafe-coerce",
+        [
+          "&map:to-list",
+          "rules"
+        ],
+        [
+          "::",
+          "'List",
+          [
+            "::",
+            "'List",
+            "'Dynamic"
+          ]
+        ]
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.css/render-css-block",
+      "path": "code@3.2.2.3.1.3.1.0",
+      "expression": [
+        "unsafe-coerce",
+        "raw-styles",
+        [
+          "::",
+          "'Map",
+          "'Tag",
+          "'Dynamic"
+        ]
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.css/render-css-block",
+      "path": "code@3.2.2.3.1.7.1.1.0",
+      "expression": [
+        "unsafe-coerce",
+        [
+          "&map:to-list",
+          "styles-map"
+        ],
+        [
+          "::",
+          "'List",
+          [
+            "::",
+            "'List",
+            "'Dynamic"
+          ]
+        ]
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.app.comp.todolist/try-test!",
+      "path": "code@3.1.0.1.0",
+      "expression": [
+        "unsafe-coerce",
+        [
+          "js/Date.now"
+        ],
+        "Number"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.app.comp.todolist/try-test!",
+      "path": "code@3.7.1.0.1.1.0",
+      "expression": [
+        "unsafe-coerce",
+        [
+          "js/Date.now"
+        ],
+        "Number"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.comp.global-keydown/effect-listen-keyboard",
+      "path": "code@4.1.1.2.1.1.1.0",
+      "expression": [
+        "unsafe-coerce",
+        "prev-listener",
+        [
+          "::",
+          "'Fn",
+          [
+            "{}",
+            [
+              ":args",
+              [
+                "[]",
+                "'js-ffi.browser/EventHost"
+              ]
+            ],
+            [
+              ":return",
+              "'Unit"
+            ]
+          ]
+        ]
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.comp.global-keydown/effect-listen-keyboard",
+      "path": "code@4.2.1.1.1.1.0",
+      "expression": [
+        "unsafe-coerce",
+        "handler",
+        [
+          "::",
+          "'Fn",
+          [
+            "{}",
+            [
+              ":args",
+              [
+                "[]",
+                "'js-ffi.browser/EventHost"
+              ]
+            ],
+            [
+              ":return",
+              "'Unit"
+            ]
+          ]
+        ]
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.css/create-style!",
+      "path": "code@4.3.2.1.2.3.1.0.1.0",
+      "expression": [
+        "unsafe-coerce",
+        [
+          ":el",
+          "cached-entry"
+        ],
+        "'respo.dom/DomElement"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.css/create-style!",
+      "path": "code@4.3.3.1.2.1.0.1.0",
+      "expression": [
+        "unsafe-coerce",
+        [
+          "js/document.createElement",
+          "|style"
+        ],
+        "'respo.dom/DomElement"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.main/main!",
+      "path": "code@3.3.1.3.1.0.1.0",
+      "expression": [
+        "unsafe-coerce",
+        "decoded",
+        [
+          "::",
+          "'List",
+          "'Dynamic"
+        ]
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.main/main!",
+      "path": "code@5.2.2.1.0.1.0",
+      "expression": [
+        "unsafe-coerce",
+        "raw-event",
+        "'respo.dom/DomKeyboardEvent"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.render.patch/apply-dom-changes",
+      "path": "code@3.1.0.1.2.0",
+      "expression": [
+        "unsafe-coerce",
+        [
+          ".-firstElementChild",
+          "mount-point"
+        ],
+        "'respo.dom/DomElement"
+      ],
+      "plan": "Use typed DOM capabilities for host nodes; keep heterogeneous style/property payload validation at the DOM boundary."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.render.patch/apply-dom-changes",
+      "path": "code@3.1.1.1.3.1.1.0",
+      "expression": [
+        "unsafe-coerce",
+        [
+          "get-root"
+        ],
+        "'respo.dom/DomElement"
+      ],
+      "plan": "Use typed DOM capabilities for host nodes; keep heterogeneous style/property payload validation at the DOM boundary."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.app.comp.todolist/effect-focus",
+      "path": "code@4.2.3.1.1.0",
+      "expression": [
+        "unsafe-coerce",
+        "target",
+        "'respo.dom/DomElement"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.controller.client/patch-instance!",
+      "path": "code@3.2.2.0",
+      "expression": [
+        "unsafe-coerce",
+        "mount-point",
+        "'respo.dom/DomElement"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.core/>>",
+      "path": "code@3.1.1.1.0",
+      "expression": [
+        "unsafe-coerce",
+        [
+          "either",
+          [
+            "&map:get",
+            "states",
+            "k"
+          ],
+          [
+            "{}"
+          ]
+        ],
+        [
+          "::",
+          "Map",
+          "Tag",
+          [
+            "::",
+            "JsNullish",
+            "Dynamic"
+          ]
+        ]
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.core/extract-effects-list",
+      "path": "code@3.3.2.1.0.1.0",
+      "expression": [
+        "unsafe-coerce",
+        "markup-tree",
+        [
+          "::",
+          "List",
+          "Dynamic"
+        ]
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.core/realize-ssr!",
+      "path": "code@5.3.2.0",
+      "expression": [
+        "unsafe-coerce",
+        "app-element",
+        "'js-ffi.browser/DomElementHost"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.cursor/get-state-at",
+      "path": "code@3.2.3.1.0.1.0",
+      "expression": [
+        "unsafe-coerce",
+        "current",
+        [
+          "::",
+          "'Map",
+          "'Tag",
+          [
+            "::",
+            "'JsNullish",
+            "'Dynamic"
+          ]
+        ]
+      ],
+      "plan": "Keep heterogeneous application state representation; use generic path keys and narrow Map/Struct payloads only at their runtime boundary."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.cursor/update-state-tree",
+      "path": "code@3.1.0.1.0",
+      "expression": [
+        "unsafe-coerce",
+        "cursor",
+        [
+          "::",
+          "List",
+          "Tag"
+        ]
+      ],
+      "plan": "Removed: use the actual generic cursor list directly; no List<Tag> coercion."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.ffi.browser/host-element",
+      "path": "code@3.0",
+      "expression": [
+        "unsafe-coerce",
+        "element",
+        "'js-ffi.browser/DomElementHost"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.ffi.browser/narrow-element",
+      "path": "code@3.0",
+      "expression": [
+        "unsafe-coerce",
+        "host-element",
+        "'respo.dom/DomElement"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.render.diff/props-as-list",
+      "path": "code@3.2.0",
+      "expression": [
+        "unsafe-coerce",
+        "props",
+        [
+          "::",
+          "'List",
+          [
+            "::",
+            "'List",
+            "'Dynamic"
+          ]
+        ]
+      ],
+      "plan": "Replace raw child pairs/nodes with typed ChildPair and RenderNode; keep heterogeneous DOM property payloads open."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.render.patch/add-style",
+      "path": "code@3.2.1.0",
+      "expression": [
+        "unsafe-coerce",
+        [
+          ".-style",
+          "target"
+        ],
+        "JsObject"
+      ],
+      "plan": "Use typed DOM capabilities for host nodes; keep heterogeneous style/property payload validation at the DOM boundary."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.render.patch/insert-before-target!",
+      "path": "code@3.3.1.1.0.1.0",
+      "expression": [
+        "unsafe-coerce",
+        "parent",
+        "'respo.dom/DomElement"
+      ],
+      "plan": "Use typed DOM capabilities for host nodes; keep heterogeneous style/property payload validation at the DOM boundary."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.render.patch/replace-prop",
+      "path": "code@3.2.2.1.1.1.0",
+      "expression": [
+        "unsafe-coerce",
+        [
+          ".-dataset",
+          "target"
+        ],
+        "JsObject"
+      ],
+      "plan": "Use typed DOM capabilities for host nodes; keep heterogeneous style/property payload validation at the DOM boundary."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.render.patch/replace-style",
+      "path": "code@3.2.1.0",
+      "expression": [
+        "unsafe-coerce",
+        [
+          ".-style",
+          "target"
+        ],
+        "JsObject"
+      ],
+      "plan": "Use typed DOM capabilities for host nodes; keep heterogeneous style/property payload validation at the DOM boundary."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.util.dom/create-shared-canvas-context",
+      "path": "code@3.2.0.0",
+      "expression": [
+        "unsafe-coerce",
+        [
+          "browser/create-element",
+          "|canvas"
+        ],
+        "'respo.dom/DomCanvasElement"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.util.dom/text-width",
+      "path": "code@3.2.1.0.1.0",
+      "expression": [
+        "unsafe-coerce",
+        "shared-canvas-context",
+        "'respo.dom/DomCanvasContext"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.util.format/event->edn",
+      "path": "code@3.1.1.1.0",
+      "expression": [
+        "unsafe-coerce",
+        "event",
+        "'respo.dom/DomKeyboardEvent"
+      ],
+      "plan": "Use typed RenderNode traversal for tree narrowing; retain native event, scalar formatting, and heterogeneous attribute boundaries."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.util.format/input-event-checked?",
+      "path": "code@3.1.0.1.0",
+      "expression": [
+        "unsafe-coerce",
+        "event",
+        "'respo.dom/DomInputEvent"
+      ],
+      "plan": "Use typed RenderNode traversal for tree narrowing; retain native event, scalar formatting, and heterogeneous attribute boundaries."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.util.format/input-event-value",
+      "path": "code@3.1.0.1.0",
+      "expression": [
+        "unsafe-coerce",
+        "event",
+        "'respo.dom/DomInputEvent"
+      ],
+      "plan": "Use typed RenderNode traversal for tree narrowing; retain native event, scalar formatting, and heterogeneous attribute boundaries."
+    },
+    {
+      "operation": "unsafe-coerce",
+      "definition": "respo.util.list/pick-event",
+      "path": "code@3.1.1.1.2.0",
+      "expression": [
+        "unsafe-coerce",
+        "raw-on",
+        [
+          "::",
+          "Map",
+          "Tag",
+          "respo.schema/EventHandler"
+        ]
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.render.diff/find-children-diffs",
+      "path": "code@3.2.2.1.1.2.1.0",
+      "expression": [
+        "assert-type",
+        [
+          "respo.util.list/pair-value",
+          "pair"
+        ],
+        "'Struct"
+      ],
+      "plan": "Replace raw child pairs/nodes with typed ChildPair and RenderNode; keep heterogeneous DOM property payloads open."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.render.diff/find-children-diffs",
+      "path": "code@3.2.3.1.1.2.1.0",
+      "expression": [
+        "assert-type",
+        [
+          "respo.util.list/pair-value",
+          "pair"
+        ],
+        "'Struct"
+      ],
+      "plan": "Replace raw child pairs/nodes with typed ChildPair and RenderNode; keep heterogeneous DOM property payloads open."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.render.diff/find-children-diffs",
+      "path": "code@3.2.4.1.3.2.1.1.2.1.0",
+      "expression": [
+        "assert-type",
+        [
+          "respo.util.list/pair-value",
+          "pair"
+        ],
+        "'Struct"
+      ],
+      "plan": "Replace raw child pairs/nodes with typed ChildPair and RenderNode; keep heterogeneous DOM property payloads open."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.render.diff/find-children-diffs",
+      "path": "code@3.2.4.1.3.3.1.1.2.1.0",
+      "expression": [
+        "assert-type",
+        [
+          "respo.util.list/pair-value",
+          "pair"
+        ],
+        "'Struct"
+      ],
+      "plan": "Replace raw child pairs/nodes with typed ChildPair and RenderNode; keep heterogeneous DOM property payloads open."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.render.diff/find-children-diffs",
+      "path": "code@3.2.4.1.3.4.1.2.2.1.0.1.0",
+      "expression": [
+        "assert-type",
+        [
+          "val-of-first",
+          "new-children"
+        ],
+        "'Struct"
+      ],
+      "plan": "Replace raw child pairs/nodes with typed ChildPair and RenderNode; keep heterogeneous DOM property payloads open."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.render.diff/find-children-diffs",
+      "path": "code@3.2.4.1.3.4.1.2.3.1.4.0",
+      "expression": [
+        "assert-type",
+        [
+          "val-of-first",
+          "old-children"
+        ],
+        "'Struct"
+      ],
+      "plan": "Replace raw child pairs/nodes with typed ChildPair and RenderNode; keep heterogeneous DOM property payloads open."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.test.dom/svg-host-smoke!",
+      "path": "code@3.1.0.1.2.0",
+      "expression": [
+        "assert-type",
+        [
+          "{}",
+          [
+            ":fill",
+            "|red"
+          ],
+          [
+            ":strokeWidth",
+            "2"
+          ]
+        ],
+        "respo.schema/DomProps"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.test.dom/svg-host-smoke!",
+      "path": "code@3.1.1.1.2.0",
+      "expression": [
+        "assert-type",
+        [
+          "{}",
+          [
+            ":width",
+            "320"
+          ]
+        ],
+        "respo.schema/DomProps"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.test.dom/svg-host-smoke!",
+      "path": "code@3.1.1.1.4.2.0",
+      "expression": [
+        "assert-type",
+        [
+          "{}"
+        ],
+        "respo.schema/DomProps"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.test.dom/svg-host-smoke!",
+      "path": "code@3.1.1.1.4.3.2.0",
+      "expression": [
+        "assert-type",
+        [
+          "{}"
+        ],
+        "respo.schema/DomProps"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.test.dom/svg-host-smoke!",
+      "path": "code@3.2.2.2.2.0",
+      "expression": [
+        "assert-type",
+        [
+          "{}",
+          [
+            ":r",
+            "5"
+          ]
+        ],
+        "respo.schema/DomProps"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.test.main/main!",
+      "path": "code@8.1.1.1.1.0",
+      "expression": [
+        "assert-type",
+        [
+          "[]"
+        ],
+        [
+          "::",
+          "'List",
+          "'respo.resource/ResourceAction"
+        ]
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.test.main/main!",
+      "path": "code@8.3.2.2.0",
+      "expression": [
+        "assert-type",
+        [
+          "option:unwrap",
+          [
+            "first",
+            "@actions"
+          ]
+        ],
+        "'respo.resource/ResourceAction"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.test.main/main!",
+      "path": "code@8.4.1.3.2.2.0",
+      "expression": [
+        "assert-type",
+        [
+          "option:unwrap",
+          [
+            "get",
+            "@actions",
+            "1"
+          ]
+        ],
+        "'respo.resource/ResourceAction"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.test.main/main!",
+      "path": "code@9.1.0.1.1.0",
+      "expression": [
+        "assert-type",
+        [
+          "[]"
+        ],
+        [
+          "::",
+          "'List",
+          "'respo.resource/ResourceAction"
+        ]
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.test.main/main!",
+      "path": "code@10.1.0.1.1.0",
+      "expression": [
+        "assert-type",
+        [
+          "[]"
+        ],
+        [
+          "::",
+          "'List",
+          "'respo.resource/ResourceAction"
+        ]
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.app.comp.todolist/comp-todolist",
+      "path": "code@3.1.1.1.0",
+      "expression": [
+        "assert-type",
+        [
+          "either",
+          [
+            "&map:get",
+            "states",
+            ":data"
+          ],
+          [
+            "respo.app.schema/TodoState",
+            ":draft",
+            "|",
+            ":locked?",
+            "false",
+            ":message",
+            "|Press Ctrl+M to change message"
+          ]
+        ],
+        "respo.app.schema/TodoState"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.app.comp.todolist/comp-todolist",
+      "path": "code@3.2.0",
+      "expression": [
+        "assert-type",
+        "state",
+        "'respo.app.schema/TodoState"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.app.comp.todolist/comp-todolist",
+      "path": "code@3.3.0",
+      "expression": [
+        "assert-type",
+        "tasks",
+        [
+          "::",
+          "'List",
+          "'respo.app.schema/Task"
+        ]
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.app.comp.todolist/comp-todolist",
+      "path": "code@3.4.3.3.2.1.6.1.2.1.4.1.1.0",
+      "expression": [
+        "assert-type",
+        [
+          "&map:get",
+          "e",
+          ":value"
+        ],
+        "String"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.core/run-effect-ops!",
+      "path": "code@3.2.2.1.1.0.0",
+      "expression": [
+        "assert-type",
+        "run!",
+        "Fn"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.core/run-effect-ops!",
+      "path": "code@3.2.3.1.1.0.0",
+      "expression": [
+        "assert-type",
+        "run!",
+        "Fn"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.core/run-effect-ops!",
+      "path": "code@3.2.4.1.1.0.0",
+      "expression": [
+        "assert-type",
+        "run!",
+        "Fn"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.core/run-effect-ops!",
+      "path": "code@3.2.5.1.1.0.0",
+      "expression": [
+        "assert-type",
+        "run!",
+        "Fn"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.core/decorate-defcomp",
+      "path": "code@3.3.1.2.1.0.1.0",
+      "expression": [
+        "assert-type",
+        "tree",
+        "'respo.schema/Element"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.core/decorate-defcomp",
+      "path": "code@3.3.1.2.1.1.1.0",
+      "expression": [
+        "assert-type",
+        [
+          "assoc",
+          "element",
+          ":attrs",
+          [
+            "loop",
+            [
+              [
+                "before",
+                [
+                  "[]"
+                ]
+              ],
+              [
+                "remaining",
+                [
+                  ":attrs",
+                  "element"
+                ]
+              ]
+            ],
+            [
+              "if",
+              [
+                "empty?",
+                "remaining"
+              ],
+              [
+                "append",
+                "before",
+                [
+                  "[]",
+                  ":data-comp",
+                  "name"
+                ]
+              ],
+              [
+                "let",
+                [
+                  [
+                    "pair",
+                    [
+                      "respo.util.list/first-pair",
+                      "remaining"
+                    ]
+                  ],
+                  [
+                    "order",
+                    [
+                      "&compare",
+                      [
+                        "respo.util.list/pair-key",
+                        "pair"
+                      ],
+                      ":data-comp"
+                    ]
+                  ]
+                ],
+                [
+                  "if",
+                  [
+                    "&<",
+                    "order",
+                    "0"
+                  ],
+                  [
+                    "recur",
+                    [
+                      "append",
+                      "before",
+                      "pair"
+                    ],
+                    [
+                      "&list:rest",
+                      "remaining"
+                    ]
+                  ],
+                  [
+                    "concat",
+                    [
+                      "assert-type",
+                      "before",
+                      "'List"
+                    ],
+                    [
+                      "[]",
+                      [
+                        "[]",
+                        ":data-comp",
+                        "name"
+                      ]
+                    ],
+                    [
+                      "if",
+                      [
+                        "&=",
+                        "order",
+                        "0"
+                      ],
+                      [
+                        "&list:rest",
+                        "remaining"
+                      ],
+                      "remaining"
+                    ]
+                  ]
+                ]
+              ]
+            ]
+          ]
+        ],
+        "'Struct"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.core/decorate-defcomp",
+      "path": "code@3.3.1.2.1.1.1.1.3.2.3.2.3.1.0",
+      "expression": [
+        "assert-type",
+        "before",
+        "'List"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.core/extract-effects-list",
+      "path": "code@3.3.2.2.2.2.3.1.8.2.0",
+      "expression": [
+        "assert-type",
+        "node-tree",
+        "Struct"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.core/extract-effects-list",
+      "path": "code@3.3.2.2.2.3.1.1.1.2.2.0",
+      "expression": [
+        "assert-type",
+        "item",
+        "Struct"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.core/extract-effects-list",
+      "path": "code@3.3.3.2.8.2.0",
+      "expression": [
+        "assert-type",
+        "markup-tree",
+        "Struct"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.util.format/mute-element",
+      "path": "code@3.2.1.0.1.0",
+      "expression": [
+        "assert-type",
+        "element",
+        "'respo.schema/Component"
+      ],
+      "plan": "Use typed RenderNode traversal for tree narrowing; retain native event, scalar formatting, and heterogeneous attribute boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.util.format/mute-element",
+      "path": "code@3.3.1.0.1.0",
+      "expression": [
+        "assert-type",
+        "element",
+        "'respo.schema/Element"
+      ],
+      "plan": "Use typed RenderNode traversal for tree narrowing; retain native event, scalar formatting, and heterogeneous attribute boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.util.format/mute-element",
+      "path": "code@3.3.2.14.2.2.2.2.2.1.0",
+      "expression": [
+        "assert-type",
+        "child",
+        "'Struct"
+      ],
+      "plan": "Use typed RenderNode traversal for tree narrowing; retain native event, scalar formatting, and heterogeneous attribute boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.controller.resolve/find-event-target",
+      "path": "code@5.1.0.1.0",
+      "expression": [
+        "assert-type",
+        [
+          "loop",
+          [
+            [
+              "m-option",
+              [
+                "get-markup-at",
+                "element",
+                "coord"
+              ]
+            ]
+          ],
+          [
+            "match",
+            "m-option",
+            [
+              [
+                ":none"
+              ],
+              [
+                "Option",
+                ":none"
+              ]
+            ],
+            [
+              [
+                ":some",
+                "m"
+              ],
+              [
+                "if",
+                [
+                  "component?",
+                  "m"
+                ],
+                [
+                  "recur",
+                  [
+                    "component-tree",
+                    "m"
+                  ]
+                ],
+                [
+                  "Option",
+                  ":some",
+                  [
+                    "assert-type",
+                    "m",
+                    "'respo.schema/Element"
+                  ]
+                ]
+              ]
+            ]
+          ]
+        ],
+        [
+          "::",
+          "'Option",
+          "'respo.schema/Element"
+        ]
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.controller.resolve/find-event-target",
+      "path": "code@5.1.0.1.1.2.3.1.3.2.0",
+      "expression": [
+        "assert-type",
+        "m",
+        "'respo.schema/Element"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.core/create-list-element",
+      "path": "code@4.1.2.1.3.0",
+      "expression": [
+        "assert-type",
+        [
+          "expect-function",
+          "ref-value",
+          "|[Respo/create-list-element] expected :ref to be a function or nil"
+        ],
+        [
+          "::",
+          "Fn",
+          [
+            "{}",
+            [
+              ":args",
+              [
+                "[]",
+                [
+                  "::",
+                  "JsNullish",
+                  "respo.dom/DomElement"
+                ]
+              ]
+            ],
+            [
+              ":return",
+              "Unit"
+            ]
+          ]
+        ]
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.core/create-list-element",
+      "path": "code@4.1.4.1.1.0",
+      "expression": [
+        "assert-type",
+        [
+          "&map:to-list",
+          [
+            "either",
+            [
+              "&map:get",
+              "props-map",
+              ":style"
+            ],
+            [
+              "{}"
+            ]
+          ]
+        ],
+        [
+          "::",
+          "List",
+          [
+            "::",
+            "List",
+            "Dynamic"
+          ]
+        ]
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.memo/memo-value-by",
+      "path": "code@3.3.1.3.1.3.1.2.1.0",
+      "expression": [
+        "assert-type",
+        "entry",
+        "respo.memo/MemoEntry"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.memo/memo-value-by",
+      "path": "code@3.3.3.1.0",
+      "expression": [
+        "assert-type",
+        "resolved-entry",
+        "respo.memo/MemoEntry"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.app.comp.task/comp-task",
+      "path": "code@3.2.2.5.1.3.1.2.1.0.1.1.0",
+      "expression": [
+        "assert-type",
+        [
+          "&map:get",
+          "e",
+          ":value"
+        ],
+        "String"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.app.task/normalize-task",
+      "path": "code@3.1.1.1.0.1.0",
+      "expression": [
+        "assert-type",
+        "data",
+        "'respo.app.schema/Task"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.app.task/normalize-tasks",
+      "path": "code@3.1.0.1.0",
+      "expression": [
+        "assert-type",
+        [
+          "[]"
+        ],
+        [
+          "::",
+          "'List",
+          "'respo.app.schema/Task"
+        ]
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.app.updater/updater",
+      "path": "code@3.9.1.2.3.1.0.1.0",
+      "expression": [
+        "assert-type",
+        [
+          "&list:first",
+          "tasks"
+        ],
+        "'respo.app.schema/Task"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.comp.global-keydown/effect-listen-keyboard",
+      "path": "code@4.1.1.1.0.1.2.0",
+      "expression": [
+        "assert-type",
+        "raw-disabled",
+        [
+          "::",
+          "'Set",
+          "'String"
+        ]
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.controller.client/traverse-and-call",
+      "path": "code@4.2.2.3.1.0.1.0",
+      "expression": [
+        "assert-type",
+        [
+          "&list:nth",
+          "pair",
+          "1"
+        ],
+        "'Struct"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.controller.resolve/build-deliver-event",
+      "path": "code@3.3.1.1.1.0",
+      "expression": [
+        "assert-type",
+        [
+          "match",
+          "target-element-option",
+          [
+            [
+              ":none"
+            ],
+            [
+              "do",
+              [
+                "js/console.warn",
+                "|found-no-element",
+                "coord",
+                "event-name"
+              ],
+              [
+                "Option",
+                ":none"
+              ]
+            ]
+          ],
+          [
+            [
+              ":some",
+              "target-element"
+            ],
+            [
+              "get",
+              [
+                "element-event",
+                "target-element"
+              ],
+              "event-name"
+            ]
+          ]
+        ],
+        [
+          "::",
+          "'Option",
+          "'respo.schema/EventHandler"
+        ]
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.controller.resolve/find-child-by-key",
+      "path": "code@3.2.3.2.2.2.0",
+      "expression": [
+        "assert-type",
+        [
+          "respo.util.list/pair-value",
+          "pair"
+        ],
+        "'Struct"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.core/>>",
+      "path": "code@3.1.0.1.0",
+      "expression": [
+        "assert-type",
+        [
+          "either",
+          [
+            "&map:get",
+            "states",
+            ":cursor"
+          ],
+          [
+            "[]"
+          ]
+        ],
+        [
+          "::",
+          "List",
+          "Dynamic"
+        ]
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.core/create-element",
+      "path": "code@3.1.2.1.3.0",
+      "expression": [
+        "assert-type",
+        [
+          "expect-function",
+          "ref-value",
+          "|[Respo/create-element] expected :ref to be a function or nil"
+        ],
+        [
+          "::",
+          "Fn",
+          [
+            "{}",
+            [
+              ":args",
+              [
+                "[]",
+                [
+                  "::",
+                  "JsNullish",
+                  "respo.dom/DomElement"
+                ]
+              ]
+            ],
+            [
+              ":return",
+              "Unit"
+            ]
+          ]
+        ]
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.core/create-list-element-open",
+      "path": "code@3.3.0",
+      "expression": [
+        "assert-type",
+        "children",
+        [
+          "::",
+          "'List",
+          [
+            "::",
+            "'List",
+            "'Dynamic"
+          ]
+        ]
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.core/mount-app!",
+      "path": "code@5.6.1.0",
+      "expression": [
+        "assert-type",
+        [
+          "&buf-list:to-list",
+          "changes"
+        ],
+        [
+          "::",
+          "List",
+          "respo.schema/DomPatch"
+        ]
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.core/normalize-dom-props",
+      "path": "code@3.2.1.1.0.1.0",
+      "expression": [
+        "assert-type",
+        "&map:filter-kv",
+        [
+          "::",
+          "'Fn",
+          [
+            "{}",
+            [
+              ":args",
+              [
+                "[]",
+                [
+                  "::",
+                  "'Map",
+                  "'Tag",
+                  "'Dynamic"
+                ],
+                [
+                  "::",
+                  "'Fn",
+                  [
+                    "{}",
+                    [
+                      ":args",
+                      [
+                        "[]",
+                        "'Tag",
+                        "'Dynamic"
+                      ]
+                    ],
+                    [
+                      ":return",
+                      "'Bool"
+                    ]
+                  ]
+                ]
+              ]
+            ],
+            [
+              ":return",
+              [
+                "::",
+                "'Map",
+                "'Tag",
+                "'Dynamic"
+              ]
+            ]
+          ]
+        ]
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.core/realize-ssr!",
+      "path": "code@5.8.1.0",
+      "expression": [
+        "assert-type",
+        [
+          "&buf-list:to-list",
+          "changes"
+        ],
+        [
+          "::",
+          "List",
+          "respo.schema/DomPatch"
+        ]
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.core/rerender-app!",
+      "path": "code@3.3.1.3.3.1.0.1.0",
+      "expression": [
+        "assert-type",
+        [
+          "&buf-list:to-list",
+          "changes"
+        ],
+        [
+          "::",
+          "List",
+          "respo.schema/DomPatch"
+        ]
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.core/run-first-task!",
+      "path": "code@3.1.0.1.0",
+      "expression": [
+        "assert-type",
+        [
+          "&list:nth",
+          "tasks",
+          "0"
+        ],
+        "Fn"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.css/create-style!",
+      "path": "code@4.3.2.1.1.0.1.0",
+      "expression": [
+        "assert-type",
+        "cached",
+        "'respo.css/StyleCacheEntry"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.cursor/coerce-cursor-test-state",
+      "path": "code@3.0",
+      "expression": [
+        "assert-type",
+        "value",
+        "CursorTestState"
+      ],
+      "plan": "Keep heterogeneous application state representation; use generic path keys and narrow Map/Struct payloads only at their runtime boundary."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.cursor/get-state-at",
+      "path": "code@3.2.3.1.1.1.0",
+      "expression": [
+        "assert-type",
+        [
+          "&list:first",
+          "xs"
+        ],
+        "'Tag"
+      ],
+      "plan": "Removed: indexed access preserves the generic key type, including String."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.memo/memo-entry-args",
+      "path": "code@3.1.0",
+      "expression": [
+        "assert-type",
+        "entry",
+        "respo.memo/MemoEntry"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.memo/memo-entry-value",
+      "path": "code@3.1.0",
+      "expression": [
+        "assert-type",
+        "entry",
+        "respo.memo/MemoEntry"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.render.diff/collect-event-refreshing",
+      "path": "code@3.2.1.2.2.2.2.2.4.0",
+      "expression": [
+        "assert-type",
+        "child",
+        "'Struct"
+      ],
+      "plan": "Replace raw child pairs/nodes with typed ChildPair and RenderNode; keep heterogeneous DOM property payloads open."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.render.diff/find-element-diffs",
+      "path": "code@5.2.5.1.2.3.1.2.4.0",
+      "expression": [
+        "assert-type",
+        "new-tree",
+        "'Struct"
+      ],
+      "plan": "Replace raw child pairs/nodes with typed ChildPair and RenderNode; keep heterogeneous DOM property payloads open."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.render.effect/collect-mounting",
+      "path": "code@3.2.1.2.2.2.2.2.4.0",
+      "expression": [
+        "assert-type",
+        "child",
+        "'Struct"
+      ],
+      "plan": "Use RenderNode variant narrowing and concrete Element/Component/Effect contracts to remove structural assertions."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.render.effect/collect-unmounting",
+      "path": "code@3.2.1.1.2.2.2.2.4.0",
+      "expression": [
+        "assert-type",
+        "child",
+        "'Struct"
+      ],
+      "plan": "Use RenderNode variant narrowing and concrete Element/Component/Effect contracts to remove structural assertions."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.render.html/coerce-pairs",
+      "path": "code@3.0",
+      "expression": [
+        "assert-type",
+        "value",
+        [
+          "::",
+          "'List",
+          [
+            "::",
+            "'List",
+            "'Dynamic"
+          ]
+        ]
+      ],
+      "plan": "Use typed RenderNode traversal for tree narrowing; retain native event, scalar formatting, and heterogeneous attribute boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.render.html/props->html",
+      "path": "code@3.1.0.1.0",
+      "expression": [
+        "assert-type",
+        [
+          "&map:to-list",
+          "props"
+        ],
+        [
+          "::",
+          "'List",
+          [
+            "::",
+            "'List",
+            "'Dynamic"
+          ]
+        ]
+      ],
+      "plan": "Use typed RenderNode traversal for tree narrowing; retain native event, scalar formatting, and heterogeneous attribute boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.util.detect/component-effects",
+      "path": "code@3.1.0.1.0",
+      "expression": [
+        "assert-type",
+        "value",
+        "'respo.schema/Component"
+      ],
+      "plan": "Use RenderNode variant narrowing and concrete Element/Component/Effect contracts to remove structural assertions."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.util.detect/component-listeners",
+      "path": "code@3.1.0.1.0",
+      "expression": [
+        "assert-type",
+        "value",
+        "'respo.schema/Component"
+      ],
+      "plan": "Use RenderNode variant narrowing and concrete Element/Component/Effect contracts to remove structural assertions."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.util.detect/component-name",
+      "path": "code@3.1.0.1.0",
+      "expression": [
+        "assert-type",
+        "value",
+        "'respo.schema/Component"
+      ],
+      "plan": "Use RenderNode variant narrowing and concrete Element/Component/Effect contracts to remove structural assertions."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.util.detect/component-tree",
+      "path": "code@3.1.0.1.0",
+      "expression": [
+        "assert-type",
+        "value",
+        "'respo.schema/Component"
+      ],
+      "plan": "Use RenderNode variant narrowing and concrete Element/Component/Effect contracts to remove structural assertions."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.util.detect/effect-args",
+      "path": "code@3.1.0.1.0",
+      "expression": [
+        "assert-type",
+        "value",
+        "'respo.schema/Effect"
+      ],
+      "plan": "Use RenderNode variant narrowing and concrete Element/Component/Effect contracts to remove structural assertions."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.util.detect/effect-method",
+      "path": "code@3.1.0.1.0",
+      "expression": [
+        "assert-type",
+        "value",
+        "'respo.schema/Effect"
+      ],
+      "plan": "Use RenderNode variant narrowing and concrete Element/Component/Effect contracts to remove structural assertions."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.util.detect/effect-name",
+      "path": "code@3.1.0.1.0",
+      "expression": [
+        "assert-type",
+        "value",
+        "'respo.schema/Effect"
+      ],
+      "plan": "Use RenderNode variant narrowing and concrete Element/Component/Effect contracts to remove structural assertions."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.util.detect/element-attrs",
+      "path": "code@3.1.0.1.0",
+      "expression": [
+        "assert-type",
+        "value",
+        "'respo.schema/Element"
+      ],
+      "plan": "Use RenderNode variant narrowing and concrete Element/Component/Effect contracts to remove structural assertions."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.util.detect/element-children",
+      "path": "code@3.1.0.1.0",
+      "expression": [
+        "assert-type",
+        "value",
+        "'respo.schema/Element"
+      ],
+      "plan": "Use RenderNode variant narrowing and concrete Element/Component/Effect contracts to remove structural assertions."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.util.detect/element-event",
+      "path": "code@3.1.0.1.0",
+      "expression": [
+        "assert-type",
+        "value",
+        "'respo.schema/Element"
+      ],
+      "plan": "Use RenderNode variant narrowing and concrete Element/Component/Effect contracts to remove structural assertions."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.util.detect/element-name",
+      "path": "code@3.1.0.1.0",
+      "expression": [
+        "assert-type",
+        "value",
+        "'respo.schema/Element"
+      ],
+      "plan": "Use RenderNode variant narrowing and concrete Element/Component/Effect contracts to remove structural assertions."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.util.detect/element-ref",
+      "path": "code@3.1.0.1.0",
+      "expression": [
+        "assert-type",
+        "value",
+        "'respo.schema/Element"
+      ],
+      "plan": "Use RenderNode variant narrowing and concrete Element/Component/Effect contracts to remove structural assertions."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.util.detect/element-style",
+      "path": "code@3.1.0.1.0",
+      "expression": [
+        "assert-type",
+        "value",
+        "'respo.schema/Element"
+      ],
+      "plan": "Use RenderNode variant narrowing and concrete Element/Component/Effect contracts to remove structural assertions."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.util.detect/listener-handler",
+      "path": "code@3.1.0.1.0",
+      "expression": [
+        "assert-type",
+        "value",
+        "'respo.schema/RespoListener"
+      ],
+      "plan": "Use RenderNode variant narrowing and concrete Element/Component/Effect contracts to remove structural assertions."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.util.format/coerce-element",
+      "path": "code@3.0",
+      "expression": [
+        "assert-type",
+        "markup",
+        "respo.schema/Element"
+      ],
+      "plan": "Use typed RenderNode traversal for tree narrowing; retain native event, scalar formatting, and heterogeneous attribute boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.util.format/hsl",
+      "path": "code@4.1.0.1.3.0",
+      "expression": [
+        "assert-type",
+        [
+          "&list:first",
+          "alpha-values"
+        ],
+        "Number"
+      ],
+      "plan": "Use typed RenderNode traversal for tree narrowing; retain native event, scalar formatting, and heterogeneous attribute boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.util.format/purify-element-node",
+      "path": "code@3.1.0.1.0",
+      "expression": [
+        "assert-type",
+        "markup",
+        "respo.schema/Element"
+      ],
+      "plan": "Use typed RenderNode traversal for tree narrowing; retain native event, scalar formatting, and heterogeneous attribute boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.util.list/first-pair",
+      "path": "code@3.0",
+      "expression": [
+        "assert-type",
+        [
+          "&list:first",
+          "entries"
+        ],
+        [
+          "::",
+          "'List",
+          "'Dynamic"
+        ]
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.util.list/index-of-dynamic",
+      "path": "code@3.2.3.2.2.0",
+      "expression": [
+        "assert-type",
+        "idx",
+        "'Number"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.util.list/pair-key",
+      "path": "code@3.0",
+      "expression": [
+        "assert-type",
+        [
+          "&list:nth",
+          "pair",
+          "0"
+        ],
+        "'Tag"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    },
+    {
+      "operation": "assert-type",
+      "definition": "respo.util.list/pick-event",
+      "path": "code@3.1.2.1.2.2.2.4.0",
+      "expression": [
+        "assert-type",
+        "v",
+        "respo.schema/EventHandler"
+      ],
+      "plan": "Review the declared input and container contract; keep validation at real open-data boundaries."
+    }
+  ]
+}
