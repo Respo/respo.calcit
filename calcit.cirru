@@ -2311,6 +2311,13 @@
           :examples $ []
           :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
             :args $ [] 'respo.schema/DomProps
+          :tests $ [] $ %{} 'TestEntry (:name |paste-event-prop)
+            :code $ quote $ let
+                handler $ fn (event dispatch!) &unit
+                element $ textarea $ {} (:on-paste handler)
+              assert= handler $ option:unwrap $ get (:event element) :paste
+              assert= ([]) (:attrs element)
+            :tags $ #{} :unit
         'title $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn title (props & children) (create-element :title props & children)
           :examples $ []
@@ -4976,6 +4983,7 @@
             :on-keyup $ :: 'JsNullish 'respo.schema/EventHandler
             :on-change $ :: 'JsNullish 'respo.schema/EventHandler
             :on-mousedown $ :: 'JsNullish 'respo.schema/EventHandler
+            :on-paste $ :: 'JsNullish 'respo.schema/EventHandler
             :on-mouseup $ :: 'JsNullish 'respo.schema/EventHandler
             :innerHTML $ :: 'JsNullish 'String
             :rel $ :: 'JsNullish 'String
