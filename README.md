@@ -136,7 +136,7 @@ let
     comp-container $ fn (state) state
   dispatch! $ :: :TODO 1 2
 
-  ; build the tree inside a managed memo frame, then render to the DOM
+  ; 在受管理的 memo 帧内构建组件树，再渲染到 DOM
   defn render-app! ()
     respo.core/render-with! mount-point
       fn () $ comp-container @*store
@@ -153,7 +153,7 @@ let
     render-app!
 ```
 
-Memoize keyed list components inside the tree built by `render-with!`:
+在 `render-with!` 构建的组件树中，为带业务 key 的列表组件启用缓存：
 
 ```cirru.no-check
 ; ns app.demo $ :require
@@ -168,12 +168,12 @@ list->
         [] task-id $ memo-comp-by task-id comp-task (>> states task-id) task
 ```
 
-`memo-comp-by` matches the component function, key, and complete argument list. Each
-`render-with!` call records active keys and prunes entries that disappeared from the
-latest tree. Passing `nil` as the key bypasses caching. Respo manages this cache
-internally, so applications do not need `memof` for component memoization. See
-[Render list: memoization and memof migration](docs/guide/render-list.md#memoizing-components)
-for setup, lifecycle, and migration details.
+`memo-comp-by` 按组件函数、key 和完整参数列表匹配缓存。每次 `render-with!` 调用都会记录
+活跃的 key，并清除已从最新组件树中消失的条目。外层 memo 命中时，会保留其嵌套依赖的缓存。
+在受管理的帧之外调用时，直接计算结果，不读取或增加缓存；传入 `nil` key 也会绕过缓存。
+Respo 内部管理这些条目，应用无需再依赖 `memof` 缓存组件。
+如果组件树构建抛出异常，当前帧会被丢弃，保留上次成功提交的缓存，并重新抛出原错误。
+配置、生命周期和迁移方式见[列表渲染指南](docs/guide/render-list.md#memoizing-components)。
 
 Reset virtual DOM caching during hot code swapping, and rerender:
 

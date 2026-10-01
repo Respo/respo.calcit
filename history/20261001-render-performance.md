@@ -1,6 +1,6 @@
 # Patch 坐标查询与重复 key 检测 — #191
 
-性能测量基线为 #204 的 `5f302951c5dfd9e067676fc8b5105c7a8d1bfc6a`。Calcit 和 @calcit/procs `0.28.0-alpha.3`、js-ffi `0.2.1-alpha.11`、Node `24.4.1`，macOS arm64、Chrome `154.0.0.0`。#204 已合并；本分支已同步 main `87f2242`。
+性能测量基线为 #204 的 `5f302951c5dfd9e067676fc8b5105c7a8d1bfc6a`。Calcit 和 @calcit/procs `0.28.0-alpha.3`、js-ffi `0.2.1-alpha.11`、Node `24.4.1`，macOS arm64、Chrome `154.0.0.0`。#204 已合并；本分支已同步 main `55c0e35`（包含 #205）。
 
 ## 实现
 
@@ -15,7 +15,7 @@
 
 修复前，最终挂载位置、跨 effect 的二次移动顺序、移除/追加后的二次移动三个回归均失败；修复后通过。Chrome 中新增节点的 ref 读到索引 1、顺序 `[0,9,2,1,3]`，其 top 与前一兄弟的 bottom 都为 969；第二 move 批次顺序正确。原生和强制 fallback 的 keyed fixtures 均保持节点身份、焦点、输入、选区、滚动及生命周期计数，控制台无错误。浏览器 deep/long-list/dispatch/index 原型四个负载的结果校验通过，其中两种 dispatch 路径均调用并投递 5000 次。
 
-合并后验证：61 项原生测试、19 项 keyed-moves/patch-lookup/SSR/nullish Node 回归通过；严格检查、质量基线、DOM host、DomPatch 正负类型检查通过；63 份文档中的 113 个可检查片段通过；Vite 构建通过。
+合并后验证：67 项原生测试、22 项 memo/keyed-moves/patch-lookup/SSR/nullish Node 回归通过；严格检查、质量基线、DOM host、DomPatch 正负类型检查通过；64 份文档中的 113 个可检查片段通过；Vite 构建通过。
 
 ## 测量复现
 
