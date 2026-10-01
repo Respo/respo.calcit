@@ -55,9 +55,9 @@ list->
       [] (:id task) (task-component task)
 ```
 
-Child elements are rendered in the order that items appear in the list. Use stable, unique keys and profile large lists with your application workload.
+子元素按列表中的顺序渲染。请使用稳定且唯一的业务 key，并用实际应用负载测量大列表性能。
 
-Development mode reports the first key in the original list that appears more than once. Detection uses hash membership rather than comparing every pair; structurally equal Calcit keys still count as duplicates, and hash collisions are checked with deep equality. The expected key traversal cost is linear, excluding hashing/comparing complex keys and adversarial collisions.
+开发模式报告原列表中最先出现的重复 key。检测使用哈希成员查询；结构相等的 Calcit key 仍视为重复，哈希碰撞通过深度相等检查区分。除复杂 key 的哈希与比较成本、极端碰撞外，预期遍历成本为线性。
 
 `list->` validates each `[key child]` pair, then omits pairs whose child is `nil`, just as ordinary elements omit nil children. Adding or deleting a nil-valued pair creates no DOM node. Changing an element to nil removes that node; changing it back restores the node at its keyed position. Remaining children keep their original keys and order. Every pair must still have a non-nil key, including pairs that will be omitted; invalid child values are rejected before filtering.
 

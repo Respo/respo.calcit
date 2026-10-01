@@ -3379,9 +3379,7 @@
                               respo.util.list/pair-value $ option:unwrap $ nth middle-new-children new-position
                               , 'Struct
                             child-coord $ append coord key
-                            appended-position $ + index-offset $ assert-type (&map:get source-index key) 'Number
                           collect! $ DomPatch :append-element child-coord n-coord child
-                          collect-mounting collect! child-coord (append n-coord appended-position) child true
                       loop
                           remaining $ reverse source-order
                           anchor $ if (> suffix 0)
@@ -3397,6 +3395,16 @@
                                   assert-type anchor $ :: 'Option 'Number
                                   fn (position) (+ index-offset position)
                             recur rest-sources $ %:: Option :some source
+                      &doseq (key added-keys)
+                        let
+                            new-position $ assert-type (&map:get new-index key) 'Number
+                            child $ assert-type
+                              respo.util.list/pair-value $ option:unwrap $ nth middle-new-children new-position
+                              , 'Struct
+                            child-coord $ append coord key
+                          collect-mounting collect! child-coord
+                            append n-coord $ + index-offset new-position
+                            , child true
                 (:some offset)
                   let
                       size $ count old-children
@@ -4661,6 +4669,7 @@
               aset target event-prop $ fn (event)
                 (listener-builder event-name) event coord
                 .!stopPropagation event
+            , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'respo.dom/DomElement 'Tag
@@ -4751,6 +4760,7 @@
                         aset (:node entry) |scrollTop $ :top entry
                         aset (:node entry) |scrollLeft $ :left entry
                   reset! scroll-snapshot $ {}
+                  reset! child-snapshots $ {}
                 invalidate-at! $ fn (n-coord)
                   hint-fn $ {} (:return 'Unit)
                     :args $ [] $ :: 'List 'Number

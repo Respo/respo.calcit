@@ -79,7 +79,7 @@ globalThis.document = {
 }
 
 const { main_$x_, svg_host_smoke_$x_, verify_dom_regressions_$x_ } = await import("./js-out/respo.test.dom.mjs")
-const { add_prop, insert_before_target_$x_, remove_target_$x_, replace_prop, rm_prop } = await import("./js-out/respo.render.patch.mjs")
+const { add_event, add_prop, insert_before_target_$x_, remove_target_$x_, replace_prop, rm_prop } = await import("./js-out/respo.render.patch.mjs")
 const { CalcitSliceList, init_tags } = await import("@calcit/procs")
 const { set_inner_html_$x_ } = await import("./js-out/respo.dom.mjs")
 const { input_event_checked_$q_, input_event_value } = await import("./js-out/respo.util.format.mjs")
@@ -113,6 +113,33 @@ if (text_width("typed", 14, "sans-serif") !== 40) {
 }
 
 const elementHost = (localName, innerHTML, children) => new FakeElement(localName, innerHTML, children)
+
+const eventTarget = elementHost("button", "", [])
+const eventTags = init_tags(["click"])
+const eventCoord = new CalcitSliceList([eventTags.click])
+const eventOrder = []
+const event = { stopPropagation: () => { eventOrder.push("stop") } }
+const eventBuilder = (name) => {
+  if (name !== eventTags.click) throw new Error("add-event changed the event name")
+  eventOrder.push("build")
+  return (actualEvent, actualCoord) => {
+    if (actualEvent !== event || actualCoord !== eventCoord) {
+      throw new Error("add-event changed the original event or coordinates")
+    }
+    eventOrder.push("deliver")
+  }
+}
+if (add_event(eventTarget, eventTags.click, eventBuilder, eventCoord) !== undefined) {
+  throw new Error("add-event must return Calcit Unit, not the assigned listener")
+}
+if (eventOrder.length !== 0 || typeof eventTarget.onclick !== "function") {
+  throw new Error("add-event must install the listener without invoking its builder")
+}
+eventTarget.onclick(event)
+if (JSON.stringify(eventOrder) !== JSON.stringify(["build", "deliver", "stop"])) {
+  throw new Error("add-event changed listener delivery or propagation order")
+}
+console.log("event-install-unit-contract-ok")
 
 const childHost = elementHost("span", "", [])
 const rootHost = elementHost("div", "", [childHost])

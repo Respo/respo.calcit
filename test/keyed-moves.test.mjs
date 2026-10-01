@@ -128,10 +128,52 @@ test('move batches preserve scroll before later effects and start fresh afterwar
     patch('move-element', coord, 1, c._PCT__$o__$o_(c.Option, c.turn_tag('some'), 0)),
     patch('effect-update', coord, coord, () => { assert.equal(first.scrollTop, 10); first.scrollTop = 50; }),
     patch('move-element', coord, 0, c._PCT__$o__$o_(c.Option, c.turn_tag('none'))),
-    patch('effect-update', coord, coord, () => { assert.equal(first.scrollTop, 50); first.scrollTop = 70; }),
+    patch('effect-update', coord, coord, () => {
+      assert.deepEqual(parent.nodes, [first, second]);
+      assert.equal(first.scrollTop, 50); first.scrollTop = 70;
+    }),
   ];
   apply_dom_changes(c.arrayToList(changes), mount, () => () => {});
   assert.equal(first.scrollTop, 70);
+});
+
+test('新增子节点的 ref 在重排完成后读取最终位置，包含公共前后缀', async () => {
+  const { div } = await import('../js-out/respo.core.mjs');
+  const oldKeys = [0, 1, 2, 3];
+  const newKeys = [0, 9, 2, 1, 3];
+  const rows = createRows(oldKeys);
+  const observations = [];
+  const props = c._$n__PCT__$M_(DomProps, ...DomProps.fields.flatMap(field => [field,
+    field.value === 'id' ? 'row-9' : field.value === 'ref' ? target => {
+      if (target) observations.push({ id: target.id, index: target.parentElement.nodes.indexOf(target),
+        order: target.parentElement.nodes.map(node => Number(node.id.slice(4))) });
+    } : undefined]));
+  rows.set(9, div(props));
+  const patches = verify(oldKeys, newKeys, rows);
+  assert.deepEqual(observations, [{ id: 'row-9', index: 1, order: newKeys }]);
+  const lastMove = patches.findLastIndex(patch => patch.tag.value === 'move-element');
+  assert.ok(lastMove >= 0);
+  assert.ok(patches.findIndex(patch => patch.tag.value === 'effect-mount') > lastMove);
+});
+
+test('移除和追加节点之后的新 move 批次重新捕获子节点快照', () => {
+  const mount = new ElementHost('main');
+  const parent = new ElementHost();
+  const first = new ElementHost();
+  const second = new ElementHost();
+  mount.appendChild(parent); parent.appendChild(first); parent.appendChild(second);
+  const coord = c.arrayToList([]);
+  const patch = (tag, ...args) => c._PCT__$o__$o_(DomPatch, c.turn_tag(tag), ...args);
+  const some = index => c._PCT__$o__$o_(c.Option, c.turn_tag('some'), index);
+  const props = c._$n__PCT__$M_(DomProps, ...DomProps.fields.flatMap(field =>
+    [field, field.value === 'id' ? 'new-child' : undefined]));
+  apply_dom_changes(c.arrayToList([
+    patch('move-element', coord, 1, some(0)),
+    patch('rm-element', coord, c.arrayToList([1])),
+    patch('append-element', coord, coord, list__GT_(props, c.arrayToList([]))),
+    patch('move-element', coord, 1, some(0)),
+  ]), mount, () => () => {});
+  assert.deepEqual(parent.nodes.map(node => node === second ? 'retained' : node.id), ['new-child', 'retained']);
 });
 
 test('public keyed-list construction omits nil children before movement coordinates', () => {
