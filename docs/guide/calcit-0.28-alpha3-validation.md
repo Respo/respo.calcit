@@ -23,7 +23,7 @@ yarn vite build
 calcit fix --preset core-api-0.28-v1 --format edn
 ```
 
-`yarn test` 执行 Snapshot 自身的全部附带测试，不以单独的 `unit` tag 子集代替完整验收。DOM/SSR smoke 验证真实生成模块和明确的测试宿主，不把它描述为真实浏览器执行；浏览器行为另由 js-ffi 的 Chromium 验证以及实际应用回归证明。
+`yarn test` 执行 Snapshot 自身的全部附带测试，不以单独的 `unit` tag 子集代替完整验收。DOM/SSR smoke 验证真实生成模块和明确的测试宿主，不把它描述为真实浏览器执行；js-ffi 的 Chromium 测试覆盖模块自己的浏览器契约，Respo 实际应用的浏览器回归仍待验证，不能用模块测试替代。
 
 保留既有人工审阅建议，不为让预览清零而扩大 Dynamic、添加 unsafe、修改预期或以 native call 替代方法。依赖升级不改变 Snapshot 语义、事件 dispatch type slot 或 Respo 自身模块版本；未来发布 Respo 时仍需单独版本、tag 与精确 main 门禁。
 
