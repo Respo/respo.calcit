@@ -1,7 +1,7 @@
-
 yarn.lock -diff linguist-generated
 llms/*.md -diff linguist-generated
 config/calcit-quality.cirru text -diff linguist-generated
 
 # 基准测试原始样本用于审计性能结论，属于脚本生成的测量产物。
 history/*-bench.json linguist-generated=true
+history/20261001-event-config-results.json linguist-generated=true

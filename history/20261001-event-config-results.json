@@ -1,0 +1,347 @@
+{
+  "browser": {
+    "cases": 8,
+    "results": [
+      {
+        "ssr": false,
+        "mode": "property",
+        "stop": true,
+        "handled": 1,
+        "updated": 2,
+        "native": 0,
+        "bubbled": 1
+      },
+      {
+        "ssr": false,
+        "mode": "property",
+        "stop": false,
+        "handled": 1,
+        "updated": 2,
+        "native": 0,
+        "bubbled": 4
+      },
+      {
+        "ssr": false,
+        "mode": "add-event-listener",
+        "stop": true,
+        "handled": 1,
+        "updated": 2,
+        "native": 4,
+        "bubbled": 1
+      },
+      {
+        "ssr": false,
+        "mode": "add-event-listener",
+        "stop": false,
+        "handled": 1,
+        "updated": 2,
+        "native": 4,
+        "bubbled": 4
+      },
+      {
+        "ssr": true,
+        "mode": "property",
+        "stop": true,
+        "handled": 1,
+        "updated": 2,
+        "native": 0,
+        "bubbled": 1
+      },
+      {
+        "ssr": true,
+        "mode": "property",
+        "stop": false,
+        "handled": 1,
+        "updated": 2,
+        "native": 0,
+        "bubbled": 4
+      },
+      {
+        "ssr": true,
+        "mode": "add-event-listener",
+        "stop": true,
+        "handled": 1,
+        "updated": 2,
+        "native": 4,
+        "bubbled": 1
+      },
+      {
+        "ssr": true,
+        "mode": "add-event-listener",
+        "stop": false,
+        "handled": 1,
+        "updated": 2,
+        "native": 4,
+        "bubbled": 4
+      }
+    ],
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36"
+  },
+  "defaultPolicyBenchmark": {
+    "nodes": 3000,
+    "operationsPerNode": "three handler installs/updates, one delivery, one removal",
+    "warmupRounds": 3,
+    "measuredRounds": 11,
+    "roots": {
+      "baseline": "/tmp/respo-193-baseline",
+      "candidate": "/Users/chenyong/repo/respo/respo"
+    },
+    "results": [
+      {
+        "revision": "baseline",
+        "medianMs": 10.541834000000051
+      },
+      {
+        "revision": "candidate",
+        "medianMs": 10.747208
+      }
+    ],
+    "samples": [
+      {
+        "round": 0,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "milliseconds": 10.578041999999982,
+        "calls": 3000,
+        "stopped": 3000
+      },
+      {
+        "round": 0,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "milliseconds": 11.070709000000022,
+        "calls": 3000,
+        "stopped": 3000
+      },
+      {
+        "round": 1,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "milliseconds": 10.625209000000012,
+        "calls": 3000,
+        "stopped": 3000
+      },
+      {
+        "round": 1,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "milliseconds": 10.689374999999984,
+        "calls": 3000,
+        "stopped": 3000
+      },
+      {
+        "round": 2,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "milliseconds": 10.605916000000008,
+        "calls": 3000,
+        "stopped": 3000
+      },
+      {
+        "round": 2,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "milliseconds": 10.78449999999998,
+        "calls": 3000,
+        "stopped": 3000
+      },
+      {
+        "round": 3,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "milliseconds": 11.075999999999965,
+        "calls": 3000,
+        "stopped": 3000
+      },
+      {
+        "round": 3,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "milliseconds": 10.541834000000051,
+        "calls": 3000,
+        "stopped": 3000
+      },
+      {
+        "round": 4,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "milliseconds": 10.420709000000045,
+        "calls": 3000,
+        "stopped": 3000
+      },
+      {
+        "round": 4,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "milliseconds": 11.008041999999989,
+        "calls": 3000,
+        "stopped": 3000
+      },
+      {
+        "round": 5,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "milliseconds": 10.629750000000001,
+        "calls": 3000,
+        "stopped": 3000
+      },
+      {
+        "round": 5,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "milliseconds": 10.467209000000025,
+        "calls": 3000,
+        "stopped": 3000
+      },
+      {
+        "round": 6,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "milliseconds": 10.63370900000001,
+        "calls": 3000,
+        "stopped": 3000
+      },
+      {
+        "round": 6,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "milliseconds": 10.552250000000015,
+        "calls": 3000,
+        "stopped": 3000
+      },
+      {
+        "round": 7,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "milliseconds": 10.705874999999992,
+        "calls": 3000,
+        "stopped": 3000
+      },
+      {
+        "round": 7,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "milliseconds": 10.836917000000028,
+        "calls": 3000,
+        "stopped": 3000
+      },
+      {
+        "round": 8,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "milliseconds": 10.405540999999971,
+        "calls": 3000,
+        "stopped": 3000
+      },
+      {
+        "round": 8,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "milliseconds": 10.83175,
+        "calls": 3000,
+        "stopped": 3000
+      },
+      {
+        "round": 9,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "milliseconds": 10.747208,
+        "calls": 3000,
+        "stopped": 3000
+      },
+      {
+        "round": 9,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "milliseconds": 10.345124999999996,
+        "calls": 3000,
+        "stopped": 3000
+      },
+      {
+        "round": 10,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "milliseconds": 10.51158300000003,
+        "calls": 3000,
+        "stopped": 3000
+      },
+      {
+        "round": 10,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "milliseconds": 10.679749999999956,
+        "calls": 3000,
+        "stopped": 3000
+      }
+    ],
+    "baselineCommit": "3847003",
+    "candidateSnapshotSha256": "69ab117188b9bf8eba9bd15e775b7b05182f325c617909b051b795778b9cd8c2",
+    "nodeVersion": "v24.4.1"
+  }
+}

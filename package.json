@@ -3,6 +3,7 @@
     "@calcit/procs": "0.28.0-alpha.3"
   },
   "scripts": {
+    "test-event-config": "calcit js && node --test test/event-config.test.mjs",
     "test-demo-scheduler": "calcit js && node --test test/demo-scheduler.test.mjs",
     "test": "calcit calcit.cirru test --require-match --summary-only --format json",
     "test-ssr": "calcit js && node --test test/ssr-css.test.mjs",
