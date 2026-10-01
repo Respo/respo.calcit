@@ -125,6 +125,16 @@ not a replacement for requests or effects. For deterministic immutable data
 transformations, use `memo-value-by` inside the same managed render frame; see
 [Common primitives](./common-primitives.md#memoizing-immutable-derived-values).
 
+## Reordering keyed children
+
+Respo matches retained children across the whole keyed list. It keeps a longest increasing subsequence of their old positions and moves the remaining nodes. Swapping two adjacent items needs one move; reversing a list of `n` retained items needs `n - 1` moves. Common prefixes and suffixes are reconciled separately, and unchanged key order skips index maps and LIS work.
+
+Moves reuse DOM nodes, preserving edited input values, selection, and scroll positions. Retained components keep their mount/unmount lifecycle; their normal prop and effect updates still run. Only added children mount and removed children unmount.
+
+Connected DOM nodes use `Element.moveBefore` when available. The fallback uses `insertBefore` or `appendChild`, restores focus with `preventScroll`, and restores scroll offsets in the moved subtree. The fallback may emit native blur/focus events while restoring focus.
+
+Run `yarn test-keyed-moves` for permutation and nested-list regressions, `yarn bench-keyed-moves` for diff timings, or open `test/examples/keyed-moves.html` in Vite for a real-browser regression. Add `?fallback=1` to exercise the insertion fallback.
+
 ## Migrating from memof
 
 For component rendering, the common migration is:

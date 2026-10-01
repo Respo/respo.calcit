@@ -1,0 +1,37 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="icon" href="data:,"><title>Keyed move benchmark</title></head>
+<body><div id="app"></div><pre id="result"></pre>
+<script type="module">
+import * as c from '../../js-out/calcit.core.mjs';
+import { DomProps } from '../../js-out/respo.schema.mjs';
+import { list__GT_, render_$x_ } from '../../js-out/respo.core.mjs';
+import { createRows, childPairs } from '../keyed-moves-fixture.mjs';
+const props = c._$n__PCT__$M_(DomProps, ...DomProps.fields.flatMap(field => [field, undefined]));
+const mount = document.querySelector('#app');
+window.benchmarkResults = [];
+for (const size of [100, 1000]) {
+  const keys = Array.from({ length: size }, (_, i) => i);
+  const rows = createRows(keys);
+  const original = list__GT_(props, childPairs(keys, rows));
+  for (const [name, next] of [
+    ['rotate', [size - 1, ...keys.slice(0, -1)]],
+    ['reverse', [...keys].reverse()],
+    ['swap', [1, 0, ...keys.slice(2)]],
+    ['unchanged', keys],
+  ]) {
+    const updated = list__GT_(props, childPairs(next, rows));
+    const samples = [];
+    for (let i = 0; i < 5; i++) {
+      render_$x_(mount, original, () => {});
+      void mount.offsetHeight;
+      const start = performance.now();
+      render_$x_(mount, updated, () => {});
+      void mount.offsetHeight;
+      if (i >= 2) samples.push(performance.now() - start);
+    }
+    samples.sort((a, b) => a - b);
+    window.benchmarkResults.push({ size, case: name, milliseconds: Number(samples[1].toFixed(3)) });
+  }
+}
+document.querySelector('#result').textContent = JSON.stringify(window.benchmarkResults);
+</script></body></html>

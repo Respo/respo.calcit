@@ -2730,6 +2730,8 @@
             :first-element-child $ :: 'JsNullish 'respo.dom/DomElement
             :tag-name 'String
             :namespace-uri 'String
+            :scroll-top 'Number
+            :scroll-left 'Number
             .matches? $ :: 'Fn $ {}
               :generics $ [] 'T
               :args $ [] 'T 'String
@@ -2749,6 +2751,10 @@
             .remove! $ :: 'Fn $ {}
               :generics $ [] 'T
               :args $ [] 'T
+              :return 'Unit
+            .move-before! $ :: 'Fn $ {}
+              :generics $ [] 'T
+              :args $ [] 'T 'respo.dom/DomElement $ :: 'JsNullish 'respo.dom/DomElement
               :return 'Unit
             .remove-attribute! $ :: 'Fn $ {}
               :generics $ [] 'T
@@ -2770,6 +2776,10 @@
               :generics $ [] 'T
               :args $ [] 'T
               :return 'Unit
+            .focus-preserving-scroll! $ :: 'Fn $ {}
+              :generics $ [] 'T
+              :args $ [] 'T 'JsObject
+              :return 'Unit
             .blur! $ :: 'Fn $ {}
               :generics $ [] 'T
               :args $ [] 'T
@@ -2780,8 +2790,8 @@
               :return 'Unit
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
-            :names $ {} (:inner-html |innerHTML) (:insert-before! |insertBefore) (:namespace-uri |namespaceURI) (:parent-element |parentElement) (:remove! |remove)
-            :writable $ #{} :checked :disabled :id :inner-html :inner-text :selected
+            :names $ {} (:focus-preserving-scroll! |focus) (:inner-html |innerHTML) (:insert-before! |insertBefore) (:move-before! |moveBefore) (:namespace-uri |namespaceURI) (:parent-element |parentElement) (:remove! |remove) (:scroll-left |scrollLeft) (:scroll-top |scrollTop)
+            :writable $ #{} :checked :disabled :id :inner-html :inner-text :scroll-left :scroll-top :selected
           :schema $ :: 'Trait
         'DomElementCollection $ %{} 'CodeEntry
           :doc "|Indexed child element collection returned by the children property."
@@ -3277,91 +3287,151 @@
           :schema $ :: 'Fn $ {} (:return 'Bool)
             :args $ [] $ :: 'List 'Dynamic
         'find-children-diffs $ %{} 'CodeEntry
-          :doc "|Compares lists of child elements to find structural differences."
+          :doc "|Reconcile whole keyed lists with common prefix/suffix trimming and an LIS over retained source positions. Update retained children before structural edits; remove missing nodes in descending order, append new nodes, and then move from right to left using stable node snapshots. Moves preserve DOM identity and component mount/unmount lifecycle."
           :code $ quote $ defn find-children-diffs (collect! coord n-coord index old-children new-children)
-            let
-                was-empty? $ empty? old-children
-                now-empty? $ empty? new-children
-              cond
-                  and was-empty? now-empty?
-                  , &unit
-                (and was-empty? (not now-empty?))
+            if
+              = (map old-children respo.util.list/pair-first) (map new-children respo.util.list/pair-first)
+              loop
+                  old-pairs old-children
+                  new-pairs new-children
+                  position index
+                list-match old-pairs
+                  () &unit
+                  (old-pair rest-old)
+                    let
+                        new-pair $ respo.util.list/first-pair new-pairs
+                        key $ respo.util.list/pair-first $ assert-type old-pair 'List
+                      find-element-diffs collect! (append coord key) (append n-coord position)
+                        respo.util.list/pair-value $ assert-type old-pair 'List
+                        respo.util.list/pair-value new-pair
+                      recur rest-old (&list:rest new-pairs) (inc position)
+              match
+                keyed-rotation (map old-children respo.util.list/pair-first) (map new-children respo.util.list/pair-first)
+                (:none)
                   let
-                      pair $ respo.util.list/first-pair new-children
-                      k $ respo.util.list/pair-first pair
-                      element $ assert-type (respo.util.list/pair-value pair) 'Struct
-                      new-coord $ append coord k
-                    collect! $ DomPatch :append-element new-coord n-coord element
-                    collect-mounting collect! coord (append n-coord index) element true
-                    recur collect! coord n-coord (inc index) ([]) (&list:rest new-children)
-                (and (not was-empty?) now-empty?)
-                  let
-                      pair $ respo.util.list/first-pair old-children
-                      k $ respo.util.list/pair-first pair
-                      element $ assert-type (respo.util.list/pair-value pair) 'Struct
-                      new-coord $ append coord k
-                      new-n-coord $ append n-coord index
-                    collect-unmounting collect! coord new-n-coord element true
-                    collect! $ DomPatch :rm-element new-coord new-n-coord
-                    recur collect! coord n-coord index (&list:rest old-children) ([])
-                true $ let
-                    old-keys $ map (take old-children 16) respo.util.list/pair-first
-                    new-keys $ map (take new-children 16) respo.util.list/pair-first
-                    x1 $ &list:first old-keys
-                    y1 $ &list:first new-keys
-                    match-x1 $ fn (x) (&= x x1)
-                    match-y1 $ fn (x) (&= x y1)
-                    x1-remains? $ any? new-keys match-x1
-                    y1-existed? $ any? old-keys match-y1
-                    old-follows $ &list:rest old-children
-                    new-follows $ &list:rest new-children
-                  if (nil? y1) (js/console.warn |nil-key-is-bad-in-Respo)
-                  cond
-                      &= x1 y1
+                      full-old-keys $ map old-children respo.util.list/pair-first
+                      full-new-keys $ map new-children respo.util.list/pair-first
+                      boundaries $ keyed-boundaries full-old-keys full-new-keys
+                      prefix $ &list:nth boundaries 0
+                      suffix $ &list:nth boundaries 1
+                      middle-old-children $ slice old-children prefix $ - (count old-children) suffix
+                      middle-new-children $ slice new-children prefix $ - (count new-children) suffix
+                      suffix-keys $ slice full-old-keys $ - (count full-old-keys) suffix
+                      index-offset $ + index prefix
+                    &doseq
+                      position $ range prefix
+                      find-element-diffs collect!
+                        append coord $ &list:nth full-old-keys position
+                        append n-coord $ + index position
+                        respo.util.list/pair-value $ &list:nth old-children position
+                        respo.util.list/pair-value $ &list:nth new-children position
+                    &doseq
+                      position $ range suffix
                       let
-                          old-element $ val-of-first old-children
-                          new-element $ val-of-first new-children
-                          next-index $ if (calcit.core/non-nil? new-element) (inc index) index
-                        find-element-diffs collect! (append coord x1) (append n-coord index) old-element new-element
-                        recur collect! coord n-coord next-index old-follows new-follows
-                    (and x1-remains? (not y1-existed?))
-                      let
-                          pair $ respo.util.list/first-pair new-children
-                          k $ respo.util.list/pair-first pair
-                          element $ assert-type (respo.util.list/pair-value pair) 'Struct
-                          new-coord $ append coord k
-                          new-n-coord $ append n-coord index
-                        collect! $ DomPatch :add-element new-coord new-n-coord element
-                        collect-mounting collect! coord new-n-coord element true
-                        recur collect! coord n-coord (inc index) old-children new-follows
-                    (and (not x1-remains?) y1-existed?)
-                      let
-                          pair $ respo.util.list/first-pair old-children
-                          k $ respo.util.list/pair-first pair
-                          element $ assert-type (respo.util.list/pair-value pair) 'Struct
-                          new-coord $ append coord k
-                          new-n-coord $ append n-coord index
-                        collect-unmounting collect! coord new-n-coord element true
-                        collect! $ DomPatch :rm-element new-coord new-n-coord
-                        recur collect! coord n-coord index old-follows new-children
-                    true $ let
-                        xi $ option:unwrap-or (respo.util.list/index-of-dynamic new-keys x1) 16
-                        yi $ option:unwrap-or (respo.util.list/index-of-dynamic old-keys y1) 16
-                        new-n-coord $ append n-coord index
-                      if
-                        not $ &= 1 $ &compare xi yi
+                          old-position $ +
+                            - (count old-children) suffix
+                            , position
+                          new-position $ +
+                            - (count new-children) suffix
+                            , position
+                        find-element-diffs collect!
+                          append coord $ &list:nth full-old-keys old-position
+                          append n-coord $ + index old-position
+                          respo.util.list/pair-value $ &list:nth old-children old-position
+                          respo.util.list/pair-value $ &list:nth new-children new-position
+                    let
+                        old-keys $ map middle-old-children respo.util.list/pair-first
+                        new-keys $ map middle-new-children respo.util.list/pair-first
+                        old-index $ keyed-index old-keys
+                        new-index $ keyed-index new-keys
+                        retained-keys $ filter old-keys $ fn (key) (contains? new-index key)
+                        added-keys $ filter new-keys $ fn (key)
+                          not $ contains? old-index key
+                        source-index $ keyed-index $ concat (concat retained-keys suffix-keys) added-keys
+                        source-order $ map new-keys $ fn (key)
+                          assert-type (&map:get source-index key) 'Number
+                        kept $ lis-values $ if (> suffix 0)
+                          filter source-order $ fn (value)
+                            < value $ count retained-keys
+                          , source-order
+                      &doseq (key retained-keys)
                         let
-                            new-element $ assert-type (val-of-first new-children) 'Struct
-                            new-coord $ append coord y1
-                          collect! $ DomPatch :add-element new-coord new-n-coord new-element
-                          collect-mounting collect! coord new-n-coord new-element true
-                          recur collect! coord n-coord (inc index) old-children new-follows
-                        do
-                          collect-unmounting collect! coord new-n-coord
-                            assert-type (val-of-first old-children) 'Struct
-                            , true
-                          collect! $ DomPatch :rm-element (append coord x1) new-n-coord
-                          recur collect! coord n-coord index old-follows new-children
+                            old-position $ assert-type (&map:get old-index key) 'Number
+                            new-position $ assert-type (&map:get new-index key) 'Number
+                          find-element-diffs collect! (append coord key)
+                            append n-coord $ + index-offset old-position
+                            respo.util.list/pair-value $ option:unwrap $ nth middle-old-children old-position
+                            respo.util.list/pair-value $ option:unwrap $ nth middle-new-children new-position
+                      &doseq
+                        key $ reverse old-keys
+                        when-not (contains? new-index key)
+                          let
+                              old-position $ assert-type (&map:get old-index key) 'Number
+                              child $ assert-type
+                                respo.util.list/pair-value $ option:unwrap $ nth middle-old-children old-position
+                                , 'Struct
+                              child-n-coord $ append n-coord $ + index-offset old-position
+                            collect-unmounting collect! (append coord key) child-n-coord child true
+                            collect! $ DomPatch :rm-element (append coord key) child-n-coord
+                      &doseq (key added-keys)
+                        let
+                            new-position $ assert-type (&map:get new-index key) 'Number
+                            child $ assert-type
+                              respo.util.list/pair-value $ option:unwrap $ nth middle-new-children new-position
+                              , 'Struct
+                            child-coord $ append coord key
+                            appended-position $ + index-offset $ assert-type (&map:get source-index key) 'Number
+                          collect! $ DomPatch :append-element child-coord n-coord child
+                          collect-mounting collect! child-coord (append n-coord appended-position) child true
+                      loop
+                          remaining $ reverse source-order
+                          anchor $ if (> suffix 0)
+                            %:: Option :some $ count retained-keys
+                            %:: Option :none
+                        list-match remaining
+                          () &unit
+                          (source rest-sources)
+                            when-not
+                              contains? kept $ assert-type source 'Number
+                              collect! $ DomPatch :move-element n-coord (+ index-offset source)
+                                option:map
+                                  assert-type anchor $ :: 'Option 'Number
+                                  fn (position) (+ index-offset position)
+                            recur rest-sources $ %:: Option :some source
+                (:some offset)
+                  let
+                      size $ count old-children
+                      sources $ concat (range offset size) (range offset)
+                      kept $ .to-set $ if
+                        > (- size offset) offset
+                        range offset size
+                        range offset
+                    &doseq
+                      position $ range size
+                      let
+                          old-pair $ &list:nth old-children position
+                          new-position $ if (< position offset)
+                            + position $ - size offset
+                            - position offset
+                          new-pair $ &list:nth new-children new-position
+                        find-element-diffs collect!
+                          append coord $ respo.util.list/pair-first old-pair
+                          append n-coord $ + index position
+                          respo.util.list/pair-value old-pair
+                          respo.util.list/pair-value new-pair
+                    loop
+                        remaining $ reverse sources
+                        anchor $ %:: Option :none
+                      list-match remaining
+                        () &unit
+                        (source rest-sources)
+                          when-not
+                            contains? kept $ assert-type source 'Number
+                            collect! $ DomPatch :move-element n-coord (+ index source)
+                              option:map
+                                assert-type anchor $ :: 'Option 'Number
+                                fn (position) (+ index position)
+                          recur rest-sources $ %:: Option :some source
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
@@ -3716,6 +3786,146 @@
               :: 'List 'Number
               :: 'List $ :: 'List 'Dynamic
               :: 'List $ :: 'List 'Dynamic
+        'keyed-boundaries $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn keyed-boundaries (old-keys new-keys)
+            let
+                old-size $ count old-keys
+                new-size $ count new-keys
+                shared-size $ &min old-size new-size
+              loop
+                  prefix 0
+                if
+                  and (< prefix shared-size)
+                    =
+                      &list:nth old-keys $ assert-type prefix 'Number
+                      &list:nth new-keys $ assert-type prefix 'Number
+                  recur $ inc prefix
+                  loop
+                      suffix 0
+                    if
+                      and
+                        < suffix $ - shared-size prefix
+                        =
+                          &list:nth old-keys $ - (dec old-size) suffix
+                          &list:nth new-keys $ - (dec new-size) suffix
+                      recur $ inc suffix
+                      [] prefix suffix
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'List 'K) (:: 'List 'K)
+            :generics $ [] 'K
+            :return $ :: 'List 'Number
+        'keyed-index $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn keyed-index (input-keys)
+            loop
+                remaining input-keys
+                index 0
+                result $ {}
+              list-match remaining
+                () result
+                (key rest-keys)
+                  recur rest-keys (inc index) (assoc result key index)
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] $ :: 'List 'K
+            :generics $ [] 'K
+            :return $ :: 'Map 'K 'Number
+        'keyed-rotation $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn keyed-rotation (old-keys new-keys)
+            if
+              or (empty? new-keys)
+                not= (count old-keys) (count new-keys)
+              %:: Option :none
+              match
+                find-index old-keys $ fn (key)
+                  = key $ &list:first new-keys
+                (:none) (%:: Option :none)
+                (:some offset)
+                  if
+                    = new-keys $ concat (slice old-keys offset) (take old-keys offset)
+                    %:: Option :some offset
+                    %:: Option :none
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'List 'K) (:: 'List 'K)
+            :generics $ [] 'K
+            :return $ :: 'Option 'Number
+        'lis-lower-bound $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn lis-lower-bound (tails value)
+            loop
+                lo 0
+                hi $ count tails
+              if (< lo hi)
+                let
+                    mid $ floor $ / (+ lo hi) 2
+                  if
+                    <
+                      option:unwrap $ nth tails mid
+                      , value
+                    recur (inc mid) hi
+                    recur lo mid
+                , lo
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Number)
+            :args $ [] (:: 'List 'Number) 'Number
+        'lis-reconstruct $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn lis-reconstruct (values previous cursor)
+            loop
+                position cursor
+                kept $ assert-type (#{}) (:: 'Set 'Number)
+              if (< position 0) kept $ recur
+                option:unwrap $ nth previous $ assert-type position 'Number
+                include
+                  assert-type kept $ :: 'Set 'Number
+                  option:unwrap $ nth values $ assert-type position 'Number
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'List 'Number) (:: 'List 'Number) 'Number
+            :return $ :: 'Set 'Number
+        'lis-values $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn lis-values (values)
+            loop
+                remaining values
+                index 0
+                tails $ assert-type ([]) (:: 'List 'Number)
+                positions $ assert-type ([]) (:: 'List 'Number)
+                previous $ assert-type ([]) (:: 'List 'Number)
+              list-match remaining
+                () $ lis-reconstruct values
+                  assert-type previous $ :: 'List 'Number
+                  if (empty? positions) -1 $ option:unwrap $ last
+                    assert-type positions $ :: 'List 'Number
+                (value rest-values)
+                  let
+                      slot $ lis-lower-bound tails value
+                      predecessor $ if (= slot 0) -1 $ option:unwrap
+                        nth
+                          assert-type positions $ :: 'List 'Number
+                          dec slot
+                      new-tails $ if
+                        = slot $ count tails
+                        append tails value
+                        assoc tails slot value
+                      new-positions $ if
+                        = slot $ count positions
+                        append positions index
+                        assoc positions slot index
+                    recur rest-values (inc index) new-tails new-positions $ append previous predecessor
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] $ :: 'List 'Number
+            :return $ :: 'Set 'Number
+          :tests $ [] $ %{} 'TestEntry (:name |increasing-and-reversed)
+            :code $ quote $ do
+              assert= (#{} 0 1 2)
+                lis-values $ [] 0 1 2
+              assert= (#{} 0)
+                lis-values $ [] 2 1 0
+              assert= (#{} 0 1 2)
+                lis-values $ [] 3 0 1 2
+              assert= (#{})
+                lis-values $ []
+            :tags $ #{} :unit
         'props-as-list $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn props-as-list (props)
             if (list? props)
@@ -4303,6 +4513,10 @@
             respo.util.detect :refer $ component? element?
     'respo.render.patch $ %{} 'FileEntry
       :defs $ {}
+        'MoveScrollState $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defstruct MoveScrollState (:node 'respo.dom/DomElement) (:top 'Number) (:left 'Number)
+          :examples $ []
+          :schema $ :: 'StructDef
         'add-element $ %{} 'CodeEntry
           :doc "|Inserts a new DOM element before a target element."
           :code $ quote $ defn add-element (target op listener-builder coord)
@@ -4388,14 +4602,19 @@
           :doc "|Internal DOM patch executor.\n\nIt walks collected diff operations, finds the target node by DOM coordinate, and applies prop, style, event, element, and effect changes in order."
           :code $ quote $ defn apply-dom-changes (changes mount-point listener-builder)
             let
-                get-root $ fn () $ unsafe-coerce (.-firstElementChild mount-point) 'respo.dom/DomElement
                 find-target-at $ fn (n-coord)
                   hint-fn $ {}
                     :return $ :: 'Option 'respo.dom/DomElement
                     :args $ [] $ :: 'List 'Number
-                  js-nullish->option $ find-target
-                    unsafe-coerce (get-root) 'respo.dom/DomElement
-                    , n-coord
+                  match
+                    js-nullish->option $ mount-point.:first-element-child
+                    (:none) (%:: Option :none)
+                    (:some root)
+                      js-nullish->option $ find-target root n-coord
+                child-snapshots $ atom $ assert-type ({})
+                  :: 'Map (:: 'List 'Number) (:: 'List 'respo.dom/DomElement)
+                scroll-snapshot $ atom $ assert-type (%:: Option :none)
+                  :: 'Option $ :: 'List 'respo.render.patch/MoveScrollState
               &doseq (op changes)
                 match op
                   (:replace-prop _coord n-coord key value)
@@ -4444,6 +4663,24 @@
                     append-element
                       option:unwrap $ find-target-at n-coord
                       , element listener-builder coord
+                  (:move-element n-coord source anchor)
+                    let
+                        parent $ option:unwrap $ find-target-at n-coord
+                        nodes $ assert-type
+                          match (get @child-snapshots n-coord)
+                            (:none) (snapshot-children parent)
+                            (:some cached) cached
+                          :: 'List 'respo.dom/DomElement
+                      swap! child-snapshots assoc n-coord $ assert-type nodes $ :: 'List 'respo.dom/DomElement
+                      match @scroll-snapshot
+                        (:some _) &unit
+                        (:none)
+                          match
+                            find-target-at $ []
+                            (:none) &unit
+                            (:some root)
+                              reset! scroll-snapshot $ %:: Option :some $ collect-scroll-states root
+                      move-element! parent nodes source anchor
                   (:effect-mount _coord n-coord run!)
                     run-effect
                       option:unwrap $ find-target-at n-coord
@@ -4460,10 +4697,34 @@
                     run-effect
                       option:unwrap $ find-target-at n-coord
                       , run! n-coord
+              match @scroll-snapshot
+                (:none) &unit
+                (:some states)
+                  &doseq (state states)
+                    let
+                        entry $ assert-type state 'respo.render.patch/MoveScrollState
+                      aset (:node entry) |scrollTop $ :top entry
+                      aset (:node entry) |scrollLeft $ :left entry
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] (:: 'List 'respo.schema/DomPatch) 'respo.dom/DomElement 'Fn
             :features $ #{} :js-ffi
+        'collect-scroll-states $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn collect-scroll-states (node)
+            let
+                own $ if
+                  and (= node.:scroll-top 0) (= node.:scroll-left 0)
+                  assert-type ([]) (:: 'List 'respo.render.patch/MoveScrollState)
+                  [] $ MoveScrollState :node node :top node.:scroll-top :left node.:scroll-left
+                children $ snapshot-children node
+              concat own $ assert-type
+                &list:flatten $ map children collect-scroll-states
+                :: 'List 'respo.render.patch/MoveScrollState
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] 'respo.dom/DomElement
+            :features $ #{} :js-ffi
+            :return $ :: 'List 'respo.render.patch/MoveScrollState
         'find-target $ %{} 'CodeEntry
           :doc "|Locates a DOM node by traversing children using a coordinate path."
           :code $ quote $ defn find-target (root coord)
@@ -4495,6 +4756,37 @@
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'respo.dom/DomElement 'respo.dom/DomElement
+            :features $ #{} :js-ffi
+        'move-element! $ %{} 'CodeEntry
+          :doc "|Move a source node before its snapshot anchor, or to the end. Prefer state-preserving moveBefore for connected nodes; fall back to insertion with focus and subtree scroll restoration."
+          :code $ quote $ defn move-element! (parent nodes source anchor)
+            let
+                node $ option:unwrap $ nth nodes source
+                focused $ if (.matches? node |:focus) (%:: Option :some node)
+                  js-nullish->option $ .query-selector node |:focus
+              if
+                and
+                  fn? $ aget parent |moveBefore
+                  aget parent |isConnected
+                  aget node |isConnected
+                match anchor
+                  (:none)
+                    .move-before! parent node $ assert-type js/undefined $ :: 'JsNullish 'respo.dom/DomElement
+                  (:some index)
+                    .move-before! parent node $ option:unwrap $ nth nodes index
+                match anchor
+                  (:none) (.append-child! parent node)
+                  (:some index)
+                    .insert-before! parent node $ option:unwrap $ nth nodes index
+              match focused
+                (:none) &unit
+                (:some active)
+                  when-not (.matches? active |:focus)
+                    .focus-preserving-scroll! active $ js-object $ :preventScroll true
+              , &unit
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ [] 'respo.dom/DomElement (:: 'List 'respo.dom/DomElement) 'Number $ :: 'Option 'Number
             :features $ #{} :js-ffi
         'remove-target! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn remove-target! (target) (.remove! target) &unit
@@ -4636,6 +4928,23 @@
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'respo.dom/DomElement 'Tag $ :: 'Option 'String
+        'snapshot-children $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn snapshot-children (parent)
+            let
+                children $ parent.:children
+              loop
+                  index 0
+                  nodes $ []
+                match
+                  js-nullish->option $ .item children index
+                  (:none) nodes
+                  (:some node)
+                    recur (inc index) (append nodes node)
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] 'respo.dom/DomElement
+            :features $ #{} :js-ffi
+            :return $ :: 'List 'respo.dom/DomElement
         'svg-children? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn svg-children? (target)
             and (svg-target? target) (not= target.:tag-name |foreignObject)
@@ -4921,31 +5230,38 @@
             :rm-element (:: 'List 'Dynamic) (:: 'List 'Number)
             :replace-element (:: 'List 'Dynamic) (:: 'List 'Number) 'Struct
             :append-element (:: 'List 'Dynamic) (:: 'List 'Number) 'Struct
+            :move-element (:: 'List 'Number) 'Number $ :: 'Option 'Number
             :effect-mount (:: 'List 'Dynamic) (:: 'List 'Number) 'Fn
             :effect-unmount (:: 'List 'Dynamic) (:: 'List 'Number) 'Fn
             :effect-update (:: 'List 'Dynamic) (:: 'List 'Number) 'Fn
             :effect-before-update (:: 'List 'Dynamic) (:: 'List 'Number) 'Fn
           :examples $ []
           :schema $ :: 'EnumDef
-          :tests $ [] $ %{} 'TestEntry
-            :name |constructs-and-exhaustively-matches-all-variants
-            :code $ quote $ let
-                coord $ [] :root
-                n-coord $ [] 0
-                element $ %{} Element (:name :div)
-                  :coord $ %none
-                  :attrs $ []
-                  :style $ []
-                  :event $ {}
-                  :children $ []
-                  :ref nil
-                run! $ fn (_target) &unit
-                patches $ [] (DomPatch :replace-prop coord n-coord :title |next) (DomPatch :add-prop coord n-coord :title |new) (DomPatch :rm-prop coord n-coord :title) (DomPatch :add-style coord n-coord :color |red) (DomPatch :replace-style coord n-coord :color |blue) (DomPatch :rm-style coord n-coord :color) (DomPatch :set-event coord n-coord :click) (DomPatch :rm-event coord n-coord :click) (DomPatch :add-element coord n-coord element) (DomPatch :rm-element coord n-coord) (DomPatch :replace-element coord n-coord element) (DomPatch :append-element coord n-coord element) (DomPatch :effect-mount coord n-coord run!) (DomPatch :effect-unmount coord n-coord run!) (DomPatch :effect-update coord n-coord run!) (DomPatch :effect-before-update coord n-coord run!)
-              assert |all-variants-construct $ = 16 $ count patches
-              match (&list:nth patches 15)
-                (:effect-before-update _coord _n-coord _run!) (assert |last-variant-matches true)
-                _ $ assert |last-variant-is-wrong false
-            :tags $ #{} :unit
+          :tests $ []
+            %{} 'TestEntry
+              :name |constructs-and-exhaustively-matches-all-variants
+              :code $ quote $ let
+                  coord $ [] :root
+                  n-coord $ [] 0
+                  element $ %{} Element (:name :div)
+                    :coord $ %none
+                    :attrs $ []
+                    :style $ []
+                    :event $ {}
+                    :children $ []
+                    :ref nil
+                  run! $ fn (_target) &unit
+                  patches $ [] (DomPatch :replace-prop coord n-coord :title |next) (DomPatch :add-prop coord n-coord :title |new) (DomPatch :rm-prop coord n-coord :title) (DomPatch :add-style coord n-coord :color |red) (DomPatch :replace-style coord n-coord :color |blue) (DomPatch :rm-style coord n-coord :color) (DomPatch :set-event coord n-coord :click) (DomPatch :rm-event coord n-coord :click) (DomPatch :add-element coord n-coord element) (DomPatch :rm-element coord n-coord) (DomPatch :replace-element coord n-coord element) (DomPatch :append-element coord n-coord element) (DomPatch :effect-mount coord n-coord run!) (DomPatch :effect-unmount coord n-coord run!) (DomPatch :effect-update coord n-coord run!) (DomPatch :effect-before-update coord n-coord run!)
+                assert |all-variants-construct $ = 16 $ count patches
+                match (&list:nth patches 15)
+                  (:effect-before-update _coord _n-coord _run!) (assert |last-variant-matches true)
+                  _ $ assert |last-variant-is-wrong false
+              :tags $ #{} :unit
+            %{} 'TestEntry (:name |move-roundtrip)
+              :code $ quote $ let
+                  op $ DomPatch :move-element ([] 2) 3 $ %:: Option :some 1
+                assert= op $ parse-cirru-edn $ format-cirru-edn op
+              :tags $ #{} :unit
         'DomProps $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct DomProps
             :class-name $ :: 'JsNullish 'String
