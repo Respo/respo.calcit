@@ -88,6 +88,57 @@ The immutable-data-oriented conditional, keyed list, lifecycle, ref, resource, e
 
 ### APIs
 
+#### make-render-scheduler
+
+`respo.core/make-render-scheduler` takes a zero-argument render callback and a
+trailing `Option<enqueue!>`, and returns a zero-argument request function.
+`Option :none` (or omission of that trailing argument) uses `queueMicrotask`.
+Calls made before the queued callback runs are coalesced into one render. Create
+the scheduler once per watch registration and read the authoritative store inside
+the callback:
+
+```cirru.no-check
+let
+    schedule! $ respo.core/make-render-scheduler
+      fn () $ render-app!
+      %:: Option :none
+  add-watch *store :rerender $ fn (_current _previous) (schedule!)
+```
+
+The scheduler stores only a queued flag. It resets that flag before invoking the
+callback, allowing a later request to enqueue another render. It does not cancel
+callbacks when a watch is removed; use a registration guard during hot swapping,
+as shown in the [beginner guide](beginner-guide.md#rerender-on-updates).
+
+`Option :some enqueue!` supplies custom timing. The enqueue function receives the
+zero-argument callback; it should enqueue it once. A synchronous enqueue function
+renders immediately and does not provide microtask batching. This runnable example
+captures callbacks to test batching without a browser:
+
+```cirru
+let
+    *renders $ atom 0
+    *tasks $ atom $ []
+    request! $ respo.core/make-render-scheduler
+      fn () (swap! *renders inc)
+        , &unit
+      %:: Option :some $ fn (task) (swap! *tasks conj task)
+        , &unit
+  request!
+  request!
+  assert= 0 @*renders
+  assert= 1 $ count @*tasks
+  let
+      task $ &list:nth @*tasks 0
+    task
+  assert= 1 @*renders
+```
+
+**Choosing timing:** `render!` and `render-with!` always update the DOM
+synchronously. Use a direct call or synchronous watch for tests that inspect the
+DOM immediately after dispatch. Use the scheduler for store update bursts; await
+its microtask before inspecting the DOM, or inject and explicitly flush a test queue.
+
 ##### map-with-idx
 
 ```cirru.no-check

@@ -143,15 +143,20 @@ let
       , dispatch!
 ```
 
-Rerender on store changes:
+与 demo 一样，将同一微任务前的 store 更新合并为一次渲染：
 
-```cirru
+```cirru.no-check
 let
-    *store $ atom $ {} (:point 0)
-    render-app! $ fn () &unit
-  add-watch *store :changes $ fn (_previous _next)
-    render-app!
+    schedule! $ respo.core/make-render-scheduler
+      fn () $ render-app!
+      %:: Option :none
+  add-watch *store :changes $ fn (_current _previous) (schedule!)
 ```
+
+`render!` 和 `render-with!` 仍同步执行。如果 dispatch 后需要立即读取更新后的 DOM，
+让 watch 直接调用 `render-app!`。使用调度器的 DOM 测试应等待微任务或清空注入的队列。
+详见[调度时机与测试示例](docs/api.md#make-render-scheduler)及
+[热更新时替换 watch](docs/beginner-guide.md#rerender-on-updates)。
 
 在 `render-with!` 构建的组件树中，为带业务 key 的列表组件启用缓存：
 

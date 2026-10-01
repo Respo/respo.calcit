@@ -1,0 +1,246 @@
+{
+  "regression": {
+    "burstDispatches": 20,
+    "burstRenders": 1,
+    "latestTasks": 21,
+    "replacementRenders": 1,
+    "synchronousDom": true,
+    "hotReload": true
+  },
+  "benchmark": {
+    "dispatches": 20,
+    "warmupRounds": 3,
+    "measuredRounds": 11,
+    "sync": {
+      "renders": 20,
+      "medianMs": 19
+    },
+    "scheduled": {
+      "renders": 1,
+      "medianMs": 6.800000190734863
+    },
+    "samples": [
+      {
+        "round": 0,
+        "order": [
+          "sync",
+          "scheduled"
+        ],
+        "mode": "sync",
+        "renders": 20,
+        "milliseconds": 20.699999809265137
+      },
+      {
+        "round": 0,
+        "order": [
+          "sync",
+          "scheduled"
+        ],
+        "mode": "scheduled",
+        "renders": 1,
+        "milliseconds": 7.100000381469727
+      },
+      {
+        "round": 1,
+        "order": [
+          "scheduled",
+          "sync"
+        ],
+        "mode": "scheduled",
+        "renders": 1,
+        "milliseconds": 8.099999904632568
+      },
+      {
+        "round": 1,
+        "order": [
+          "scheduled",
+          "sync"
+        ],
+        "mode": "sync",
+        "renders": 20,
+        "milliseconds": 19
+      },
+      {
+        "round": 2,
+        "order": [
+          "sync",
+          "scheduled"
+        ],
+        "mode": "sync",
+        "renders": 20,
+        "milliseconds": 18.59999990463257
+      },
+      {
+        "round": 2,
+        "order": [
+          "sync",
+          "scheduled"
+        ],
+        "mode": "scheduled",
+        "renders": 1,
+        "milliseconds": 7.299999713897705
+      },
+      {
+        "round": 3,
+        "order": [
+          "scheduled",
+          "sync"
+        ],
+        "mode": "scheduled",
+        "renders": 1,
+        "milliseconds": 6
+      },
+      {
+        "round": 3,
+        "order": [
+          "scheduled",
+          "sync"
+        ],
+        "mode": "sync",
+        "renders": 20,
+        "milliseconds": 19
+      },
+      {
+        "round": 4,
+        "order": [
+          "sync",
+          "scheduled"
+        ],
+        "mode": "sync",
+        "renders": 20,
+        "milliseconds": 18.299999713897705
+      },
+      {
+        "round": 4,
+        "order": [
+          "sync",
+          "scheduled"
+        ],
+        "mode": "scheduled",
+        "renders": 1,
+        "milliseconds": 6.099999904632568
+      },
+      {
+        "round": 5,
+        "order": [
+          "scheduled",
+          "sync"
+        ],
+        "mode": "scheduled",
+        "renders": 1,
+        "milliseconds": 6.300000190734863
+      },
+      {
+        "round": 5,
+        "order": [
+          "scheduled",
+          "sync"
+        ],
+        "mode": "sync",
+        "renders": 20,
+        "milliseconds": 19.40000009536743
+      },
+      {
+        "round": 6,
+        "order": [
+          "sync",
+          "scheduled"
+        ],
+        "mode": "sync",
+        "renders": 20,
+        "milliseconds": 18.100000381469727
+      },
+      {
+        "round": 6,
+        "order": [
+          "sync",
+          "scheduled"
+        ],
+        "mode": "scheduled",
+        "renders": 1,
+        "milliseconds": 6.5
+      },
+      {
+        "round": 7,
+        "order": [
+          "scheduled",
+          "sync"
+        ],
+        "mode": "scheduled",
+        "renders": 1,
+        "milliseconds": 7.700000286102295
+      },
+      {
+        "round": 7,
+        "order": [
+          "scheduled",
+          "sync"
+        ],
+        "mode": "sync",
+        "renders": 20,
+        "milliseconds": 19.300000190734863
+      },
+      {
+        "round": 8,
+        "order": [
+          "sync",
+          "scheduled"
+        ],
+        "mode": "sync",
+        "renders": 20,
+        "milliseconds": 18.300000190734863
+      },
+      {
+        "round": 8,
+        "order": [
+          "sync",
+          "scheduled"
+        ],
+        "mode": "scheduled",
+        "renders": 1,
+        "milliseconds": 8
+      },
+      {
+        "round": 9,
+        "order": [
+          "scheduled",
+          "sync"
+        ],
+        "mode": "scheduled",
+        "renders": 1,
+        "milliseconds": 6.5
+      },
+      {
+        "round": 9,
+        "order": [
+          "scheduled",
+          "sync"
+        ],
+        "mode": "sync",
+        "renders": 20,
+        "milliseconds": 18.200000286102295
+      },
+      {
+        "round": 10,
+        "order": [
+          "sync",
+          "scheduled"
+        ],
+        "mode": "sync",
+        "renders": 20,
+        "milliseconds": 19
+      },
+      {
+        "round": 10,
+        "order": [
+          "sync",
+          "scheduled"
+        ],
+        "mode": "scheduled",
+        "renders": 1,
+        "milliseconds": 6.800000190734863
+      }
+    ]
+  },
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36"
+}
