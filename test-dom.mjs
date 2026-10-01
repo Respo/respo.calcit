@@ -14,6 +14,14 @@ class FakeElement {
     this.firstElementChild = children[0] ?? null
     this.dataset = {}
   }
+
+  getAttribute(name) {
+    return this[name] ?? null
+  }
+
+  removeAttribute(name) {
+    delete this[name === "class" ? "className" : name]
+  }
 }
 
 class FakeSvgElement extends FakeElement {
@@ -132,6 +140,17 @@ if (ssrClicks !== 12 || ssrMount.firstElementChild !== ssrRoot || ssrRoot.childr
 if (ssrRoot.onfocus != null) throw new Error("component switch kept a removed focus handler")
 console.log("typed-SSR-ref-and-events-contract-ok")
 console.log("component-event-coords-contract-ok")
+
+const { verifyDataCompUpdates } = await import("./test/data-comp-fixture.mjs")
+const decoratedRoot = elementHost("a", "", [elementHost("span", "", [])])
+const decoratedMount = elementHost("main", "", [decoratedRoot])
+verifyDataCompUpdates(decoratedMount, () => {
+  decoratedRoot.dataset.comp = "comp-event-shell"
+  decoratedRoot.href = "/page"
+  decoratedRoot.title = "title"
+  return decoratedRoot
+})
+console.log("data-comp-attrs-contract-ok")
 
 const newElement = {}
 const target = {}
