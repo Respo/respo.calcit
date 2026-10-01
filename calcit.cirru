@@ -303,7 +303,7 @@
                 dispatch! $ Op :add "|only 10 items"
                 if (> x 0)
                   recur $ dec x
-              let
+              shared/queue-microtask! $ fn () $ let
                   cost $ -
                     unsafe-coerce (js/Date.now) Number
                     , started
@@ -334,6 +334,7 @@
             respo.app.style.widget :as widget
             respo.css :refer $ defstyle
             respo.app.schema :refer $ Op
+            js-ffi.shared :as shared
     'respo.app.comp.wrap $ %{} 'FileEntry
       :defs $ {} $ 'comp-wrap
         %{} 'CodeEntry (:doc |)
@@ -400,6 +401,40 @@
             respo.schema :refer $ dev?
             respo.app.schema :as schema
             respo.app.updater :refer $ updater
+    'respo.app.scheduler $ %{} 'FileEntry
+      :defs $ {}
+        '*render-watch-generation $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defatom *render-watch-generation 0
+          :examples $ []
+          :schema $ :: 'Ref 'Number
+        'watch-render! $ %{} 'CodeEntry
+          :doc "|Install the demo store watch with one scheduler per registration. Read application state when the render callback runs; replacing the watch invalidates pending callbacks from the previous registration. Pass Option:none for queueMicrotask or Option:some enqueue! for deterministic tests."
+          :code $ quote $ defn watch-render! (render! enqueue-option) (swap! *render-watch-generation inc)
+            let
+                generation @*render-watch-generation
+                schedule! $ make-render-scheduler
+                  fn ()
+                    when (= generation @*render-watch-generation) (render!)
+                    , &unit
+                  , enqueue-option
+              add-watch *store :rerender $ fn (_current _previous) (schedule!)
+            , &unit
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ []
+              :: 'Fn $ {} (:return 'Unit)
+                :args $ []
+              :: 'Option $ :: 'Fn $ {} (:return 'Unit)
+                :args $ [] $ :: 'Fn
+                  {} (:return 'Unit)
+                    :args $ []
+            :features $ #{} :js-ffi
+          :tags $ #{} :internal
+      :ns $ %{} 'NsEntry (:doc |)
+        :code $ quote $ ns respo.app.scheduler
+          :require
+            respo.app.core :refer $ *store
+            respo.core :refer $ make-render-scheduler
     'respo.app.schema $ %{} 'FileEntry
       :defs $ {}
         'Op $ %{} 'CodeEntry (:doc |)
@@ -1951,7 +1986,7 @@
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Element)
             :args $ [] 'respo.schema/DomProps $ :: 'List (:: 'List 'Dynamic)
         'make-render-scheduler $ %{} 'CodeEntry
-          :doc "|Returns a zero-argument scheduler. The default queueMicrotask implementation coalesces repeated requests before its callback runs; a custom enqueue! owns timing semantics. It stores only queued metadata, never application state."
+          :doc "|Returns a zero-argument scheduler. Pass Option:none (or omit the trailing Option argument) to coalesce requests via queueMicrotask, or Option:some enqueue! to supply custom timing. The callback reads the latest application state when it runs; only queued metadata is stored. render! and render-with! themselves remain synchronous. Reuse one scheduler per store watch; resetting its queued flag before rendering allows later requests to schedule another callback."
           :code $ quote $ defn make-render-scheduler (render! enqueue-option)
             let
                 queue! $ match enqueue-option
@@ -1964,8 +1999,8 @@
                 , &unit
           :examples $ [] $ quote
             make-render-scheduler
-              fn () nil
-              fn (task) (task)
+              fn () &unit
+              %:: Option :some $ fn (task) (task)
           :schema $ :: 'Fn $ {}
             :args $ []
               :: 'Fn $ {} (:return 'Unit)
@@ -2944,7 +2979,9 @@
                     :alt $ event.:alt-key
                     :meta $ event.:meta-key
                 send-to-component! event-tuple
-            add-watch *store :rerender $ fn (_store _prev) (render-app! mount-target)
+            watch-render!
+              fn () $ render-app! mount-target
+              %:: Option :none
             println |Loaded.
             browser/set-before-unload! $ fn (_event) (save-store!)
           :examples $ []
@@ -2971,7 +3008,9 @@
           :code $ quote $ defn reload! ()
             if (nil? build-errors)
               do (remove-watch *store :rerender) (clear-cache!) (render-app! mount-target)
-                add-watch *store :rerender $ fn (store prev) (render-app! mount-target)
+                watch-render!
+                  fn () $ render-app! mount-target
+                  %:: Option :none
                 hud! |ok~ |Ok
                 js/console.log "|code updated."
               hud! |error build-errors
@@ -3000,6 +3039,7 @@
             respo.app.task :refer $ normalize-task
             js-ffi.browser :as browser
             respo.ffi.browser :refer $ narrow-element
+            respo.app.scheduler :refer $ watch-render!
     'respo.memo $ %{} 'FileEntry
       :defs $ {}
         '*component-caches $ %{} 'CodeEntry (:doc |)

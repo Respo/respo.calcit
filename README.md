@@ -143,15 +143,20 @@ let
       , dispatch!
 ```
 
-Rerender on store changes:
+Coalesce store changes into one render per microtask (as in the demo):
 
-```cirru
+```cirru.no-check
 let
-    *store $ atom $ {} (:point 0)
-    render-app! $ fn () &unit
-  add-watch *store :changes $ fn (_previous _next)
-    render-app!
+    schedule! $ respo.core/make-render-scheduler
+      fn () $ render-app!
+      %:: Option :none
+  add-watch *store :changes $ fn (_current _previous) (schedule!)
 ```
+
+`render!` and `render-with!` remain synchronous. For an immediate DOM read after
+dispatch, use a watch that calls `render-app!` directly. Scheduled DOM tests await
+the microtask or flush an injected queue. See [scheduler timing and test examples](docs/api.md#make-render-scheduler)
+and [watch replacement during hot swapping](docs/beginner-guide.md#rerender-on-updates).
 
 Memoize keyed list components inside the tree built by `render-with!`:
 

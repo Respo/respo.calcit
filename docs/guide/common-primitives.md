@@ -208,14 +208,17 @@ let
         render-with! mount-target
           fn () (comp-container @*store)
           , dispatch!
-  add-watch *store :changes $ fn ()
+      %:: Option :none
+  add-watch *store :changes $ fn (_current _previous)
     schedule-render!
   schedule-render!
 ```
 
 With the default `queueMicrotask` scheduler, multiple calls before the queued callback runs produce one render. The scheduler owns only its queued flag; the authoritative data remains in `*store`, and the render callback reads the newest immutable value when it runs.
 
-An optional `enqueue!` callback can replace `queueMicrotask`, mainly for deterministic tests or a host-specific scheduler. A custom implementation controls callback timing and may run synchronously, so the default microtask batching guarantee does not apply to it.
+Pass `Option :some enqueue!` to replace `queueMicrotask`, mainly for deterministic tests or a host-specific scheduler. A custom implementation controls callback timing and may run synchronously, so the default microtask batching guarantee does not apply to it. The trailing Option argument may be omitted for the default queue.
+
+`render!` and `render-with!` remain synchronous; call them directly or use a synchronous store watch when code must read the updated DOM immediately. Scheduled tests should await a microtask or explicitly flush their injected queue. Reuse one scheduler per watch registration, and invalidate old queued callbacks when replacing a watch during hot swapping; the [beginner guide](../beginner-guide.md#rerender-on-updates) demonstrates this guard.
 
 ## Error behavior
 

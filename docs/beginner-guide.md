@@ -254,12 +254,27 @@ Dispatching actions is not allowed inside effects, which is unlike React.
 
 ### Rerender on updates
 
-Better to render on page load and changes of data sources:
+Render immediately on page load, then coalesce store changes in a microtask.
+Import `make-render-scheduler` from `respo.core`. The callback reads `@*store`
+when it runs, so several dispatches in one tick produce one render of the newest state:
 
 ```cirru.no-check
+defatom *render-generation 0
+
+defn watch-render! ()
+  swap! *render-generation inc
+  let
+      generation @*render-generation
+      schedule! $ make-render-scheduler
+        fn ()
+          when (= generation @*render-generation) (render-app!)
+          , &unit
+        %:: Option :none
+    add-watch *store :rerender $ fn (_current _previous) (schedule!)
+
 defn main! ()
   render-app!
-  add-watch global-store :rerender render-app!
+  watch-render!
 
 set! (.-onload js/window) main!
 ```
@@ -268,12 +283,28 @@ To cooperate with hot swapping:
 
 ```cirru.no-check
 defn reload! ()
+  remove-watch *store :rerender
   clear-cache!
   render-app!
+  watch-render!
 ```
 
 Notice that `clear-cache!` is from `respo.core` and it clears component caches after code updated.
 Caching is a mechanism to speed up virtual DOM rendering. It's invalidated after code changes.
+`add-watch` replaces the watch registered under the same key. The generation guard
+also skips callbacks queued by the previous registration during hot swapping.
+
+`render!` and `render-with!` remain synchronous. A scheduled watch updates the DOM
+after the current call stack; use the following watch when callers or tests need
+to read the updated DOM immediately after `dispatch!`:
+
+```cirru.no-check
+add-watch *store :rerender $ fn (_current _previous) (render-app!)
+```
+
+For scheduled integration tests, await the queued microtask before checking the DOM.
+For deterministic scheduler tests, pass `Option :some enqueue!` and run the captured
+callback explicitly. See [the scheduler API](api.md#make-render-scheduler).
 
 ### Handling events
 
