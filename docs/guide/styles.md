@@ -202,4 +202,4 @@ Since it's not a GC-based solution, `<style>..</style>` created before hot code 
 
 ### Node.js rendering
 
-During HTML rendering in Node.js , styles are collected in a list in `respo.css/*style-list-in-nodejs`. It's an unstable design but you can get styles from it.
+During HTML rendering in Node.js, styles are collected in `respo.css/*style-list-in-nodejs`. Each style name occupies one position, in first-registration order. Repeating a registration reuses that position; changing its rules replaces the CSS block in place. Resetting this atom to an empty list starts a fresh collection on the next registration. The list remains a process-wide collection; callers manage its lifetime across SSR requests.

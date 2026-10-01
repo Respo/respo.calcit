@@ -2342,6 +2342,10 @@
           :code $ quote $ defatom *style-caches ({})
           :examples $ []
           :schema $ :: 'Ref $ :: 'Map 'String 'respo.css/StyleCacheEntry
+        '*style-indices-in-nodejs $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defatom *style-indices-in-nodejs ({})
+          :examples $ []
+          :schema $ :: 'Ref $ :: 'Map 'String 'Number
         '*style-list-in-nodejs $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defatom *style-list-in-nodejs ([])
           :examples $ []
@@ -2351,32 +2355,54 @@
             :el $ :: 'JsNullish 'respo.dom/DomElement
           :examples $ []
           :schema $ :: 'StructDef
+        'cache-node-style! $ %{} 'CodeEntry
+          :doc "|Store one CSS block per style name in Node, preserving first registration order. Repeated blocks reuse their position; changed blocks replace it. Clearing the public CSS list resets the index cache on the next registration."
+          :code $ quote $ defn cache-node-style! (style-name css-block)
+            when (empty? @*style-list-in-nodejs)
+              reset! *style-indices-in-nodejs $ {}
+            match (get @*style-indices-in-nodejs style-name)
+              (:some index)
+                when-not
+                  =
+                    option:unwrap $ nth @*style-list-in-nodejs index
+                    , css-block
+                  swap! *style-list-in-nodejs assoc index css-block
+              (:none)
+                let
+                    index $ count @*style-list-in-nodejs
+                  swap! *style-list-in-nodejs append css-block
+                  swap! *style-indices-in-nodejs assoc style-name index
+            , style-name
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'String)
+            :args $ [] 'String 'String
         'create-style! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn create-style! (style-name rules)
             assert |expected-rules-in-map $ map? rules
-            match (get @*style-caches style-name)
-              (:some cached)
-                let
-                    cached-entry $ assert-type cached 'respo.css/StyleCacheEntry
-                  if
-                    &= rules $ :rules cached-entry
-                    , style-name $ let
-                        style-el $ unsafe-coerce (:el cached-entry) 'respo.dom/DomElement
-                        css-block $ render-css-block style-name rules
-                      respo.dom/set-inner-html! style-el css-block
-                      swap! *style-caches assoc style-name $ StyleCacheEntry :rules rules :el style-el
-                      , style-name
-              (:none)
-                let
-                    css-block $ render-css-block style-name rules
-                  if nodejs? (swap! *style-list-in-nodejs conj css-block)
+            if nodejs?
+              cache-node-style! style-name $ render-css-block style-name rules
+              match (get @*style-caches style-name)
+                (:some cached)
+                  let
+                      cached-entry $ assert-type cached 'respo.css/StyleCacheEntry
+                    if
+                      &= rules $ :rules cached-entry
+                      , style-name $ let
+                          style-el $ unsafe-coerce (:el cached-entry) 'respo.dom/DomElement
+                          css-block $ render-css-block style-name rules
+                        respo.dom/set-inner-html! style-el css-block
+                        swap! *style-caches assoc style-name $ StyleCacheEntry :rules rules :el style-el
+                        , style-name
+                (:none)
+                  let
+                      css-block $ render-css-block style-name rules
                     let
                         style-el $ unsafe-coerce (js/document.createElement |style) 'respo.dom/DomElement
                       respo.dom/set-inner-html! style-el css-block
                       js-set style-el :id style-name
                       js/document.head.appendChild style-el
                       swap! *style-caches assoc style-name $ StyleCacheEntry :rules rules :el style-el
-                  , style-name
+                    , style-name
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'String)
             :args $ [] 'String 'Dynamic
@@ -4188,12 +4214,17 @@
           :code $ quote $ defn escape-html (text)
             &str:replace
               &str:replace
-                &str:replace (&str:replace text "|\"" |&quot;) |< |&lt;
+                &str:replace
+                  &str:replace (&str:replace text |& |&amp;) "|\"" |&quot;
+                  , |< |&lt;
                 , |> |&gt;
               , &newline |&#13;&#10;
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'String)
             :args $ [] 'String
+          :tests $ [] $ %{} 'TestEntry (:name |preserves-literal-entities)
+            :code $ quote $ assert= |&amp;&amp;amp;&lt;&gt;&quot; (escape-html "|&&amp;<>\"")
+            :tags $ #{} :unit
         'make-string $ %{} 'CodeEntry
           :doc "|Render a component tree to an HTML string for SSR.\n\nIt strips live event handlers and serializes a purified tree so the output stays stable across environments. This is the current HTML output API that replaces older `make-html` references."
           :code $ quote $ defn make-string (element)
@@ -5977,11 +6008,16 @@
         'text->html $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn text->html (x)
             if (nil? x) | $ &str:replace
-              &str:replace (turn-string x) |> |&gt;
+              &str:replace
+                &str:replace (turn-string x) |& |&amp;
+                , |> |&gt;
               , |< |&lt;
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'String)
             :args $ [] 'Dynamic
+          :tests $ [] $ %{} 'TestEntry (:name |preserves-literal-entities)
+            :code $ quote $ assert= |&amp;&amp;amp;&lt;&gt; (text->html |&&amp;<>)
+            :tags $ #{} :unit
         'unitless-props $ %{} 'CodeEntry (:doc "|gemini suggested from popular libs\n")
           :code $ quote $ def unitless-props
             {} (|animationDelay true) (|animationDuration true) (|animationIterationCount true) (|aspectRatio true) (|borderImageOutset true) (|borderImageSlice true) (|borderImageWidth true) (|boxFlex true) (|boxFlexGroup true) (|boxOrdinalGroup true) (|columnCount true) (|columns true) (|fillOpacity true) (|flex true) (|flexGrow true) (|flexNegative true) (|flexPositive true) (|flexShrink true) (|floodOpacity true) (|fontSizeAdjust true) (|fontWeight true) (|gridArea true) (|gridColumn true) (|gridColumnEnd true) (|gridColumnSpan true) (|gridColumnStart true) (|gridRow true) (|gridRowEnd true) (|gridRowSpan true) (|gridRowStart true) (|lineClamp true) (|lineHeight true) (|opacity true) (|order true) (|orphans true) (|stopOpacity true) (|strokeDasharray true) (|strokeDashoffset true) (|strokeMiterlimit true) (|strokeOpacity true) (|strokeWidth true) (|tabSize true) (|transitionDelay true) (|transitionDuration true) (|widows true) (|zIndex true) (|zoom true)

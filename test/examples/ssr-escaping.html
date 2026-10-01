@@ -1,0 +1,36 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="icon" href="data:,"><title>SSR escaping regression</title></head>
+<body><div id="ssr"></div><div id="client"></div><pre id="result"></pre>
+<script type="module">
+import * as c from '../../js-out/calcit.core.mjs';
+import { DomProps } from '../../js-out/respo.schema.mjs';
+import { div, render_$x_ } from '../../js-out/respo.core.mjs';
+import { comp_event_shell } from '../../js-out/respo.test.dom.mjs';
+import { make_string } from '../../js-out/respo.render.html.mjs';
+import { create_style_$x_, render_css_block } from '../../js-out/respo.css.mjs';
+const props = value => c._$n__PCT__$M_(DomProps, ...DomProps.fields.flatMap(field =>
+  [field, ['title', 'inner-text'].includes(field.value) ? value : undefined]));
+const values = ['&', '&amp;', '<', '& &amp; < > "'];
+const ssr = document.querySelector('#ssr');
+const client = document.querySelector('#client');
+for (const value of values) {
+  const tree = comp_event_shell(div(props(value)));
+  ssr.innerHTML = make_string(tree);
+  render_$x_(client, tree, () => {});
+  for (const root of [ssr.firstElementChild, client.firstElementChild]) {
+    if (root.textContent !== value || root.getAttribute('title') !== value)
+      throw new Error(`SSR/client mismatch for ${value}: ${root.outerHTML}`);
+  }
+}
+const tags = c.init_tags(['color']);
+const rules = color => c._$n__$M_('&', c._$n__$M_(tags.color, color));
+const name = 'browser-style-regression';
+create_style_$x_(name, rules('red'));
+create_style_$x_(name, rules('red'));
+create_style_$x_(name, rules('green'));
+const styles = document.querySelectorAll(`style#${name}`);
+if (styles.length !== 1 || styles[0].textContent !== render_css_block(name, rules('green')))
+  throw new Error('Browser style cache changed');
+window.regressionResult = { values: values.length, ssrMatchesClient: true, browserStyleReplaced: true };
+document.querySelector('#result').textContent = JSON.stringify(window.regressionResult);
+</script></body></html>
