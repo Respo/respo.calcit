@@ -170,7 +170,8 @@ list->
 
 `memo-comp-by` matches the component function, key, and complete argument list. Each
 `render-with!` call records active keys and prunes entries that disappeared from the
-latest tree. Passing `nil` as the key bypasses caching. Respo manages this cache
+latest tree. An outer memo hit retains its nested memo entries. Calls outside a
+managed frame compute directly without growing the cache. Passing `nil` as the key bypasses caching. Respo manages this cache
 internally, so applications do not need `memof` for component memoization. See
 [Render list: memoization and memof migration](docs/guide/render-list.md#memoizing-components)
 for setup, lifecycle, and migration details.

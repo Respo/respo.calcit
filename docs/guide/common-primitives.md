@@ -88,7 +88,7 @@ let
 
 The cache identity is the function plus the stable key. A hit also requires the complete argument list to remain equal. Passing `nil` as the key bypasses caching.
 
-Build memoized values inside the tree function passed to `render-with!`. That lets the existing render frame prune keys that disappeared from the latest tree. Prefer immutable return values, and do not use this API for requests, timers, DOM work, or other effects.
+Build memoized values inside the tree function passed to `render-with!`. That lets the render frame prune keys that disappeared from the latest tree. An outer cache hit retains its recorded nested entries transitively; an outer miss records its current dependencies again. Outside an active frame, every call computes directly, even if the same function/key was previously cached, and leaves the cache unchanged. Prefer immutable return values, and do not use this API for requests, timers, DOM work, or other effects.
 
 `memo-value-by` deliberately has a dynamic return schema: Calcit cannot express a variadic higher-order function that preserves every fixed callback signature without rejecting valid callbacks. The callback is still validated at runtime. Add a local `assert-type` when downstream static analysis needs a concrete result type.
 

@@ -110,8 +110,12 @@ the key; an array index is unsafe when items can be inserted, removed, or reorde
 Passing `nil` deliberately bypasses caching.
 
 `render-with!` starts and finishes the memo frame automatically. At the end of the
-frame, Respo removes cached keys that were not visited, so business code must not
-call frame lifecycle functions itself. During hot reload, call `clear-cache!` before
+frame, Respo removes cached keys that were not visited. When an outer memo hits,
+its recorded nested memo dependencies also remain active, including dependencies
+of dependencies. If the outer callback recomputes without a child, that child can
+be pruned in that frame. Calls outside a managed frame compute directly without
+reading or adding cache entries. Business code must not call frame lifecycle
+functions itself. During hot reload, call `clear-cache!` before
 rendering again so components defined by the old code are not retained:
 
 ```cirru.no-check

@@ -8,7 +8,9 @@
     "test-dom-patch-types": "bash scripts/check-dom-patch-types.sh",
     "test-dom-host": "calcit --init-fn respo.test.dom/main! --reload-fn respo.test.dom/verify-dom-regressions! calcit.cirru js && node test-dom.mjs",
     "check-docs": "bash scripts/check-docs-md.sh",
-    "check-quality": "calcit calcit.cirru analyze quality --baseline config/calcit-quality.cirru"
+    "check-quality": "calcit calcit.cirru analyze quality --baseline config/calcit-quality.cirru",
+    "test-memo": "calcit js && node --test test/memo.test.mjs",
+    "bench-memo": "calcit js && node test/memo-bench.mjs"
   },
   "devDependencies": {
     "bottom-tip": "^0.1.5",
