@@ -55,7 +55,9 @@ list->
       [] (:id task) (task-component task)
 ```
 
-Child elements are rendered in the order that items appear in the list. Diffing is not very fast, so don't make the list too large.
+Child elements are rendered in the order that items appear in the list. Use stable, unique keys and profile large lists with your application workload.
+
+Development mode reports the first key in the original list that appears more than once. Detection uses hash membership rather than comparing every pair; structurally equal Calcit keys still count as duplicates, and hash collisions are checked with deep equality. The expected key traversal cost is linear, excluding hashing/comparing complex keys and adversarial collisions.
 
 `list->` validates each `[key child]` pair, then omits pairs whose child is `nil`, just as ordinary elements omit nil children. Adding or deleting a nil-valued pair creates no DOM node. Changing an element to nil removes that node; changing it back restores the node at its keyed position. Remaining children keep their original keys and order. Every pair must still have a non-nil key, including pairs that will be omitted; invalid child values are rejected before filtering.
 

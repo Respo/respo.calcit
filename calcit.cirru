@@ -3197,6 +3197,20 @@
           :require $ respo.util.detect :refer $ component?
     'respo.render.diff $ %{} 'FileEntry
       :defs $ {}
+        'KeyBucketIndex $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ deftrait KeyBucketIndex
+            .get $ :: Fn $ {}
+              :generics $ [] 'T
+              :args $ [] 'T Number
+              :return $ :: JsNullish $ :: List Number
+            .set $ :: Fn $ {}
+              :generics $ [] 'T
+              :args $ [] 'T Number $ :: List Number
+              :return Unit
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object)
+          :schema $ :: 'Trait
+          :tags $ #{} :internal
         'collect-event-refreshing $ %{} 'CodeEntry
           :doc "|Reattach live events with the current virtual and DOM coordinates after a component/element switch. Traverses shared descendants even when the normal diff skips identical subtrees. Ordinary diffing still handles removed events and lifecycle changes."
           :code $ quote $ defn collect-event-refreshing (collect! coord n-coord tree)
@@ -3264,25 +3278,10 @@
         'detect-keys-dup $ %{} 'CodeEntry
           :doc "|Checks for duplicate keys in a list of children. Useful for development mode warnings."
           :code $ quote $ defn detect-keys-dup (child-keys)
-            let
-                size $ count child-keys
-                last-pos $ dec size
-              if (> size 1)
-                loop
-                    p 0
-                    q 1
-                  if
-                    &= (&list:nth child-keys p) (&list:nth child-keys q)
-                    do
-                      eprintln "|duplicated key" $ &list:nth child-keys p
-                      , true
-                    if (&< q last-pos)
-                      recur p $ inc q
-                      let
-                          p-next $ inc p
-                        if (&< p-next last-pos)
-                          recur p-next $ inc p-next
-                          , false
+            match (first-duplicate-key child-keys)
+              (:none) false
+              (:some key)
+                do (eprintln "|duplicated key" key) true
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Bool)
             :args $ [] $ :: 'List 'Dynamic
@@ -3786,6 +3785,129 @@
               :: 'List 'Number
               :: 'List $ :: 'List 'Dynamic
               :: 'List $ :: 'List 'Dynamic
+        'first-duplicate-key $ %{} 'CodeEntry
+          :doc "|Find the first original key which occurs more than once, retaining deep Calcit equality and warning selection. Native evaluation uses hash sets; JavaScript uses hash-indexed buckets backed by native Map, with equality checks for collisions. Expected linear work in the number of keys, excluding key hashing/comparison costs and adversarial collisions."
+          :code $ quote $ defn first-duplicate-key (child-keys)
+            if
+              = :js $ &get-calcit-backend
+              first-duplicate-key-js child-keys
+              first-duplicate-key-native child-keys
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] $ :: 'List 'K
+            :features $ #{} :js-ffi
+            :generics $ [] 'K
+            :return $ :: 'Option 'K
+          :tags $ #{} :internal
+          :tests $ [] $ %{} 'TestEntry (:name |preserves-warning-order-and-deep-equality)
+            :code $ quote $ do
+              assert= (%:: Option :none)
+                first-duplicate-key $ []
+              assert= (%:: Option :none)
+                first-duplicate-key $ [] :a
+              assert= (%:: Option :none)
+                first-duplicate-key $ [] :a :b :c
+              assert= (%:: Option :some :a)
+                first-duplicate-key $ [] :a :b :b :a
+              assert=
+                %:: Option :some $ [] 1 2
+                first-duplicate-key $ [] ([] 1 2) ([] 3) ([] 1 2)
+              assert=
+                %:: Option :some $ {} $ :id 1
+                first-duplicate-key $ []
+                  {} $ :id 1
+                  {} $ :id 2
+                  {} $ :id 1
+            :tags $ #{} :unit
+        'first-duplicate-key-js $ %{} 'CodeEntry
+          :doc "|JavaScript hash-set adapter backed by native Map. Store representative input indices per Calcit hash, confirm equality inside collision buckets, and remember the earliest original duplicate index."
+          :code $ quote $ defn first-duplicate-key-js (child-keys)
+            let
+                buckets $ assert-type (new js/Map) 'respo.render.diff/KeyBucketIndex
+                size $ count child-keys
+              loop
+                  cursor 0
+                  duplicate-position $ %:: Option :none
+                let
+                    index $ assert-type cursor Number
+                    first-position $ assert-type duplicate-position $ :: Option Number
+                  if (= index size)
+                    match first-position
+                      (:none) (%:: Option :none)
+                      (:some position)
+                        %:: Option :some $ &list:nth child-keys position
+                    let
+                        key $ &list:nth child-keys index
+                        key-hash $ &hash key
+                        previous $ js-nullish->option $ .get buckets key-hash
+                        matched $ match previous
+                          (:none) (%:: Option :none)
+                          (:some positions) (index-of-equal-key child-keys positions key)
+                        next-position $ match matched
+                          (:none) first-position
+                          (:some position)
+                            match first-position
+                              (:none) (%:: Option :some position)
+                              (:some first-index)
+                                %:: Option :some $ &min first-index position
+                      match matched
+                        (:some _) &unit
+                        (:none)
+                          .set buckets key-hash $ match previous
+                            (:none) ([] index)
+                            (:some positions) (append positions index)
+                      recur (inc index) next-position
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] $ :: 'List 'K
+            :features $ #{} :js-ffi
+            :generics $ [] 'K
+            :return $ :: 'Option 'K
+          :tags $ #{} :internal
+        'first-duplicate-key-native $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn first-duplicate-key-native (child-keys)
+            let
+                repeated $ loop
+                    remaining child-keys
+                    seen $ #{}
+                    duplicates $ #{}
+                  if (empty? remaining) duplicates $ let
+                      key $ assert-type (&list:first remaining) 'K
+                      seen $ assert-type seen $ :: Set 'K
+                      duplicates $ assert-type duplicates $ :: Set 'K
+                    recur (&list:rest remaining) (include seen key)
+                      if (contains? seen key) (include duplicates key) duplicates
+              if (empty? repeated) (%:: Option :none)
+                loop
+                    remaining child-keys
+                  let
+                      key $ assert-type (&list:first remaining) 'K
+                    if (contains? repeated key) (%:: Option :some key)
+                      recur $ &list:rest remaining
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] $ :: 'List 'K
+            :generics $ [] 'K
+            :return $ :: 'Option 'K
+          :tags $ #{} :internal
+        'index-of-equal-key $ %{} 'CodeEntry
+          :doc "|Compare the candidate against representative input keys inside one hash bucket. Hash collisions never imply equality."
+          :code $ quote $ defn index-of-equal-key (child-keys positions key)
+            loop
+                remaining positions
+              if (empty? remaining) (%:: Option :none)
+                let
+                    index $ assert-type (&list:first remaining) Number
+                  if
+                    &= key $ &list:nth child-keys index
+                    %:: Option :some index
+                    recur $ &list:rest remaining
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'List 'K) (:: 'List 'Number) 'K
+            :generics $ [] 'K
+            :return $ :: 'Option 'Number
+          :tags $ #{} :internal
         'keyed-boundaries $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn keyed-boundaries (old-keys new-keys)
             let
@@ -4602,6 +4724,8 @@
           :doc "|Internal DOM patch executor.\n\nIt walks collected diff operations, finds the target node by DOM coordinate, and applies prop, style, event, element, and effect changes in order."
           :code $ quote $ defn apply-dom-changes (changes mount-point listener-builder)
             let
+                target-cache $ atom $ assert-type ({})
+                  :: 'Map (:: 'List 'Number) 'respo.dom/DomElement
                 find-target-at $ fn (n-coord)
                   hint-fn $ {}
                     :return $ :: 'Option 'respo.dom/DomElement
@@ -4609,8 +4733,7 @@
                   match
                     js-nullish->option $ mount-point.:first-element-child
                     (:none) (%:: Option :none)
-                    (:some root)
-                      js-nullish->option $ find-target root n-coord
+                    (:some root) (find-target-cached root n-coord target-cache)
                 child-snapshots $ atom $ assert-type ({})
                   :: 'Map (:: 'List 'Number) (:: 'List 'respo.dom/DomElement)
                 scroll-snapshot $ atom $ assert-type ({})
@@ -4628,6 +4751,12 @@
                         aset (:node entry) |scrollTop $ :top entry
                         aset (:node entry) |scrollLeft $ :left entry
                   reset! scroll-snapshot $ {}
+                invalidate-at! $ fn (n-coord)
+                  hint-fn $ {} (:return 'Unit)
+                    :args $ [] $ :: 'List 'Number
+                  if (empty? n-coord)
+                    reset! target-cache $ {}
+                    invalidate-target-children! target-cache $ slice n-coord 0 $ dec (count n-coord)
               &doseq (op changes)
                 match op
                   (:replace-prop _coord n-coord key value)
@@ -4635,16 +4764,34 @@
                       replace-prop
                         option:unwrap $ find-target-at n-coord
                         , key value
+                      if
+                        contains? (#{} :outerHTML :outer-html) key
+                        invalidate-at! n-coord
+                        when
+                          contains? (#{} :inner-text :innerHTML :inner-html :innerText :textContent :text-content) key
+                          invalidate-target-children! target-cache n-coord
                   (:add-prop _coord n-coord key value)
                     do (flush-scroll!)
                       add-prop
                         option:unwrap $ find-target-at n-coord
                         , key value
+                      if
+                        contains? (#{} :outerHTML :outer-html) key
+                        invalidate-at! n-coord
+                        when
+                          contains? (#{} :inner-text :innerHTML :inner-html :innerText :textContent :text-content) key
+                          invalidate-target-children! target-cache n-coord
                   (:rm-prop _coord n-coord key)
                     do (flush-scroll!)
                       rm-prop
                         option:unwrap $ find-target-at n-coord
                         , key
+                      if
+                        contains? (#{} :outerHTML :outer-html) key
+                        invalidate-at! n-coord
+                        when
+                          contains? (#{} :inner-text :innerHTML :inner-html :innerText :textContent :text-content) key
+                          invalidate-target-children! target-cache n-coord
                   (:add-style _coord n-coord key value)
                     do (flush-scroll!)
                       add-style
@@ -4675,19 +4822,23 @@
                       add-element
                         option:unwrap $ find-target-at n-coord
                         , element listener-builder coord
+                      invalidate-at! n-coord
                   (:rm-element _coord n-coord)
                     do (flush-scroll!)
                       rm-element $ find-target-at n-coord
+                      invalidate-at! n-coord
                   (:replace-element coord n-coord element)
                     do (flush-scroll!)
                       replace-element
                         option:unwrap $ find-target-at n-coord
                         , element listener-builder coord
+                      invalidate-at! n-coord
                   (:append-element coord n-coord element)
                     do (flush-scroll!)
                       append-element
                         option:unwrap $ find-target-at n-coord
                         , element listener-builder coord
+                      invalidate-target-children! target-cache n-coord
                   (:move-element n-coord source anchor)
                     let
                         parent $ option:unwrap $ find-target-at n-coord
@@ -4701,26 +4852,31 @@
                         not $ contains? @scroll-snapshot n-coord
                         swap! scroll-snapshot assoc n-coord $ collect-scroll-states parent
                       move-element! parent nodes source anchor
+                      invalidate-target-children! target-cache n-coord
                   (:effect-mount _coord n-coord run!)
                     do (flush-scroll!)
                       run-effect
                         option:unwrap $ find-target-at n-coord
                         , run! n-coord
+                      reset! target-cache $ {}
                   (:effect-unmount _coord n-coord run!)
                     do (flush-scroll!)
                       run-effect
                         option:unwrap $ find-target-at n-coord
                         , run! n-coord
+                      reset! target-cache $ {}
                   (:effect-update _coord n-coord run!)
                     do (flush-scroll!)
                       run-effect
                         option:unwrap $ find-target-at n-coord
                         , run! n-coord
+                      reset! target-cache $ {}
                   (:effect-before-update _coord n-coord run!)
                     do (flush-scroll!)
                       run-effect
                         option:unwrap $ find-target-at n-coord
                         , run! n-coord
+                      reset! target-cache $ {}
               flush-scroll!
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
@@ -4759,6 +4915,32 @@
             :args $ [] 'respo.dom/DomElement $ :: 'List 'Number
             :features $ #{} :js-ffi
             :return $ :: 'JsNullish 'respo.dom/DomElement
+        'find-target-cached $ %{} 'CodeEntry
+          :doc "|Locate a DOM target with prefix reuse inside one patch application. Cache only successful lookups. Structural patches retain unchanged ancestors; content properties discard descendants, and lifecycle callbacks clear all targets."
+          :code $ quote $ defn find-target-cached (root coord cache)
+            match (get @cache coord)
+              (:some node) (%:: Option :some node)
+              (:none)
+                if (empty? coord)
+                  do (swap! cache assoc coord root) (%:: Option :some root)
+                  let
+                      parent-coord $ slice coord 0 $ dec (count coord)
+                      index $ assert-type (&list:last coord) Number
+                    match (find-target-cached root parent-coord cache)
+                      (:none) (%:: Option :none)
+                      (:some parent)
+                        match
+                          js-nullish->option $ .item (parent.:children) index
+                          (:none) (%:: Option :none)
+                          (:some child)
+                            do (swap! cache assoc coord child) (%:: Option :some child)
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] 'respo.dom/DomElement (:: 'List 'Number)
+              :: 'Ref $ :: 'Map (:: 'List 'Number) 'respo.dom/DomElement
+            :features $ #{} :js-ffi
+            :return $ :: 'Option 'respo.dom/DomElement
+          :tags $ #{} :internal
         'insert-before-target! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn insert-before-target! (target new-element)
             match
@@ -4774,6 +4956,28 @@
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'respo.dom/DomElement 'respo.dom/DomElement
             :features $ #{} :js-ffi
+        'invalidate-target-children! $ %{} 'CodeEntry
+          :doc "|Conservatively discard cached targets after child structure changes, retaining only the unchanged parent and its ancestors. Work depends on coordinate depth rather than total cached targets, avoiding scans of unrelated cached branches on each move."
+          :code $ quote $ defn invalidate-target-children! (cache parent-coord)
+            loop
+                remaining parent-coord
+                retained $ {}
+              let
+                  path $ assert-type remaining $ :: List Number
+                  entries $ assert-type retained $ :: Map (:: List Number) 'respo.dom/DomElement
+                  next $ match (get @cache path)
+                    (:none) entries
+                    (:some node) (assoc entries path node)
+                if (empty? path) (reset! cache next)
+                  recur
+                    slice path 0 $ dec $ count path
+                    , next
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ []
+              :: 'Ref $ :: 'Map (:: 'List 'Number) 'respo.dom/DomElement
+              :: 'List 'Number
+          :tags $ #{} :internal
         'move-element! $ %{} 'CodeEntry
           :doc "|Move a source node before its snapshot anchor, or to the end. Prefer state-preserving moveBefore for connected nodes; fall back to insertion with focus and subtree scroll restoration."
           :code $ quote $ defn move-element! (parent nodes source anchor)

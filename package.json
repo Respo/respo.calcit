@@ -10,7 +10,9 @@
     "test-keyed-moves": "calcit js && node --test test/keyed-moves.test.mjs",
     "bench-keyed-moves": "calcit js && node test/keyed-moves-bench.mjs",
     "check-docs": "bash scripts/check-docs-md.sh",
-    "check-quality": "calcit calcit.cirru analyze quality --baseline config/calcit-quality.cirru"
+    "check-quality": "calcit calcit.cirru analyze quality --baseline config/calcit-quality.cirru",
+    "test-patch-lookup": "calcit js && node --test test/patch-lookup.test.mjs",
+    "bench-render": "calcit js && node test/render-performance-bench.mjs"
   },
   "devDependencies": {
     "bottom-tip": "^0.1.5",

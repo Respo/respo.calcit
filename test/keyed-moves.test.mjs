@@ -1,45 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-class ElementHost {
-  constructor(name = 'div') {
-    this.localName = name;
-    this.tagName = name.toUpperCase();
-    this.namespaceURI = 'http://www.w3.org/1999/xhtml';
-    this.nodes = [];
-    this.dataset = {};
-    this.style = {};
-    this.scrollTop = 0;
-    this.scrollLeft = 0;
-    this.children = { item: index => this.nodes[index] ?? null };
-    Object.defineProperty(this.children, 'length', { get: () => this.nodes.length });
-  }
-  get firstElementChild() { return this.nodes[0] ?? null; }
-  appendChild(node) {
-    node.remove();
-    this.nodes.push(node);
-    node.parentElement = this;
-    return node;
-  }
-  insertBefore(node, anchor) {
-    if (node === anchor) return node;
-    node.remove();
-    const index = this.nodes.indexOf(anchor);
-    assert.notEqual(index, -1, 'move anchor must remain in the parent');
-    this.nodes.splice(index, 0, node);
-    node.parentElement = this;
-    return node;
-  }
-  remove() {
-    if (this.parentElement) {
-      this.parentElement.nodes.splice(this.parentElement.nodes.indexOf(this), 1);
-      this.parentElement = null;
-    }
-  }
-  querySelector() { return null; }
-  matches(selector) { return selector === 'svg' && this.localName === 'svg'; }
-  getContext() { return null; }
-}
+import { ElementHost } from './dom-host.mjs';
 globalThis.Element = ElementHost;
 globalThis.document = { createElement: name => new ElementHost(name) };
 const c = await import('../js-out/calcit.core.mjs');
