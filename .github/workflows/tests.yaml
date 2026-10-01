@@ -69,6 +69,9 @@ jobs:
       - name: Test memo frame lifecycle
         run: yarn test-memo
 
+      - name: Test keyed node moves
+        run: yarn test-keyed-moves
+
       - name: "check docs markdown"
         run: bash scripts/check-docs-md.sh
 

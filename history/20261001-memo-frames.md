@@ -1,39 +1,51 @@
-# Memo frame fixes — #190
+# Memo 帧修复 — #190
 
-Baseline: main `69081288a83cb43eb49af4f030ea9bfd06e57a12`. Calcit and @calcit/procs `0.28.0-alpha.3`, Node `24.4.1`, macOS arm64.
+基线为 main `69081288a83cb43eb49af4f030ea9bfd06e57a12`。工具版本：Calcit 和 @calcit/procs `0.28.0-alpha.3`、Node `24.4.1`，macOS arm64。
 
-## Choice
+## 实现选择
 
-Record direct child keys on each memo entry and retain their transitive dependencies when the outer entry hits. A miss records the new dependency set. An entry already computed in the current frame wins over its previous-frame entry; promoting a key before traversing its children prevents repeated paths and cycles.
+每个 memo 条目记录直接调用的子缓存 key。外层条目命中时，递归保留这些依赖；未命中时重新记录依赖集合。当前帧已经计算出的条目优先于上一帧条目。先提升条目再遍历依赖，避免重复路径和依赖环造成重复处理。
 
-Compared with retaining untouched entries for N generations, dependencies keep children alive for arbitrarily many outer hits and preserve immediate pruning when a subtree disappears. A fixed retention period would still expire nested children behind a long-lived outer hit and retain unrelated inactive entries for extra frames. The chosen approach stores one set of direct child keys per entry and adds traversal cost on hits.
+这种方式允许嵌套条目在外层连续命中时一直存活，同时在子树消失时立即清理对应条目。固定保留 N 帧仍会使长期外层命中下的子缓存过期，并额外保留无关条目。当前方案为每个条目增加一个直接依赖集合，并在命中时承担依赖遍历成本。
 
-Outside frames, compute directly without looking up or inserting entries. A warning alone would leave the verified cache-growth defect intact. The public call shape, callback-plus-key identity, nil-key bypass, and deep argument comparison remain unchanged. Cache identity does not add dependency invalidation: a callback must still describe all value inputs through its immutable arguments.
+帧外调用直接计算，不查询也不写入缓存。只输出警告无法修复已经复现的缓存增长问题。公开调用方式、函数与 key 组成的缓存身份、nil key 绕过缓存、参数深度相等比较保持原有语义。依赖关系只用于保留条目，不会自动使缓存失效：回调仍须通过不可变参数完整表达影响结果的输入。
 
-## Reproduction and verification
+## 复现与验证
 
-The initial native regressions failed on the baseline: after an outer hit the three-level memo cache shrank to one entry, and 40 out-of-frame calls populated the global cache. After the fix:
+最初的原生回归在基线上失败：外层命中后，三层 memo 缓存缩减为一个条目；40 次帧外调用写入了全局缓存。修复后验证了：
 
-- Three-level nesting survives four consecutive outer hits and a later outer miss, with one inner computation.
-- Changed parents prune dependencies they no longer invoke; an empty frame clears all entries.
-- Calls outside frames do not grow caches or read previous entries.
-- Failed callbacks restore the dependency stack; current-frame child entries survive promotion from an outer hit.
-- 63 native tests pass, including existing memo tests. Two compiled JavaScript memo tests cover nested reuse, deep equality, pruning, and frame isolation; seven total Node tests pass with the SSR/nullish suites.
-- DOM host, snapshot validation, patch types, docs (127 snippets), and Vite build pass. Type debt metrics have zero delta.
-- Chrome demo adds/removes a task and its cache changes from one entry to zero. There are no JavaScript exceptions; the existing `/favicon.ico` request returns 404.
+- 三层嵌套经过四次连续外层命中及后续一次外层未命中，内部计算仍只执行一次。
+- 父条目重新计算时，清理不再调用的依赖；空帧清空全部条目。
+- 帧外调用不读取旧条目，也不会使缓存增长。
+- 回调失败后恢复依赖栈；外层命中提升旧条目时，保留当前帧已计算的子条目。
+- 初次实现通过 63 项原生测试；两个编译后的 JavaScript memo 测试覆盖嵌套复用、深度相等、清理和帧隔离。加上 SSR/nullish 套件，共七项 Node 测试通过。
+- DOM host、快照校验、patch 类型、文档中的 127 个代码片段、Vite 构建通过；类型债务指标无增长。
+- Chrome 示例添加、删除任务后，缓存条目从一个变为零。没有 JavaScript 异常；原有 `/favicon.ico` 请求返回 404。
 
-## Benchmark
+## 渲染异常后的帧清理
 
-Compile both checkouts, then run `node test/memo-bench.mjs /path/to/compiled-baseline`. Worker isolation keeps Calcit trait registries separate. Three warmup rounds precede eleven measured rounds, alternating revision order and rotating workloads. Timing includes the complete workload and frame lifecycle; each measured workload starts with empty caches. Each derived value has 1000 numbers. [Raw samples and execution order](20261001-memo-bench.json) accompany the medians.
+`render-with!` 捕获向外传播的渲染错误，通过 `abort-memo-frame!` 清空当前帧标记、临时条目和依赖栈，然后重新抛出原 Calcit 错误消息。上次成功提交的缓存保持不变，失败帧的部分结果不会提交。
 
-- Nested: 60 frames, outer args change every sixth frame, with two nested memos below the outer memo.
-- Flat: 100 keys across ten frames, unchanged arguments after initial misses.
-- Outside: 1000 distinct keys without a render frame.
+新增的编译后回归先写入部分条目，再抛出错误。修复前得到 42 次回调调用，预期为 44 次；修复后确认帧外调用直接计算、成功提交的旧条目仍可复用、部分条目在下一帧重新计算。增加该回归后，64 项原生测试、八项 memo/SSR/nullish Node 测试及浏览器恢复流程通过。
 
-| Workload | ms before | ms after | Derived calls before → after | Retained entries before → after |
+## 基准测试
+
+编译两个 checkout 后，运行 `node test/memo-bench.mjs /path/to/compiled-baseline`。两个版本分别在 Worker 中执行，隔离 Calcit trait 注册表。先进行三轮预热，再测量十一轮；每轮交替执行版本，并轮换负载顺序。计时包含完整负载和帧生命周期，每个测量负载从空缓存开始。每个派生结果包含 1000 个数字。[原始样本和执行顺序](20261001-memo-bench.json)记录中位数的来源。
+
+- 嵌套：60 帧，外层参数每六帧变化一次，外层下方有两层 memo。
+- 平铺：100 个 key，运行十帧；初次未命中后参数不变。
+- 帧外：不启动渲染帧，调用 1000 个不同 key。
+
+| 负载 | 修复前耗时 / ms | 修复后耗时 / ms | 派生计算次数：前 → 后 | 保留条目：前 → 后 |
 | --- | --- | --- | --- | --- |
 | nested | 0.415 | 0.325 | 10 → 1 | 1 → 3 |
 | flat | 4.404 | 4.845 | 100 → 100 | 100 → 100 |
 | outside | 31.418 | 30.189 | 1000 → 1000 | 1000 → 0 |
 
-These local timings are observations, not performance assertions. The flat workload has about 10% overhead from dependency bookkeeping. Nested retention reduces repeated computations; the larger nested cache is intentional. The outside workload no longer retains its 1000 derived results.
+这些本地计时仅作为观察结果，不是性能断言。平铺负载因依赖记录增加约 10% 开销；嵌套依赖保留减少重复计算，其缓存条目增加符合预期。帧外负载不再保留 1000 个派生结果。
+
+## 同步 main 与中文文档（2026-10-01）
+
+合并最新 main `87f2242` 后，解决 CI 步骤冲突，同时保留 `test-memo` 和 `test-keyed-moves`。对比合并前后的 21 个 memo/render-with! 定义，代码、schema 和附加测试完全一致；函数文档改为中文。列表渲染、常用原语和本记录改为中文，保留原英文章节锚点，避免已有链接失效。
+
+合并后的验证：66 项原生测试、14 项 memo/keyed-moves/SSR/nullish Node 测试通过；严格检查、类型质量基线、DOM host、DomPatch 正负类型检查通过；63 份 Markdown 文档中的 113 个可检查片段通过；Vite 构建通过。

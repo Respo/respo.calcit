@@ -7,6 +7,8 @@
     "test-ssr": "calcit js && node --test test/ssr-css.test.mjs",
     "test-dom-patch-types": "bash scripts/check-dom-patch-types.sh",
     "test-dom-host": "calcit --init-fn respo.test.dom/main! --reload-fn respo.test.dom/verify-dom-regressions! calcit.cirru js && node test-dom.mjs",
+    "test-keyed-moves": "calcit js && node --test test/keyed-moves.test.mjs",
+    "bench-keyed-moves": "calcit js && node test/keyed-moves-bench.mjs",
     "check-docs": "bash scripts/check-docs-md.sh",
     "check-quality": "calcit calcit.cirru analyze quality --baseline config/calcit-quality.cirru",
     "test-memo": "calcit js && node --test test/memo.test.mjs",
