@@ -12,6 +12,7 @@ class FakeElement {
     this.childElementCount = children.length
     this.children = childrenHost(children)
     this.firstElementChild = children[0] ?? null
+    this.dataset = {}
   }
 }
 
@@ -69,7 +70,7 @@ globalThis.document = {
   },
 }
 
-const { main_$x_, svg_host_smoke_$x_, verify_realize_ssr_ref_$x_ } = await import("./js-out/respo.test.dom.mjs")
+const { main_$x_, svg_host_smoke_$x_, verify_dom_regressions_$x_ } = await import("./js-out/respo.test.dom.mjs")
 const { add_prop, insert_before_target_$x_, remove_target_$x_, replace_prop, rm_prop } = await import("./js-out/respo.render.patch.mjs")
 const { CalcitSliceList, init_tags } = await import("@calcit/procs")
 const { set_inner_html_$x_ } = await import("./js-out/respo.dom.mjs")
@@ -124,11 +125,13 @@ const clickSsrElement = (target) => {
   if (!stopped) throw new Error("SSR event did not stop propagation")
   ssrClicks += 1
 }
-verify_realize_ssr_ref_$x_(ssrMount, ssrRoot, ssrChild, clickSsrElement)
-if (ssrClicks !== 6 || ssrMount.firstElementChild !== ssrRoot || ssrRoot.children.item(0) !== ssrChild) {
+verify_dom_regressions_$x_(ssrMount, ssrRoot, ssrChild, clickSsrElement)
+if (ssrClicks !== 12 || ssrMount.firstElementChild !== ssrRoot || ssrRoot.children.item(0) !== ssrChild) {
   throw new Error("SSR adoption did not preserve the existing DOM through subsequent renders")
 }
+if (ssrRoot.onfocus != null) throw new Error("component switch kept a removed focus handler")
 console.log("typed-SSR-ref-and-events-contract-ok")
+console.log("component-event-coords-contract-ok")
 
 const newElement = {}
 const target = {}

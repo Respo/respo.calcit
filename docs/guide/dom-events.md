@@ -70,3 +70,5 @@ defn event->edn (event)
 ```
 
 Events are bound directly on the elements for simplicity and consistency. And it stops propagation when event is triggered.
+
+When a position switches between a `defcomp` component and a plain element, Respo refreshes event coordinates throughout the resulting subtree. Root and descendant events resolve the current handlers, including descendants whose virtual nodes are reused unchanged. Removing an event prop still removes its DOM handler.
