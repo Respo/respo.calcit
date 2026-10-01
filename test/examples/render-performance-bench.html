@@ -1,0 +1,63 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="icon" href="data:,"><title>Render performance</title></head>
+<body><pre id="result">Running paired render workloads…</pre><script type="module">
+import { createPerformanceFixture } from '../render-performance-fixture.mjs';
+const fixtures = await createPerformanceFixture(new URL('/', location.href));
+const sample = scenario => {
+  const start = performance.now();
+  const evidence = fixtures[scenario].run();
+  const milliseconds = performance.now() - start;
+  fixtures[scenario].verify();
+  return { milliseconds, ...evidence };
+};
+const params = new URLSearchParams(location.search);
+if (params.has('worker')) {
+  addEventListener('message', event => {
+    if (event.source !== parent || event.data?.type !== 'render-bench-sample') return;
+    event.source.postMessage({ type: 'render-bench-result', ...sample(event.data.scenario) }, event.origin);
+  });
+  parent.postMessage({ type: 'render-bench-ready' }, '*');
+} else {
+  let remoteSample;
+  if (params.has('baseline')) {
+    const url = new URL(params.get('baseline')); url.searchParams.set('worker', '1');
+    const baseline = document.createElement('iframe'); baseline.style.cssText = 'width:800px;height:600px';
+    const ready = new Promise(resolve => {
+      const receive = event => {
+        if (event.source !== baseline.contentWindow || event.origin !== url.origin || event.data?.type !== 'render-bench-ready') return;
+        removeEventListener('message', receive); resolve();
+      };
+      addEventListener('message', receive);
+    });
+    baseline.src = url.href; document.body.appendChild(baseline); await ready;
+    remoteSample = scenario => new Promise(resolve => {
+      const receive = event => {
+        if (event.source !== baseline.contentWindow || event.origin !== url.origin || event.data?.type !== 'render-bench-result') return;
+        removeEventListener('message', receive);
+        const { type, ...result } = event.data; resolve(result);
+      };
+      addEventListener('message', receive);
+      baseline.contentWindow.postMessage({ type: 'render-bench-sample', scenario }, url.origin);
+    });
+  }
+  const scenarios = ['deep', 'long-list', 'dispatch', 'listener-index-prototype'];
+  const samples = [];
+  for (let round = -3; round < 11; round++) {
+    const offset = (round + 3) % scenarios.length;
+    for (const scenario of [...scenarios.slice(offset), ...scenarios.slice(0, offset)]) {
+      const order = remoteSample ? (round % 2 === 0 ? ['baseline', 'candidate'] : ['candidate', 'baseline']) : ['candidate'];
+      for (const revision of order) {
+        const result = revision === 'baseline' ? await remoteSample(scenario) : sample(scenario);
+        if (round >= 0) samples.push({ execution: samples.length, round, order, revision, scenario, ...result });
+      }
+    }
+  }
+  const results = [...new Set(samples.map(entry => entry.revision))].flatMap(revision => scenarios.map(scenario => {
+    const rows = samples.filter(entry => entry.revision === revision && entry.scenario === scenario);
+    const times = rows.map(entry => entry.milliseconds).sort((a, b) => a - b);
+    const { milliseconds, execution, round, order, ...evidence } = rows[0];
+    return { ...evidence, milliseconds: Number(times[5].toFixed(3)) };
+  }));
+  window.benchmarkResults = { results, samples };
+  document.querySelector('#result').textContent = JSON.stringify(window.benchmarkResults);
+}
+</script></body></html>

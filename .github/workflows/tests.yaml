@@ -69,6 +69,15 @@ jobs:
       - name: Test demo render scheduling
         run: yarn test-demo-scheduler
 
+      - name: Test memo frame lifecycle
+        run: yarn test-memo
+
+      - name: Test keyed node moves
+        run: yarn test-keyed-moves
+
+      - name: Test patch lookup and duplicate keys
+        run: yarn test-patch-lookup
+
       - name: "check docs markdown"
         run: bash scripts/check-docs-md.sh
 

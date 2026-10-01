@@ -63,3 +63,15 @@ yarn vite --host 127.0.0.1
 
 The beginner guide and API reference show both timing choices, deterministic
 queue injection, and pending callback guards during watch replacement.
+
+## 合入主分支后的冲突验证
+
+合入最新 `main`（`dccf7f8`，包含 #205 和 #209）。CI 保留调度器、memo、keyed
+移动与 patch lookup 的测试入口；文档冲突以中文整合，明确直接渲染仍同步执行，
+调度测试需要等待微任务或清空注入队列。
+
+- 严格编译、67 项原生测试、25 项 Node 回归、类型补丁协议与 typed DOM host 通过。
+- 质量门禁、65 份文档的 116 个可执行代码块及 Vite 生产构建通过。
+- Chrome 154 确认 20 次连续 dispatch 合并为一次渲染，watch 替换只触发一次新回调。
+  同步 DOM 读取及热更新检查通过，刷新后无控制台错误。
+- 原始基准 JSON 沿用主分支的 `history/*-bench.json` generated 标记，未新增大 JSON。

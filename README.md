@@ -136,14 +136,14 @@ let
     comp-container $ fn (state) state
   dispatch! $ :: :TODO 1 2
 
-  ; build the tree inside a managed memo frame, then render to the DOM
+  ; 在受管理的 memo 帧内构建组件树，再渲染到 DOM
   defn render-app! ()
     respo.core/render-with! mount-point
       fn () $ comp-container @*store
       , dispatch!
 ```
 
-Coalesce store changes into one render per microtask (as in the demo):
+与 demo 一样，将同一微任务前的 store 更新合并为一次渲染：
 
 ```cirru.no-check
 let
@@ -153,12 +153,12 @@ let
   add-watch *store :changes $ fn (_current _previous) (schedule!)
 ```
 
-`render!` and `render-with!` remain synchronous. For an immediate DOM read after
-dispatch, use a watch that calls `render-app!` directly. Scheduled DOM tests await
-the microtask or flush an injected queue. See [scheduler timing and test examples](docs/api.md#make-render-scheduler)
-and [watch replacement during hot swapping](docs/beginner-guide.md#rerender-on-updates).
+`render!` 和 `render-with!` 仍同步执行。如果 dispatch 后需要立即读取更新后的 DOM，
+让 watch 直接调用 `render-app!`。使用调度器的 DOM 测试应等待微任务或清空注入的队列。
+详见[调度时机与测试示例](docs/api.md#make-render-scheduler)及
+[热更新时替换 watch](docs/beginner-guide.md#rerender-on-updates)。
 
-Memoize keyed list components inside the tree built by `render-with!`:
+在 `render-with!` 构建的组件树中，为带业务 key 的列表组件启用缓存：
 
 ```cirru.no-check
 ; ns app.demo $ :require
@@ -173,12 +173,12 @@ list->
         [] task-id $ memo-comp-by task-id comp-task (>> states task-id) task
 ```
 
-`memo-comp-by` matches the component function, key, and complete argument list. Each
-`render-with!` call records active keys and prunes entries that disappeared from the
-latest tree. Passing `nil` as the key bypasses caching. Respo manages this cache
-internally, so applications do not need `memof` for component memoization. See
-[Render list: memoization and memof migration](docs/guide/render-list.md#memoizing-components)
-for setup, lifecycle, and migration details.
+`memo-comp-by` 按组件函数、key 和完整参数列表匹配缓存。每次 `render-with!` 调用都会记录
+活跃的 key，并清除已从最新组件树中消失的条目。外层 memo 命中时，会保留其嵌套依赖的缓存。
+在受管理的帧之外调用时，直接计算结果，不读取或增加缓存；传入 `nil` key 也会绕过缓存。
+Respo 内部管理这些条目，应用无需再依赖 `memof` 缓存组件。
+如果组件树构建抛出异常，当前帧会被丢弃，保留上次成功提交的缓存，并重新抛出原错误。
+配置、生命周期和迁移方式见[列表渲染指南](docs/guide/render-list.md#memoizing-components)。
 
 Reset virtual DOM caching during hot code swapping, and rerender:
 
@@ -262,6 +262,7 @@ This index helps LLM tools automatically fetch and reference documentation using
 | Typed Dispatch    | [docs/guide/type-slots.md](docs/guide/type-slots.md)               | Entry-level `Op` binding and checks                        |
 | Styles            | [docs/guide/styles.md](docs/guide/styles.md)                       | CSS and styling approach                                   |
 | Render Lists      | [docs/guide/render-list.md](docs/guide/render-list.md)             | Efficient list rendering                                   |
+| Renderer Upgrades | [docs/guide/upgrade.md](docs/guide/upgrade.md)                     | Internal patch protocol changes                            |
 | Common Primitives | [docs/guide/common-primitives.md](docs/guide/common-primitives.md) | Conditional UI, lifecycle, resources, errors, and batching |
 | Hot Swapping      | [docs/guide/hot-swapping.md](docs/guide/hot-swapping.md)           | Hot code reloading setup                                   |
 | Server Rendering  | [docs/guide/server-rendering.md](docs/guide/server-rendering.md)   | SSR capabilities                                           |
