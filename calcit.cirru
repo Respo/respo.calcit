@@ -4613,56 +4613,81 @@
                       js-nullish->option $ find-target root n-coord
                 child-snapshots $ atom $ assert-type ({})
                   :: 'Map (:: 'List 'Number) (:: 'List 'respo.dom/DomElement)
-                scroll-snapshot $ atom $ assert-type (%:: Option :none)
-                  :: 'Option $ :: 'List 'respo.render.patch/MoveScrollState
+                scroll-snapshot $ atom $ assert-type ({})
+                  :: 'Map (:: 'List 'Number) (:: 'List 'respo.render.patch/MoveScrollState)
+                flush-scroll! $ fn ()
+                  hint-fn $ {} (:return 'Unit)
+                    :args $ []
+                    :features $ #{} :js-ffi
+                  &doseq
+                    pair $ &map:to-list @scroll-snapshot
+                    &doseq
+                      state $ respo.util.list/pair-value pair
+                      let
+                          entry $ assert-type state 'respo.render.patch/MoveScrollState
+                        aset (:node entry) |scrollTop $ :top entry
+                        aset (:node entry) |scrollLeft $ :left entry
+                  reset! scroll-snapshot $ {}
               &doseq (op changes)
                 match op
                   (:replace-prop _coord n-coord key value)
-                    replace-prop
-                      option:unwrap $ find-target-at n-coord
-                      , key value
+                    do (flush-scroll!)
+                      replace-prop
+                        option:unwrap $ find-target-at n-coord
+                        , key value
                   (:add-prop _coord n-coord key value)
-                    add-prop
-                      option:unwrap $ find-target-at n-coord
-                      , key value
+                    do (flush-scroll!)
+                      add-prop
+                        option:unwrap $ find-target-at n-coord
+                        , key value
                   (:rm-prop _coord n-coord key)
-                    rm-prop
-                      option:unwrap $ find-target-at n-coord
-                      , key
+                    do (flush-scroll!)
+                      rm-prop
+                        option:unwrap $ find-target-at n-coord
+                        , key
                   (:add-style _coord n-coord key value)
-                    add-style
-                      option:unwrap $ find-target-at n-coord
-                      , key value
+                    do (flush-scroll!)
+                      add-style
+                        option:unwrap $ find-target-at n-coord
+                        , key value
                   (:replace-style _coord n-coord key value)
-                    replace-style
-                      option:unwrap $ find-target-at n-coord
-                      , key value
+                    do (flush-scroll!)
+                      replace-style
+                        option:unwrap $ find-target-at n-coord
+                        , key value
                   (:rm-style _coord n-coord key)
-                    rm-style
-                      option:unwrap $ find-target-at n-coord
-                      , key
+                    do (flush-scroll!)
+                      rm-style
+                        option:unwrap $ find-target-at n-coord
+                        , key
                   (:set-event coord n-coord event-name)
-                    add-event
-                      option:unwrap $ find-target-at n-coord
-                      , event-name listener-builder coord
+                    do (flush-scroll!)
+                      add-event
+                        option:unwrap $ find-target-at n-coord
+                        , event-name listener-builder coord
                   (:rm-event _coord n-coord event-name)
-                    rm-event
-                      option:unwrap $ find-target-at n-coord
-                      , event-name
+                    do (flush-scroll!)
+                      rm-event
+                        option:unwrap $ find-target-at n-coord
+                        , event-name
                   (:add-element coord n-coord element)
-                    add-element
-                      option:unwrap $ find-target-at n-coord
-                      , element listener-builder coord
+                    do (flush-scroll!)
+                      add-element
+                        option:unwrap $ find-target-at n-coord
+                        , element listener-builder coord
                   (:rm-element _coord n-coord)
-                    rm-element $ find-target-at n-coord
+                    do (flush-scroll!)
+                      rm-element $ find-target-at n-coord
                   (:replace-element coord n-coord element)
-                    replace-element
-                      option:unwrap $ find-target-at n-coord
-                      , element listener-builder coord
+                    do (flush-scroll!)
+                      replace-element
+                        option:unwrap $ find-target-at n-coord
+                        , element listener-builder coord
                   (:append-element coord n-coord element)
-                    append-element
-                      option:unwrap $ find-target-at n-coord
-                      , element listener-builder coord
+                    do (flush-scroll!)
+                      append-element
+                        option:unwrap $ find-target-at n-coord
+                        , element listener-builder coord
                   (:move-element n-coord source anchor)
                     let
                         parent $ option:unwrap $ find-target-at n-coord
@@ -4672,39 +4697,31 @@
                             (:some cached) cached
                           :: 'List 'respo.dom/DomElement
                       swap! child-snapshots assoc n-coord $ assert-type nodes $ :: 'List 'respo.dom/DomElement
-                      match @scroll-snapshot
-                        (:some _) &unit
-                        (:none)
-                          match
-                            find-target-at $ []
-                            (:none) &unit
-                            (:some root)
-                              reset! scroll-snapshot $ %:: Option :some $ collect-scroll-states root
+                      when
+                        not $ contains? @scroll-snapshot n-coord
+                        swap! scroll-snapshot assoc n-coord $ collect-scroll-states parent
                       move-element! parent nodes source anchor
                   (:effect-mount _coord n-coord run!)
-                    run-effect
-                      option:unwrap $ find-target-at n-coord
-                      , run! n-coord
+                    do (flush-scroll!)
+                      run-effect
+                        option:unwrap $ find-target-at n-coord
+                        , run! n-coord
                   (:effect-unmount _coord n-coord run!)
-                    run-effect
-                      option:unwrap $ find-target-at n-coord
-                      , run! n-coord
+                    do (flush-scroll!)
+                      run-effect
+                        option:unwrap $ find-target-at n-coord
+                        , run! n-coord
                   (:effect-update _coord n-coord run!)
-                    run-effect
-                      option:unwrap $ find-target-at n-coord
-                      , run! n-coord
+                    do (flush-scroll!)
+                      run-effect
+                        option:unwrap $ find-target-at n-coord
+                        , run! n-coord
                   (:effect-before-update _coord n-coord run!)
-                    run-effect
-                      option:unwrap $ find-target-at n-coord
-                      , run! n-coord
-              match @scroll-snapshot
-                (:none) &unit
-                (:some states)
-                  &doseq (state states)
-                    let
-                        entry $ assert-type state 'respo.render.patch/MoveScrollState
-                      aset (:node entry) |scrollTop $ :top entry
-                      aset (:node entry) |scrollLeft $ :left entry
+                    do (flush-scroll!)
+                      run-effect
+                        option:unwrap $ find-target-at n-coord
+                        , run! n-coord
+              flush-scroll!
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] (:: 'List 'respo.schema/DomPatch) 'respo.dom/DomElement 'Fn
@@ -5251,9 +5268,14 @@
                     :children $ []
                     :ref nil
                   run! $ fn (_target) &unit
-                  patches $ [] (DomPatch :replace-prop coord n-coord :title |next) (DomPatch :add-prop coord n-coord :title |new) (DomPatch :rm-prop coord n-coord :title) (DomPatch :add-style coord n-coord :color |red) (DomPatch :replace-style coord n-coord :color |blue) (DomPatch :rm-style coord n-coord :color) (DomPatch :set-event coord n-coord :click) (DomPatch :rm-event coord n-coord :click) (DomPatch :add-element coord n-coord element) (DomPatch :rm-element coord n-coord) (DomPatch :replace-element coord n-coord element) (DomPatch :append-element coord n-coord element) (DomPatch :effect-mount coord n-coord run!) (DomPatch :effect-unmount coord n-coord run!) (DomPatch :effect-update coord n-coord run!) (DomPatch :effect-before-update coord n-coord run!)
-                assert |all-variants-construct $ = 16 $ count patches
-                match (&list:nth patches 15)
+                  patches $ [] (DomPatch :replace-prop coord n-coord :title |next) (DomPatch :add-prop coord n-coord :title |new) (DomPatch :rm-prop coord n-coord :title) (DomPatch :add-style coord n-coord :color |red) (DomPatch :replace-style coord n-coord :color |blue) (DomPatch :rm-style coord n-coord :color) (DomPatch :set-event coord n-coord :click) (DomPatch :rm-event coord n-coord :click) (DomPatch :add-element coord n-coord element) (DomPatch :rm-element coord n-coord) (DomPatch :replace-element coord n-coord element) (DomPatch :append-element coord n-coord element)
+                    DomPatch :move-element n-coord 0 $ %:: Option :none
+                    DomPatch :effect-mount coord n-coord run!
+                    DomPatch :effect-unmount coord n-coord run!
+                    DomPatch :effect-update coord n-coord run!
+                    DomPatch :effect-before-update coord n-coord run!
+                assert |all-variants-construct $ = 17 $ count patches
+                match (&list:nth patches 16)
                   (:effect-before-update _coord _n-coord _run!) (assert |last-variant-matches true)
                   _ $ assert |last-variant-is-wrong false
               :tags $ #{} :unit

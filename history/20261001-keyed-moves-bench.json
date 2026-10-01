@@ -1,0 +1,4509 @@
+{
+  "baseline": "97a4bc658ab00c11e20f7cdb370e74313982cd68",
+  "candidateBase": "16d9a7ca60c01c5072ad49db8f1d822ad806933b",
+  "candidate": "review fixes in this commit",
+  "node": {
+    "sampleCount": 11,
+    "results": [
+      {
+        "revision": "baseline",
+        "size": 100,
+        "case": "rotate",
+        "patches": 6,
+        "kinds": {
+          "add-element": 1,
+          "effect-mount": 2,
+          "effect-unmount": 2,
+          "rm-element": 1
+        },
+        "milliseconds": 0.098
+      },
+      {
+        "revision": "baseline",
+        "size": 100,
+        "case": "reverse",
+        "patches": 594,
+        "kinds": {
+          "add-element": 99,
+          "effect-mount": 198,
+          "effect-unmount": 198,
+          "rm-element": 99
+        },
+        "milliseconds": 0.535
+      },
+      {
+        "revision": "baseline",
+        "size": 100,
+        "case": "swap",
+        "patches": 6,
+        "kinds": {
+          "add-element": 1,
+          "effect-mount": 2,
+          "effect-unmount": 2,
+          "rm-element": 1
+        },
+        "milliseconds": 0.095
+      },
+      {
+        "revision": "baseline",
+        "size": 100,
+        "case": "unchanged",
+        "patches": 0,
+        "kinds": {},
+        "milliseconds": 0.092
+      },
+      {
+        "revision": "baseline",
+        "size": 1000,
+        "case": "rotate",
+        "patches": 6,
+        "kinds": {
+          "add-element": 1,
+          "effect-mount": 2,
+          "effect-unmount": 2,
+          "rm-element": 1
+        },
+        "milliseconds": 0.993
+      },
+      {
+        "revision": "baseline",
+        "size": 1000,
+        "case": "reverse",
+        "patches": 5994,
+        "kinds": {
+          "add-element": 999,
+          "effect-mount": 1998,
+          "effect-unmount": 1998,
+          "rm-element": 999
+        },
+        "milliseconds": 6.101
+      },
+      {
+        "revision": "baseline",
+        "size": 1000,
+        "case": "swap",
+        "patches": 6,
+        "kinds": {
+          "add-element": 1,
+          "effect-mount": 2,
+          "effect-unmount": 2,
+          "rm-element": 1
+        },
+        "milliseconds": 0.988
+      },
+      {
+        "revision": "baseline",
+        "size": 1000,
+        "case": "unchanged",
+        "patches": 0,
+        "kinds": {},
+        "milliseconds": 0.982
+      },
+      {
+        "revision": "candidate",
+        "size": 100,
+        "case": "rotate",
+        "patches": 1,
+        "kinds": {
+          "move-element": 1
+        },
+        "milliseconds": 0.114
+      },
+      {
+        "revision": "candidate",
+        "size": 100,
+        "case": "reverse",
+        "patches": 99,
+        "kinds": {
+          "move-element": 99
+        },
+        "milliseconds": 0.705
+      },
+      {
+        "revision": "candidate",
+        "size": 100,
+        "case": "swap",
+        "patches": 1,
+        "kinds": {
+          "move-element": 1
+        },
+        "milliseconds": 0.212
+      },
+      {
+        "revision": "candidate",
+        "size": 100,
+        "case": "unchanged",
+        "patches": 0,
+        "kinds": {},
+        "milliseconds": 0.022
+      },
+      {
+        "revision": "candidate",
+        "size": 1000,
+        "case": "rotate",
+        "patches": 1,
+        "kinds": {
+          "move-element": 1
+        },
+        "milliseconds": 4.755
+      },
+      {
+        "revision": "candidate",
+        "size": 1000,
+        "case": "reverse",
+        "patches": 999,
+        "kinds": {
+          "move-element": 999
+        },
+        "milliseconds": 17.928
+      },
+      {
+        "revision": "candidate",
+        "size": 1000,
+        "case": "swap",
+        "patches": 1,
+        "kinds": {
+          "move-element": 1
+        },
+        "milliseconds": 1.941
+      },
+      {
+        "revision": "candidate",
+        "size": 1000,
+        "case": "unchanged",
+        "patches": 0,
+        "kinds": {},
+        "milliseconds": 0.219
+      }
+    ],
+    "samples": [
+      {
+        "execution": 0,
+        "round": 0,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0.09074860000000626
+      },
+      {
+        "execution": 1,
+        "round": 0,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0.02117639999999786
+      },
+      {
+        "execution": 2,
+        "round": 0,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 0.9841986000000058
+      },
+      {
+        "execution": 3,
+        "round": 0,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 4.7083833333333285
+      },
+      {
+        "execution": 4,
+        "round": 0,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 7.482865266666674
+      },
+      {
+        "execution": 5,
+        "round": 0,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 18.18824723333334
+      },
+      {
+        "execution": 6,
+        "round": 0,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 0.9969791666666727
+      },
+      {
+        "execution": 7,
+        "round": 0,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 1.936611099999997
+      },
+      {
+        "execution": 8,
+        "round": 0,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 0.9824013999999807
+      },
+      {
+        "execution": 9,
+        "round": 0,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 0.21915553333331747
+      },
+      {
+        "execution": 10,
+        "round": 0,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.09524583333335007
+      },
+      {
+        "execution": 11,
+        "round": 0,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.11243750000000242
+      },
+      {
+        "execution": 12,
+        "round": 0,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 0.5270916666666684
+      },
+      {
+        "execution": 13,
+        "round": 0,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 0.6958777666666417
+      },
+      {
+        "execution": 14,
+        "round": 0,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.09439863333333658
+      },
+      {
+        "execution": 15,
+        "round": 0,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.20502499999999296
+      },
+      {
+        "execution": 16,
+        "round": 1,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 4.6576680333333265
+      },
+      {
+        "execution": 17,
+        "round": 1,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 0.9932264000000032
+      },
+      {
+        "execution": 18,
+        "round": 1,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 17.92810973333332
+      },
+      {
+        "execution": 19,
+        "round": 1,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 6.004805566666679
+      },
+      {
+        "execution": 20,
+        "round": 1,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 1.909923600000002
+      },
+      {
+        "execution": 21,
+        "round": 1,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 0.9832277666666717
+      },
+      {
+        "execution": 22,
+        "round": 1,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 0.21931249999997818
+      },
+      {
+        "execution": 23,
+        "round": 1,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 0.9753277666666691
+      },
+      {
+        "execution": 24,
+        "round": 1,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.11208333333333939
+      },
+      {
+        "execution": 25,
+        "round": 1,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.0961958333333314
+      },
+      {
+        "execution": 26,
+        "round": 1,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 0.7054958333333161
+      },
+      {
+        "execution": 27,
+        "round": 1,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 0.6236805333333298
+      },
+      {
+        "execution": 28,
+        "round": 1,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.21370000000000194
+      },
+      {
+        "execution": 29,
+        "round": 1,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.0950375000000046
+      },
+      {
+        "execution": 30,
+        "round": 1,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0.0204194333333362
+      },
+      {
+        "execution": 31,
+        "round": 1,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0.09517776666668093
+      },
+      {
+        "execution": 32,
+        "round": 2,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 6.100783333333341
+      },
+      {
+        "execution": 33,
+        "round": 2,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 17.975412500000008
+      },
+      {
+        "execution": 34,
+        "round": 2,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 2.8884930666666757
+      },
+      {
+        "execution": 35,
+        "round": 2,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 2.530574999999984
+      },
+      {
+        "execution": 36,
+        "round": 2,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 1.131412500000018
+      },
+      {
+        "execution": 37,
+        "round": 2,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 0.23836386666665324
+      },
+      {
+        "execution": 38,
+        "round": 2,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.09767083333332872
+      },
+      {
+        "execution": 39,
+        "round": 2,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.11651666666666642
+      },
+      {
+        "execution": 40,
+        "round": 2,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 0.5691749999999957
+      },
+      {
+        "execution": 41,
+        "round": 2,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 0.7477694333333602
+      },
+      {
+        "execution": 42,
+        "round": 2,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.12291526666664747
+      },
+      {
+        "execution": 43,
+        "round": 2,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.2207277666666717
+      },
+      {
+        "execution": 44,
+        "round": 2,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0.09171666666667685
+      },
+      {
+        "execution": 45,
+        "round": 2,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0.02170416666667734
+      },
+      {
+        "execution": 46,
+        "round": 2,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 1.0520791666666809
+      },
+      {
+        "execution": 47,
+        "round": 2,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 4.7588708333333365
+      },
+      {
+        "execution": 48,
+        "round": 3,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 1.9412402999999965
+      },
+      {
+        "execution": 49,
+        "round": 3,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 2.835354166666669
+      },
+      {
+        "execution": 50,
+        "round": 3,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 0.7209749999999986
+      },
+      {
+        "execution": 51,
+        "round": 3,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 1.2495958333333268
+      },
+      {
+        "execution": 52,
+        "round": 3,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.151334733333321
+      },
+      {
+        "execution": 53,
+        "round": 3,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.19765276666666978
+      },
+      {
+        "execution": 54,
+        "round": 3,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 0.8737389000000196
+      },
+      {
+        "execution": 55,
+        "round": 3,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 0.856368066666649
+      },
+      {
+        "execution": 56,
+        "round": 3,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.21889583333331758
+      },
+      {
+        "execution": 57,
+        "round": 3,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.09641109999999269
+      },
+      {
+        "execution": 58,
+        "round": 3,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0.028629166666693587
+      },
+      {
+        "execution": 59,
+        "round": 3,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0.1283499999999852
+      },
+      {
+        "execution": 60,
+        "round": 3,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 5.510738866666665
+      },
+      {
+        "execution": 61,
+        "round": 3,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 1.0641833333333124
+      },
+      {
+        "execution": 62,
+        "round": 3,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 20.102427766666704
+      },
+      {
+        "execution": 63,
+        "round": 3,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 6.659637500000039
+      },
+      {
+        "execution": 64,
+        "round": 4,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 0.9664361333333242
+      },
+      {
+        "execution": 65,
+        "round": 4,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 0.21839026666669573
+      },
+      {
+        "execution": 66,
+        "round": 4,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.09757219999998294
+      },
+      {
+        "execution": 67,
+        "round": 4,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.11444999999997284
+      },
+      {
+        "execution": 68,
+        "round": 4,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 0.5129791666666885
+      },
+      {
+        "execution": 69,
+        "round": 4,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 0.6914069333333221
+      },
+      {
+        "execution": 70,
+        "round": 4,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.09321666666667928
+      },
+      {
+        "execution": 71,
+        "round": 4,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.20286803333334927
+      },
+      {
+        "execution": 72,
+        "round": 4,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0.0886569666666522
+      },
+      {
+        "execution": 73,
+        "round": 4,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0.02172639999995833
+      },
+      {
+        "execution": 74,
+        "round": 4,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 0.9733444333332955
+      },
+      {
+        "execution": 75,
+        "round": 4,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 4.659931966666651
+      },
+      {
+        "execution": 76,
+        "round": 4,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 5.963784733333341
+      },
+      {
+        "execution": 77,
+        "round": 4,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 17.673976366666707
+      },
+      {
+        "execution": 78,
+        "round": 4,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 0.9826764000000063
+      },
+      {
+        "execution": 79,
+        "round": 4,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 1.8992958333332959
+      },
+      {
+        "execution": 80,
+        "round": 5,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.1138096999999713
+      },
+      {
+        "execution": 81,
+        "round": 5,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.09729166666663029
+      },
+      {
+        "execution": 82,
+        "round": 5,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 0.6780319666666401
+      },
+      {
+        "execution": 83,
+        "round": 5,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 0.5201958333333095
+      },
+      {
+        "execution": 84,
+        "round": 5,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.2078722333333038
+      },
+      {
+        "execution": 85,
+        "round": 5,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.09262223333334987
+      },
+      {
+        "execution": 86,
+        "round": 5,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0.02113890000000538
+      },
+      {
+        "execution": 87,
+        "round": 5,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0.09060833333332993
+      },
+      {
+        "execution": 88,
+        "round": 5,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 4.653020833333358
+      },
+      {
+        "execution": 89,
+        "round": 5,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 0.9799722333333193
+      },
+      {
+        "execution": 90,
+        "round": 5,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 17.42284166666668
+      },
+      {
+        "execution": 91,
+        "round": 5,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 6.132751400000052
+      },
+      {
+        "execution": 92,
+        "round": 5,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 2.4864180666666775
+      },
+      {
+        "execution": 93,
+        "round": 5,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 1.0544333333333271
+      },
+      {
+        "execution": 94,
+        "round": 5,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 0.22494583333336776
+      },
+      {
+        "execution": 95,
+        "round": 5,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 1.1471402666666715
+      },
+      {
+        "execution": 96,
+        "round": 6,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 1.1960083333333387
+      },
+      {
+        "execution": 97,
+        "round": 6,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 1.6987250000000131
+      },
+      {
+        "execution": 98,
+        "round": 6,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.13493749999997817
+      },
+      {
+        "execution": 99,
+        "round": 6,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.33929446666667595
+      },
+      {
+        "execution": 100,
+        "round": 6,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0.0988416666666429
+      },
+      {
+        "execution": 101,
+        "round": 6,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0.02334306666671182
+      },
+      {
+        "execution": 102,
+        "round": 6,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 1.0476138999999725
+      },
+      {
+        "execution": 103,
+        "round": 6,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 5.511615266666619
+      },
+      {
+        "execution": 104,
+        "round": 6,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 6.503037500000028
+      },
+      {
+        "execution": 105,
+        "round": 6,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 17.6481375
+      },
+      {
+        "execution": 106,
+        "round": 6,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 0.9847819666666207
+      },
+      {
+        "execution": 107,
+        "round": 6,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 1.9495166666666894
+      },
+      {
+        "execution": 108,
+        "round": 6,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 1.0645291666666405
+      },
+      {
+        "execution": 109,
+        "round": 6,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 0.21438333333335322
+      },
+      {
+        "execution": 110,
+        "round": 6,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.09282500000002376
+      },
+      {
+        "execution": 111,
+        "round": 6,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.11038886666665348
+      },
+      {
+        "execution": 112,
+        "round": 7,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.20455833333332218
+      },
+      {
+        "execution": 113,
+        "round": 7,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.09343333333332945
+      },
+      {
+        "execution": 114,
+        "round": 7,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0.024752766666642854
+      },
+      {
+        "execution": 115,
+        "round": 7,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0.09504723333332853
+      },
+      {
+        "execution": 116,
+        "round": 7,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 4.754543033333357
+      },
+      {
+        "execution": 117,
+        "round": 7,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 0.970583333333343
+      },
+      {
+        "execution": 118,
+        "round": 7,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 17.653473599999963
+      },
+      {
+        "execution": 119,
+        "round": 7,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 6.130593066666673
+      },
+      {
+        "execution": 120,
+        "round": 7,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 2.0681528000000373
+      },
+      {
+        "execution": 121,
+        "round": 7,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 0.987986133333349
+      },
+      {
+        "execution": 122,
+        "round": 7,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 0.20873193333330467
+      },
+      {
+        "execution": 123,
+        "round": 7,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 0.9741083333333639
+      },
+      {
+        "execution": 124,
+        "round": 7,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.10951386666662681
+      },
+      {
+        "execution": 125,
+        "round": 7,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.09980553333334682
+      },
+      {
+        "execution": 126,
+        "round": 7,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 0.6852486000000378
+      },
+      {
+        "execution": 127,
+        "round": 7,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 0.5239291666666759
+      },
+      {
+        "execution": 128,
+        "round": 8,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0.09463750000001407
+      },
+      {
+        "execution": 129,
+        "round": 8,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0.022205566666707456
+      },
+      {
+        "execution": 130,
+        "round": 8,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 0.9722541666666681
+      },
+      {
+        "execution": 131,
+        "round": 8,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 4.728723600000012
+      },
+      {
+        "execution": 132,
+        "round": 8,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 6.085576366666646
+      },
+      {
+        "execution": 133,
+        "round": 8,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 17.971300000000035
+      },
+      {
+        "execution": 134,
+        "round": 8,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 0.9706944333333013
+      },
+      {
+        "execution": 135,
+        "round": 8,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 1.9040388999999778
+      },
+      {
+        "execution": 136,
+        "round": 8,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 0.9701611333333252
+      },
+      {
+        "execution": 137,
+        "round": 8,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 0.27484999999996945
+      },
+      {
+        "execution": 138,
+        "round": 8,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.16401110000000094
+      },
+      {
+        "execution": 139,
+        "round": 8,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.14842083333332995
+      },
+      {
+        "execution": 140,
+        "round": 8,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 0.6236875000000509
+      },
+      {
+        "execution": 141,
+        "round": 8,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 0.7089986333333703
+      },
+      {
+        "execution": 142,
+        "round": 8,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.1864152666666996
+      },
+      {
+        "execution": 143,
+        "round": 8,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.26879166666670545
+      },
+      {
+        "execution": 144,
+        "round": 9,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 5.173345833333345
+      },
+      {
+        "execution": 145,
+        "round": 9,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 1.9325916666666672
+      },
+      {
+        "execution": 146,
+        "round": 9,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 18.963766666666682
+      },
+      {
+        "execution": 147,
+        "round": 9,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 6.0656166666666955
+      },
+      {
+        "execution": 148,
+        "round": 9,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 2.0748041666667025
+      },
+      {
+        "execution": 149,
+        "round": 9,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 0.9764889000000039
+      },
+      {
+        "execution": 150,
+        "round": 9,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 0.21313750000002377
+      },
+      {
+        "execution": 151,
+        "round": 9,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 0.9777124999999918
+      },
+      {
+        "execution": 152,
+        "round": 9,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.11197499999998399
+      },
+      {
+        "execution": 153,
+        "round": 9,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.09509443333336094
+      },
+      {
+        "execution": 154,
+        "round": 9,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 0.6886486000000028
+      },
+      {
+        "execution": 155,
+        "round": 9,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 0.5134778000000249
+      },
+      {
+        "execution": 156,
+        "round": 9,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.20751806666667108
+      },
+      {
+        "execution": 157,
+        "round": 9,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.09484583333329889
+      },
+      {
+        "execution": 158,
+        "round": 9,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0.020756933333359484
+      },
+      {
+        "execution": 159,
+        "round": 9,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0.092222233333329
+      },
+      {
+        "execution": 160,
+        "round": 10,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 5.9372472333333155
+      },
+      {
+        "execution": 161,
+        "round": 10,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 17.393202799999987
+      },
+      {
+        "execution": 162,
+        "round": 10,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 0.998131933333328
+      },
+      {
+        "execution": 163,
+        "round": 10,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 1.9245180333333338
+      },
+      {
+        "execution": 164,
+        "round": 10,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 0.9848527999999835
+      },
+      {
+        "execution": 165,
+        "round": 10,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 0.21819583333338718
+      },
+      {
+        "execution": 166,
+        "round": 10,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.09853473333332659
+      },
+      {
+        "execution": 167,
+        "round": 10,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.14164029999998698
+      },
+      {
+        "execution": 168,
+        "round": 10,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 0.5354791666666036
+      },
+      {
+        "execution": 169,
+        "round": 10,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 0.7755541666666734
+      },
+      {
+        "execution": 170,
+        "round": 10,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.09864029999989725
+      },
+      {
+        "execution": 171,
+        "round": 10,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.21244723333341728
+      },
+      {
+        "execution": 172,
+        "round": 10,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0.08829723333340857
+      },
+      {
+        "execution": 173,
+        "round": 10,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0.020820833333345945
+      },
+      {
+        "execution": 174,
+        "round": 10,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 1.0020763666667336
+      },
+      {
+        "execution": 175,
+        "round": 10,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 4.8164944666667
+      }
+    ]
+  },
+  "chrome": {
+    "sampleCount": 11,
+    "results": [
+      {
+        "revision": "baseline",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.3
+      },
+      {
+        "revision": "baseline",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 3.4
+      },
+      {
+        "revision": "baseline",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.3
+      },
+      {
+        "revision": "baseline",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0.1
+      },
+      {
+        "revision": "baseline",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 1.6
+      },
+      {
+        "revision": "baseline",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 42.2
+      },
+      {
+        "revision": "baseline",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 1.6
+      },
+      {
+        "revision": "baseline",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 1.2
+      },
+      {
+        "revision": "candidate",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.7
+      },
+      {
+        "revision": "candidate",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 2.1
+      },
+      {
+        "revision": "candidate",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.5
+      },
+      {
+        "revision": "candidate",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0
+      },
+      {
+        "revision": "candidate",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 8.6
+      },
+      {
+        "revision": "candidate",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 33.9
+      },
+      {
+        "revision": "candidate",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 5.6
+      },
+      {
+        "revision": "candidate",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 0.2
+      }
+    ],
+    "samples": [
+      {
+        "execution": 0,
+        "round": 0,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0.09999990463256836
+      },
+      {
+        "execution": 1,
+        "round": 0,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0.20000028610229492
+      },
+      {
+        "execution": 2,
+        "round": 0,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 1.700000286102295
+      },
+      {
+        "execution": 3,
+        "round": 0,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 10.199999809265137
+      },
+      {
+        "execution": 4,
+        "round": 0,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 43.5
+      },
+      {
+        "execution": 5,
+        "round": 0,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 33.89999961853027
+      },
+      {
+        "execution": 6,
+        "round": 0,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 2
+      },
+      {
+        "execution": 7,
+        "round": 0,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 5.800000190734863
+      },
+      {
+        "execution": 8,
+        "round": 0,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 1.1999998092651367
+      },
+      {
+        "execution": 9,
+        "round": 0,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 0.2999997138977051
+      },
+      {
+        "execution": 10,
+        "round": 0,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.39999961853027344
+      },
+      {
+        "execution": 11,
+        "round": 0,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.5
+      },
+      {
+        "execution": 12,
+        "round": 0,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 3
+      },
+      {
+        "execution": 13,
+        "round": 0,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 2.4000000953674316
+      },
+      {
+        "execution": 14,
+        "round": 0,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.5
+      },
+      {
+        "execution": 15,
+        "round": 0,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.5999999046325684
+      },
+      {
+        "execution": 16,
+        "round": 1,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 8.700000286102295
+      },
+      {
+        "execution": 17,
+        "round": 1,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 1.5999999046325684
+      },
+      {
+        "execution": 18,
+        "round": 1,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 36.89999961853027
+      },
+      {
+        "execution": 19,
+        "round": 1,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 42.39999961853027
+      },
+      {
+        "execution": 20,
+        "round": 1,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 5.800000190734863
+      },
+      {
+        "execution": 21,
+        "round": 1,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 1.5
+      },
+      {
+        "execution": 22,
+        "round": 1,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 0.19999980926513672
+      },
+      {
+        "execution": 23,
+        "round": 1,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 1
+      },
+      {
+        "execution": 24,
+        "round": 1,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.6000003814697266
+      },
+      {
+        "execution": 25,
+        "round": 1,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.40000009536743164
+      },
+      {
+        "execution": 26,
+        "round": 1,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 2.0999999046325684
+      },
+      {
+        "execution": 27,
+        "round": 1,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 3.5
+      },
+      {
+        "execution": 28,
+        "round": 1,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.5
+      },
+      {
+        "execution": 29,
+        "round": 1,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.40000009536743164
+      },
+      {
+        "execution": 30,
+        "round": 1,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0
+      },
+      {
+        "execution": 31,
+        "round": 1,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0.09999990463256836
+      },
+      {
+        "execution": 32,
+        "round": 2,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 42.200000286102295
+      },
+      {
+        "execution": 33,
+        "round": 2,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 37.80000019073486
+      },
+      {
+        "execution": 34,
+        "round": 2,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 1.5999999046325684
+      },
+      {
+        "execution": 35,
+        "round": 2,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 15.900000095367432
+      },
+      {
+        "execution": 36,
+        "round": 2,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 1.200000286102295
+      },
+      {
+        "execution": 37,
+        "round": 2,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 0.19999980926513672
+      },
+      {
+        "execution": 38,
+        "round": 2,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.3000001907348633
+      },
+      {
+        "execution": 39,
+        "round": 2,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.7000002861022949
+      },
+      {
+        "execution": 40,
+        "round": 2,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 3.799999713897705
+      },
+      {
+        "execution": 41,
+        "round": 2,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 2.1999998092651367
+      },
+      {
+        "execution": 42,
+        "round": 2,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.39999961853027344
+      },
+      {
+        "execution": 43,
+        "round": 2,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.5999999046325684
+      },
+      {
+        "execution": 44,
+        "round": 2,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0.09999990463256836
+      },
+      {
+        "execution": 45,
+        "round": 2,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0
+      },
+      {
+        "execution": 46,
+        "round": 2,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 1.5
+      },
+      {
+        "execution": 47,
+        "round": 2,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 8.899999618530273
+      },
+      {
+        "execution": 48,
+        "round": 3,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 5
+      },
+      {
+        "execution": 49,
+        "round": 3,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 1.299999713897705
+      },
+      {
+        "execution": 50,
+        "round": 3,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 0.2999997138977051
+      },
+      {
+        "execution": 51,
+        "round": 3,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 1.1999998092651367
+      },
+      {
+        "execution": 52,
+        "round": 3,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.6999998092651367
+      },
+      {
+        "execution": 53,
+        "round": 3,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.2999997138977051
+      },
+      {
+        "execution": 54,
+        "round": 3,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 1.8000001907348633
+      },
+      {
+        "execution": 55,
+        "round": 3,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 3.5
+      },
+      {
+        "execution": 56,
+        "round": 3,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.40000009536743164
+      },
+      {
+        "execution": 57,
+        "round": 3,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.19999980926513672
+      },
+      {
+        "execution": 58,
+        "round": 3,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0
+      },
+      {
+        "execution": 59,
+        "round": 3,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0.19999980926513672
+      },
+      {
+        "execution": 60,
+        "round": 3,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 8.799999713897705
+      },
+      {
+        "execution": 61,
+        "round": 3,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 1.9000000953674316
+      },
+      {
+        "execution": 62,
+        "round": 3,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 34.19999980926514
+      },
+      {
+        "execution": 63,
+        "round": 3,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 44
+      },
+      {
+        "execution": 64,
+        "round": 4,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 1.1999998092651367
+      },
+      {
+        "execution": 65,
+        "round": 4,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 0.3000001907348633
+      },
+      {
+        "execution": 66,
+        "round": 4,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.40000009536743164
+      },
+      {
+        "execution": 67,
+        "round": 4,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.6999998092651367
+      },
+      {
+        "execution": 68,
+        "round": 4,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 4.599999904632568
+      },
+      {
+        "execution": 69,
+        "round": 4,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 5.300000190734863
+      },
+      {
+        "execution": 70,
+        "round": 4,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.40000009536743164
+      },
+      {
+        "execution": 71,
+        "round": 4,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.7000002861022949
+      },
+      {
+        "execution": 72,
+        "round": 4,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0.19999980926513672
+      },
+      {
+        "execution": 73,
+        "round": 4,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0
+      },
+      {
+        "execution": 74,
+        "round": 4,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 1.5999999046325684
+      },
+      {
+        "execution": 75,
+        "round": 4,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 8.5
+      },
+      {
+        "execution": 76,
+        "round": 4,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 40.09999990463257
+      },
+      {
+        "execution": 77,
+        "round": 4,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 34
+      },
+      {
+        "execution": 78,
+        "round": 4,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 1.4000000953674316
+      },
+      {
+        "execution": 79,
+        "round": 4,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 5.699999809265137
+      },
+      {
+        "execution": 80,
+        "round": 5,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.5
+      },
+      {
+        "execution": 81,
+        "round": 5,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.20000028610229492
+      },
+      {
+        "execution": 82,
+        "round": 5,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 2.0999999046325684
+      },
+      {
+        "execution": 83,
+        "round": 5,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 3.200000286102295
+      },
+      {
+        "execution": 84,
+        "round": 5,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.5
+      },
+      {
+        "execution": 85,
+        "round": 5,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.40000009536743164
+      },
+      {
+        "execution": 86,
+        "round": 5,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0.09999990463256836
+      },
+      {
+        "execution": 87,
+        "round": 5,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0.09999990463256836
+      },
+      {
+        "execution": 88,
+        "round": 5,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 8.200000286102295
+      },
+      {
+        "execution": 89,
+        "round": 5,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 1.5999999046325684
+      },
+      {
+        "execution": 90,
+        "round": 5,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 34.89999961853027
+      },
+      {
+        "execution": 91,
+        "round": 5,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 40.90000009536743
+      },
+      {
+        "execution": 92,
+        "round": 5,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 5.099999904632568
+      },
+      {
+        "execution": 93,
+        "round": 5,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 1.5999999046325684
+      },
+      {
+        "execution": 94,
+        "round": 5,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 0.20000028610229492
+      },
+      {
+        "execution": 95,
+        "round": 5,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 1.0999999046325684
+      },
+      {
+        "execution": 96,
+        "round": 6,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 3.4000000953674316
+      },
+      {
+        "execution": 97,
+        "round": 6,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 2.1000003814697266
+      },
+      {
+        "execution": 98,
+        "round": 6,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.2999997138977051
+      },
+      {
+        "execution": 99,
+        "round": 6,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.5
+      },
+      {
+        "execution": 100,
+        "round": 6,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0.09999990463256836
+      },
+      {
+        "execution": 101,
+        "round": 6,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0.10000038146972656
+      },
+      {
+        "execution": 102,
+        "round": 6,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 1.5
+      },
+      {
+        "execution": 103,
+        "round": 6,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 8.199999809265137
+      },
+      {
+        "execution": 104,
+        "round": 6,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 40.90000009536743
+      },
+      {
+        "execution": 105,
+        "round": 6,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 33.69999980926514
+      },
+      {
+        "execution": 106,
+        "round": 6,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 1.5
+      },
+      {
+        "execution": 107,
+        "round": 6,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 5.599999904632568
+      },
+      {
+        "execution": 108,
+        "round": 6,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 1.1999998092651367
+      },
+      {
+        "execution": 109,
+        "round": 6,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 0.09999990463256836
+      },
+      {
+        "execution": 110,
+        "round": 6,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.40000009536743164
+      },
+      {
+        "execution": 111,
+        "round": 6,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.5
+      },
+      {
+        "execution": 112,
+        "round": 7,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.5
+      },
+      {
+        "execution": 113,
+        "round": 7,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.09999990463256836
+      },
+      {
+        "execution": 114,
+        "round": 7,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0
+      },
+      {
+        "execution": 115,
+        "round": 7,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0.09999990463256836
+      },
+      {
+        "execution": 116,
+        "round": 7,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 8.599999904632568
+      },
+      {
+        "execution": 117,
+        "round": 7,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 1.6999998092651367
+      },
+      {
+        "execution": 118,
+        "round": 7,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 32.5
+      },
+      {
+        "execution": 119,
+        "round": 7,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 40.89999961853027
+      },
+      {
+        "execution": 120,
+        "round": 7,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 5.300000190734863
+      },
+      {
+        "execution": 121,
+        "round": 7,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 1.5
+      },
+      {
+        "execution": 122,
+        "round": 7,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 0.6999998092651367
+      },
+      {
+        "execution": 123,
+        "round": 7,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 1.0999999046325684
+      },
+      {
+        "execution": 124,
+        "round": 7,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.7999997138977051
+      },
+      {
+        "execution": 125,
+        "round": 7,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.2999997138977051
+      },
+      {
+        "execution": 126,
+        "round": 7,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 2
+      },
+      {
+        "execution": 127,
+        "round": 7,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 2.9000000953674316
+      },
+      {
+        "execution": 128,
+        "round": 8,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0.19999980926513672
+      },
+      {
+        "execution": 129,
+        "round": 8,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0.19999980926513672
+      },
+      {
+        "execution": 130,
+        "round": 8,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 1.8999996185302734
+      },
+      {
+        "execution": 131,
+        "round": 8,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 9.299999713897705
+      },
+      {
+        "execution": 132,
+        "round": 8,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 43.700000286102295
+      },
+      {
+        "execution": 133,
+        "round": 8,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 32.799999713897705
+      },
+      {
+        "execution": 134,
+        "round": 8,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 2.200000286102295
+      },
+      {
+        "execution": 135,
+        "round": 8,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 5
+      },
+      {
+        "execution": 136,
+        "round": 8,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 1.0999999046325684
+      },
+      {
+        "execution": 137,
+        "round": 8,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 0.19999980926513672
+      },
+      {
+        "execution": 138,
+        "round": 8,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.3000001907348633
+      },
+      {
+        "execution": 139,
+        "round": 8,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.6999998092651367
+      },
+      {
+        "execution": 140,
+        "round": 8,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 2.8000001907348633
+      },
+      {
+        "execution": 141,
+        "round": 8,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 2
+      },
+      {
+        "execution": 142,
+        "round": 8,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.3000001907348633
+      },
+      {
+        "execution": 143,
+        "round": 8,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.40000009536743164
+      },
+      {
+        "execution": 144,
+        "round": 9,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 8.100000381469727
+      },
+      {
+        "execution": 145,
+        "round": 9,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 1.4000000953674316
+      },
+      {
+        "execution": 146,
+        "round": 9,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 32.90000009536743
+      },
+      {
+        "execution": 147,
+        "round": 9,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 41.5
+      },
+      {
+        "execution": 148,
+        "round": 9,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 5.599999904632568
+      },
+      {
+        "execution": 149,
+        "round": 9,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 1.700000286102295
+      },
+      {
+        "execution": 150,
+        "round": 9,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 0.20000028610229492
+      },
+      {
+        "execution": 151,
+        "round": 9,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 1.1999998092651367
+      },
+      {
+        "execution": 152,
+        "round": 9,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.7000002861022949
+      },
+      {
+        "execution": 153,
+        "round": 9,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.2999997138977051
+      },
+      {
+        "execution": 154,
+        "round": 9,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 2.4000000953674316
+      },
+      {
+        "execution": 155,
+        "round": 9,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 3.4000000953674316
+      },
+      {
+        "execution": 156,
+        "round": 9,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.8000001907348633
+      },
+      {
+        "execution": 157,
+        "round": 9,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.3000001907348633
+      },
+      {
+        "execution": 158,
+        "round": 9,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0
+      },
+      {
+        "execution": 159,
+        "round": 9,
+        "order": [
+          "candidate",
+          "baseline"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0.10000038146972656
+      },
+      {
+        "execution": 160,
+        "round": 10,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 42.200000286102295
+      },
+      {
+        "execution": 161,
+        "round": 10,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "reverse",
+        "milliseconds": 33.40000009536743
+      },
+      {
+        "execution": 162,
+        "round": 10,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 6.400000095367432
+      },
+      {
+        "execution": 163,
+        "round": 10,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "swap",
+        "milliseconds": 6.099999904632568
+      },
+      {
+        "execution": 164,
+        "round": 10,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 1.1000003814697266
+      },
+      {
+        "execution": 165,
+        "round": 10,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "unchanged",
+        "milliseconds": 0.2999997138977051
+      },
+      {
+        "execution": 166,
+        "round": 10,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.39999961853027344
+      },
+      {
+        "execution": 167,
+        "round": 10,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "rotate",
+        "milliseconds": 0.5999999046325684
+      },
+      {
+        "execution": 168,
+        "round": 10,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 3.8000001907348633
+      },
+      {
+        "execution": 169,
+        "round": 10,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "reverse",
+        "milliseconds": 2.0999999046325684
+      },
+      {
+        "execution": 170,
+        "round": 10,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.19999980926513672
+      },
+      {
+        "execution": 171,
+        "round": 10,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "swap",
+        "milliseconds": 0.5999999046325684
+      },
+      {
+        "execution": 172,
+        "round": 10,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0.19999980926513672
+      },
+      {
+        "execution": 173,
+        "round": 10,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 100,
+        "case": "unchanged",
+        "milliseconds": 0
+      },
+      {
+        "execution": 174,
+        "round": 10,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "baseline",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 1.4000000953674316
+      },
+      {
+        "execution": 175,
+        "round": 10,
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "revision": "candidate",
+        "size": 1000,
+        "case": "rotate",
+        "milliseconds": 8.200000286102295
+      }
+    ]
+  }
+}

@@ -6,32 +6,75 @@ import * as c from '../../js-out/calcit.core.mjs';
 import { DomProps } from '../../js-out/respo.schema.mjs';
 import { list__GT_, render_$x_ } from '../../js-out/respo.core.mjs';
 import { createRows, childPairs } from '../keyed-moves-fixture.mjs';
+import { cases, orderedCases, sampleCount, median } from '../keyed-moves-bench-cases.mjs';
 const props = c._$n__PCT__$M_(DomProps, ...DomProps.fields.flatMap(field => [field, undefined]));
 const mount = document.querySelector('#app');
-window.benchmarkResults = [];
-for (const size of [100, 1000]) {
-  const keys = Array.from({ length: size }, (_, i) => i);
-  const rows = createRows(keys);
-  const original = list__GT_(props, childPairs(keys, rows));
-  for (const [name, next] of [
-    ['rotate', [size - 1, ...keys.slice(0, -1)]],
-    ['reverse', [...keys].reverse()],
-    ['swap', [1, 0, ...keys.slice(2)]],
-    ['unchanged', keys],
-  ]) {
-    const updated = list__GT_(props, childPairs(next, rows));
-    const samples = [];
-    for (let i = 0; i < 5; i++) {
-      render_$x_(mount, original, () => {});
-      void mount.offsetHeight;
-      const start = performance.now();
-      render_$x_(mount, updated, () => {});
-      void mount.offsetHeight;
-      if (i >= 2) samples.push(performance.now() - start);
-    }
-    samples.sort((a, b) => a - b);
-    window.benchmarkResults.push({ size, case: name, milliseconds: Number(samples[1].toFixed(3)) });
-  }
+const contexts = new Map(cases().map(item => {
+  const rows = createRows(item.keys);
+  return [`${item.size}/${item.name}`, {
+    original: list__GT_(props, childPairs(item.keys, rows)),
+    updated: list__GT_(props, childPairs(item.next, rows)),
+  }];
+}));
+/** Measure one render plus layout after restoring the original tree. */
+function sample(item) {
+  const { original, updated } = contexts.get(`${item.size}/${item.name}`);
+  render_$x_(mount, original, () => {});
+  void mount.offsetHeight;
+  const start = performance.now();
+  render_$x_(mount, updated, () => {});
+  void mount.offsetHeight;
+  return performance.now() - start;
 }
-document.querySelector('#result').textContent = JSON.stringify(window.benchmarkResults);
+const params = new URLSearchParams(location.search);
+if (params.has('worker')) {
+  // The parent runs both revisions sequentially; messages contain benchmark data only.
+  addEventListener('message', event => {
+    if (event.source !== parent || event.data?.type !== 'keyed-bench-sample') return;
+    event.source.postMessage({ type: 'keyed-bench-result', milliseconds: sample(event.data.item) }, event.origin);
+  });
+  window.benchmarkReady = true;
+} else {
+  let baseline;
+  let remoteSample;
+  if (params.has('baseline')) {
+    const url = new URL(params.get('baseline'));
+    url.searchParams.set('worker', '1');
+    baseline = document.createElement('iframe');
+    baseline.style.cssText = 'width:800px;height:600px';
+    const loaded = new Promise(resolve => { baseline.onload = resolve; });
+    baseline.src = url.href;
+    document.body.appendChild(baseline);
+    await loaded;
+    remoteSample = item => new Promise(resolve => {
+      const receive = event => {
+        if (event.source !== baseline.contentWindow || event.origin !== url.origin ||
+            event.data?.type !== 'keyed-bench-result') return;
+        removeEventListener('message', receive);
+        resolve(event.data.milliseconds);
+      };
+      addEventListener('message', receive);
+      baseline.contentWindow.postMessage({ type: 'keyed-bench-sample', item }, url.origin);
+    });
+  }
+  const samples = [];
+  let execution = 0;
+  for (let round = -3; round < sampleCount; round++) {
+    for (const item of orderedCases(round + 3)) {
+      const order = baseline ? (round % 2 === 0 ? ['baseline', 'candidate'] : ['candidate', 'baseline']) : ['candidate'];
+      for (const revision of order) {
+        const milliseconds = revision === 'baseline' ? await remoteSample(item) : sample(item);
+        if (round >= 0) samples.push({ execution: execution++, round, order, revision,
+          size: item.size, case: item.name, milliseconds });
+      }
+    }
+  }
+  const results = [...new Set(samples.map(entry => entry.revision))].flatMap(revision => cases().map(item => ({
+    revision, size: item.size, case: item.name,
+    milliseconds: Number(median(samples.filter(entry => entry.revision === revision &&
+      entry.size === item.size && entry.case === item.name).map(entry => entry.milliseconds)).toFixed(3)),
+  })));
+  window.benchmarkResults = { sampleCount, results, samples };
+  document.querySelector('#result').textContent = JSON.stringify(window.benchmarkResults);
+}
 </script></body></html>

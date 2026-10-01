@@ -8,6 +8,7 @@ const list = values => c.arrayToList(values);
 const props = overrides => c._$n__PCT__$M_(DomProps, ...DomProps.fields.flatMap(field =>
   [field, overrides[field.value]]));
 export const childPairs = (keys, rows) => list(keys.map(key => list([key, rows.get(key)])));
+/** Build stable component instances with observable mount and unmount effects. */
 export function createRows(keys, counts = { mounts: 0, unmounts: 0 }) {
   return new Map(keys.map(key => [key, c._$n__PCT__$M_(Component,
     tags.name, tags['keyed-row'], tags.tree, c._PCT__$o__$o_(c.Option, tags.some,
@@ -19,12 +20,14 @@ export function createRows(keys, counts = { mounts: 0, unmounts: 0 }) {
         effect_on_unmount(() => { counts.unmounts++; }),
       ]))]));
 }
+/** Diff keyed component pairs without touching the DOM. */
 export function collectPatches(oldKeys, newKeys, rows) {
   const patches = [];
   find_children_diffs(patch => { patches.push(patch); }, list([]), list([]), 0,
     childPairs(oldKeys, rows), childPairs(newKeys, rows));
   return patches;
 }
+/** Exercise node identity, user input, scroll and lifecycle state in a browser. */
 export function verifyKeyedMoves(mount, forceFallback = false) {
   const keys = Array.from({ length: 40 }, (_, i) => i);
   const counts = { mounts: 0, unmounts: 0 };
@@ -65,6 +68,7 @@ export function verifyKeyedMoves(mount, forceFallback = false) {
       throw new Error('Keyed reorder lost focus, input, selection, or scroll');
     order = next;
   }
+  // 40 initial mounts + rows 40/41; the final case removes the 20 odd keys.
   if (counts.mounts !== 42 || counts.unmounts !== 20)
     throw new Error(`Moved components remounted: ${JSON.stringify(counts)}`);
   return { cases: cases.length, moves, ...counts, nodeIdentityPreserved: true, forceFallback };

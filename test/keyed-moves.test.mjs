@@ -45,7 +45,7 @@ globalThis.document = { createElement: name => new ElementHost(name) };
 const c = await import('../js-out/calcit.core.mjs');
 const { apply_dom_changes } = await import('../js-out/respo.render.patch.mjs');
 const { createRows, collectPatches } = await import('./keyed-moves-fixture.mjs');
-const { DomProps } = await import('../js-out/respo.schema.mjs');
+const { DomProps, DomPatch } = await import('../js-out/respo.schema.mjs');
 const { list__GT_ } = await import('../js-out/respo.core.mjs');
 const { find_element_diffs } = await import('../js-out/respo.render.diff.mjs');
 
@@ -141,4 +141,71 @@ test('nested reorders and prop updates use the correct node coordinates', () => 
     for (const childKey of keys)
       if (originals.has(childKey)) assert.equal(nodes[keys.indexOf(childKey)], originals.get(childKey));
   }
+});
+
+test('move batches preserve scroll before later effects and start fresh afterward', () => {
+  const mount = new ElementHost('main');
+  const parent = new ElementHost();
+  const first = new ElementHost();
+  const second = new ElementHost();
+  mount.appendChild(parent);
+  parent.appendChild(first);
+  parent.appendChild(second);
+  first.scrollTop = 10;
+  for (const method of ['appendChild', 'insertBefore']) {
+    const original = parent[method].bind(parent);
+    parent[method] = (...args) => {
+      const node = original(...args);
+      node.scrollTop = 0; // Model scroll loss during a DOM move.
+      return node;
+    };
+  }
+  const patch = (tag, ...args) => c._PCT__$o__$o_(DomPatch, c.turn_tag(tag), ...args);
+  const coord = c.arrayToList([]);
+  const changes = [
+    patch('move-element', coord, 1, c._PCT__$o__$o_(c.Option, c.turn_tag('some'), 0)),
+    patch('effect-update', coord, coord, () => { assert.equal(first.scrollTop, 10); first.scrollTop = 50; }),
+    patch('move-element', coord, 0, c._PCT__$o__$o_(c.Option, c.turn_tag('none'))),
+    patch('effect-update', coord, coord, () => { assert.equal(first.scrollTop, 50); first.scrollTop = 70; }),
+  ];
+  apply_dom_changes(c.arrayToList(changes), mount, () => () => {});
+  assert.equal(first.scrollTop, 70);
+});
+
+test('public keyed-list construction omits nil children before movement coordinates', () => {
+  const rows = createRows([0, 1, 2]);
+  const props = c._$n__PCT__$M_(DomProps, ...DomProps.fields.flatMap(field => [field, undefined]));
+  const tree = pairs => list__GT_(props, c.arrayToList(pairs.map(pair => c.arrayToList(pair))));
+  const oldTree = tree([[0, rows.get(0)], [1, null], [2, rows.get(2)]]);
+  const newTree = tree([[2, rows.get(2)], [1, rows.get(1)], [0, null]]);
+  const mount = new ElementHost('main');
+  const parent = new ElementHost();
+  mount.appendChild(parent);
+  for (const key of [0, 2]) {
+    const node = new ElementHost();
+    node.id = `row-${key}`;
+    parent.appendChild(node);
+  }
+  const retained = parent.nodes[1];
+  const patches = [];
+  find_element_diffs(patch => { patches.push(patch); }, c.arrayToList([]), c.arrayToList([]), oldTree, newTree);
+  apply_dom_changes(c.arrayToList(patches), mount, () => () => {});
+  assert.deepEqual(parent.nodes.map(node => node.id), ['row-2', 'row-1']);
+  assert.equal(parent.nodes[0], retained);
+});
+
+test('moving a nested list does not scan unrelated application siblings', () => {
+  const mount = new ElementHost('main');
+  const root = new ElementHost();
+  const parent = new ElementHost();
+  const unrelated = new ElementHost();
+  mount.appendChild(root);
+  root.appendChild(parent);
+  root.appendChild(unrelated);
+  parent.appendChild(new ElementHost());
+  parent.appendChild(new ElementHost());
+  Object.defineProperty(unrelated, 'scrollTop', { get() { throw new Error('unrelated scroll read'); } });
+  const patch = c._PCT__$o__$o_(DomPatch, c.turn_tag('move-element'), c.arrayToList([0]), 1,
+    c._PCT__$o__$o_(c.Option, c.turn_tag('some'), 0));
+  apply_dom_changes(c.arrayToList([patch]), mount, () => () => {});
 });
