@@ -3024,6 +3024,70 @@
           :require $ respo.util.detect :refer $ component?
     'respo.render.diff $ %{} 'FileEntry
       :defs $ {}
+        'collect-event-refreshing $ %{} 'CodeEntry
+          :doc "|Reattach live events with the current virtual and DOM coordinates after a component/element switch. Traverses shared descendants even when the normal diff skips identical subtrees. Ordinary diffing still handles removed events and lifecycle changes."
+          :code $ quote $ defn collect-event-refreshing (collect! coord n-coord tree)
+            cond
+                component? tree
+                match (component-tree tree)
+                  (:none) &unit
+                  (:some child-tree)
+                    collect-event-refreshing collect!
+                      append coord $ component-name tree
+                      , n-coord child-tree
+              (element? tree)
+                do
+                  &doseq
+                    event-name $ keys-non-nil $ element-event tree
+                    collect! $ DomPatch :set-event coord n-coord event-name
+                  loop
+                      children $ element-children tree
+                      idx 0
+                    when-not (empty? children)
+                      let
+                          pair $ respo.util.list/first-pair children
+                          k $ respo.util.list/pair-first pair
+                          child $ respo.util.list/pair-value pair
+                        when (some? child)
+                          collect-event-refreshing collect! (append coord k) (append n-coord idx) (assert-type child 'Struct)
+                        recur (&list:rest children)
+                          if (some? child) (inc idx) idx
+              true &unit
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ []
+              :: 'Fn $ {} (:return 'Unit)
+                :args $ [] 'respo.schema/DomPatch
+              :: 'List 'K
+              :: 'List 'Number
+              , 'Struct
+            :generics $ [] 'K
+          :tests $ [] $ %{} 'TestEntry (:name |skips-nil-children-and-handlers)
+            :code $ quote $ let
+                ops $ atom $ []
+                collect! $ fn (op) (respo.core/append-dynamic! ops op)
+                leaf $ %{} respo.schema/Element (:name :span)
+                  :coord $ Option :none
+                  :attrs $ []
+                  :style $ []
+                  :ref nil
+                  :children $ []
+                  :event $ {}
+                    :click $ fn (_event _d!) &unit
+                    :focus nil
+                wrapped $ respo.schema/Component :name :inner :effects ([]) :listeners ([]) :tree $ Option :some leaf
+                root $ %{} respo.schema/Element (:name :div)
+                  :coord $ Option :none
+                  :attrs $ []
+                  :style $ []
+                  :ref nil
+                  :event $ {}
+                  :children $ [] ([] :empty nil) ([] :live wrapped)
+              collect-event-refreshing collect! ([] :app) ([]) root
+              assert=
+                [] $ DomPatch :set-event ([] :app :live :inner) ([] 0) :click
+                , @ops
+            :tags $ #{} :unit
         'detect-keys-dup $ %{} 'CodeEntry
           :doc "|Checks for duplicate keys in a list of children. Useful for development mode warnings."
           :code $ quote $ defn detect-keys-dup (child-keys)
@@ -3203,13 +3267,16 @@
                   do (collect-own-unmounting collect! coord n-coord old-tree true)
                     match (component-tree old-tree)
                       (:none) (find-element-diffs collect! coord n-coord legacy-nil new-tree)
-                      (:some old-child-tree) (find-element-diffs collect! coord n-coord old-child-tree new-tree)
+                      (:some old-child-tree)
+                        do (find-element-diffs collect! coord n-coord old-child-tree new-tree)
+                          collect-event-refreshing collect! coord n-coord $ assert-type new-tree 'Struct
                 (and (element? old-tree) (component? new-tree))
                   let
                       new-coord $ append coord $ component-name new-tree
                     match (component-tree new-tree)
                       (:none) (find-element-diffs collect! new-coord n-coord old-tree legacy-nil)
-                      (:some new-child-tree) (find-element-diffs collect! new-coord n-coord old-tree new-child-tree)
+                      (:some new-child-tree)
+                        do (find-element-diffs collect! new-coord n-coord old-tree new-child-tree) (collect-event-refreshing collect! new-coord n-coord new-child-tree)
                     collect-own-mounting collect! coord n-coord new-tree true
                 (and (element? old-tree) (element? new-tree))
                   if
@@ -4845,6 +4912,11 @@
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] $ :: 'List 'respo.schema/DomPatch
+        'comp-event-shell $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ respo.core/defcomp comp-event-shell (tree) tree
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
+            :args $ [] 'respo.schema/Element
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! (root-host html-host)
             assert |typed-DOM-host-traverses-nested-child $ = &unit $ compare-to-dom!
@@ -4902,6 +4974,63 @@
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.dom/DomElement)
             :args $ []
+            :features $ #{} :js-ffi
+        'verify-component-event-coords! $ %{} 'CodeEntry
+          :doc "|DOM regression for component to element and element to component switches, including an identical nested defcomp child. Root and descendant clicks must resolve the current handlers; removed focus handlers must stay removed."
+          :code $ quote $ defn verify-component-event-coords! (mount root child click!)
+            let
+                dispatched $ atom $ []
+                dispatch! $ fn (op) (respo.core/append-dynamic! dispatched op)
+                child-tree $ comp-event-shell $ span
+                  {} $ :on-click $ fn (_event d!) (d! :child)
+                wrapped $ comp-event-shell $ div
+                  {}
+                    :on-click $ fn (_event d!) (d! :wrapped-root)
+                    :on-focus $ fn (_event _d!) &unit
+                  , child-tree
+                plain $ div
+                  {} $ :on-click $ fn (_event d!) (d! :plain-root)
+                  , child-tree
+                rewrapped $ comp-event-shell $ div
+                  {} $ :on-click $ fn (_event d!) (d! :rewrapped-root)
+                  , child-tree
+                make-app $ fn (tree)
+                  hint-fn $ {}
+                    :args $ [] 'Struct
+                    :return 'respo.schema/Component
+                  respo.schema/Component :name :coord-fixture :effects ([]) :listeners ([]) :tree $ Option :some tree
+              respo.core/realize-ssr! mount (make-app wrapped) dispatch!
+              click! root
+              click! child
+              assert |wrapped-events-before-switch $ &=
+                [] (:: :wrapped-root) (:: :child)
+                , @dispatched
+              respo.core/render! mount (make-app plain) dispatch!
+              click! root
+              click! child
+              assert |component-to-element-refreshes-descendant-coords $ &=
+                [] (:: :wrapped-root) (:: :child) (:: :plain-root) (:: :child)
+                , @dispatched
+              respo.core/render! mount (make-app rewrapped) dispatch!
+              click! root
+              click! child
+              assert |element-to-component-refreshes-descendant-coords $ &=
+                [] (:: :wrapped-root) (:: :child) (:: :plain-root) (:: :child) (:: :rewrapped-root) (:: :child)
+                , @dispatched
+              , &unit
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ [] 'respo.dom/DomElement 'respo.dom/DomElement 'respo.dom/DomElement $ :: 'Fn
+              {} (:return 'Unit)
+                :args $ [] 'respo.dom/DomElement
+            :features $ #{} :js-ffi
+        'verify-dom-regressions! $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn verify-dom-regressions! (mount root child click!) (verify-realize-ssr-ref! mount root child click!) (verify-component-event-coords! mount root child click!)
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ [] 'respo.dom/DomElement 'respo.dom/DomElement 'respo.dom/DomElement $ :: 'Fn
+              {} (:return 'Unit)
+                :args $ [] 'respo.dom/DomElement
             :features $ #{} :js-ffi
         'verify-realize-ssr-ref! $ %{} 'CodeEntry
           :doc "|SSR adoption regression: preserve root and descendant DOM nodes, attach click handlers immediately, update shared dispatch and handlers on later renders, and run the ref and mount effect exactly once."
