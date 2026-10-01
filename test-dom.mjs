@@ -111,10 +111,24 @@ const htmlHost = elementHost("div", "<b>x</b>", [childHost])
 
 main_$x_(rootHost, htmlHost)
 
-const ssrRoot = elementHost("div", "", [])
+const ssrChild = elementHost("span", "", [])
+const ssrRoot = elementHost("div", "", [ssrChild])
 const ssrMount = elementHost("main", "", [ssrRoot])
-verify_realize_ssr_ref_$x_(ssrMount, ssrRoot)
-console.log("typed-SSR-ref-contract-ok")
+let ssrClicks = 0
+const clickSsrElement = (target) => {
+  if (typeof target.onclick !== "function") {
+    throw new Error(`SSR adoption left ${target.localName} without an onclick handler`)
+  }
+  let stopped = false
+  target.onclick({ type: "click", target, stopPropagation: () => { stopped = true } })
+  if (!stopped) throw new Error("SSR event did not stop propagation")
+  ssrClicks += 1
+}
+verify_realize_ssr_ref_$x_(ssrMount, ssrRoot, ssrChild, clickSsrElement)
+if (ssrClicks !== 6 || ssrMount.firstElementChild !== ssrRoot || ssrRoot.children.item(0) !== ssrChild) {
+  throw new Error("SSR adoption did not preserve the existing DOM through subsequent renders")
+}
+console.log("typed-SSR-ref-and-events-contract-ok")
 
 const newElement = {}
 const target = {}
