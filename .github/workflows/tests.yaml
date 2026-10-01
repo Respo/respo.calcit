@@ -63,6 +63,9 @@ jobs:
       - name: Test nullish DOM props
         run: node --test test/nullish-props.test.mjs
 
+      - name: Test SSR escaping and Node styles
+        run: yarn test-ssr
+
       - name: "check docs markdown"
         run: bash scripts/check-docs-md.sh
 
