@@ -57,6 +57,8 @@ list->
 
 Child elements are rendered in the order that items appear in the list. Diffing is not very fast, so don't make the list too large.
 
+`list->` validates each `[key child]` pair, then omits pairs whose child is `nil`, just as ordinary elements omit nil children. Adding or deleting a nil-valued pair creates no DOM node. Changing an element to nil removes that node; changing it back restores the node at its keyed position. Remaining children keep their original keys and order. Every pair must still have a non-nil key, including pairs that will be omitted; invalid child values are rejected before filtering.
+
 `for-keyed` packages the common ordered-list transformation and reports a `nil` key with its source index:
 
 ```cirru.no-check
