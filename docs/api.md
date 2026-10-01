@@ -46,6 +46,7 @@ calcit query def respo.render.html/make-string
 |                      | `defeffect`       |
 |                      | `create-element`  |
 |                      | `render!`         |
+|                      | `configure-events!` |
 |                      | `render-with!`    |
 |                      | `memo-comp-by`    |
 |                      | `memo-value-by`   |

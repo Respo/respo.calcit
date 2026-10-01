@@ -1147,6 +1147,17 @@
           :examples $ []
           :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
             :args $ [] 'respo.schema/DomProps
+        'configure-events! $ %{} 'CodeEntry
+          :doc "|Configure event installation before the first render! or realize-ssr!. EventConfig contains stop-propagation? (default true) and ListenerMode :property (default) or :add-event-listener. Configuration is immutable after mounting and is preserved during hot reload."
+          :code $ quote $ defn configure-events! (config)
+            match @*global-element
+              (:none) (reset! events/*event-config config)
+              (:some _)
+                raise |[Respo/configure-events!]-configure-before-mount
+            , &unit
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ [] 'respo.schema/EventConfig
         'confirm-child $ %{} 'CodeEntry
           :doc "|Validates if the item is a valid Respo node (element, component, or nil). Returns the item."
           :code $ quote $ defn confirm-child (x)
@@ -2343,6 +2354,7 @@
             respo.util.detect :refer $ component? element? effect? listener? expect-function component-tree
             respo.memo :as memo
             js-ffi.shared :as shared
+            respo.render.events :as events
     'respo.css $ %{} 'FileEntry
       :defs $ {}
         '*style-caches $ %{} 'CodeEntry (:doc "|Atom for caching style information.")
@@ -2778,10 +2790,14 @@
               :generics $ [] 'T
               :args $ [] 'T
               :return 'Unit
+            :owned-event-listeners $ :: 'JsNullish $ :: 'Map 'Tag
+              :: 'Fn $ {}
+                :args $ [] 'respo.dom/DomEvent
+                :return 'Unit
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
-            :names $ {} (:inner-html |innerHTML) (:insert-before! |insertBefore) (:namespace-uri |namespaceURI) (:parent-element |parentElement) (:remove! |remove)
-            :writable $ #{} :checked :disabled :id :inner-html :inner-text :selected
+            :names $ {} (:inner-html |innerHTML) (:insert-before! |insertBefore) (:namespace-uri |namespaceURI) (:owned-event-listeners |__respo_calcit_event_listeners) (:parent-element |parentElement) (:remove! |remove)
+            :writable $ #{} :checked :disabled :id :inner-html :inner-text :owned-event-listeners :selected
           :schema $ :: 'Trait
         'DomElementCollection $ %{} 'CodeEntry
           :doc "|Indexed child element collection returned by the children property."
@@ -3802,12 +3818,7 @@
                   let
                       event-handler $ respo.util.list/pair-value entry
                     when (some? event-handler)
-                      let
-                          event-name $ respo.util.list/pair-key entry
-                          name-in-string $ event->prop event-name
-                        aset element name-in-string $ fn (event)
-                          (listener-builder event-name) event coord
-                          .!stopPropagation event
+                      install-listener! element (respo.util.list/pair-key entry) listener-builder coord
                 each child-elements $ fn (child-element)
                   if (calcit.core/non-nil? child-element)
                     browser/append-child! (host-element element) (host-element child-element)
@@ -3854,10 +3865,11 @@
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.render.dom
           :require
-            respo.util.format :refer $ dashed->camel event->prop get-style-value svg-attr-name
+            respo.util.format :refer $ dashed->camel get-style-value svg-attr-name
             respo.util.detect :refer $ component? component-tree component-name element-name element-attrs element-style element-event element-children
             js-ffi.browser :as browser
             respo.ffi.browser :refer $ narrow-element host-element
+            respo.render.events :refer $ install-listener!
     'respo.render.effect $ %{} 'FileEntry
       :defs $ {}
         'collect-mounting $ %{} 'CodeEntry
@@ -4112,6 +4124,80 @@
             respo.util.detect :refer $ component? element? =seq as-component as-element as-effect component-name component-effects component-tree effect-name effect-method effect-args element-children element-ref
             respo.util.list :refer $ val-of-first
             respo.schema :refer $ DomPatch
+    'respo.render.events $ %{} 'FileEntry
+      :defs $ {}
+        '*event-config $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defatom *event-config default-config
+          :examples $ []
+          :schema $ :: 'Ref 'respo.schema/EventConfig
+          :tags $ #{} :internal
+        'default-config $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ def default-config
+            %{} EventConfig (:stop-propagation? true)
+              :listener-mode $ ListenerMode :property
+          :examples $ []
+          :schema $ :: 'respo.schema/EventConfig
+        'install-listener! $ %{} 'CodeEntry
+          :doc "|Internal event installer shared by initial DOM creation and event patches. Captures the immutable mount configuration; independent mode replaces only the callback recorded on the node."
+          :code $ quote $ defn install-listener! (target event-name listener-builder coord)
+            let
+                config @*event-config
+                handler $ fn (event)
+                  hint-fn $ {}
+                    :args $ [] 'respo.dom/DomEvent
+                    :return 'Unit
+                  (listener-builder event-name) event coord
+                  when (:stop-propagation? config) (.stop-propagation! event)
+                  , &unit
+              match (:listener-mode config)
+                (:property)
+                  aset target (event->prop event-name) handler
+                (:add-event-listener)
+                  do (remove-listener! target event-name)
+                    let
+                        listeners $ match (js-nullish->option target.:owned-event-listeners)
+                          (:none) ({})
+                          (:some listeners) listeners
+                      set! target.:owned-event-listeners $ assoc listeners event-name handler
+                      .add-event-listener! target (turn-string event-name) handler
+            , &unit
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ [] 'respo.dom/DomElement 'Tag
+              :: 'Fn $ {}
+                :args $ [] 'Tag
+                :return $ :: 'Fn $ {} (:return 'Unit)
+                  :args $ [] 'respo.dom/DomEvent $ :: 'List 'K
+              :: 'List 'K
+            :features $ #{} :js-ffi
+            :generics $ [] 'K
+          :tags $ #{} :internal
+        'remove-listener! $ %{} 'CodeEntry
+          :doc "|Remove only the recorded independent Respo callback. Release the internal node field after its last callback is removed; user on* properties and other native listeners are untouched."
+          :code $ quote $ defn remove-listener! (target event-name)
+            match (js-nullish->option target.:owned-event-listeners)
+              (:none) &unit
+              (:some listeners)
+                match (get listeners event-name)
+                  (:none) &unit
+                  (:some listener)
+                    do
+                      .remove-event-listener! target (turn-string event-name) listener
+                      let
+                          remaining $ dissoc listeners event-name
+                        if (empty? remaining) (js-delete target |__respo_calcit_event_listeners) (set! target.:owned-event-listeners remaining)
+            , &unit
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ [] 'respo.dom/DomElement 'Tag
+            :features $ #{} :js-ffi
+          :tags $ #{} :internal
+      :ns $ %{} 'NsEntry (:doc |)
+        :code $ quote $ ns respo.render.events
+          :require
+            respo.dom :refer $ DomElement DomEvent
+            respo.util.format :refer $ event->prop
+            respo.schema :refer $ ListenerMode EventConfig
     'respo.render.html $ %{} 'FileEntry
       :defs $ {}
         'coerce-pairs $ %{} 'CodeEntry (:doc |)
@@ -4319,13 +4405,7 @@
               :: 'List 'Dynamic
             :features $ #{} :js-ffi
         'add-event $ %{} 'CodeEntry (:doc "|Attaches an event listener to a DOM element.")
-          :code $ quote $ defn add-event (target event-name listener-builder coord)
-            &let
-              event-prop $ event->prop event-name
-              aset target event-prop $ fn (event)
-                (listener-builder event-name) event coord
-                .!stopPropagation event
-            , &unit
+          :code $ quote $ defn add-event (target event-name listener-builder coord) (install-listener! target event-name listener-builder coord)
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'respo.dom/DomElement 'Tag
@@ -4574,14 +4654,16 @@
             :args $ [] $ :: 'calcit.core/Option 'respo.dom/DomElement
             :features $ #{} :js-ffi
         'rm-event $ %{} 'CodeEntry
-          :doc "|Removes an event listener from a DOM element by setting it to nil."
+          :doc "|Remove an event according to the mount policy. Property mode clears its on* property as before; independent mode removes only the callback owned by Respo."
           :code $ quote $ defn rm-event (target event-name)
-            &let
-              event-prop $ event->prop event-name
-              do (js-set target event-prop nil) &unit
+            match (:listener-mode @respo.render.events/*event-config)
+              (:property)
+                js-set target (event->prop event-name) nil
+              (:add-event-listener) (remove-listener! target event-name)
+            , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'Dynamic 'Tag
+            :args $ [] 'respo.dom/DomElement 'Tag
             :features $ #{} :js-ffi
         'rm-prop $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn rm-prop (target op)
@@ -4669,6 +4751,7 @@
             respo.schema :refer $ DomPatch
             js-ffi.browser :as browser
             respo.ffi.browser :refer $ host-element
+            respo.render.events :refer $ install-listener! remove-listener!
     'respo.resource $ %{} 'FileEntry
       :defs $ {}
         '*resource-id $ %{} 'CodeEntry (:doc |)
@@ -5019,6 +5102,11 @@
                 :args $ [] $ :: 'JsNullish 'respo.dom/DomElement
           :examples $ []
           :schema $ :: 'StructDef
+        'EventConfig $ %{} 'CodeEntry
+          :doc "|Mount-time event policy: whether Respo stops propagation, and whether handlers use on* properties or independent native listeners."
+          :code $ quote $ defstruct EventConfig (:stop-propagation? 'Bool) (:listener-mode 'respo.schema/ListenerMode)
+          :examples $ []
+          :schema $ :: 'StructDef
         'EventHandler $ %{} 'CodeEntry
           :doc "|Event callback signature. Respo delivers an immutable map produced by event->edn together with the application dispatch function."
           :code $ quote $ def EventHandler &unit
@@ -5027,6 +5115,11 @@
             :args $ [] (:: 'Map 'Tag 'Dynamic)
               :: 'Fn $ {} (:return 'Unit)
                 :args $ [] 'Dynamic
+        'ListenerMode $ %{} 'CodeEntry
+          :doc "|Event installation policy. :property preserves the existing on* property behavior; :add-event-listener preserves external property handlers and registers independent Respo callbacks."
+          :code $ quote $ defenum ListenerMode (:property) (:add-event-listener)
+          :examples $ []
+          :schema $ :: 'EnumDef
         'RespoEvent $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct RespoEvent (:type 'Tag)
             :value $ :: 'JsNullish 'Dynamic

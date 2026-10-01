@@ -1,0 +1,10 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Event configuration regressions</title>
+<div id="mount"></div>
+<pre id="result">Running…</pre>
+<script type="module">
+  import { verifyEventConfig } from '/test/event-config-fixture.mjs';
+  window.eventConfigResults = verifyEventConfig(document.querySelector('#mount'));
+  document.querySelector('#result').textContent = JSON.stringify(window.eventConfigResults, null, 2);
+</script>

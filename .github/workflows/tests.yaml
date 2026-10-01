@@ -63,6 +63,9 @@ jobs:
       - name: Test nullish DOM props
         run: node --test test/nullish-props.test.mjs
 
+      - name: Test event configuration
+        run: yarn test-event-config
+
       - name: Test SSR escaping and Node styles
         run: yarn test-ssr
 
