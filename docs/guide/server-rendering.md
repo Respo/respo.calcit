@@ -22,23 +22,24 @@ For more details please read <https://github.com/Respo/ssr-stages>
 Before talking about **S**erver **S**ide **R**endering(SSR), you should know about how Respo mounts and rerenders. There's a Atom called `*global-element` which represents the virtual DOM of currently rendered HTML content on the page:
 
 ```cirru.no-check
-defatom *global-element nil
+defatom *global-element $ Option :none
 ```
 
 And every time you call `render!`, it checks if old virtual DOM exists. If exists, it will do patching with `rerender-app!` rather than mounting:
 
 ```cirru.no-check
 defn render! (target markup dispatch!)
-  if (some? @*global-element)
-    rerender-app! target markup dispatch!
-    mount-app! target markup dispatch!
+  reset! *dispatch-fn dispatch!
+  match @*global-element
+    (:none) (mount-app! target markup *dispatch-fn)
+    (:some _) (rerender-app! target markup *dispatch-fn)
 ```
 
 ### What is SSR in Respo?
 
 So SSR is there's already HTML in `<div class="app">{"some HTML existed"}</div>` and Respo need to patch the DOM in the first screen. And in order to generate the patches, we must prepare an old virtual DOM so that we can call diff function.
 
-And note that the HTML transferred over the network does not bind events, and we need to bind them on client side. Internally there's `mute-element` function to remove events from virtual DOM.
+HTML transferred over the network does not bind events. During `realize-ssr!`, Respo diffs a copy with events removed by `mute-element` against the live component tree. This produces event patches for the existing DOM, including descendant nodes, before mount effects run.
 
 ### Server rendering
 
@@ -53,7 +54,7 @@ Virtual DOM can be rendered on a server, use it like in JavaScript.
 
 `respo.render.html/make-string` is the function to render HTML. `respo.core/realize-ssr!` is also useful to make first screen look smoother; make sure it is called before `respo.core/render!`.
 
-Notice that when rendering on server, events are not bound, and internally Respo uses `respo.util.format/mute-element` to remove events before rendering.
+`make-string` serializes the component tree without event handlers. On the client, `realize-ssr!` attaches those handlers while adopting the existing HTML.
 Without `respo.core/realize-ssr!`, `respo.core/render!` will remove existing DOM and mount the whole tree.
 
 ### `realize-ssr!` solution
@@ -81,7 +82,7 @@ It can be divided into several steps:
 - call `(realize-ssr! target element dispatch!)` to reset `*global-element` we mentioned above
 - then call `render!` with `(render-app!)`
 
-In `realize-ssr!` we also setup the event listener, and all listeners are finished registering after `render!` is called, i.e. DOM patching finished.
+When `realize-ssr!` returns, event handlers are already attached and the ref callbacks and mount effects have run once. It records the live component tree and the shared dispatch reference. The first `render!` can reuse that same tree and update `dispatch!`; later renders resolve the latest handlers without remounting the adopted nodes or repeating mount effects.
 
 ### Extracting CSS defined in Calcit
 

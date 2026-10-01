@@ -1962,7 +1962,7 @@
           :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
             :args $ [] 'respo.schema/DomProps
         'realize-ssr! $ %{} 'CodeEntry
-          :doc "|Adopt server-rendered DOM before the first client render.\n\nIt compares the incoming component tree to the existing HTML, mounts effects, registers listeners, and records a muted virtual tree in `*global-element` so later `render!` calls can patch instead of remounting."
+          :doc "|Adopt server-rendered DOM before the first client render. It compares the component tree to the existing HTML, attaches events by diffing a muted tree against the live tree, and mounts effects once. The live tree and shared dispatch reference are recorded before patches run, so events work immediately and later render! calls update handlers and dispatch without remounting."
           :code $ quote $ defn realize-ssr! (target element dispatch!)
             assert (instance? element-type target) "|1st argument should be an element"
             assert (component? element) "|2nd argument should be a component"
@@ -1970,12 +1970,14 @@
                 app-element $ .-firstElementChild target
                 changes $ &buf-list:new
                 collect! $ fn (patch) (&buf-list:push changes patch)
-                deliver-event $ build-deliver-event *global-element $ atom dispatch!
+                deliver-event $ build-deliver-event *global-element *dispatch-fn
               if (js-nullish? app-element) (raise "|Detected no element from SSR!")
               compare-to-dom!
                 respo.util.format/coerce-element $ purify-element element
                 unsafe-coerce app-element 'js-ffi.browser/DomElementHost
+              find-element-diffs collect! ([]) ([]) (mute-element element) element
               collect-mounting collect! ([]) ([]) element true
+              reset! *dispatch-fn dispatch!
               reset! *global-element $ Option :some element
               patch-instance!
                 assert-type (&buf-list:to-list changes) (:: List respo.schema/DomPatch)
@@ -4902,18 +4904,61 @@
             :args $ []
             :features $ #{} :js-ffi
         'verify-realize-ssr-ref! $ %{} 'CodeEntry
-          :doc "|Regression fixture for SSR adoption: a ref-backed component must collect one nominal DomPatch and receive the already-rendered root without callback arity failure."
-          :code $ quote $ defn verify-realize-ssr-ref! (mount root)
+          :doc "|SSR adoption regression: preserve root and descendant DOM nodes, attach click handlers immediately, update shared dispatch and handlers on later renders, and run the ref and mount effect exactly once."
+          :code $ quote $ defn verify-realize-ssr-ref! (mount root child click!)
             let
                 refs $ atom $ []
-                element $ respo.schema/Element :name :div :coord (Option :none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref $ fn (target) (respo.core/append-dynamic! refs target)
-                component $ respo.schema/Component :name :ssr-fixture :effects ([]) :listeners ([]) :tree $ Option :some element
-              respo.core/realize-ssr! mount component $ fn (_op) &unit
+                mounts $ atom $ []
+                dispatched $ atom $ []
+                later-dispatched $ atom $ []
+                dispatch! $ fn (op) (respo.core/append-dynamic! dispatched op)
+                later-dispatch! $ fn (op) (respo.core/append-dynamic! later-dispatched op)
+                ref! $ fn (target) (respo.core/append-dynamic! refs target)
+                mount-effect $ respo.core/effect-on-mount $ fn (target) (respo.core/append-dynamic! mounts target)
+                make-component $ fn (op)
+                  hint-fn $ {}
+                    :args $ [] 'Tag
+                    :return 'respo.schema/Component
+                  let
+                      handler $ fn (_event d!) (d! op)
+                      child-element $ span $ {} (:on-click handler)
+                      element $ div
+                        {} (:on-click handler) (:ref ref!)
+                        , child-element
+                    respo.schema/Component :name :ssr-fixture :effects ([] mount-effect) :listeners ([]) :tree $ Option :some element
+                component $ make-component :adopted
+              assert= |<div><span></span></div> $ respo.render.html/make-string component
+              respo.core/realize-ssr! mount component dispatch!
               assert |SSR-ref-receives-adopted-root $ &= ([] root) @refs
+              assert |SSR-mount-effect-runs-once $ &= ([] root) @mounts
+              click! root
+              click! child
+              assert |SSR-events-work-during-adoption $ &=
+                [] (:: :adopted) (:: :adopted)
+                , @dispatched
+              respo.core/render! mount component later-dispatch!
+              click! root
+              click! child
+              assert |SSR-first-render-updates-dispatch $ &=
+                [] (:: :adopted) (:: :adopted)
+                , @later-dispatched
+              respo.core/render! mount (make-component :updated) later-dispatch!
+              click! root
+              click! child
+              assert |SSR-later-render-updates-handlers $ &=
+                [] (:: :adopted) (:: :adopted) (:: :updated) (:: :updated)
+                , @later-dispatched
+              assert |SSR-old-dispatch-is-no-longer-used $ &=
+                [] (:: :adopted) (:: :adopted)
+                , @dispatched
+              assert |SSR-ref-is-not-remounted $ &= ([] root) @refs
+              assert |SSR-effect-is-not-remounted $ &= ([] root) @mounts
               , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'respo.dom/DomElement 'respo.dom/DomElement
+            :args $ [] 'respo.dom/DomElement 'respo.dom/DomElement 'respo.dom/DomElement $ :: 'Fn
+              {} (:return 'Unit)
+                :args $ [] 'respo.dom/DomElement
             :features $ #{} :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.test.dom
