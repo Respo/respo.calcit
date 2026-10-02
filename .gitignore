@@ -1,9 +1,11 @@
 
 .compact-inc.cirru
 compact.cirru
+package.cirru
 .calcit-error.cirru
 
 js-out/
+server-out/
 node_modules/
 dist/
 yarn-error.log

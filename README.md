@@ -8,7 +8,11 @@ Respo 的开发版本以 `deps.cirru` 固定 Calcit 与 js-ffi 依赖，通过�
 
 升级时同时固定 `deps.cirru :calcit-version` 和 `package.json` 的 `@calcit/procs` 为同一精确版本，并执行 `yarn install --immutable`。只更新 CLI 而沿用旧 JS runtime，可能在运行时缺失新的 trait 实现；编译成功不能代替 DOM/SSR 测试。核心 API 改写先用 `calcit fix --preset core-api-0.28-v1 --format edn` 预览，只有可证明安全的建议自动应用，剩余开放类型和 macro 建议保留人工审阅。
 
-当前开发依赖组合为已发布的 Calcit CLI / `@calcit/procs` `0.28.0-alpha.3` 与 js-ffi Git tag `0.2.1-alpha.11`。模块通过普通 Calcit 引用复用 JS FFI，不需要片段专用 npm 包。本次依赖验证不改变 Respo 自身版本，也不表示 Calcit 0.28 已正式发布；升级记录见[发布依赖验收](docs/guide/calcit-0.28-alpha3-validation.md)。
+当前编译器和 JS runtime 固定为正式 Calcit / `@calcit/procs` `0.28.0`；js-ffi 暂保留原已发布 tag `0.2.1-alpha.11`，待兼容正式版本发布后替换，不使用提交 hash。模块通过普通 Calcit 引用复用 JS FFI，不需要片段专用 npm 包，也不改变 Respo 自身版本。此前 alpha 工具链的历史验收见[发布依赖验收](docs/guide/calcit-0.28-alpha3-validation.md)，不代表本次正式版本已通过全部测试。
+
+演示页前端构建使用 `https://cos-sh.tiye.me/Respo/respo.calcit/` 作为资源 base。仅 main push 在测试、构建通过后上传 `dist/`，使用 `cos-upload-action@v1.2.0` 的 `public-base-url` 内置逐文件校验，不维护额外验证脚本。PR 只构建，不读取部署 secrets。原 rsync 页面路径 `/web-assets/repo/${github.repository}` 保持不变；生产运行串行且上传前检查 main SHA，跳过已过期提交，这并非原子发布。
+
+正式 0.28 下，默认 browser 入口检查和 JS 编译、68 项 Calcit 测试、29 项既有 JS 测试、完整 DOM host 套件、DomPatch/扩展属性正反类型检查及 CDN 构建已通过。[Map 构造及 DOM anchor 宿主断言问题](https://github.com/Respo/respo.calcit/issues/212)使用显式 browser JS FFI 与受检列表转换修正，末尾移动传入 null anchor；[SVG 属性构造](https://github.com/Respo/respo.calcit/issues/208)改用类型化的 `with-attrs`。这些结果不代表整个库的 Node target 或真实浏览器已验收；完整公开定义及 strict workflow 仍受 [Promise 宿主边界](https://github.com/calcit-lang/js-ffi/issues/154)阻止，尚未实际验证 COS 上传。
 
 > Inspired by React and Reagent. Previously [Respo/respo.cljs](https://github.com/Respo/respo.cljs).
 
@@ -26,12 +30,12 @@ Respo 的开发版本以 `deps.cirru` 固定 Calcit 与 js-ffi 依赖，通过�
 
 ### Usage
 
-In `package.cirru` and run `caps`:
+In `deps.cirru` and run `caps` (replace the version with the compatible published release):
 
 ```cirru
 {}
   :dependencies $ {}
-    |Respo/respo.calcit |main
+    |Respo/respo.calcit |0.16.113
 ```
 
 ![Latest](https://img.shields.io/github/v/release/Respo/respo.calcit)
@@ -56,6 +60,15 @@ let
 ### SVG 渲染
 
 `create-element` 创建的 `:svg` 会为自身及其子节点使用 SVG 命名空间；进入 `:foreignObject` 后，子节点恢复 HTML 命名空间。SVG 的普通属性在首次渲染及后续补丁中都以 DOM attribute 写入、更新和移除，`strokeWidth` 等常见驼峰名称会转为 `stroke-width`。事件、`data-*` 和样式仍沿用 Respo 的现有处理路径。
+
+共同属性继续传给 `create-element`，不把 SVG Map 强转为闭合的 DomProps。`with-attrs` 接收 `Element` 和 `Map<Tag, String>`，将已序列化的扩展属性合并到 Element；同名属性覆盖，其他属性、子节点、事件、ref 和样式不变。数字须显式转成字符串；它不是事件或样式 props 入口。
+
+```cirru.no-run
+respo.core/with-attrs
+  respo.core/create-element :rect $ {} $ :class-name |shape
+  {} (:fill |red)
+    :strokeWidth $ to-string 2
+```
 
 本仓库的 `yarn test-dom-host` 覆盖 SVG 初次创建及属性增删改；消费者可用 Cross Stitch 页面验证图案显示及点击后的增量更新。
 
