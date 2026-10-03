@@ -1363,15 +1363,18 @@
             match (:tree c)
               (:none) c
               (:some tree)
-                if
-                  and (struct? tree)
-                    = (&struct:definition tree) schema/Element
-                  let
-                      element $ assert-type tree 'respo.schema/Element
-                      updated $ assert-type
-                        assoc element :attrs $ loop
+                match tree
+                  (:component _component) c
+                  (:element element)
+                    let
+                        updated $ assoc element :attrs $ loop
                             before $ []
                             remaining $ :attrs element
+                          hint-fn $ {}
+                            :args $ []
+                              :: 'List $ :: 'List 'Dynamic
+                              :: 'List $ :: 'List 'Dynamic
+                            :return $ :: 'List $ :: 'List 'Dynamic
                           if (empty? remaining)
                             append before $ [] :data-comp name
                             let
@@ -1379,12 +1382,10 @@
                                 order $ &compare (respo.util.list/pair-key pair) :data-comp
                               if (&< order 0)
                                 recur (append before pair) (&list:rest remaining)
-                                concat (assert-type before 'List)
+                                concat before
                                   [] $ [] :data-comp name
                                   if (&= order 0) (&list:rest remaining) remaining
-                        , 'Struct
-                    &struct:assoc c :tree $ Option :some updated
-                  , c
+                      assoc c :tree $ Option :some $ respo.schema/RenderNode :element updated
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
             :args $ [] 'respo.schema/Component 'String
@@ -1394,16 +1395,16 @@
                   patches $ atom $ []
                   collect! $ fn (patch) (append-dynamic! patches patch)
                   old-component $ decorate-defcomp
-                    schema/Component :name :link :effects ([]) :listeners ([]) :tree $ Option :some $ div
-                      {} (:href |/page) (:title |title)
+                    schema/Component :name :link :effects ([]) :listeners ([]) :tree $ Option :some $ respo.util.detect/as-render-node
+                      div $ {} (:href |/page) (:title |title)
                     , |comp-link
                   new-component $ decorate-defcomp
-                    schema/Component :name :link :effects ([]) :listeners ([]) :tree $ Option :some $ div
-                      {} $ :href |/page
+                    schema/Component :name :link :effects ([]) :listeners ([]) :tree $ Option :some $ respo.util.detect/as-render-node
+                      div $ {} $ :href |/page
                     , |comp-link
                 respo.render.diff/find-props-diffs collect! ([]) ([])
-                  respo.util.detect/element-attrs $ option:unwrap $ :tree old-component
-                  respo.util.detect/element-attrs $ option:unwrap $ :tree new-component
+                  respo.util.detect/element-attrs $ option:unwrap $ respo.util.detect/component-tree old-component
+                  respo.util.detect/element-attrs $ option:unwrap $ respo.util.detect/component-tree new-component
                 assert=
                   [] $ schema/DomPatch :rm-prop ([]) ([]) :title
                   , @patches
@@ -1414,16 +1415,16 @@
                   patches $ atom $ []
                   collect! $ fn (patch) (append-dynamic! patches patch)
                   old-component $ decorate-defcomp
-                    schema/Component :name :link :effects ([]) :listeners ([]) :tree $ Option :some $ div
-                      {} $ :href |/old
+                    schema/Component :name :link :effects ([]) :listeners ([]) :tree $ Option :some $ respo.util.detect/as-render-node
+                      div $ {} $ :href |/old
                     , |comp-link
                   new-component $ decorate-defcomp
-                    schema/Component :name :link :effects ([]) :listeners ([]) :tree $ Option :some $ div
-                      {} (:class-name |styled) (:href |/new) (:id |link)
+                    schema/Component :name :link :effects ([]) :listeners ([]) :tree $ Option :some $ respo.util.detect/as-render-node
+                      div $ {} (:class-name |styled) (:href |/new) (:id |link)
                     , |comp-link
                 respo.render.diff/find-props-diffs collect! ([]) ([])
-                  respo.util.detect/element-attrs $ option:unwrap $ :tree old-component
-                  respo.util.detect/element-attrs $ option:unwrap $ :tree new-component
+                  respo.util.detect/element-attrs $ option:unwrap $ respo.util.detect/component-tree old-component
+                  respo.util.detect/element-attrs $ option:unwrap $ respo.util.detect/component-tree new-component
                 assert=
                   []
                     schema/DomPatch :add-prop ([]) ([]) :class-name |styled
@@ -1434,18 +1435,18 @@
             %{} 'TestEntry (:name |marker-is-unique-and-sorted)
               :code $ quote $ let
                   component $ schema/Component :name :link :effects ([]) :listeners ([]) :tree $ Option :some
-                    div $ {} (:class-name |styled) (:data-comp |old) (:href |/page)
+                    respo.util.detect/as-render-node $ div $ {} (:class-name |styled) (:data-comp |old) (:href |/page)
                   decorated $ decorate-defcomp (decorate-defcomp component |first) |final
                   class-only $ decorate-defcomp
-                    schema/Component :name :link :effects ([]) :listeners ([]) :tree $ Option :some $ div
-                      {} $ :class-name |styled
+                    schema/Component :name :link :effects ([]) :listeners ([]) :tree $ Option :some $ respo.util.detect/as-render-node
+                      div $ {} $ :class-name |styled
                     , |comp-link
                 assert=
                   [] ([] :class-name |styled) ([] :data-comp |final) ([] :href |/page)
-                  respo.util.detect/element-attrs $ option:unwrap $ :tree decorated
+                  respo.util.detect/element-attrs $ option:unwrap $ respo.util.detect/component-tree decorated
                 assert=
                   [] ([] :class-name |styled) ([] :data-comp |comp-link)
-                  respo.util.detect/element-attrs $ option:unwrap $ :tree class-only
+                  respo.util.detect/element-attrs $ option:unwrap $ respo.util.detect/component-tree class-only
               :tags $ #{} :unit
         'defcomp $ %{} 'CodeEntry
           :doc "|Macro for defining a Respo component.\n\n`defcomp` expands to a function that returns a `respo.schema/Component`, decorates the component name, and extracts component effects declared from the render result. Use it for reusable view functions that accept props or state cursors and return virtual DOM."
@@ -1653,11 +1654,11 @@
                   old-tree $ %{} schema/Component (:name :watch)
                     :effects $ [] old-effect
                     :listeners $ []
-                    :tree $ %some element
+                    :tree $ %some $ respo.util.detect/as-render-node element
                   new-tree $ %{} schema/Component (:name :watch)
                     :effects $ [] new-effect
                     :listeners $ []
-                    :tree $ %some element
+                    :tree $ %some $ respo.util.detect/as-render-node element
                 respo.render.effect/collect-updating collect! :before-update ([]) ([]) old-tree new-tree
                 respo.render.effect/collect-updating collect! :update ([]) ([]) old-tree new-tree
                 run-effect-ops! @ops :target
@@ -1683,11 +1684,11 @@
                   old-tree $ %{} schema/Component (:name :watch)
                     :effects $ [] old-effect
                     :listeners $ []
-                    :tree $ %some element
+                    :tree $ %some $ respo.util.detect/as-render-node element
                   new-tree $ %{} schema/Component (:name :watch)
                     :effects $ [] new-effect
                     :listeners $ []
-                    :tree $ %some element
+                    :tree $ %some $ respo.util.detect/as-render-node element
                 respo.render.effect/collect-updating collect! :before-update ([]) ([]) old-tree new-tree
                 respo.render.effect/collect-updating collect! :update ([]) ([]) old-tree new-tree
                 assert |unchanged-effects-produce-no-operations $ empty? @ops
@@ -1712,11 +1713,11 @@
                   without-effect $ %{} schema/Component (:name :optional)
                     :effects $ []
                     :listeners $ []
-                    :tree $ %some element
+                    :tree $ %some $ respo.util.detect/as-render-node element
                   with-effect $ %{} schema/Component (:name :optional)
                     :effects $ [] watch
                     :listeners $ []
-                    :tree $ %some element
+                    :tree $ %some $ respo.util.detect/as-render-node element
                 respo.render.effect/collect-updating collect! :before-update ([]) ([]) without-effect with-effect
                 respo.render.effect/collect-updating collect! :update ([]) ([]) without-effect with-effect
                 run-effect-ops! @ops :target
@@ -1747,11 +1748,11 @@
                   old-tree $ %{} schema/Component (:name :replace)
                     :effects $ [] old-effect
                     :listeners $ []
-                    :tree $ %some element
+                    :tree $ %some $ respo.util.detect/as-render-node element
                   new-tree $ %{} schema/Component (:name :replace)
                     :effects $ [] new-effect
                     :listeners $ []
-                    :tree $ %some element
+                    :tree $ %some $ respo.util.detect/as-render-node element
                 respo.render.effect/collect-updating collect! :before-update ([]) ([]) old-tree new-tree
                 respo.render.effect/collect-updating collect! :update ([]) ([]) old-tree new-tree
                 run-effect-ops! @ops :target
@@ -1808,12 +1809,13 @@
         'extract-effects-list $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn extract-effects-list (component-name markup-tree)
             if (nil? markup-tree)
-              schema/Component :effects ([]) :name component-name :listeners ([]) :tree $ Option :some $ span ({})
+              schema/Component :effects ([]) :name component-name :listeners ([]) :tree $ Option :some $ respo.util.detect/as-render-node
+                span $ {}
               if (list? markup-tree)
                 let
                     items $ unsafe-coerce markup-tree $ :: List Dynamic
                   loop
-                      node-option $ none-struct
+                      node-option $ none-render-node
                       effects $ empty-effects
                       listeners $ empty-listeners
                       xs items
@@ -1821,13 +1823,13 @@
                       match node-option
                         (:none) (raise |expected-render-node)
                         (:some node-tree)
-                          schema/Component :effects effects :name component-name :listeners listeners :tree $ Option :some $ assert-type node-tree Struct
+                          schema/Component :effects effects :name component-name :listeners listeners :tree $ Option :some node-tree
                       let
                           item $ &list:first xs
                           next-node $ if
                             and (struct? item)
                               or (component? item) (element? item)
-                            Option :some $ assert-type item Struct
+                            Option :some $ respo.util.detect/as-render-node item
                             , node-option
                           next-effects $ if (effect? item)
                             append effects $ respo.util.detect/as-effect item
@@ -1837,7 +1839,7 @@
                             , listeners
                         recur next-node next-effects next-listeners $ &list:rest xs
                 if (struct? markup-tree)
-                  schema/Component :effects ([]) :name component-name :listeners ([]) :tree $ Option :some $ assert-type markup-tree Struct
+                  schema/Component :effects ([]) :name component-name :listeners ([]) :tree $ Option :some $ respo.util.detect/as-render-node markup-tree
                   raise |invalid-component-tree
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
@@ -2083,6 +2085,12 @@
               :: 'Fn $ {} (:return 'Unit)
                 :args $ [] 'Dynamic
             :features $ #{} :js-ffi
+        'none-render-node $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn none-render-node () (Option :none)
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ []
+            :return $ :: 'calcit.core/Option 'respo.schema/RenderNode
         'none-struct $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn none-struct () (Option :none)
           :examples $ []
@@ -3619,7 +3627,7 @@
                         :return 'Unit
                       , &unit
                     :focus nil
-                wrapped $ respo.schema/Component :name :inner :effects ([]) :listeners ([]) :tree $ Option :some leaf
+                wrapped $ respo.schema/Component :name :inner :effects ([]) :listeners ([]) :tree $ Option :some (respo.util.detect/as-render-node leaf)
                 root $ %{} respo.schema/Element (:name :div)
                   :coord $ Option :none
                   :attrs $ []
@@ -3987,7 +3995,7 @@
                   wrapped $ %{} respo.schema/Component (:name :boundary)
                     :effects $ [] watch
                     :listeners $ []
-                    :tree $ %some inner
+                    :tree $ %some $ respo.util.detect/as-render-node inner
                 find-element-diffs collect! ([]) ([]) plain wrapped
                 respo.core/run-effect-ops! @ops :target
                 assert |entering-wrapper-runs-two-actions $ &= 2 $ count @log
@@ -4020,7 +4028,7 @@
                   rendered $ %{} respo.schema/Component (:name :same)
                     :effects $ []
                     :listeners $ []
-                    :tree $ %some inner
+                    :tree $ %some $ respo.util.detect/as-render-node inner
                 find-element-diffs collect! ([]) ([]) empty-old empty-new
                 assert |none-to-none-does-not-touch-dom $ empty? @ops
                 find-element-diffs collect! ([]) ([]) empty-old rendered
@@ -5050,7 +5058,7 @@
                 component $ %{} respo.schema/Component (:name :root)
                   :effects $ []
                   :listeners $ []
-                  :tree $ %some element
+                  :tree $ %some $ respo.util.detect/as-render-node element
               assert |component-root-is-serialized $ &= |<div></div> $ make-string component
             :tags $ #{} :unit
         'props->html $ %{} 'CodeEntry (:doc |)
@@ -5897,9 +5905,9 @@
           :code $ quote $ defstruct Component (:name 'Tag)
             :effects $ :: 'List 'respo.schema/Effect
             :listeners $ :: 'List 'respo.schema/RespoListener
-            :tree $ :: 'Option 'Struct
+            :tree $ :: 'Option 'respo.schema/RenderNode
           :examples $ []
-          :schema $ :: 'Enum
+          :schema $ :: 'StructDef
         'DomPatch $ %{} 'CodeEntry
           :doc "|Nominal internal command protocol shared by Respo's virtual-tree diff producers and sole DOM patch consumer."
           :code $ quote $ defenum DomPatch
@@ -6043,6 +6051,10 @@
           :code $ quote $ defenum ListenerMode (:property) (:add-event-listener)
           :examples $ []
           :schema $ :: 'EnumDef
+        'RenderNode $ %{} 'CodeEntry (:doc "|渲染节点的具名并集；每个变体保留具体 Element 或 Component payload。")
+          :code $ quote $ defenum RenderNode (:element 'respo.schema/Element) (:component 'respo.schema/Component)
+          :examples $ []
+          :schema $ :: 'EnumDef
         'RespoEvent $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct RespoEvent (:type 'Tag)
             :value $ :: 'JsNullish 'Dynamic
@@ -6183,7 +6195,7 @@
                   hint-fn $ {}
                     :args $ [] 'Struct
                     :return 'respo.schema/Component
-                  respo.schema/Component :name :coord-fixture :effects ([]) :listeners ([]) :tree $ Option :some tree
+                  respo.schema/Component :name :coord-fixture :effects ([]) :listeners ([]) :tree $ Option :some $ respo.util.detect/as-render-node tree
               respo.core/realize-ssr! mount (make-app wrapped) dispatch!
               click! root
               click! child
@@ -6239,7 +6251,7 @@
                       element $ div
                         {} (:on-click handler) (:ref ref!)
                         , child-element
-                    respo.schema/Component :name :ssr-fixture :effects ([] mount-effect) :listeners ([]) :tree $ Option :some element
+                    respo.schema/Component :name :ssr-fixture :effects ([] mount-effect) :listeners ([]) :tree $ Option :some $ respo.util.detect/as-render-node element
                 component $ make-component :adopted
               assert= |<div><span></span></div> $ respo.render.html/make-string component
               respo.core/realize-ssr! mount component dispatch!
@@ -6446,6 +6458,49 @@
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/RespoListener)
             :args $ [] 'Dynamic
+        'as-render-node $ %{} 'CodeEntry
+          :doc "|在创建边界标记 Element 或 Component，保留 payload 的身份；非法节点报告组件树错误。"
+          :code $ quote $ defn as-render-node (value)
+            cond
+                element? value
+                respo.schema/RenderNode :element $ as-element value
+              (component? value)
+                respo.schema/RenderNode :component $ as-component value
+              true $ raise |invalid-component-tree
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/RenderNode)
+            :args $ [] 'NodeInput
+            :generics $ [] 'NodeInput
+          :tests $ []
+            %{} 'TestEntry (:name |preserves-element-payload)
+              :code $ quote $ let
+                  element $ respo.core/span $ {}
+                  node $ as-render-node element
+                match node
+                  (:element payload)
+                    assert |element-identity $ identical? element payload
+                  (:component _) (assert |expected-element false)
+                assert |value-identity $ identical? element $ render-node-value node
+              :tags $ #{} :unit
+            %{} 'TestEntry (:name |preserves-component-payload-and-empty-tree)
+              :code $ quote $ let
+                  component $ respo.schema/Component :name :empty :effects ([]) :listeners ([]) :tree $ %none
+                  node $ as-render-node component
+                match node
+                  (:component payload)
+                    assert |component-identity $ identical? component payload
+                  (:element _) (assert |expected-component false)
+                assert |value-identity $ identical? component $ render-node-value node
+                assert |keeps-none-tree $ option:none? $ component-tree component
+              :tags $ #{} :unit
+            %{} 'TestEntry (:name |rejects-invalid-node)
+              :code $ quote $ let
+                  caught? $ atom false
+                try
+                  as-render-node $ {}
+                  fn (error) (assert= |invalid-component-tree error) (reset! caught? true)
+                assert |invalid-node-rejected $ deref caught?
+              :tags $ #{} :unit
         'component-effects $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn component-effects (value)
             let
@@ -6476,7 +6531,7 @@
           :code $ quote $ defn component-tree (value)
             let
                 component $ assert-type value 'respo.schema/Component
-              :tree component
+              option:map (:tree component) respo.util.detect/render-node-value
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] 'Dynamic
@@ -6642,6 +6697,14 @@
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Bool)
             :args $ [] 'Dynamic
+        'render-node-value $ %{} 'CodeEntry (:doc "|通过具名变体读取原始节点；用于保留既有 component-tree 读取合同。")
+          :code $ quote $ defn render-node-value (node)
+            match node
+              (:element element) element
+              (:component component) component
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Struct)
+            :args $ [] 'respo.schema/RenderNode
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.util.detect
           :require $ respo.schema :as schema
@@ -6892,7 +6955,12 @@
             if (component? element)
               let
                   component $ assert-type element 'respo.schema/Component
-                respo.schema/Component :name (:name component) :effects (:effects component) :listeners (:listeners component) :tree $ option:map (:tree component) mute-element
+                respo.schema/Component :name (:name component) :effects (:effects component) :listeners (:listeners component) :tree $ option:map (:tree component)
+                  fn (node)
+                    hint-fn $ {}
+                      :args $ [] 'respo.schema/RenderNode
+                      :return 'respo.schema/RenderNode
+                    respo.util.detect/as-render-node $ mute-element $ respo.util.detect/render-node-value node
               let
                   node $ assert-type element 'respo.schema/Element
                 respo.schema/Element :name (:name node) :coord (:coord node) :attrs (:attrs node) :style (:style node) :event ({}) :ref (:ref node) :children $ map (:children node)
@@ -6928,10 +6996,10 @@
                             :return 'Unit
                         :return 'Unit
                       , &unit
-                component $ respo.schema/Component :name :root :effects ([]) :listeners ([]) :tree $ %some root
+                component $ respo.schema/Component :name :root :effects ([]) :listeners ([]) :tree $ %some (respo.util.detect/as-render-node root)
                 muted $ assert-type (mute-element component) 'respo.schema/Component
                 muted-root $ assert-type
-                  option:unwrap $ :tree muted
+                  option:unwrap $ respo.util.detect/component-tree muted
                   , 'respo.schema/Element
                 child-pair $ option:unwrap $ first (:children muted-root)
                 muted-child $ assert-type

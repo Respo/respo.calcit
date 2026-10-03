@@ -27,6 +27,11 @@ expect_failure() {
   'respo.schema/DomPatch :move-element ([]) 0 (%:: Option :some 1)' >/dev/null
 
 expect_failure \
+  'a Number used as a RenderNode element payload' \
+  'RenderNode::element` payload 1 expects type' \
+  'respo.schema/RenderNode :element 1'
+
+expect_failure \
   'a String in a move source index' \
   'but got `:string`' \
   'respo.schema/DomPatch :move-element ([]) |first (%:: Option :none)'

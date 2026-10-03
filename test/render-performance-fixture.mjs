@@ -52,10 +52,10 @@ export async function createPerformanceFixture(baseURL = new URL('../', import.m
     tag('name'), tag('benchmark-row'), tag('effects'), list([]),
     tag('listeners'), list(i % 20 === 0 ? [c._$n__PCT__$M_(schema.RespoListener,
       tag('name'), tag('keydown'), tag('handler'), (event, dispatch) => { callbacks++; dispatch(tag('ping')); })] : []),
-    tag('tree'), c._PCT__$o__$o_(c.Option, tag('some'), core.div(props))));
+    tag('tree'), c._PCT__$o__$o_(c.Option, tag('some'), detect.as_render_node(core.div(props)))));
   const tree = c._$n__PCT__$M_(schema.Component, tag('name'), tag('benchmark-root'),
     tag('effects'), list([]), tag('listeners'), list([]), tag('tree'),
-    c._PCT__$o__$o_(c.Option, tag('some'), core.list__GT_(props, list(rows.map((row, i) => list([i, row]))))));
+    c._PCT__$o__$o_(c.Option, tag('some'), detect.as_render_node(core.list__GT_(props, list(rows.map((row, i) => list([i, row])))))));
   c.reset_$x_(core._$s_global_element, c._PCT__$o__$o_(c.Option, tag('some'), tree));
   c.reset_$x_(core._$s_dispatch_fn, () => { dispatches++; });
   const event = new c.CalcitEnumValue(tag('keydown'), []);
