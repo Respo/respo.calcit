@@ -3577,7 +3577,14 @@
                   :ref nil
                   :children $ []
                   :event $ {}
-                    :click $ fn (_event _d!) &unit
+                    :click $ fn (_event _d!)
+                      hint-fn $ {}
+                        :args $ [] (:: 'Map 'Tag 'Dynamic)
+                          :: 'Fn $ {}
+                            :args $ [] 'Dynamic
+                            :return 'Unit
+                        :return 'Unit
+                      , &unit
                     :focus nil
                 wrapped $ respo.schema/Component :name :inner :effects ([]) :listeners ([]) :tree $ Option :some leaf
                 root $ %{} respo.schema/Element (:name :div)
@@ -3892,8 +3899,14 @@
                   log $ atom $ []
                   ops $ atom $ []
                   old-ref! $ fn (target)
+                    hint-fn $ {}
+                      :args $ [] $ :: 'JsNullish 'respo.dom/DomElement
+                      :return 'Unit
                     respo.core/append-dynamic! log $ [] :old target
                   new-ref! $ fn (target)
+                    hint-fn $ {}
+                      :args $ [] $ :: 'JsNullish 'respo.dom/DomElement
+                      :return 'Unit
                     respo.core/append-dynamic! log $ [] :new target
                   old-element $ %{} respo.schema/Element (:name :div)
                     :coord $ %none
@@ -4580,7 +4593,11 @@
               :code $ quote $ let
                   log $ atom $ []
                   ops $ atom $ []
-                  ref! $ fn (target) (respo.core/append-dynamic! log target)
+                  ref! $ fn (target)
+                    hint-fn $ {}
+                      :args $ [] $ :: 'JsNullish 'respo.dom/DomElement
+                      :return 'Unit
+                    respo.core/append-dynamic! log target
                   element $ %{} respo.schema/Element (:name :div)
                     :coord $ %none
                     :attrs $ []
@@ -4987,7 +5004,14 @@
                   :attrs $ []
                   :style $ []
                   :event $ {} $ :click
-                    fn (_event _dispatch!) &unit
+                    fn (_event _dispatch!)
+                      hint-fn $ {}
+                        :args $ [] (:: 'Map 'Tag 'Dynamic)
+                          :: 'Fn $ {}
+                            :args $ [] 'Dynamic
+                            :return 'Unit
+                        :return 'Unit
+                      , &unit
                   :children $ []
                   :ref nil
                 component $ %{} respo.schema/Component (:name :root)
@@ -5960,7 +5984,7 @@
             :coord $ :: 'Option $ :: 'List 'Dynamic
             :attrs $ :: 'List $ :: 'List 'Dynamic
             :style $ :: 'List $ :: 'List 'Dynamic
-            :event $ :: 'Map 'Tag 'respo.schema/EventHandler
+            :event $ :: 'Map 'Tag $ :: 'JsNullish 'respo.schema/EventHandler
             :children $ :: 'List $ :: 'List 'Dynamic
             :ref $ :: 'JsNullish $ :: 'Fn
               {} (:return 'Unit)
@@ -6488,7 +6512,8 @@
           :schema $ :: 'Fn $ {}
             :args $ [] 'Dynamic
             :return $ :: 'List $ :: 'List 'Dynamic
-        'element-event $ %{} 'CodeEntry (:doc |)
+        'element-event $ %{} 'CodeEntry
+          :doc "|返回元素事件表，保留已有 nil/undefined handler 的语义；消费者在调用前排除 nullish 值。"
           :code $ quote $ defn element-event (value)
             let
                 element $ assert-type value 'respo.schema/Element
@@ -6496,7 +6521,7 @@
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] 'Dynamic
-            :return $ :: 'Map 'Tag 'respo.schema/EventHandler
+            :return $ :: 'Map 'Tag $ :: 'JsNullish 'respo.schema/EventHandler
         'element-name $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn element-name (value)
             let
@@ -6851,11 +6876,25 @@
           :tests $ [] $ %{} 'TestEntry (:name |clears-events-through-component-tree)
             :code $ quote $ let
                 leaf $ respo.schema/Element :name :span :coord (%none) :attrs ([]) :style ([]) :children ([]) :ref nil :event $ {}
-                  :click $ fn (_event _dispatch!) &unit
+                  :click $ fn (_event _dispatch!)
+                    hint-fn $ {}
+                      :args $ [] (:: 'Map 'Tag 'Dynamic)
+                        :: 'Fn $ {}
+                          :args $ [] 'Dynamic
+                          :return 'Unit
+                      :return 'Unit
+                    , &unit
                 root $ respo.schema/Element :name :div :coord (%none) :attrs ([]) :style ([]) :children
                   [] ([] :child leaf) ([] :empty nil)
                   , :ref nil :event $ {}
-                    :click $ fn (_event _dispatch!) &unit
+                    :click $ fn (_event _dispatch!)
+                      hint-fn $ {}
+                        :args $ [] (:: 'Map 'Tag 'Dynamic)
+                          :: 'Fn $ {}
+                            :args $ [] 'Dynamic
+                            :return 'Unit
+                        :return 'Unit
+                      , &unit
                 component $ respo.schema/Component :name :root :effects ([]) :listeners ([]) :tree $ %some root
                 muted $ assert-type (mute-element component) 'respo.schema/Component
                 muted-root $ assert-type

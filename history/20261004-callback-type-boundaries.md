@@ -37,3 +37,35 @@ checkout，未改动其中未提交的 RenderNode 设计。
 这些失败继续按 #218 / #194 分别追踪，不能据正式版通过宣称候选版或类型迁移完成。
 RenderNode / ChildPair 全量迁移、两个真实下游回归、dispatch 类型生效和动态告警复查
 仍属于 0.19.0 milestone 的未完成工作。
+
+## nullable event 与 ref 合同续进
+
+通过 CLI 将 `Element.event` 和 `element-event` 如实声明为
+`Map<Tag, JsNullish<EventHandler>>`。已有 raw Element 测试刻意保存 nil handler，
+事件遍历已经在交付前排除 nil；本次只改声明，不删除这些业务样例或扩大为 Dynamic。
+既有五个 attached 测试的 ref/event 回调补全实际参数与 Unit 返回签名，保留原测试
+名称、unit 标签、执行内容和预期。ref 仍接收 JsNullish<DomElement>，事件仍接收
+事件 map 与 dispatch 回调，无用参数明确忽略。
+
+正式 Calcit 0.28.0：76/76 原生测试通过；真实生成 JS 的事件配置与 SSR 共八项
+Node 回归通过，严格编译、规范格式与质量门禁通过。
+
+重新在独立只读源码副本构建 Calcit main `b10dcad1`（0.29.0-alpha.1），回放为
+71/76：clears-old-ref-before-setting-new-ref 与 runs-ref-mount-and-unmount-lifecycle
+恢复通过。没有复用旧二进制假冒最新 main。
+
+剩余五项：两项 create-list-element、collect-event-refreshing 的 nil handler、
+make-string 的事件表、mute-element 的事件表。最新诊断仍包含 nullable Map 的
+字段证明缺口、ref 创建边界的 Dynamic 合并、子节点累积，以及 Option<Never> 的
+recur 约束。并非这些字段已完成迁移。
+
+独立 scratch 将 EventHandler 展开为精确 Fn，仍拒绝如下合法合同转换：
+
+```cirru.no-check
+; immutable Map<Tag, Fn(Map<Tag,Dynamic>, Fn(Dynamic)->Unit)->Unit>
+; 应可用于 Map<Tag, JsNullish<相同 Fn>>，当前字段 proof 拒绝。
+```
+
+诊断为 W_FN_ARG_TYPE_MISMATCH，明确指出 :event 字段；所以不是模块加载失败或
+单纯别名未解析。此处不添加 unsafe-coerce、宽化 Dynamic 或删除 nil handler 来通过。
+继续完成共享类型关系与真实开放创建边界后，再做 DOM/SSR 与两组下游最终回归。
