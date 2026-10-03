@@ -67,3 +67,24 @@ let
 - 消除有证据支持的 unsafe-coerce，更新计数及盘点。
 - 完成至少两个真实下游项目回归，并记录必要迁移。
 - 将盘点与最终验收证据发布到 issue/PR。
+
+## 首个下游证据：TopixIM
+
+在独立临时副本中使用 TopixIM main `fd1b3af`，原始工作区未修改。
+正式 Calcit 0.28.0 对应用 `main!` / `reload!` 的严格检查和 JS 编译通过。
+随后调用应用真实 `comp-container(new-reel(store))`，通过 Respo `make-string`
+生成 SSR，验证首页标语、TopixIM 链接及 `comp-container` 标记。
+
+固定相同下游源码与依赖，分别加载迁移前 `3842a45` 和迁移后 `f4aea5f` 的 Respo，
+每次重新生成 JS。两个 SSR 结果完全一致（7,842 字符），SHA-256 都是
+`22718998435d7da2a6eccb542e3623fd3df530376275da906a47a2b42955ad33`。
+恢复迁移后的模块并再次生成 JS、运行 SSR，同样通过。
+
+依赖组合为 js-ffi `605367e`、Reel 本地迁移分支 `c270622`、UI 本地迁移分支
+`a6ebfb0`，以及该组合解析的 Router。不能把此结果描述为 TopixIM 现有锁定依赖
+已经全部兼容；旧 js-ffi 会先在 keyboard-event-host 边界失败，使用当前修复版本后
+严格检查通过。应用没有 definition-attached tests，零项选择不作为通过证据。
+
+这项证据覆盖真实首页组件构造与 SSR 等价性，尚不覆盖浏览器交互、生产构建，
+也未达到至少两个下游项目的完整验收。Calcium 最新 main 仍固定 0.14.16，
+需在独立副本完成依赖迁移后再验证。
