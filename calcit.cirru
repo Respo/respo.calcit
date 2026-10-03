@@ -6538,16 +6538,37 @@
             quote $ element? nil
           :schema $ :: 'Fn $ {} (:return 'Bool)
             :args $ [] 'Dynamic
-        'expect-function $ %{} 'CodeEntry (:doc |)
+        'expect-function $ %{} 'CodeEntry
+          :doc "|验证值可调用后原样返回，保留调用方已有的具体函数签名；运行时仍对非法输入抛出指定消息。开放 Dynamic 输入仍需在业务边界建立具体合同。"
           :code $ quote $ defn expect-function (value message)
             when
               not $ fn? value
               raise message
             , value
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Fn)
-            :args $ [] 'Dynamic 'String
+          :schema $ :: 'Fn $ {} (:return 'Callback)
+            :args $ [] 'Callback 'String
+            :generics $ [] 'Callback
           :tags $ #{} :internal
+          :tests $ []
+            %{} 'TestEntry (:name |preserves-concrete-callback)
+              :code $ quote $ let
+                  callback $ fn (n)
+                    hint-fn $ {}
+                      :args $ [] 'Number
+                      :return 'Number
+                    inc n
+                  checked $ expect-function callback |expected-function
+                assert |callback-identity-preserved $ identical? callback checked
+                assert= 4 $ checked 3
+              :tags $ #{} :unit
+            %{} 'TestEntry (:name |rejects-non-function)
+              :code $ quote $ let
+                  caught? $ atom false
+                try (expect-function :invalid |expected-callback)
+                  fn (error) (assert= |expected-callback error) (reset! caught? true)
+                assert |validation-still-raises @caught?
+              :tags $ #{} :unit
         'listener-handler $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn listener-handler (value)
             let
