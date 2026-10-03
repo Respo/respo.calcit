@@ -3,7 +3,7 @@
   :about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `calcit query` to inspect and `calcit edit`/`calcit tree` to modify. Run `calcit docs agents --contract` before mutations; use `--full` for first orientation or changed contract digest. Manual edits must follow format and schema conventions, then run `calcit edit format`."
   :package |respo
   :entries $ {} $ :default
-    {} (:description |) (:init-fn 'respo.main/main!) (:mode :js) (:reload-fn 'respo.main/reload!)
+    {} (:description |) (:init-fn 'respo.main/main!) (:mode :js) (:reload-fn 'respo.main/reload!) (:target :browser)
       :feature-policy $ {}
       :modules $ [] |js-ffi/
       :type-slots $ {} $ :dispatch-op |respo.app.schema/Op
@@ -664,6 +664,7 @@
                           .!preventDefault event
                           Option :none
                         .!dispatchEvent el $ new js/KeyboardEvent (.-type event) event
+                        , &unit
                   let
                       prev-listener $ aget el dirty-field
                       listener $ unsafe-coerce prev-listener $ :: 'Fn
@@ -2376,6 +2377,32 @@
           :examples $ []
           :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
             :args $ [] 'respo.schema/DomProps
+        'with-attrs $ %{} 'CodeEntry
+          :doc "|Merge serialized DOM attributes (Map<Tag, String>) into an Element without changing its children, event handlers, ref or styles. New values replace attributes with the same Tag; the result retains canonical Tag ordering. Use common props with create-element and this helper for SVG/custom attributes. Convert numbers explicitly with to-string; this is not an event/style props entry."
+          :code $ quote $ defn with-attrs (element attrs)
+            let
+                retained $ filter (:attrs element)
+                  fn (pair)
+                    not $ attrs.contains-key? $ decode-map-as (&list:nth pair 0) 'Tag
+                combined $ concat retained $ attrs.to-list
+              element.assoc :attrs $ sort combined $ fn (x y)
+                &compare (&list:nth x 0) (&list:nth y 0)
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/Element)
+            :args $ [] 'respo.schema/Element $ :: 'Map 'Tag 'String
+          :tests $ [] $ %{} 'TestEntry (:name |merge-preserves-element)
+            :code $ quote $ let
+                original $ create-element :svg $ {} (:class-name |common) (:id |before)
+                extended $ with-attrs original $ {} (:width |320) (:id |after)
+              assert=
+                [] ([] :class-name |common) ([] :id |after) ([] :width |320)
+                :attrs extended
+              assert=
+                [] ([] :class-name |common) ([] :id |before)
+                :attrs original
+              assert= (:children original) (:children extended)
+              assert= (:event original) (:event extended)
+              assert= original $ with-attrs original $ {}
       :ns $ %{} 'NsEntry
         :doc "|provide core APIs for Respo, many of them are elements. if expected element is not defined yet, use `create-element :tag-name ...` to use it dynamically.\n"
         :code $ quote $ ns respo.core
@@ -3458,19 +3485,15 @@
           :require $ respo.util.detect :refer $ component?
     'respo.render.diff $ %{} 'FileEntry
       :defs $ {}
-        'KeyBucketIndex $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ deftrait KeyBucketIndex
-            .get $ :: Fn $ {}
-              :generics $ [] 'T
-              :args $ [] 'T Number
-              :return $ :: JsNullish $ :: List Number
-            .set $ :: Fn $ {}
-              :generics $ [] 'T
-              :args $ [] 'T Number $ :: List Number
-              :return Unit
+        'append-key-bucket! $ %{} 'CodeEntry
+          :doc "|Append a typed Number index to a native Array bucket in the private JS Map, preserving representative order. The host operation explicitly returns undefined/Calcit Unit."
+          :code $ quote $ defn append-key-bucket! (buckets key-hash index) (raise |JS-only-key-bucket-write)
           :examples $ []
-          :ffi $ {} (:backend :js) (:kind :external-object)
-          :schema $ :: 'Trait
+          :ffi $ {} (:target :browser)
+            :js $ {} $ :inline "|(buckets, keyHash, index) => { const positions = buckets.get(keyHash); if (positions === undefined) buckets.set(keyHash, [index]); else positions.push(index); }"
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ [] 'JsObject 'Number 'Number
+            :features $ #{} :js-ffi
           :tags $ #{} :internal
         'collect-event-refreshing $ %{} 'CodeEntry
           :doc "|Reattach live events with the current virtual and DOM coordinates after a component/element switch. Traverses shared descendants even when the normal diff skips identical subtrees. Ordinary diffing still handles removed events and lifecycle changes."
@@ -4092,7 +4115,7 @@
           :doc "|JavaScript hash-set adapter backed by native Map. Store representative input indices per Calcit hash, confirm equality inside collision buckets, and remember the earliest original duplicate index."
           :code $ quote $ defn first-duplicate-key-js (child-keys)
             let
-                buckets $ assert-type (new js/Map) 'respo.render.diff/KeyBucketIndex
+                buckets $ new js/Map
                 size $ count child-keys
               loop
                   cursor 0
@@ -4108,7 +4131,10 @@
                     let
                         key $ &list:nth child-keys index
                         key-hash $ &hash key
-                        previous $ js-nullish->option $ .get buckets key-hash
+                        previous $ let
+                            value $ key-bucket-positions buckets key-hash
+                          if (js-nullish? value) (Option :none)
+                            Option :some $ decode-map-as (to-calcit-data value) (:: 'List 'Number)
                         matched $ match previous
                           (:none) (%:: Option :none)
                           (:some positions) (index-of-equal-key child-keys positions key)
@@ -4121,10 +4147,7 @@
                                 %:: Option :some $ &min first-index position
                       match matched
                         (:some _) &unit
-                        (:none)
-                          .set buckets key-hash $ match previous
-                            (:none) ([] index)
-                            (:some positions) (append positions index)
+                        (:none) (append-key-bucket! buckets key-hash index)
                       recur (inc index) next-position
           :examples $ []
           :schema $ :: 'Fn $ {}
@@ -4176,6 +4199,17 @@
             :args $ [] (:: 'List 'K) (:: 'List 'Number) 'K
             :generics $ [] 'K
             :return $ :: 'Option 'Number
+          :tags $ #{} :internal
+        'key-bucket-positions $ %{} 'CodeEntry
+          :doc "|Read a native Array of representative indices from the private, locally constructed JS Map. Absence remains JsNullish; the caller converts and validates the number list."
+          :code $ quote $ defn key-bucket-positions (buckets key-hash) (raise |JS-only-key-bucket-read)
+          :examples $ []
+          :ffi $ {} (:target :browser)
+            :js $ {} $ :inline "|(buckets, keyHash) => buckets.get(keyHash)"
+          :schema $ :: 'Fn $ {}
+            :args $ [] 'JsObject 'Number
+            :features $ #{} :js-ffi
+            :return $ :: 'JsNullish 'JsObject
           :tags $ #{} :internal
         'keyed-boundaries $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn keyed-boundaries (old-keys new-keys)
@@ -5327,7 +5361,7 @@
                   aget node |isConnected
                 match anchor
                   (:none)
-                    .move-before! parent node $ assert-type js/undefined $ :: 'JsNullish 'respo.dom/DomElement
+                    do (.!moveBefore parent node js/null) &unit
                   (:some index)
                     .move-before! parent node $ option:unwrap $ nth nodes index
                 match anchor
@@ -5904,8 +5938,9 @@
           :examples $ []
           :schema $ :: 'StructDef
         'EventHandler $ %{} 'CodeEntry
-          :doc "|Event callback signature. Respo delivers an immutable map produced by event->edn together with the application dispatch function."
-          :code $ quote $ def EventHandler &unit
+          :doc "|Event callback signature. Respo delivers an immutable map produced by event->edn together with the application dispatch function. The exported value is a no-op callback, matching the declared callable type rather than a Unit placeholder."
+          :code $ quote $ def EventHandler
+            fn (_event _dispatch!) &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] (:: 'Map 'Tag 'Dynamic)
@@ -5989,6 +6024,7 @@
             assert= |fontSize $ dashed->camel |font-size
             assert= |spellcheck $ dashed->camel |spell-check
             println |typed-DOM-host-contract-ok
+            svg-host-smoke!
             , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
@@ -5997,16 +6033,14 @@
         'svg-host-smoke! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn svg-host-smoke! ()
             let
-                child $ create-element :rect $ assert-type
-                  {} (:fill |red) (:strokeWidth 2)
-                  , respo.schema/DomProps
-                root $ create-element :svg
-                  assert-type
-                    {} $ :width 320
-                    , respo.schema/DomProps
-                  , child $ create-element :foreignObject
-                    assert-type ({}) respo.schema/DomProps
-                    create-element :div $ assert-type ({}) respo.schema/DomProps
+                child $ with-attrs
+                  create-element :rect $ {}
+                  {} (:fill |red)
+                    :strokeWidth $ to-string 2
+                root $ with-attrs
+                  create-element :svg ({}) child $ create-element :foreignObject ({})
+                    create-element :div $ {}
+                  {} $ :width $ to-string 320
               let
                   host $ make-element root
                     fn (_name)
@@ -6018,9 +6052,9 @@
                         , &unit
                     []
                 append-element host
-                  create-element :circle $ assert-type
-                    {} $ :r 5
-                    , respo.schema/DomProps
+                  with-attrs
+                    create-element :circle $ {}
+                    {} $ :r $ to-string 5
                   fn (_name)
                     fn (_event _coord)
                       hint-fn $ {}
@@ -6151,7 +6185,7 @@
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.test.dom
           :require
-            respo.core :refer $ div span create-element
+            respo.core :refer $ div span create-element with-attrs
             respo.util.dom :refer $ compare-to-dom!
             js-ffi.browser :as browser
             respo.util.format :refer $ dashed->camel
@@ -6661,7 +6695,7 @@
             cond
                 string? x
                 , x
-              (tag? x) (turn-string x)
+              (tag? x) (to-string x)
               (number? x)
                 if (contains? unitless-props prop) (str x) (str x |px)
               (nil? x) |
@@ -6867,10 +6901,10 @@
             cond
                 string? x
                 , x
-              (tag? x) (turn-string x)
-              (symbol? x) (turn-string x)
-              (number? x) (turn-string x)
-              (bool? x) (turn-string x)
+              (tag? x) (to-string x)
+              (symbol? x) (to-string x)
+              (number? x) (to-string x)
+              (bool? x) (to-string x)
               true $ raise "|Attribute value must be a scalar"
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'String)

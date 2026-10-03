@@ -72,4 +72,14 @@ expect_failure \
   ':move-element' \
   "$legacy_match"
 
+expect_failure \
+  'a non-serialized Number in extended DOM attributes' \
+  'but got `map<tag, number>`' \
+  'respo.core/with-attrs (respo.core/create-element :svg ({})) $ {} $ :width 320'
+
+expect_failure \
+  'a collection in extended DOM attributes' \
+  'but got `map<tag, list<string>>`' \
+  'respo.core/with-attrs (respo.core/create-element :svg ({})) $ {} $ :fill $ [] |red'
+
 printf 'DomPatch positive and negative type checks passed.\n'
