@@ -4852,48 +4852,10 @@
         'collect-mounting $ %{} 'CodeEntry
           :doc "|internal function to collect mounting effects from component tree. recursively traverses the virtual DOM and collects effect:mount callbacks."
           :code $ quote $ defn collect-mounting (collect! coord n-coord tree at-place?)
-            cond
-                component? tree
-                let
-                    component-value $ as-component tree
-                    effects $ component-effects component-value
-                    next-coord $ append coord $ component-name component-value
-                  when
-                    not $ empty? effects
-                    &doseq (effect effects)
-                      let
-                          typed-effect $ as-effect effect
-                          method $ effect-method typed-effect
-                        collect! $ DomPatch :effect-mount next-coord n-coord $ fn (target)
-                          method (effect-args typed-effect) ([] :mount target at-place?)
-                  match (respo.util.detect/component-tree component-value)
-                    (:none) &unit
-                    (:some child-tree) (collect-mounting collect! next-coord n-coord child-tree false)
-              (element? tree)
-                do
-                  match
-                    js-nullish->option $ element-ref tree
-                    (:none) &unit
-                    (:some ref!)
-                      collect! $ DomPatch :effect-mount coord n-coord $ fn (target) (ref! target)
-                  loop
-                      children $ respo.util.detect/element-children tree
-                      idx 0
-                    hint-fn $ {}
-                      :args $ [] (:: 'List 'respo.schema/ChildPair) 'Number
-                      :return 'Unit
-                    when
-                      not $ empty? children
-                      let
-                          pair $ &list:nth children 0
-                          k $ :key pair
-                          child $ :node pair
-                        when (option:some? child)
-                          collect-mounting collect! (append coord k) (append n-coord idx)
-                            respo.util.detect/render-node-value $ option:unwrap child
-                            , false
-                      recur (&list:rest children) (inc idx)
-              true $ js/console.warn |Unknown-entry-for-mounting: tree
+            if
+              or (component? tree) (element? tree)
+              collect-mounting-node collect! coord n-coord (respo.util.detect/as-render-node tree) at-place?
+              js/console.warn |Unknown-entry-for-mounting: tree
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
@@ -4946,6 +4908,100 @@
                 respo.core/run-effect-ops! @ops :dom-node
                 assert |own-effects-survive-none-tree $ &= ([] :mount :unmount) @actions
               :tags $ #{} :unit
+            %{} 'TestEntry (:name |keeps-dom-indices-dense-through-empty-children)
+              :code $ quote $ let
+                  ops $ atom $ []
+                  ref! $ fn (_target)
+                    hint-fn $ {}
+                      :args $ [] $ :: 'JsNullish 'respo.dom/DomElement
+                      :return 'Unit
+                    , &unit
+                  leaf $ &struct:assoc
+                    respo.core/span $ {}
+                    , :ref ref!
+                  parent $ &struct:assoc
+                    respo.core/div $ {}
+                    , :children $ [] (respo.util.detect/make-child-pair :empty nil) (respo.util.detect/make-child-pair |leaf leaf)
+                  collect! $ fn (op) (respo.core/append-dynamic! ops op)
+                collect-mounting collect! ([]) ([]) parent false
+                collect-unmounting collect! ([]) ([]) parent false
+                assert= 2 $ count @ops
+                match (&list:nth @ops 0)
+                  (:effect-mount coord n-coord _run!)
+                    do
+                      assert= ([] |leaf) coord
+                      assert= ([] 0) n-coord
+                  _ $ raise |expected-mount
+                match (&list:nth @ops 1)
+                  (:effect-unmount coord n-coord _run!)
+                    do
+                      assert= ([] |leaf) coord
+                      assert= ([] 0) n-coord
+                  _ $ raise |expected-unmount
+            %{} 'TestEntry (:name |keeps-root-at-place-flag-after-descending)
+              :code $ quote $ let
+                  flags $ atom $ []
+                  ops $ atom $ []
+                  effect $ respo.schema/Effect :name :watch :coord ([]) :args ([]) :method $ fn (_args params)
+                    respo.core/append-dynamic! flags $ &list:nth params 2
+                  component $ respo.schema/Component :name :root :effects ([] effect) :listeners ([]) :tree $ %some
+                    respo.util.detect/as-render-node $ respo.core/div $ {}
+                  collect! $ fn (op) (respo.core/append-dynamic! ops op)
+                collect-mounting collect! ([]) ([]) component true
+                respo.core/run-effect-ops! @ops :dom-node
+                assert= ([] true) @flags
+        'collect-mounting-node $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn collect-mounting-node (collect! coord n-coord node at-place?)
+            match node
+              (:component component-value)
+                let
+                    effects $ :effects component-value
+                    next-coord $ append coord $ :name component-value
+                  when
+                    not $ empty? effects
+                    &doseq (effect effects)
+                      let
+                          typed-effect effect
+                          method $ :method typed-effect
+                        collect! $ DomPatch :effect-mount next-coord n-coord $ fn (target)
+                          method (:args typed-effect) ([] :mount target at-place?)
+                  match (:tree component-value)
+                    (:none) &unit
+                    (:some child-tree) (collect-mounting-node collect! next-coord n-coord child-tree false)
+              (:element tree)
+                do
+                  match
+                    js-nullish->option $ :ref tree
+                    (:none) &unit
+                    (:some ref!)
+                      collect! $ DomPatch :effect-mount coord n-coord $ fn (target) (ref! target)
+                  loop
+                      children $ :children tree
+                      idx 0
+                    hint-fn $ {}
+                      :args $ [] (:: 'List 'respo.schema/ChildPair) 'Number
+                      :return 'Unit
+                    when
+                      not $ empty? children
+                      let
+                          pair $ &list:nth children 0
+                          k $ :key pair
+                          child $ :node pair
+                        when (option:some? child)
+                          collect-mounting-node collect! (append coord k) (append n-coord idx) (option:unwrap child) false
+                        recur (&list:rest children)
+                          if (option:some? child) (inc idx) idx
+            , &unit
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ []
+              :: 'Fn $ {} (:return 'Unit)
+                :args $ [] 'respo.schema/DomPatch
+              :: 'List 'CoordKey
+              :: 'List 'Number
+              , 'respo.schema/RenderNode 'Bool
+            :features $ #{} :js-ffi
+            :generics $ [] 'CoordKey
         'collect-own-mounting $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn collect-own-mounting (collect! coord n-coord tree at-place?)
             when
@@ -4993,27 +5049,41 @@
         'collect-unmounting $ %{} 'CodeEntry
           :doc "|internal function to collect unmounting effects from component tree. recursively traverses the virtual DOM and collects effect:unmount callbacks."
           :code $ quote $ defn collect-unmounting (collect! coord n-coord tree at-place?)
-            cond
-                component? tree
+            if
+              or (component? tree) (element? tree)
+              collect-unmounting-node collect! coord n-coord (respo.util.detect/as-render-node tree) at-place?
+              js/console.warn |Unknown-entry-for-unmounting: tree
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ []
+              :: 'Fn $ {} (:return 'Unit)
+                :args $ [] 'respo.schema/DomPatch
+              :: 'List 'Dynamic
+              :: 'List 'Number
+              , 'Struct 'Bool
+            :features $ #{} :js-ffi
+        'collect-unmounting-node $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn collect-unmounting-node (collect! coord n-coord node at-place?)
+            match node
+              (:component component-value)
                 let
-                    component-value $ as-component tree
-                    effects $ component-effects component-value
-                    new-coord $ append coord $ component-name component-value
-                  match (respo.util.detect/component-tree component-value)
+                    effects $ :effects component-value
+                    new-coord $ append coord $ :name component-value
+                  match (:tree component-value)
                     (:none) &unit
-                    (:some child-tree) (collect-unmounting collect! new-coord n-coord child-tree false)
+                    (:some child-tree) (collect-unmounting-node collect! new-coord n-coord child-tree false)
                   when
                     not $ empty? effects
                     &doseq (effect effects)
                       let
-                          typed-effect $ as-effect effect
-                          method $ effect-method typed-effect
+                          typed-effect effect
+                          method $ :method typed-effect
                         collect! $ DomPatch :effect-unmount new-coord n-coord $ fn (target)
-                          method (effect-args typed-effect) ([] :unmount target at-place?)
-              (element? tree)
+                          method (:args typed-effect) ([] :unmount target at-place?)
+              (:element tree)
                 do
                   loop
-                      children $ respo.util.detect/element-children tree
+                      children $ :children tree
                       idx 0
                     hint-fn $ {}
                       :args $ [] (:: 'List 'respo.schema/ChildPair) 'Number
@@ -5025,25 +5095,25 @@
                           k $ :key pair
                           child $ :node pair
                         when (option:some? child)
-                          collect-unmounting collect! (append coord k) (append n-coord idx)
-                            respo.util.detect/render-node-value $ option:unwrap child
-                            , false
-                      recur (&list:rest children) (inc idx)
+                          collect-unmounting-node collect! (append coord k) (append n-coord idx) (option:unwrap child) false
+                        recur (&list:rest children)
+                          if (option:some? child) (inc idx) idx
                   match
-                    js-nullish->option $ element-ref tree
+                    js-nullish->option $ :ref tree
                     (:none) &unit
                     (:some ref!)
                       collect! $ DomPatch :effect-unmount coord n-coord $ fn (_target) (ref! nil)
-              true $ js/console.warn |Unknown-entry-for-unmounting: tree
+            , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
               :: 'Fn $ {} (:return 'Unit)
                 :args $ [] 'respo.schema/DomPatch
-              :: 'List 'Dynamic
+              :: 'List 'CoordKey
               :: 'List 'Number
-              , 'Struct 'Bool
+              , 'respo.schema/RenderNode 'Bool
             :features $ #{} :js-ffi
+            :generics $ [] 'CoordKey
         'collect-updating $ %{} 'CodeEntry
           :doc "|Compares effects between component updates and collects effect actions if arguments change."
           :code $ quote $ defn collect-updating (collect! action coord n-coord old-tree new-tree)
@@ -6316,7 +6386,7 @@
             :method $ :: 'Fn $ {} (:return 'Unit)
               :args $ [] (:: 'List 'Dynamic) (:: 'List 'Dynamic)
           :examples $ []
-          :schema $ :: 'Enum
+          :schema $ :: 'StructDef
         'Element $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Element (:name 'Tag)
             :coord $ :: 'Option $ :: 'List 'Dynamic
