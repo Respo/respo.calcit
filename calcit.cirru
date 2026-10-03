@@ -2564,7 +2564,7 @@
                   xs entries
                 if (empty? xs) acc $ let
                     pair $ respo.util.list/first-pair xs
-                    k $ turn-string $ respo.util.list/pair-first pair
+                    k $ to-string $ respo.util.list/pair-key pair
                     raw-styles $ respo.util.list/pair-value pair
                     styles-map $ unsafe-coerce raw-styles $ :: 'Map 'Tag 'Dynamic
                     class-rule $ str |. style-name
@@ -3803,7 +3803,8 @@
                       next-coord $ append coord $ component-name new-tree
                     if
                       = (component-name old-tree) (component-name new-tree)
-                      do (collect-updating collect! :before-update coord n-coord old-tree new-tree)
+                      do
+                        collect-updating collect! :before-update coord n-coord (respo.util.format/coerce-component old-tree) (respo.util.format/coerce-component new-tree)
                         let
                             old-tree-option $ component-tree old-tree
                             new-tree-option $ component-tree new-tree
@@ -3816,12 +3817,13 @@
                               match new-tree-option
                                 (:none) (find-element-diffs collect! next-coord n-coord old-child-tree legacy-nil)
                                 (:some new-child-tree) (find-element-diffs collect! next-coord n-coord old-child-tree new-child-tree)
-                        collect-updating collect! :update coord n-coord old-tree new-tree
+                        collect-updating collect! :update coord n-coord (respo.util.format/coerce-component old-tree) (respo.util.format/coerce-component new-tree)
                       do (collect-unmounting collect! coord n-coord old-tree true)
                         collect! $ DomPatch :replace-element coord n-coord new-tree
                         collect-mounting collect! coord n-coord new-tree true
                 (and (component? old-tree) (element? new-tree))
-                  do (collect-own-unmounting collect! coord n-coord old-tree true)
+                  do
+                    collect-own-unmounting collect! coord n-coord (respo.util.format/coerce-component old-tree) true
                     match (component-tree old-tree)
                       (:none) (find-element-diffs collect! coord n-coord legacy-nil new-tree)
                       (:some old-child-tree)
@@ -3834,7 +3836,7 @@
                       (:none) (find-element-diffs collect! new-coord n-coord old-tree legacy-nil)
                       (:some new-child-tree)
                         do (find-element-diffs collect! new-coord n-coord old-tree new-child-tree) (collect-event-refreshing collect! new-coord n-coord new-child-tree)
-                    collect-own-mounting collect! coord n-coord new-tree true
+                    collect-own-mounting collect! coord n-coord (respo.util.format/coerce-component new-tree) true
                 (and (element? old-tree) (element? new-tree))
                   if
                     not= (element-name old-tree) (element-name new-tree)
@@ -4438,7 +4440,7 @@
                     :args $ [] $ :: 'List 'Dynamic
                     :return 'Dynamic
                   let
-                      prop-str $ turn-string $ respo.util.list/pair-first entry
+                      prop-str $ to-string $ respo.util.list/pair-key entry
                       v $ respo.util.list/pair-value entry
                     if (.!startsWith prop-str |data-)
                       if (calcit.core/non-nil? v)
@@ -4460,7 +4462,7 @@
                     :args $ [] $ :: 'List 'Dynamic
                     :return 'Dynamic
                   let
-                      style-name $ turn-string $ respo.util.list/pair-first entry
+                      style-name $ to-string $ respo.util.list/pair-key entry
                       k $ dashed->camel style-name
                       v $ respo.util.list/pair-value entry
                     aset
@@ -6648,6 +6650,12 @@
             respo.util.detect :refer $ as-element
     'respo.util.format $ %{} 'FileEntry
       :defs $ {}
+        'coerce-component $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn coerce-component (markup) (assert-type markup respo.schema/Component)
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
+            :args $ [] 'Dynamic
+            :features $ #{} :js-ffi
         'coerce-element $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn coerce-element (markup) (assert-type markup respo.schema/Element)
           :examples $ []
@@ -6712,10 +6720,10 @@
         'event->prop $ %{} 'CodeEntry
           :doc "|Converts an event keyword (e.g. :click) to a prop name string (e.g. 'onclick')."
           :code $ quote $ defn event->prop (x)
-            str |on $ turn-string x
+            str |on $ to-string x
           :examples $ [] $ quote (event->prop :click)
           :schema $ :: 'Fn $ {} (:return 'String)
-            :args $ [] 'Dynamic
+            :args $ [] 'Tag
         'event->string $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn event->string (x)
             &str:slice (turn-string x) 3
@@ -7082,8 +7090,11 @@
             if (nil? props) ([])
               -> props (&map:dissoc :on) (&map:dissoc :style) (&map:dissoc :ref)
                 &map:filter-kv $ fn (k v)
+                  hint-fn $ {}
+                    :args $ [] 'Tag 'Dynamic
+                    :return 'Bool
                   and (some? v)
-                    not $ starts-with? (turn-string k) |on-
+                    not $ starts-with? (to-string k) |on-
                 &map:to-list
                 sort $ fn (x y)
                   &compare (&list:nth x 0) (&list:nth y 0)
@@ -7111,12 +7122,15 @@
                   unsafe-coerce raw-on $ :: Map Tag respo.schema/EventHandler
                   {}
                 property-events $ filter-map-kv props $ fn (k v)
+                  hint-fn $ {}
+                    :args $ [] 'Tag 'Dynamic
+                    :return $ :: 'MapEntryDecision
                   if
                     and
-                      starts-with? (turn-string k) |on-
+                      starts-with? (to-string k) |on-
                       some? v
                     %:: MapEntryDecision :keep
-                      turn-tag $ &str:slice (turn-string k) 3
+                      turn-tag $ &str:slice (to-string k) 3
                       assert-type v respo.schema/EventHandler
                     %:: MapEntryDecision :drop
               merge base-events property-events
