@@ -21,8 +21,8 @@ let
     parent $ respo.schema/Element :name :div :coord (%none) :attrs ([]) :style ([]) :event ({}) :children ([] pair empty-pair) :ref nil
     children $ respo.util.detect/element-children parent
   assert= 2 $ count children
-  assert :payload-identity $ identical? leaf $ respo.util.detect/child-pair-value pair
-  assert :empty-is-preserved $ option:none? $ :node empty-pair
+  assert |payload-identity $ identical? leaf $ respo.util.detect/child-pair-value pair
+  assert |empty-is-preserved $ option:none? $ :node empty-pair
 ```
 
 `element-children` 返回存储的 `List<ChildPair>`，不再重建旧二元列表；读取 key
