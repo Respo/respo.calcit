@@ -1242,15 +1242,6 @@
       :typeNotFull 1
       :unresolved 0
       :unsafeCoerce 0
-    |respo.render.patch/apply-dom-changes $ {} (:codeDynamic 0)
-      :codeNil 0
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 0
-      :typeNone 0
-      :typeNotFull 0
-      :unresolved 0
-      :unsafeCoerce 2
     |respo.render.patch/find-target $ {} (:codeDynamic 0)
       :codeNil 1
       :declaredOptional 0
@@ -1302,7 +1293,7 @@
       :deprecatedCalls 0
       :schemaDynamic 0
       :typeNone 0
-      :typeNotFull 1
+      :typeNotFull 0
       :unresolved 1
       :unsafeCoerce 0
     |respo.render.patch/rm-prop $ {} (:codeDynamic 0)
@@ -1638,6 +1629,15 @@
       :typeNotFull 0
       :unresolved 0
       :unsafeCoerce 1
+    |respo.util.format/coerce-component $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 0
+      :typeNone 0
+      :typeNotFull 1
+      :unresolved 0
+      :unsafeCoerce 0
     |respo.util.format/coerce-element $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -1674,15 +1674,6 @@
       :typeNotFull 1
       :unresolved 0
       :unsafeCoerce 1
-    |respo.util.format/event->prop $ {} (:codeDynamic 0)
-      :codeNil 0
-      :declaredOptional 0
-      :deprecatedCalls 0
-      :schemaDynamic 1
-      :typeNone 0
-      :typeNotFull 1
-      :unresolved 1
-      :unsafeCoerce 0
     |respo.util.format/event->string $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -1876,11 +1867,11 @@
     :codeNil 33
     :declaredOptional 0
     :deprecatedCalls 0
-    :schemaDynamic 192
+    :schemaDynamic 191
     :typeNone 3
-    :typeNotFull 191
-    :unresolved 220
-    :unsafeCoerce 43
+    :typeNotFull 190
+    :unresolved 219
+    :unsafeCoerce 41
   :scope $ {} (:includeDependencies false)
     :namespace nil
     :namespacePrefix nil
