@@ -65,7 +65,7 @@ export async function createPerformanceFixture(baseURL = new URL('../', import.m
       const child = detect.component_tree(element);
       return child.tag.value === 'some' ? [...handlers, ...collectHandlers(child.extra[0])] : handlers;
     }
-    return detect.element_children(element).toArray().flatMap(pair => collectHandlers(c._$n_list_$o_nth(pair, 1)));
+    return detect.element_children(element).toArray().flatMap(pair => collectHandlers(detect.child_pair_value(pair)));
   };
   const broadcast = indexed => {
     callbacks = 0; dispatches = 0;

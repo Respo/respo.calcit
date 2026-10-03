@@ -2,7 +2,7 @@ import * as c from '../js-out/calcit.core.mjs';
 import { Component, DomProps } from '../js-out/respo.schema.mjs';
 import { div, input, list__GT_, effect_on_mount, effect_on_unmount, render_$x_ } from '../js-out/respo.core.mjs';
 import { find_children_diffs } from '../js-out/respo.render.diff.mjs';
-import { as_render_node } from '../js-out/respo.util.detect.mjs';
+import { as_render_node, make_child_pair } from '../js-out/respo.util.detect.mjs';
 
 const tags = c.init_tags(['name', 'tree', 'effects', 'listeners', 'some', 'keyed-row']);
 const list = values => c.arrayToList(values);
@@ -25,7 +25,8 @@ export function createRows(keys, counts = { mounts: 0, unmounts: 0 }) {
 export function collectPatches(oldKeys, newKeys, rows) {
   const patches = [];
   find_children_diffs(patch => { patches.push(patch); }, list([]), list([]), 0,
-    childPairs(oldKeys, rows), childPairs(newKeys, rows));
+    list(oldKeys.map(key => make_child_pair(key, rows.get(key)))),
+    list(newKeys.map(key => make_child_pair(key, rows.get(key)))));
   return patches;
 }
 /** Exercise node identity, user input, scroll and lifecycle state in a browser. */

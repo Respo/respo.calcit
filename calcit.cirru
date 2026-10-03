@@ -858,10 +858,10 @@
               each (element-children element)
                 fn (pair)
                   hint-fn $ {}
-                    :args $ [] $ :: 'List 'Dynamic
+                    :args $ [] 'respo.schema/ChildPair
                     :return 'Unit
                   let
-                      child $ assert-type (&list:nth pair 1) 'Struct
+                      child $ respo.util.detect/child-pair-value pair
                     traverse-and-call child event-tuple dispatch!
             , &unit
           :examples $ []
@@ -990,19 +990,20 @@
           :code $ quote $ defn find-child-by-key (children expected-key)
             loop
                 xs children
+              hint-fn $ {}
+                :args $ [] $ :: 'List 'respo.schema/ChildPair
+                :return $ :: 'Option 'Struct
               if (empty? xs) (Option :none)
                 let
-                    pair $ respo.util.list/first-pair xs
-                    key $ respo.util.list/pair-first pair
-                  if (&= key expected-key)
-                    Option :some $ assert-type (respo.util.list/pair-value pair) 'Struct
+                    pair $ &list:nth xs 0
+                  if
+                    &= (:key pair) expected-key
+                    option:map (:node pair) respo.util.detect/render-node-value
                     recur $ &list:rest xs
           :examples $ []
           :schema $ :: 'Fn $ {}
-            :args $ []
-              :: 'List $ :: 'List 'Dynamic
-              , 'Dynamic
-            :return $ :: 'calcit.core/Option 'Struct
+            :args $ [] (:: 'List 'respo.schema/ChildPair) 'Dynamic
+            :return $ :: 'Option 'Struct
         'find-event-target $ %{} 'CodeEntry
           :doc "|Traverses the virtual DOM to find the element that should handle a specific event."
           :code $ quote $ defn find-event-target (element coord event-name)
@@ -1055,7 +1056,12 @@
                     match (find-child-by-key children coord-head)
                       (:some child) (get-markup-at child cs)
                       (:none)
-                        raise $ str |child-not-found: coord $ map children respo.util.list/pair-first
+                        raise $ str |child-not-found: coord $ map children
+                          fn (pair)
+                            hint-fn $ {}
+                              :args $ [] 'respo.schema/ChildPair
+                              :return 'Dynamic
+                            :key pair
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] 'Struct $ :: 'List 'Dynamic
@@ -1236,17 +1242,14 @@
                     xs children
                     idx 0
                   hint-fn $ {}
-                    :args $ []
-                      :: 'List $ :: 'List 'Dynamic
-                      :: 'List 'Dynamic
-                      , 'Number
-                    :return $ :: 'List $ :: 'List 'Dynamic
+                    :args $ [] (:: 'List 'respo.schema/ChildPair) (:: 'List 'Dynamic) 'Number
+                    :return $ :: 'List 'respo.schema/ChildPair
                   if (empty? xs) acc $ let
                       item $ &list:first xs
                     confirm-child item
                     recur
                       if (some? item)
-                        append acc $ [] idx item
+                        append acc $ respo.util.detect/make-child-pair idx item
                         , acc
                       &list:rest xs
                       inc idx
@@ -1278,9 +1281,15 @@
                     &compare (&list:first x) (&list:first y)
                 event $ pick-event props-map
               schema/Element :name tag-name :coord (Option :none) :attrs attrs :style styles :event event :children
-                filter (map child-pairs confirm-child-pair)
+                map
+                  filter (map child-pairs confirm-child-pair)
+                    fn (pair)
+                      some? $ respo.util.list/pair-value pair
                   fn (pair)
-                    some? $ respo.util.list/pair-value pair
+                    hint-fn $ {}
+                      :args $ [] $ :: 'List 'Dynamic
+                      :return 'respo.schema/ChildPair
+                    respo.util.detect/make-child-pair (respo.util.list/pair-key pair) (respo.util.list/pair-value pair)
                 , :ref ref!
           :examples $ [] $ quote
             create-list-element :div
@@ -1337,8 +1346,8 @@
                   caught-key? $ atom false
                   caught-child? $ atom false
                 assert=
-                  [] $ [] :live child
-                  :children tree
+                  [] $ respo.util.detect/make-child-pair :live child
+                  respo.util.detect/element-children tree
                 try
                   list-> ({})
                     [] $ [] nil nil
@@ -3586,17 +3595,21 @@
                     event-name $ keys-non-nil $ element-event tree
                     collect! $ DomPatch :set-event coord n-coord event-name
                   loop
-                      children $ element-children tree
+                      children $ respo.util.detect/element-children tree
                       idx 0
+                    hint-fn $ {}
+                      :args $ [] (:: 'List 'respo.schema/ChildPair) 'Number
+                      :return 'Unit
                     when-not (empty? children)
                       let
-                          pair $ respo.util.list/first-pair children
-                          k $ respo.util.list/pair-first pair
-                          child $ respo.util.list/pair-value pair
-                        when (some? child)
-                          collect-event-refreshing collect! (append coord k) (append n-coord idx) (assert-type child 'Struct)
+                          pair $ &list:nth children 0
+                          k $ :key pair
+                          child $ :node pair
+                        when (option:some? child)
+                          collect-event-refreshing collect! (append coord k) (append n-coord idx)
+                            respo.util.detect/render-node-value $ option:unwrap child
                         recur (&list:rest children)
-                          if (some? child) (inc idx) idx
+                          if (option:some? child) (inc idx) idx
               true &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
@@ -3634,7 +3647,7 @@
                   :style $ []
                   :ref nil
                   :event $ {}
-                  :children $ [] ([] :empty nil) ([] :live wrapped)
+                  :children $ [] (respo.util.detect/make-child-pair :empty nil) (respo.util.detect/make-child-pair :live wrapped)
               collect-event-refreshing collect! ([] :app) ([]) root
               assert=
                 [] $ DomPatch :set-event ([] :app :live :inner) ([] 0) :click
@@ -3654,27 +3667,56 @@
           :doc "|Reconcile whole keyed lists with common prefix/suffix trimming and an LIS over retained source positions. Update retained children before structural edits; remove missing nodes in descending order, append new nodes, and then move from right to left using stable node snapshots. Moves preserve DOM identity and component mount/unmount lifecycle."
           :code $ quote $ defn find-children-diffs (collect! coord n-coord index old-children new-children)
             if
-              = (map old-children respo.util.list/pair-first) (map new-children respo.util.list/pair-first)
+              =
+                map old-children $ fn (pair)
+                  hint-fn $ {}
+                    :args $ [] 'respo.schema/ChildPair
+                    :return 'Dynamic
+                  :key pair
+                map new-children $ fn (pair)
+                  hint-fn $ {}
+                    :args $ [] 'respo.schema/ChildPair
+                    :return 'Dynamic
+                  :key pair
               loop
                   old-pairs old-children
                   new-pairs new-children
                   position index
+                hint-fn $ {}
+                  :args $ [] (:: 'List 'respo.schema/ChildPair) (:: 'List 'respo.schema/ChildPair) 'Number
+                  :return 'Unit
                 list-match old-pairs
                   () &unit
                   (old-pair rest-old)
                     let
-                        new-pair $ respo.util.list/first-pair new-pairs
-                        key $ respo.util.list/pair-first $ assert-type old-pair 'List
-                      find-element-diffs collect! (append coord key) (append n-coord position)
-                        respo.util.list/pair-value $ assert-type old-pair 'List
-                        respo.util.list/pair-value new-pair
+                        new-pair $ &list:nth new-pairs 0
+                        key $ :key old-pair
+                      find-element-diffs collect! (append coord key) (append n-coord position) (respo.util.detect/child-pair-value old-pair) (respo.util.detect/child-pair-value new-pair)
                       recur rest-old (&list:rest new-pairs) (inc position)
               match
-                keyed-rotation (map old-children respo.util.list/pair-first) (map new-children respo.util.list/pair-first)
+                keyed-rotation
+                  map old-children $ fn (pair)
+                    hint-fn $ {}
+                      :args $ [] 'respo.schema/ChildPair
+                      :return 'Dynamic
+                    :key pair
+                  map new-children $ fn (pair)
+                    hint-fn $ {}
+                      :args $ [] 'respo.schema/ChildPair
+                      :return 'Dynamic
+                    :key pair
                 (:none)
                   let
-                      full-old-keys $ map old-children respo.util.list/pair-first
-                      full-new-keys $ map new-children respo.util.list/pair-first
+                      full-old-keys $ map old-children $ fn (pair)
+                        hint-fn $ {}
+                          :args $ [] 'respo.schema/ChildPair
+                          :return 'Dynamic
+                        :key pair
+                      full-new-keys $ map new-children $ fn (pair)
+                        hint-fn $ {}
+                          :args $ [] 'respo.schema/ChildPair
+                          :return 'Dynamic
+                        :key pair
                       boundaries $ keyed-boundaries full-old-keys full-new-keys
                       prefix $ &list:nth boundaries 0
                       suffix $ &list:nth boundaries 1
@@ -3687,8 +3729,8 @@
                       find-element-diffs collect!
                         append coord $ &list:nth full-old-keys position
                         append n-coord $ + index position
-                        respo.util.list/pair-value $ &list:nth old-children position
-                        respo.util.list/pair-value $ &list:nth new-children position
+                        respo.util.detect/child-pair-value $ &list:nth old-children position
+                        respo.util.detect/child-pair-value $ &list:nth new-children position
                     &doseq
                       position $ range suffix
                       let
@@ -3701,11 +3743,19 @@
                         find-element-diffs collect!
                           append coord $ &list:nth full-old-keys old-position
                           append n-coord $ + index old-position
-                          respo.util.list/pair-value $ &list:nth old-children old-position
-                          respo.util.list/pair-value $ &list:nth new-children new-position
+                          respo.util.detect/child-pair-value $ &list:nth old-children old-position
+                          respo.util.detect/child-pair-value $ &list:nth new-children new-position
                     let
-                        old-keys $ map middle-old-children respo.util.list/pair-first
-                        new-keys $ map middle-new-children respo.util.list/pair-first
+                        old-keys $ map middle-old-children $ fn (pair)
+                          hint-fn $ {}
+                            :args $ [] 'respo.schema/ChildPair
+                            :return 'Dynamic
+                          :key pair
+                        new-keys $ map middle-new-children $ fn (pair)
+                          hint-fn $ {}
+                            :args $ [] 'respo.schema/ChildPair
+                            :return 'Dynamic
+                          :key pair
                         old-index $ keyed-index old-keys
                         new-index $ keyed-index new-keys
                         retained-keys $ filter old-keys $ fn (key) (contains? new-index key)
@@ -3724,25 +3774,21 @@
                             new-position $ assert-type (&map:get new-index key) 'Number
                           find-element-diffs collect! (append coord key)
                             append n-coord $ + index-offset old-position
-                            respo.util.list/pair-value $ option:unwrap $ nth middle-old-children old-position
-                            respo.util.list/pair-value $ option:unwrap $ nth middle-new-children new-position
+                            respo.util.detect/child-pair-value $ &list:nth middle-old-children old-position
+                            respo.util.detect/child-pair-value $ &list:nth middle-new-children new-position
                       &doseq
                         key $ reverse old-keys
                         when-not (contains? new-index key)
                           let
                               old-position $ assert-type (&map:get old-index key) 'Number
-                              child $ assert-type
-                                respo.util.list/pair-value $ option:unwrap $ nth middle-old-children old-position
-                                , 'Struct
+                              child $ respo.util.detect/child-pair-value $ &list:nth middle-old-children old-position
                               child-n-coord $ append n-coord $ + index-offset old-position
                             collect-unmounting collect! (append coord key) child-n-coord child true
                             collect! $ DomPatch :rm-element (append coord key) child-n-coord
                       &doseq (key added-keys)
                         let
                             new-position $ assert-type (&map:get new-index key) 'Number
-                            child $ assert-type
-                              respo.util.list/pair-value $ option:unwrap $ nth middle-new-children new-position
-                              , 'Struct
+                            child $ respo.util.detect/child-pair-value $ &list:nth middle-new-children new-position
                             child-coord $ append coord key
                           collect! $ DomPatch :append-element child-coord n-coord child
                       loop
@@ -3763,9 +3809,7 @@
                       &doseq (key added-keys)
                         let
                             new-position $ assert-type (&map:get new-index key) 'Number
-                            child $ assert-type
-                              respo.util.list/pair-value $ option:unwrap $ nth middle-new-children new-position
-                              , 'Struct
+                            child $ respo.util.detect/child-pair-value $ &list:nth middle-new-children new-position
                             child-coord $ append coord key
                           collect-mounting collect! child-coord
                             append n-coord $ + index-offset new-position
@@ -3787,10 +3831,10 @@
                             - position offset
                           new-pair $ &list:nth new-children new-position
                         find-element-diffs collect!
-                          append coord $ respo.util.list/pair-first old-pair
+                          append coord $ :key old-pair
                           append n-coord $ + index position
-                          respo.util.list/pair-value old-pair
-                          respo.util.list/pair-value new-pair
+                          respo.util.detect/child-pair-value old-pair
+                          respo.util.detect/child-pair-value new-pair
                     loop
                         remaining $ reverse sources
                         anchor $ assert-type (%:: Option :none) (:: 'Option 'Number)
@@ -3811,9 +3855,7 @@
                 :args $ [] 'respo.schema/DomPatch
               :: 'List 'Dynamic
               :: 'List 'Number
-              , 'Number
-                :: 'List $ :: 'List 'Dynamic
-                :: 'List $ :: 'List 'Dynamic
+              , 'Number (:: 'List 'respo.schema/ChildPair) (:: 'List 'respo.schema/ChildPair)
             :features $ #{} :js-ffi
           :tests $ [] $ %{} 'TestEntry (:name |accepts-list-map-representation-transitions)
             :code $ quote $ let
@@ -3826,8 +3868,8 @@
                   :ref nil
                 effects $ atom $ []
                 collect! $ fn (effect) (respo.core/append-dynamic! effects effect)
-                child-list $ [] $ [] :a child
-                same-child-list $ [] $ [] :a child
+                child-list $ [] $ respo.util.detect/make-child-pair :a child
+                same-child-list $ [] $ respo.util.detect/make-child-pair :a child
               find-children-diffs collect! ([]) ([]) 0 child-list same-child-list
               assert |equivalent-keyed-lists-have-no-diff $ empty? @effects
             :tags $ #{} :unit
@@ -3921,7 +3963,11 @@
                           new-children $ element-children new-tree
                         if
                           and dev? $ detect-keys-dup $ map new-children
-                            fn (entry) (&list:first entry)
+                            fn (entry)
+                              hint-fn $ {}
+                                :args $ [] 'respo.schema/ChildPair
+                                :return 'Dynamic
+                              :key entry
                           js/console.error "|Parent that has dups" new-tree
                         find-children-diffs collect! coord n-coord 0 old-children new-children
                 true $ js/console.warn "|Diffing unknown params" old-tree new-tree
@@ -4480,14 +4526,20 @@
                   events $ element-event virtual-element
                   children $ element-children virtual-element
                   element $ narrow-element $ if svg? (browser/create-element-ns |http://www.w3.org/2000/svg tag-name) (browser/create-element tag-name)
-                  child-elements $ map children $ fn (pair)
-                    assert |expect-pair-of-key/element $ and (list? pair)
-                      &= 2 $ count pair
-                    let
-                        k $ &list:nth pair 0
-                        child $ &list:nth pair 1
-                      when (nil? k) (js/console.warn |nil-key-is-bad-for-Respo)
-                      when (some? child)
+                  child-elements $ map
+                    filter children $ fn (pair)
+                      hint-fn $ {}
+                        :args $ [] 'respo.schema/ChildPair
+                        :return 'Bool
+                      option:some? $ :node pair
+                    fn (pair)
+                      hint-fn $ {}
+                        :args $ [] 'respo.schema/ChildPair
+                        :return 'respo.dom/DomElement
+                      let
+                          k $ :key pair
+                          child $ respo.util.detect/child-pair-value pair
+                        when (nil? k) (js/console.warn |nil-key-is-bad-for-Respo)
                         make-element child listener-builder (append coord k) child-svg?
                 each attrs $ fn (entry)
                   hint-fn $ {}
@@ -4608,16 +4660,21 @@
                     (:some ref!)
                       collect! $ DomPatch :effect-mount coord n-coord $ fn (target) (ref! target)
                   loop
-                      children $ element-children tree
+                      children $ respo.util.detect/element-children tree
                       idx 0
+                    hint-fn $ {}
+                      :args $ [] (:: 'List 'respo.schema/ChildPair) 'Number
+                      :return 'Unit
                     when
                       not $ empty? children
                       let
-                          pair $ respo.util.list/first-pair children
-                          k $ respo.util.list/pair-first pair
-                          child $ respo.util.list/pair-value pair
-                        when (some? child)
-                          collect-mounting collect! (append coord k) (append n-coord idx) (assert-type child 'Struct) false
+                          pair $ &list:nth children 0
+                          k $ :key pair
+                          child $ :node pair
+                        when (option:some? child)
+                          collect-mounting collect! (append coord k) (append n-coord idx)
+                            respo.util.detect/render-node-value $ option:unwrap child
+                            , false
                       recur (&list:rest children) (inc idx)
               true $ js/console.warn |Unknown-entry-for-mounting: tree
           :examples $ []
@@ -4739,16 +4796,21 @@
               (element? tree)
                 do
                   loop
-                      children $ element-children tree
+                      children $ respo.util.detect/element-children tree
                       idx 0
+                    hint-fn $ {}
+                      :args $ [] (:: 'List 'respo.schema/ChildPair) 'Number
+                      :return 'Unit
                     when
                       not $ empty? children
                       let
-                          pair $ respo.util.list/first-pair children
-                          k $ respo.util.list/pair-first pair
-                          child $ respo.util.list/pair-value pair
-                        when (some? child)
-                          collect-unmounting collect! (append coord k) (append n-coord idx) (assert-type child 'Struct) false
+                          pair $ &list:nth children 0
+                          k $ :key pair
+                          child $ :node pair
+                        when (option:some? child)
+                          collect-unmounting collect! (append coord k) (append n-coord idx)
+                            respo.util.detect/render-node-value $ option:unwrap child
+                            , false
                       recur (&list:rest children) (inc idx)
                   match
                     js-nullish->option $ element-ref tree
@@ -4929,9 +4991,12 @@
                 children $ map (element :children)
                   fn (entry)
                     hint-fn $ {}
-                      :args $ [] $ :: 'List 'Dynamic
+                      :args $ [] 'respo.schema/ChildPair
                       :return 'String
-                    element->string $ respo.util.format/coerce-element $ respo.util.list/pair-value entry
+                    match
+                      option:unwrap $ :node entry
+                      (:element child) (element->string child)
+                      (:component _) (raise |expected-purified-element)
                 text-inside $ element-content (element :name) attrs children
                 tailored-props $ &let
                   props $ dissoc (dissoc attrs :innerHTML) :inner-text
@@ -4978,7 +5043,7 @@
                     :attrs $ []
                     :style $ []
                     :event $ {}
-                    :children $ [] $ [] :child child
+                    :children $ [] $ respo.util.detect/make-child-pair :child child
                     :ref nil
                 assert |nested-document-is-serialized-in-child-order $ = |<div><span>Demo</span></div> $ element->string parent
               :tags $ #{} :unit
@@ -5901,6 +5966,11 @@
           :code $ quote $ deftype-slot :dispatch-op
           :examples $ []
           :schema $ :: 'Dynamic
+        'ChildPair $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defstruct ChildPair (:key 'Dynamic)
+            :node $ :: 'Option 'respo.schema/RenderNode
+          :examples $ []
+          :schema $ :: 'StructDef
         'Component $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Component (:name 'Tag)
             :effects $ :: 'List 'respo.schema/Effect
@@ -6026,7 +6096,7 @@
             :attrs $ :: 'List $ :: 'List 'Dynamic
             :style $ :: 'List $ :: 'List 'Dynamic
             :event $ :: 'Map 'Tag $ :: 'JsNullish 'respo.schema/EventHandler
-            :children $ :: 'List $ :: 'List 'Dynamic
+            :children $ :: 'List 'respo.schema/ChildPair
             :ref $ :: 'JsNullish $ :: 'Fn
               {} (:return 'Unit)
                 :args $ [] $ :: 'JsNullish 'respo.dom/DomElement
@@ -6501,6 +6571,12 @@
                   fn (error) (assert= |invalid-component-tree error) (reset! caught? true)
                 assert |invalid-node-rejected $ deref caught?
               :tags $ #{} :unit
+        'child-pair-value $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn child-pair-value (pair)
+            render-node-value $ option:unwrap $ :node pair
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Struct)
+            :args $ [] 'respo.schema/ChildPair
         'component-effects $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn component-effects (value)
             let
@@ -6593,13 +6669,11 @@
             :return $ :: 'List $ :: 'List 'Dynamic
         'element-children $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn element-children (value)
-            let
-                element $ assert-type value 'respo.schema/Element
-              :children element
+            :children $ as-element value
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] 'Dynamic
-            :return $ :: 'List $ :: 'List 'Dynamic
+            :return $ :: 'List 'respo.schema/ChildPair
         'element-event $ %{} 'CodeEntry
           :doc "|返回元素事件表，保留已有 nil/undefined handler 的语义；消费者在调用前排除 nullish 值。"
           :code $ quote $ defn element-event (value)
@@ -6697,6 +6771,14 @@
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Bool)
             :args $ [] 'Dynamic
+        'make-child-pair $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn make-child-pair (key node)
+            respo.schema/ChildPair :key key :node $ if (nil? node) (Option :none)
+              Option :some $ as-render-node node
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/ChildPair)
+            :args $ [] 'KeyInput 'NodeInput
+            :generics $ [] 'KeyInput 'NodeInput
         'render-node-value $ %{} 'CodeEntry (:doc "|通过具名变体读取原始节点；用于保留既有 component-tree 读取合同。")
           :code $ quote $ defn render-node-value (node)
             match node
@@ -6713,7 +6795,7 @@
         'compare-to-dom! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn compare-to-dom! (vdom element)
             ; println |compare (:name vdom)
-              map :name $ vals $ :children vdom
+              map :name $ vals $ respo.util.detect/element-children vdom
             ; js/console.log element
             let
                 virtual-name $ turn-string $ :name vdom
@@ -6722,7 +6804,7 @@
                 js/console.warn "|SSR checking: tag names do not match:" (to-lispy-string vdom) element
             if
               not=
-                count $ :children vdom
+                count $ respo.util.detect/element-children vdom
                 element :child-element-count
               let
                   maybe-html $ &map:get
@@ -6733,17 +6815,17 @@
                     not= (respo.util.format/scalar-attribute-text maybe-html) (element :inner-html)
                     js/console.warn "|SSR checking: noticed dom containing innerHTML:" element
                   do (js/console.error "|SSR checking: children sizes do not match!")
-                    js/console.log |virtual: $ -> (:children vdom) (map last) (map :name) to-lispy-string
+                    js/console.log |virtual: $ -> (respo.util.detect/element-children vdom) (map respo.util.detect/child-pair-value) (map :name) to-lispy-string
                     js/console.log |real: $ element :children
               let
                   real-children $ element :children
                 loop
                     acc 0
-                    other-children $ :children vdom
+                    other-children $ respo.util.detect/element-children vdom
                   when
                     not $ empty? other-children
                     compare-to-dom!
-                      as-element $ val-of-first other-children
+                      as-element $ respo.util.detect/child-pair-value $ &list:nth other-children 0
                       option:unwrap $ browser/child-element-at real-children acc
                     recur (inc acc) (&list:rest other-children)
             , &unit
@@ -6952,25 +7034,7 @@
         'mute-element $ %{} 'CodeEntry
           :doc "|Recursively remove event handlers from a component or element tree.\n\nThis is used in SSR-related flows where the initial HTML should not carry live client event functions."
           :code $ quote $ defn mute-element (element)
-            if (component? element)
-              let
-                  component $ assert-type element 'respo.schema/Component
-                respo.schema/Component :name (:name component) :effects (:effects component) :listeners (:listeners component) :tree $ option:map (:tree component)
-                  fn (node)
-                    hint-fn $ {}
-                      :args $ [] 'respo.schema/RenderNode
-                      :return 'respo.schema/RenderNode
-                    respo.util.detect/as-render-node $ mute-element $ respo.util.detect/render-node-value node
-              let
-                  node $ assert-type element 'respo.schema/Element
-                respo.schema/Element :name (:name node) :coord (:coord node) :attrs (:attrs node) :style (:style node) :event ({}) :ref (:ref node) :children $ map (:children node)
-                  fn (entry)
-                    let
-                        k $ option:unwrap $ first entry
-                        child $ option:unwrap $ last entry
-                      [] k $ if (struct? child)
-                        mute-element $ assert-type child 'Struct
-                        , child
+            respo.util.detect/render-node-value $ mute-render-node $ respo.util.detect/as-render-node element
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Struct)
             :args $ [] 'Struct
@@ -6986,7 +7050,7 @@
                       :return 'Unit
                     , &unit
                 root $ respo.schema/Element :name :div :coord (%none) :attrs ([]) :style ([]) :children
-                  [] ([] :child leaf) ([] :empty nil)
+                  [] (respo.util.detect/make-child-pair :child leaf) (respo.util.detect/make-child-pair :empty nil)
                   , :ref nil :event $ {}
                     :click $ fn (_event _dispatch!)
                       hint-fn $ {}
@@ -7001,19 +7065,34 @@
                 muted-root $ assert-type
                   option:unwrap $ respo.util.detect/component-tree muted
                   , 'respo.schema/Element
-                child-pair $ option:unwrap $ first (:children muted-root)
-                muted-child $ assert-type
-                  option:unwrap $ last child-pair
-                  , 'respo.schema/Element
-                nil-pair $ option:unwrap $ last (:children muted-root)
+                child-pair $ option:unwrap $ first (respo.util.detect/element-children muted-root)
+                muted-child $ assert-type (respo.util.detect/child-pair-value child-pair) 'respo.schema/Element
+                nil-pair $ option:unwrap $ last (respo.util.detect/element-children muted-root)
               assert= 1 $ count $ :event root
               assert= 1 $ count $ :event leaf
               assert= ({}) (:event muted-root)
               assert= ({}) (:event muted-child)
               assert= :root $ :name muted
-              assert= :empty $ option:unwrap $ first nil-pair
-              assert= nil $ option:unwrap $ last nil-pair
+              assert= :empty $ :key nil-pair
+              assert |empty-child-is-preserved $ option:none? $ :node nil-pair
             :tags $ #{} :unit
+        'mute-render-node $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn mute-render-node (node)
+            match node
+              (:component component)
+                respo.schema/RenderNode :component $ &struct:assoc component :tree $ option:map (:tree component) mute-render-node
+              (:element element)
+                respo.schema/RenderNode :element $ -> element
+                  assoc :event $ {}
+                  assoc :children $ map (:children element)
+                    fn (pair)
+                      hint-fn $ {}
+                        :args $ [] 'respo.schema/ChildPair
+                        :return 'respo.schema/ChildPair
+                      &struct:assoc pair :node $ option:map (:node pair) mute-render-node
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/RenderNode)
+            :args $ [] 'respo.schema/RenderNode
         'prop->attr $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn prop->attr (x)
             when (includes? x |?) (println "|[Respo] warning: property includes `?` in" x)
@@ -7052,10 +7131,10 @@
                     :attrs $ []
                     :style $ []
                     :event $ {}
-                    :children $ [] $ [] :child child
+                    :children $ [] $ respo.util.detect/make-child-pair :child child
                     :ref $ fn (_target) &unit
                   purified $ coerce-element $ purify-element parent
-                  purified-child $ coerce-element $ respo.util.list/pair-value
+                  purified-child $ respo.util.detect/as-element $ respo.util.detect/child-pair-value
                     &list:nth (element-children purified) 0
                 assert |parent-ref-is-removed $ js-nullish? $ element-ref purified
                 assert |child-ref-is-removed $ js-nullish? $ element-ref purified-child
@@ -7077,13 +7156,13 @@
                 element $ assert-type markup respo.schema/Element
               -> element (assoc :ref nil)
                 assoc :event $ {}
-                assoc :children $ -> (element-children element)
+                assoc :children $ -> (:children element)
                   map $ fn (pair)
                     hint-fn $ {}
-                      :args $ [] $ :: 'List 'Dynamic
-                      :return $ :: 'List 'Dynamic
-                    [] (respo.util.list/pair-key pair)
-                      purify-element $ respo.util.list/pair-value pair
+                      :args $ [] 'respo.schema/ChildPair
+                      :return 'respo.schema/ChildPair
+                    respo.util.detect/make-child-pair (:key pair)
+                      purify-element $ respo.util.detect/child-pair-value pair
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Element)
             :args $ [] 'Dynamic
