@@ -57,6 +57,10 @@ Virtual DOM can be rendered on a server, use it like in JavaScript.
 `make-string` serializes the component tree without event handlers. On the client, `realize-ssr!` attaches those handlers while adopting the existing HTML.
 
 Text and attribute values escape ampersands before other HTML characters, so literal entities such as `&amp;` keep their original text after the browser parses the SSR output. Explicit `:innerHTML` content is inserted as HTML.
+
+`text->html` 将 nil 转为空字符串；String、Tag、Symbol、Number、Bool 经现有标量检查后转换和转义。集合或任意宿主对象不自动字符串化；失败复用 `scalar-attribute-text` 的 `Attribute value must be a scalar` 消息，而不是依赖底层转换错误。需要显示集合或业务对象时，先由应用明确选择展示文本。
+
+生成的 JS 中，Calcit nil 对应 `null`；宿主 `undefined` 不自动视为 nil，需先在 FFI 边界明确处理。
 Without `respo.core/realize-ssr!`, `respo.core/render!` will remove existing DOM and mount the whole tree.
 
 ### `realize-ssr!` solution

@@ -4,6 +4,7 @@ import * as c from '../js-out/calcit.core.mjs';
 import { DomProps } from '../js-out/respo.schema.mjs';
 import { div } from '../js-out/respo.core.mjs';
 import { make_string } from '../js-out/respo.render.html.mjs';
+import { text__GT_html } from '../js-out/respo.util.format.mjs';
 import { create_style_$x_, render_css_block, warn_style_literals, _$s_style_list_in_nodejs, _$s_style_indices_in_nodejs, nodejs_$q_ } from '../js-out/respo.css.mjs';
 
 test('Style source validation reports extra tokens inside nested List forms', () => {
@@ -31,6 +32,19 @@ test('SSR preserves literal ampersands in text and attributes', () => {
     ['title', 'inner-text'].includes(field.value) ? value : undefined]));
   assert.equal(make_string(div(props)),
     '<div title="&amp; &amp;amp; &lt; &gt; &quot;">&amp; &amp;amp; &lt; &gt; "</div>');
+});
+
+test('HTML text keeps scalar formatting and rejects arbitrary hosts', () => {
+  const tags = c.init_tags(['ready']);
+  for (const [value, expected] of [
+    [null, ''], [true, 'true'], [false, 'false'], [12.5, '12.5'],
+    [tags.ready, 'ready'], [c.to_symbol('ready'), 'ready'], ['<ready>&amp;', '&lt;ready&gt;&amp;amp;'],
+  ]) {
+    assert.equal(text__GT_html(value), expected);
+  }
+  for (const value of [undefined, {}, new Date(0), () => 'text']) {
+    assert.throws(() => text__GT_html(value), /Attribute value must be a scalar/);
+  }
 });
 
 test('Node style registration deduplicates names and replaces rules in place', () => {
