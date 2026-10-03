@@ -841,48 +841,92 @@
         'traverse-and-call $ %{} 'CodeEntry
           :doc "|Traverses the rendered tree and invokes component listeners. The dispatch callback intentionally stays at the generic Fn boundary because wrap-dispatch supports multiple operation forms and an optional payload."
           :code $ quote $ defn traverse-and-call (element event-tuple dispatch!)
-            when (component? element)
-              let
-                  listeners $ component-listeners element
-                each listeners $ fn (listener)
-                  hint-fn $ {}
-                    :args $ [] 'respo.schema/RespoListener
-                    :return 'Unit
-                  let
-                      handler $ listener-handler listener
-                    handler event-tuple dispatch!
-                match (component-tree element)
-                  (:none) &unit
-                  (:some tree) (traverse-and-call tree event-tuple dispatch!)
-            when (element? element)
-              each (element-children element)
-                fn (pair)
-                  hint-fn $ {}
-                    :args $ [] 'respo.schema/ChildPair
-                    :return 'Unit
-                  let
-                      child $ respo.util.detect/child-pair-value pair
-                    traverse-and-call child event-tuple dispatch!
+            when
+              or (component? element) (element? element)
+              loop
+                  xs $ [] $ respo.util.detect/as-render-node element
+                hint-fn $ {}
+                  :args $ [] $ :: 'List 'respo.schema/RenderNode
+                  :return 'Unit
+                if (empty? xs) &unit $ let
+                    node $ &list:nth xs 0
+                    pending $ &list:rest xs
+                  match node
+                    (:component component)
+                      do
+                        each (:listeners component)
+                          fn (listener)
+                            hint-fn $ {}
+                              :args $ [] 'respo.schema/RespoListener
+                              :return 'Unit
+                            (:handler listener) event-tuple dispatch!
+                            , &unit
+                        match (:tree component)
+                          (:none) (recur pending)
+                          (:some tree)
+                            recur $ prepend pending tree
+                    (:element markup)
+                      recur $ foldl
+                        reverse $ :children markup
+                        , pending $ fn (acc pair)
+                          hint-fn $ {}
+                            :args $ [] (:: 'List 'respo.schema/RenderNode) 'respo.schema/ChildPair
+                            :return $ :: 'List 'respo.schema/RenderNode
+                          match (:node pair)
+                            (:none) acc
+                            (:some child) (prepend acc child)
             , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'Struct 'Enum 'Fn
-          :tests $ [] $ %{} 'TestEntry
-            :name |tolerates-none-subtree-and-keeps-component-listener
-            :code $ quote $ let
-                log $ atom $ []
-                listener $ %{} respo.schema/RespoListener (:name :watch)
-                  :handler $ fn (event _dispatch!)
-                    reset! log $ [] event
-                component $ %{} respo.schema/Component (:name :empty)
-                  :effects $ []
-                  :listeners $ [] listener
-                  :tree $ %none
-              traverse-and-call component (:: :changed)
-                fn (_op) &unit
-              assert |listener-was-called $ &= 1 $ count @log
-              assert |listener-received-event $ &= (:: :changed) (&list:nth @log 0)
-            :tags $ #{} :unit
+          :tests $ []
+            %{} 'TestEntry
+              :name |tolerates-none-subtree-and-keeps-component-listener
+              :code $ quote $ let
+                  log $ atom $ []
+                  listener $ %{} respo.schema/RespoListener (:name :watch)
+                    :handler $ fn (event _dispatch!)
+                      reset! log $ [] event
+                  component $ %{} respo.schema/Component (:name :empty)
+                    :effects $ []
+                    :listeners $ [] listener
+                    :tree $ %none
+                traverse-and-call component (:: :changed)
+                  fn (_op) &unit
+                assert |listener-was-called $ &= 1 $ count @log
+                assert |listener-received-event $ &= (:: :changed) (&list:nth @log 0)
+              :tags $ #{} :unit
+            %{} 'TestEntry
+              :name |keeps-listener-order-dispatch-and-empty-children
+              :code $ quote $ let
+                  calls $ atom $ []
+                  operations $ atom $ []
+                  event $ :: :changed
+                  dispatch-ref $ atom $ fn (op)
+                    reset! operations $ append @operations op
+                    , &unit
+                  wrapped-dispatch $ wrap-dispatch dispatch-ref
+                  make-component $ fn (name tree)
+                    hint-fn $ {}
+                      :args $ [] 'Tag $ :: 'Option 'respo.schema/RenderNode
+                      :return 'respo.schema/Component
+                    respo.schema/Component :name name :effects ([]) :tree tree :listeners $ [] $ respo.schema/RespoListener :name :watch :handler
+                      fn (received dispatch!) (assert= event received)
+                        reset! calls $ append @calls name
+                        dispatch! $ :: :heard name
+                        , &unit
+                  first-component $ make-component :first $ %none
+                  second-component $ make-component :second $ %none
+                  element $ &struct:assoc
+                    respo.core/div $ {}
+                    , :children $ [] (respo.util.detect/make-child-pair :first first-component) (respo.util.detect/make-child-pair :empty nil) (respo.util.detect/make-child-pair :second second-component)
+                  nested $ make-component :nested $ %some (respo.util.detect/as-render-node element)
+                  root $ make-component :root $ %some (respo.util.detect/as-render-node nested)
+                traverse-and-call root event wrapped-dispatch
+                assert= ([] :root :nested :first :second) @calls
+                assert=
+                  [] (:: :heard :root) (:: :heard :nested) (:: :heard :first) (:: :heard :second)
+                  , @operations
         'wrap-dispatch $ %{} 'CodeEntry
           :doc "|Wraps a raw dispatch function to automatically handle different operation types (list, tag, or direct)."
           :code $ quote $ defn wrap-dispatch (*dispatch-fn)
@@ -6313,7 +6357,7 @@
         'RespoListener $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct RespoListener (:name 'Tag) (:handler 'Fn)
           :examples $ []
-          :schema $ :: 'Enum
+          :schema $ :: 'StructDef
         'cache-info $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def cache-info
             {} (:value nil) (:initial-loop nil) (:last-hit nil) (:hit-times 0)
