@@ -69,3 +69,26 @@ recur 约束。并非这些字段已完成迁移。
 诊断为 W_FN_ARG_TYPE_MISMATCH，明确指出 :event 字段；所以不是模块加载失败或
 单纯别名未解析。此处不添加 unsafe-coerce、宽化 Dynamic 或删除 nil handler 来通过。
 继续完成共享类型关系与真实开放创建边界后，再做 DOM/SSR 与两组下游最终回归。
+
+## ref 创建边界与独立回放
+
+新增内部 `normalize-ref`，集中两个创建入口原有的验证，返回
+`JsNullish<Fn(JsNullish<DomElement>)->Unit>`。泛型 `RefInput` 保留输入证据；
+函数身份、nil 行为、验证顺序和两个入口各自的错误消息不变。
+两项 attached 测试覆盖合法 callback/nil 和非法值的实际报错。
+
+本次精确源码回放：正式 0.28.0 原生 78/78、质量门禁通过；重新生成 JS 后
+事件配置、nullish props、SSR、keyed、memo、patch lookup 共 28 项通过。
+DOM host smoke 通过，覆盖事件安装、SSR ref 与事件、组件坐标和 paste 合同。
+
+候选编译器基于 `b10dcad1`（0.29.0-alpha.1，未发布），另含尚未提交的
+nullable 集合字段证明修复，使用独立 target 构建：78 项中 76 项通过，
+#218 原先暴露的五项全部恢复。剩余两项 create-list-element 测试属于 #194：
+children 累积得到 Dynamic，以及 loop 的 Option<Never> 初值无法接收
+Option<Number> 的 recur。候选版 DOM JS 编译仍被这三处诊断阻断。
+
+编译器正例已在 native 和同源码生成的 0.29.0-alpha.1 JS runtime 回放，
+两种 Struct 构造语法的错误 payload 反例准确报告字段诊断。此前临时 target
+含共享软链接，容易被其他构建替换；以上结果以独立目录重跑为准。
+候选修复尚未发布，不能将这些结果归于上游 main，也不能宣称 #218 或
+整个 0.19.0 milestone 已完成。

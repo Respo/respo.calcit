@@ -1221,11 +1221,7 @@
             let
                 props-map $ normalize-dom-props props
                 ref-value $ &map:get props-map :ref
-                ref! $ if (nil? ref-value) nil $ assert-type
-                  expect-function ref-value "|[Respo/create-element] expected :ref to be a function or nil"
-                  :: Fn $ {}
-                    :args $ [] $ :: JsNullish respo.dom/DomElement
-                    :return Unit
+                ref! $ normalize-ref ref-value "|[Respo/create-element] expected :ref to be a function or nil"
                 attrs $ pick-attrs props-map
                 styles $ ->
                   either (&map:get props-map :style) ({})
@@ -1264,11 +1260,7 @@
             let
                 props-map $ normalize-dom-props props
                 ref-value $ &map:get props-map :ref
-                ref! $ if (nil? ref-value) nil $ assert-type
-                  expect-function ref-value "|[Respo/create-list-element] expected :ref to be a function or nil"
-                  :: Fn $ {}
-                    :args $ [] $ :: JsNullish respo.dom/DomElement
-                    :return Unit
+                ref! $ normalize-ref ref-value "|[Respo/create-list-element] expected :ref to be a function or nil"
                 attrs $ pick-attrs props-map
                 styles $ sort
                   assert-type
@@ -2114,6 +2106,39 @@
             :args $ [] 'Dynamic
             :features $ #{} :js-ffi
             :return $ :: 'Map 'Tag 'Dynamic
+        'normalize-ref $ %{} 'CodeEntry
+          :doc "|在 props 的开放数据边界验证 ref，返回明确的 nullable DOM 回调；nil 保留，非法函数沿用调用方消息。"
+          :code $ quote $ defn normalize-ref (value message)
+            if (nil? value) nil $ assert-type (expect-function value message)
+              :: Fn $ {}
+                :args $ [] $ :: JsNullish respo.dom/DomElement
+                :return Unit
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] 'RefInput 'String
+            :generics $ [] 'RefInput
+            :return $ :: 'JsNullish $ :: 'Fn
+              {} (:return 'Unit)
+                :args $ [] $ :: 'JsNullish 'respo.dom/DomElement
+          :tags $ #{} :internal
+          :tests $ []
+            %{} 'TestEntry (:name |preserves-nil-and-callback)
+              :code $ quote $ let
+                  callback $ fn (_target)
+                    hint-fn $ {}
+                      :args $ [] $ :: 'JsNullish 'respo.dom/DomElement
+                      :return 'Unit
+                    , &unit
+                assert= nil $ normalize-ref nil |expected-ref
+                assert |ref-identity-preserved $ identical? callback $ normalize-ref callback |expected-ref
+              :tags $ #{} :unit
+            %{} 'TestEntry (:name |rejects-invalid-ref)
+              :code $ quote $ let
+                  caught? $ atom false
+                try (normalize-ref :invalid |expected-ref)
+                  fn (error) (assert= |expected-ref error) (reset! caught? true)
+                assert |invalid-ref-rejected @caught?
+              :tags $ #{} :unit
         'ol $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn ol (props & children) (create-element :ol props & children)
           :examples $ []
