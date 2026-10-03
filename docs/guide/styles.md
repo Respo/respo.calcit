@@ -102,6 +102,12 @@ respo.css/defstyle style-input $ {}
 
 Use string selectors such as `|&`, `|&:hover`, or `|input&`. Avoid writing bare symbol `&` as the selector key in `defstyle`.
 
+#### 源码检查
+
+`defstyle` 在宏展开时遍历字面量 `{}` 的 List 源码，包括嵌套 selector。属性节点需要同时包含 key 和 value；缺失 value 或不是 List 的属性节点会报明确错误。属性节点包含两个以上 token 时仍输出 `defstyle-extra-tokens` 提示，不静默丢失检查。
+
+该检查只针对字面量 map 源码，不执行计算表达式，也不是 CSS 属性或浏览器支持范围的验证器。运行时动态样式继续使用 `:style`。
+
 #### When to use `defstyle`
 
 `defstyle` works best for static styles: fixed font sizes, colors, gaps, borders, paddings, hover rules, and reusable layout rules.

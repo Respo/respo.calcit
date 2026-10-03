@@ -4,7 +4,26 @@ import * as c from '../js-out/calcit.core.mjs';
 import { DomProps } from '../js-out/respo.schema.mjs';
 import { div } from '../js-out/respo.core.mjs';
 import { make_string } from '../js-out/respo.render.html.mjs';
-import { create_style_$x_, render_css_block, _$s_style_list_in_nodejs, _$s_style_indices_in_nodejs, nodejs_$q_ } from '../js-out/respo.css.mjs';
+import { create_style_$x_, render_css_block, warn_style_literals, _$s_style_list_in_nodejs, _$s_style_indices_in_nodejs, nodejs_$q_ } from '../js-out/respo.css.mjs';
+
+test('Style source validation reports extra tokens inside nested List forms', () => {
+  const tags = c.init_tags(['color']);
+  const source = c.arrayToList([
+    c.to_symbol('{}'),
+    c.arrayToList(['&:hover', c.arrayToList([
+      c.to_symbol('{}'), c.arrayToList([tags.color, 'red', 'extra']),
+    ])]),
+  ]);
+  const messages = [];
+  const originalLog = console.log;
+  try {
+    console.log = (...args) => messages.push(args.join(' '));
+    warn_style_literals(source);
+    assert.deepEqual(messages, ['defstyle-extra-tokens']);
+  } finally {
+    console.log = originalLog;
+  }
+});
 
 test('SSR preserves literal ampersands in text and attributes', () => {
   const value = '& &amp; < > "';

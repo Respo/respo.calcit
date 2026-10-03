@@ -2583,29 +2583,62 @@
             :features $ #{} :js-ffi
         'warn-style-literals $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn warn-style-literals (x)
-            if (enum? x)
-              if
-                &= '{} $ &enum:nth x 0
+            if (list? x)
+              if (empty? x) &unit $ if
+                &= '{} $ .unwrap $ .get x 0
                 loop
                     idx 1
                   if
                     >= idx $ count x
                     , &unit $ let
-                        pair $ &enum:nth x idx
-                        value $ &enum:nth pair 1
-                      when
-                        &> (count pair) 2
-                        println |defstyle-extra-tokens
-                      warn-style-literals value
-                      recur $ inc idx
+                        pair $ .unwrap $ .get x idx
+                      if (list? pair)
+                        if
+                          < (count pair) 2
+                          raise "|defstyle expected a property pair with a value"
+                          let
+                              value $ .unwrap $ .get pair 1
+                            when
+                              &> (count pair) 2
+                              println |defstyle-extra-tokens
+                            warn-style-literals value
+                            recur $ inc idx
+                        raise "|defstyle expected a List property pair"
                 , &unit
               , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'Dynamic
             :features $ #{} :js-ffi
-          :tests $ [] $ %{} 'TestEntry (:name |returns-unit-for-non-enum)
-            :code $ quote $ do (warn-style-literals |plain) (assert |non-enum-style-is-accepted true)
+          :tests $ []
+            %{} 'TestEntry (:name |returns-unit-for-non-enum)
+              :code $ quote $ do (warn-style-literals |plain) (assert |non-enum-style-is-accepted true)
+            %{} 'TestEntry (:name |accepts-list-source-and-empty-input)
+              :code $ quote $ do
+                assert= &unit $ warn-style-literals $ []
+                assert= &unit $ warn-style-literals $ quote
+                  {} (:color :red)
+                    |&:hover $ {} $ :color :blue
+              :tags $ #{} :unit
+            %{} 'TestEntry (:name |rejects-non-list-property-pair)
+              :code $ quote $ assert= "|defstyle expected a List property pair"
+                try
+                  warn-style-literals $ quote $ {} |bad
+                  fn (error) error
+              :tags $ #{} :unit
+            %{} 'TestEntry (:name |rejects-property-without-value)
+              :code $ quote $ assert= "|defstyle expected a property pair with a value"
+                try
+                  warn-style-literals $ quote $ {} (:color)
+                  fn (error) error
+              :tags $ #{} :unit
+            %{} 'TestEntry (:name |validates-nested-list-source)
+              :code $ quote $ assert= "|defstyle expected a List property pair"
+                try
+                  warn-style-literals $ quote $ {}
+                    |&:hover $ {} |bad
+                  fn (error) error
+              :tags $ #{} :unit
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.css
           :require $ respo.render.dom :refer $ style->string
