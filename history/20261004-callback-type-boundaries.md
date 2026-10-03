@@ -140,3 +140,15 @@ TypeScript 编译已通过；`yarn check-all` 在 Agent interface 的迁移报�
 
 完整逐项消除表、RenderNode / ChildPair 字段迁移、Tag/String cursor 合同及
 Calcium / TopixIM 两组真实下游回归仍需完成。
+
+## 编译器门禁续记
+
+诊断预期更新后，Agent interface 53/53、后续 native / JS / IR 门禁均通过。
+WASM 脚本优先选中了缓存的 0.28.0 release 二进制，引起六个 remainder trap
+失败；显式指定本次独立构建的 debug 0.29.0-alpha.1 后全部 WASM 检查通过。
+literal-paths 与 typed-method-rem 最后两组门禁也通过。
+
+远端 main 随后合并 #1739（`13c4cf75`），包含诊断编号修复及额外消息、位置
+断言。本地编译器分支已 rebase 到该版本，重复测试提交被移除；剩余提交为
+`18899359`，只包含 nullable 集合字段证明、对应正反例和中文文档。增强后的
+Agent interface 正在重跑。对外发布需要用户授权，PR 草稿已在本地准备好。
