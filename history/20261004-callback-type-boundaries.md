@@ -92,3 +92,22 @@ Option<Number> 的 recur。候选版 DOM JS 编译仍被这三处诊断阻断。
 含共享软链接，容易被其他构建替换；以上结果以独立目录重跑为准。
 候选修复尚未发布，不能将这些结果归于上游 main，也不能宣称 #218 或
 整个 0.19.0 milestone 已完成。
+
+## 循环证据与完整 demo 回放
+
+`create-element` 的子节点累积循环通过 `hint-fn` 声明实际入参和返回类型，
+保留每个 child 的验证、原索引及 nil 过滤顺序。两个以空 Option 开始的循环
+明确初值为 `Option<Number>`，避免把后续索引固定成 `Option<Never>`。
+这只恢复当前结构的证明；子节点仍是旧的 `List<List<Dynamic>>`，没有据此
+宣称 RenderNode / ChildPair 迁移完成。
+
+完整 demo 编译另外暴露 `effect-focus` 和 `effect-log` 返回 nil；两者在原有
+副作用之后明确返回 Unit，与 `Effect.method` 的声明一致。
+
+以上源码在正式 0.28.0 和包含本地 nullable 集合修复的候选 0.29.0-alpha.1
+分别通过 78/78 原生测试、重新生成 JS 后的 28 项 Node 回归，以及 DOM host
+smoke。候选 JS 使用同一编译器源码生成的 runtime，正式 JS 使用 0.28.0
+runtime。正式质量门禁通过，没有扩大预算。
+
+编译器修复的全量 Rust 测试、clippy、TypeScript 编译已通过；`yarn check-all`
+仍在运行，不能提前将整个编译器验证视为完成。本地依赖修复尚未发布。

@@ -95,6 +95,7 @@
                 , nil
               :update (; println |read) nil
               :unmount (; println |read) nil
+            , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Effect)
             :args $ [] 'respo.app.schema/Task
@@ -207,6 +208,7 @@
                 (:none) &unit
                 (:some target)
                   .select! $ unsafe-coerce target 'respo.dom/DomElement
+            , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Effect)
             :args $ [] 'String
@@ -1233,6 +1235,12 @@
                     acc $ []
                     xs children
                     idx 0
+                  hint-fn $ {}
+                    :args $ []
+                      :: 'List $ :: 'List 'Dynamic
+                      :: 'List 'Dynamic
+                      , 'Number
+                    :return $ :: 'List $ :: 'List 'Dynamic
                   if (empty? xs) acc $ let
                       item $ &list:first xs
                     confirm-child item
@@ -3777,7 +3785,7 @@
                           respo.util.list/pair-value new-pair
                     loop
                         remaining $ reverse sources
-                        anchor $ %:: Option :none
+                        anchor $ assert-type (%:: Option :none) (:: 'Option 'Number)
                       list-match remaining
                         () &unit
                         (source rest-sources)
@@ -4192,7 +4200,7 @@
                 size $ count child-keys
               loop
                   cursor 0
-                  duplicate-position $ %:: Option :none
+                  duplicate-position $ assert-type (%:: Option :none) (:: 'Option 'Number)
                 let
                     index $ assert-type cursor Number
                     first-position $ assert-type duplicate-position $ :: 'Option 'Number
