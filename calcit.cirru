@@ -3880,36 +3880,20 @@
             :args $ [] $ :: 'List 'Dynamic
         'find-children-diffs $ %{} 'CodeEntry
           :doc "|Reconcile whole keyed lists with common prefix/suffix trimming and an LIS over retained source positions. Update retained children before structural edits; remove missing nodes in descending order, append new nodes, and then move from right to left using stable node snapshots. Moves preserve DOM identity and component mount/unmount lifecycle."
-          :code $ quote $ defn find-children-diffs (collect! coord n-coord index old-children new-children)
-            if
-              =
-                map old-children $ fn (pair)
+          :code $ quote $ defn find-children-diffs (collect! coord n-coord index old-pairs-input new-pairs-input)
+            let
+                old-children $ filter old-pairs-input $ fn (pair)
                   hint-fn $ {}
                     :args $ [] 'respo.schema/ChildPair
-                    :return 'Dynamic
-                  :key pair
-                map new-children $ fn (pair)
+                    :return 'Bool
+                  option:some? $ :node pair
+                new-children $ filter new-pairs-input $ fn (pair)
                   hint-fn $ {}
                     :args $ [] 'respo.schema/ChildPair
-                    :return 'Dynamic
-                  :key pair
-              loop
-                  old-pairs old-children
-                  new-pairs new-children
-                  position index
-                hint-fn $ {}
-                  :args $ [] (:: 'List 'respo.schema/ChildPair) (:: 'List 'respo.schema/ChildPair) 'Number
-                  :return 'Unit
-                list-match old-pairs
-                  () &unit
-                  (old-pair rest-old)
-                    let
-                        new-pair $ &list:nth new-pairs 0
-                        key $ :key old-pair
-                      find-element-diffs collect! (append coord key) (append n-coord position) (respo.util.detect/child-pair-value old-pair) (respo.util.detect/child-pair-value new-pair)
-                      recur rest-old (&list:rest new-pairs) (inc position)
-              match
-                keyed-rotation
+                    :return 'Bool
+                  option:some? $ :node pair
+              if
+                =
                   map old-children $ fn (pair)
                     hint-fn $ {}
                       :args $ [] 'respo.schema/ChildPair
@@ -3920,149 +3904,176 @@
                       :args $ [] 'respo.schema/ChildPair
                       :return 'Dynamic
                     :key pair
-                (:none)
-                  let
-                      full-old-keys $ map old-children $ fn (pair)
-                        hint-fn $ {}
-                          :args $ [] 'respo.schema/ChildPair
-                          :return 'Dynamic
-                        :key pair
-                      full-new-keys $ map new-children $ fn (pair)
-                        hint-fn $ {}
-                          :args $ [] 'respo.schema/ChildPair
-                          :return 'Dynamic
-                        :key pair
-                      boundaries $ keyed-boundaries full-old-keys full-new-keys
-                      prefix $ &list:nth boundaries 0
-                      suffix $ &list:nth boundaries 1
-                      middle-old-children $ slice old-children prefix $ - (count old-children) suffix
-                      middle-new-children $ slice new-children prefix $ - (count new-children) suffix
-                      suffix-keys $ slice full-old-keys $ - (count full-old-keys) suffix
-                      index-offset $ + index prefix
-                    &doseq
-                      position $ range prefix
-                      find-element-diffs collect!
-                        append coord $ &list:nth full-old-keys position
-                        append n-coord $ + index position
-                        respo.util.detect/child-pair-value $ &list:nth old-children position
-                        respo.util.detect/child-pair-value $ &list:nth new-children position
-                    &doseq
-                      position $ range suffix
+                loop
+                    old-pairs old-children
+                    new-pairs new-children
+                    position index
+                  hint-fn $ {}
+                    :args $ [] (:: 'List 'respo.schema/ChildPair) (:: 'List 'respo.schema/ChildPair) 'Number
+                    :return 'Unit
+                  list-match old-pairs
+                    () &unit
+                    (old-pair rest-old)
                       let
-                          old-position $ +
-                            - (count old-children) suffix
-                            , position
-                          new-position $ +
-                            - (count new-children) suffix
-                            , position
-                        find-element-diffs collect!
-                          append coord $ &list:nth full-old-keys old-position
-                          append n-coord $ + index old-position
-                          respo.util.detect/child-pair-value $ &list:nth old-children old-position
-                          respo.util.detect/child-pair-value $ &list:nth new-children new-position
+                          new-pair $ &list:nth new-pairs 0
+                          key $ :key old-pair
+                        find-render-node-diffs collect! (append coord key) (append n-coord position) (:node old-pair) (:node new-pair)
+                        recur rest-old (&list:rest new-pairs) (inc position)
+                match
+                  keyed-rotation
+                    map old-children $ fn (pair)
+                      hint-fn $ {}
+                        :args $ [] 'respo.schema/ChildPair
+                        :return 'Dynamic
+                      :key pair
+                    map new-children $ fn (pair)
+                      hint-fn $ {}
+                        :args $ [] 'respo.schema/ChildPair
+                        :return 'Dynamic
+                      :key pair
+                  (:none)
                     let
-                        old-keys $ map middle-old-children $ fn (pair)
+                        full-old-keys $ map old-children $ fn (pair)
                           hint-fn $ {}
                             :args $ [] 'respo.schema/ChildPair
                             :return 'Dynamic
                           :key pair
-                        new-keys $ map middle-new-children $ fn (pair)
+                        full-new-keys $ map new-children $ fn (pair)
                           hint-fn $ {}
                             :args $ [] 'respo.schema/ChildPair
                             :return 'Dynamic
                           :key pair
-                        old-index $ keyed-index old-keys
-                        new-index $ keyed-index new-keys
-                        retained-keys $ filter old-keys $ fn (key) (contains? new-index key)
-                        added-keys $ filter new-keys $ fn (key)
-                          not $ contains? old-index key
-                        source-index $ keyed-index $ concat (concat retained-keys suffix-keys) added-keys
-                        source-order $ map new-keys $ fn (key)
-                          assert-type (&map:get source-index key) 'Number
-                        kept $ lis-values $ if (> suffix 0)
-                          filter source-order $ fn (value)
-                            < value $ count retained-keys
-                          , source-order
-                      &doseq (key retained-keys)
-                        let
-                            old-position $ assert-type (&map:get old-index key) 'Number
-                            new-position $ assert-type (&map:get new-index key) 'Number
-                          find-element-diffs collect! (append coord key)
-                            append n-coord $ + index-offset old-position
-                            respo.util.detect/child-pair-value $ &list:nth middle-old-children old-position
-                            respo.util.detect/child-pair-value $ &list:nth middle-new-children new-position
+                        boundaries $ keyed-boundaries full-old-keys full-new-keys
+                        prefix $ &list:nth boundaries 0
+                        suffix $ &list:nth boundaries 1
+                        middle-old-children $ slice old-children prefix $ - (count old-children) suffix
+                        middle-new-children $ slice new-children prefix $ - (count new-children) suffix
+                        suffix-keys $ slice full-old-keys $ - (count full-old-keys) suffix
+                        index-offset $ + index prefix
                       &doseq
-                        key $ reverse old-keys
-                        when-not (contains? new-index key)
+                        position $ range prefix
+                        find-render-node-diffs collect!
+                          append coord $ &list:nth full-old-keys position
+                          append n-coord $ + index position
+                          :node $ &list:nth old-children position
+                          :node $ &list:nth new-children position
+                      &doseq
+                        position $ range suffix
+                        let
+                            old-position $ +
+                              - (count old-children) suffix
+                              , position
+                            new-position $ +
+                              - (count new-children) suffix
+                              , position
+                          find-render-node-diffs collect!
+                            append coord $ &list:nth full-old-keys old-position
+                            append n-coord $ + index old-position
+                            :node $ &list:nth old-children old-position
+                            :node $ &list:nth new-children new-position
+                      let
+                          old-keys $ map middle-old-children $ fn (pair)
+                            hint-fn $ {}
+                              :args $ [] 'respo.schema/ChildPair
+                              :return 'Dynamic
+                            :key pair
+                          new-keys $ map middle-new-children $ fn (pair)
+                            hint-fn $ {}
+                              :args $ [] 'respo.schema/ChildPair
+                              :return 'Dynamic
+                            :key pair
+                          old-index $ keyed-index old-keys
+                          new-index $ keyed-index new-keys
+                          retained-keys $ filter old-keys $ fn (key) (contains? new-index key)
+                          added-keys $ filter new-keys $ fn (key)
+                            not $ contains? old-index key
+                          source-index $ keyed-index $ concat (concat retained-keys suffix-keys) added-keys
+                          source-order $ map new-keys $ fn (key)
+                            assert-type (&map:get source-index key) 'Number
+                          kept $ lis-values $ if (> suffix 0)
+                            filter source-order $ fn (value)
+                              < value $ count retained-keys
+                            , source-order
+                        &doseq (key retained-keys)
                           let
                               old-position $ assert-type (&map:get old-index key) 'Number
-                              child $ respo.util.detect/child-pair-value $ &list:nth middle-old-children old-position
-                              child-n-coord $ append n-coord $ + index-offset old-position
-                            collect-unmounting collect! (append coord key) child-n-coord child true
-                            collect! $ DomPatch :rm-element (append coord key) child-n-coord
-                      &doseq (key added-keys)
+                              new-position $ assert-type (&map:get new-index key) 'Number
+                            find-render-node-diffs collect! (append coord key)
+                              append n-coord $ + index-offset old-position
+                              :node $ &list:nth middle-old-children old-position
+                              :node $ &list:nth middle-new-children new-position
+                        &doseq
+                          key $ reverse old-keys
+                          when-not (contains? new-index key)
+                            let
+                                old-position $ assert-type (&map:get old-index key) 'Number
+                                child $ option:unwrap $ :node (&list:nth middle-old-children old-position)
+                                child-n-coord $ append n-coord $ + index-offset old-position
+                              respo.render.effect/collect-unmounting-node collect! (append coord key) child-n-coord child true
+                              collect! $ DomPatch :rm-element (append coord key) child-n-coord
+                        &doseq (key added-keys)
+                          let
+                              new-position $ assert-type (&map:get new-index key) 'Number
+                              child $ option:unwrap $ :node (&list:nth middle-new-children new-position)
+                              child-coord $ append coord key
+                            collect! $ DomPatch :append-element child-coord n-coord $ respo.util.detect/render-node-value child
+                        loop
+                            remaining $ reverse source-order
+                            anchor $ if (> suffix 0)
+                              %:: Option :some $ count retained-keys
+                              %:: Option :none
+                          list-match remaining
+                            () &unit
+                            (source rest-sources)
+                              when-not
+                                contains? kept $ assert-type source 'Number
+                                collect! $ DomPatch :move-element n-coord (+ index-offset source)
+                                  option:map
+                                    assert-type anchor $ :: 'Option 'Number
+                                    fn (position) (+ index-offset position)
+                              recur rest-sources $ %:: Option :some source
+                        &doseq (key added-keys)
+                          let
+                              new-position $ assert-type (&map:get new-index key) 'Number
+                              child $ option:unwrap $ :node (&list:nth middle-new-children new-position)
+                              child-coord $ append coord key
+                            respo.render.effect/collect-mounting-node collect! child-coord
+                              append n-coord $ + index-offset new-position
+                              , child true
+                  (:some offset)
+                    let
+                        size $ count old-children
+                        sources $ concat (range offset size) (range offset)
+                        kept $ .to-set $ if
+                          > (- size offset) offset
+                          range offset size
+                          range offset
+                      &doseq
+                        position $ range size
                         let
-                            new-position $ assert-type (&map:get new-index key) 'Number
-                            child $ respo.util.detect/child-pair-value $ &list:nth middle-new-children new-position
-                            child-coord $ append coord key
-                          collect! $ DomPatch :append-element child-coord n-coord child
+                            old-pair $ &list:nth old-children position
+                            new-position $ if (< position offset)
+                              + position $ - size offset
+                              - position offset
+                            new-pair $ &list:nth new-children new-position
+                          find-render-node-diffs collect!
+                            append coord $ :key old-pair
+                            append n-coord $ + index position
+                            :node old-pair
+                            :node new-pair
                       loop
-                          remaining $ reverse source-order
-                          anchor $ if (> suffix 0)
-                            %:: Option :some $ count retained-keys
-                            %:: Option :none
+                          remaining $ reverse sources
+                          anchor $ assert-type (%:: Option :none) (:: 'Option 'Number)
                         list-match remaining
                           () &unit
                           (source rest-sources)
                             when-not
                               contains? kept $ assert-type source 'Number
-                              collect! $ DomPatch :move-element n-coord (+ index-offset source)
+                              collect! $ DomPatch :move-element n-coord (+ index source)
                                 option:map
                                   assert-type anchor $ :: 'Option 'Number
-                                  fn (position) (+ index-offset position)
+                                  fn (position) (+ index position)
                             recur rest-sources $ %:: Option :some source
-                      &doseq (key added-keys)
-                        let
-                            new-position $ assert-type (&map:get new-index key) 'Number
-                            child $ respo.util.detect/child-pair-value $ &list:nth middle-new-children new-position
-                            child-coord $ append coord key
-                          collect-mounting collect! child-coord
-                            append n-coord $ + index-offset new-position
-                            , child true
-                (:some offset)
-                  let
-                      size $ count old-children
-                      sources $ concat (range offset size) (range offset)
-                      kept $ .to-set $ if
-                        > (- size offset) offset
-                        range offset size
-                        range offset
-                    &doseq
-                      position $ range size
-                      let
-                          old-pair $ &list:nth old-children position
-                          new-position $ if (< position offset)
-                            + position $ - size offset
-                            - position offset
-                          new-pair $ &list:nth new-children new-position
-                        find-element-diffs collect!
-                          append coord $ :key old-pair
-                          append n-coord $ + index position
-                          respo.util.detect/child-pair-value old-pair
-                          respo.util.detect/child-pair-value new-pair
-                    loop
-                        remaining $ reverse sources
-                        anchor $ assert-type (%:: Option :none) (:: 'Option 'Number)
-                      list-match remaining
-                        () &unit
-                        (source rest-sources)
-                          when-not
-                            contains? kept $ assert-type source 'Number
-                            collect! $ DomPatch :move-element n-coord (+ index source)
-                              option:map
-                                assert-type anchor $ :: 'Option 'Number
-                                fn (position) (+ index position)
-                          recur rest-sources $ %:: Option :some source
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
@@ -4072,120 +4083,53 @@
               :: 'List 'Number
               , 'Number (:: 'List 'respo.schema/ChildPair) (:: 'List 'respo.schema/ChildPair)
             :features $ #{} :js-ffi
-          :tests $ [] $ %{} 'TestEntry (:name |accepts-list-map-representation-transitions)
-            :code $ quote $ let
-                child $ %{} respo.schema/Element (:name :div)
-                  :coord $ %none
-                  :attrs $ []
-                  :style $ []
-                  :event $ {}
-                  :children $ []
-                  :ref nil
-                effects $ atom $ []
-                collect! $ fn (effect) (respo.core/append-dynamic! effects effect)
-                child-list $ [] $ respo.util.detect/make-child-pair :a child
-                same-child-list $ [] $ respo.util.detect/make-child-pair :a child
-              find-children-diffs collect! ([]) ([]) 0 child-list same-child-list
-              assert |equivalent-keyed-lists-have-no-diff $ empty? @effects
-            :tags $ #{} :unit
+          :tests $ []
+            %{} 'TestEntry (:name |accepts-list-map-representation-transitions)
+              :code $ quote $ let
+                  child $ %{} respo.schema/Element (:name :div)
+                    :coord $ %none
+                    :attrs $ []
+                    :style $ []
+                    :event $ {}
+                    :children $ []
+                    :ref nil
+                  effects $ atom $ []
+                  collect! $ fn (effect) (respo.core/append-dynamic! effects effect)
+                  child-list $ [] $ respo.util.detect/make-child-pair :a child
+                  same-child-list $ [] $ respo.util.detect/make-child-pair :a child
+                find-children-diffs collect! ([]) ([]) 0 child-list same-child-list
+                assert |equivalent-keyed-lists-have-no-diff $ empty? @effects
+              :tags $ #{} :unit
+            %{} 'TestEntry (:name |keeps-dom-coordinates-dense-through-none)
+              :code $ quote $ let
+                  ops $ atom $ []
+                  leaf $ respo.core/span $ {}
+                  old-children $ [] (respo.util.detect/make-child-pair :empty nil) (respo.util.detect/make-child-pair :live leaf)
+                  new-children $ [] (respo.util.detect/make-child-pair :empty leaf) (respo.util.detect/make-child-pair :live nil)
+                find-children-diffs
+                  fn (op) (swap! ops append op)
+                  [] :parent
+                  []
+                  , 0 old-children new-children
+                assert=
+                  []
+                    DomPatch :rm-element ([] :parent :live) ([] 0)
+                    DomPatch :append-element ([] :parent :empty) ([]) leaf
+                  deref ops
+              :tags $ #{} :unit
         'find-element-diffs $ %{} 'CodeEntry
           :doc "|Internal diff algorithm for comparing old and new virtual DOM trees.\n\nIt collects patch operations via `collect!`, handling components, plain elements, styles, events, keyed children, and effect lifecycle transitions."
-          :code $ quote $ defn find-element-diffs (collect! coord n-coord old-tree new-tree) (; js/console.log "|element diffing:" n-coord old-tree new-tree) (; echo "|element coord" coord)
-            let
-                legacy-nil nil
-              cond
-                  identical? old-tree new-tree
-                  , legacy-nil
-                (and (nil? old-tree) (some? new-tree))
-                  do
-                    collect! $ DomPatch :add-element coord n-coord new-tree
-                    collect-mounting collect! coord n-coord new-tree true
-                (and (some? old-tree) (nil? new-tree))
-                  do (collect-unmounting collect! coord n-coord old-tree true)
-                    collect! $ DomPatch :rm-element coord n-coord
-                (and (component? old-tree) (component? new-tree))
-                  let
-                      next-coord $ append coord $ component-name new-tree
-                    if
-                      = (component-name old-tree) (component-name new-tree)
-                      do
-                        collect-updating collect! :before-update coord n-coord (respo.util.format/coerce-component old-tree) (respo.util.format/coerce-component new-tree)
-                        let
-                            old-tree-option $ component-tree old-tree
-                            new-tree-option $ component-tree new-tree
-                          match old-tree-option
-                            (:none)
-                              match new-tree-option
-                                (:none) &unit
-                                (:some new-child-tree) (find-element-diffs collect! next-coord n-coord legacy-nil new-child-tree)
-                            (:some old-child-tree)
-                              match new-tree-option
-                                (:none) (find-element-diffs collect! next-coord n-coord old-child-tree legacy-nil)
-                                (:some new-child-tree) (find-element-diffs collect! next-coord n-coord old-child-tree new-child-tree)
-                        collect-updating collect! :update coord n-coord (respo.util.format/coerce-component old-tree) (respo.util.format/coerce-component new-tree)
-                      do (collect-unmounting collect! coord n-coord old-tree true)
-                        collect! $ DomPatch :replace-element coord n-coord new-tree
-                        collect-mounting collect! coord n-coord new-tree true
-                (and (component? old-tree) (element? new-tree))
-                  do
-                    collect-own-unmounting collect! coord n-coord (respo.util.format/coerce-component old-tree) true
-                    match (component-tree old-tree)
-                      (:none) (find-element-diffs collect! coord n-coord legacy-nil new-tree)
-                      (:some old-child-tree)
-                        do (find-element-diffs collect! coord n-coord old-child-tree new-tree)
-                          collect-event-refreshing collect! coord n-coord $ assert-type new-tree 'Struct
-                (and (element? old-tree) (component? new-tree))
-                  let
-                      new-coord $ append coord $ component-name new-tree
-                    match (component-tree new-tree)
-                      (:none) (find-element-diffs collect! new-coord n-coord old-tree legacy-nil)
-                      (:some new-child-tree)
-                        do (find-element-diffs collect! new-coord n-coord old-tree new-child-tree) (collect-event-refreshing collect! new-coord n-coord new-child-tree)
-                    collect-own-mounting collect! coord n-coord (respo.util.format/coerce-component new-tree) true
-                (and (element? old-tree) (element? new-tree))
-                  if
-                    not= (element-name old-tree) (element-name new-tree)
-                    do (collect-unmounting collect! coord n-coord old-tree true)
-                      collect! $ DomPatch :replace-element coord n-coord new-tree
-                      collect-mounting collect! coord n-coord new-tree true
-                    do
-                      find-props-diffs collect! coord n-coord (element-attrs old-tree) (element-attrs new-tree)
-                      let
-                          old-ref-option $ element-ref old-tree
-                          new-ref-option $ element-ref new-tree
-                        when (not= old-ref-option new-ref-option)
-                          when (js-present? old-ref-option)
-                            collect! $ DomPatch :effect-before-update coord n-coord $ fn (_target) (old-ref-option legacy-nil)
-                          when (js-present? new-ref-option)
-                            collect! $ DomPatch :effect-update coord n-coord $ fn (target) (new-ref-option target)
-                      let
-                          old-style $ element-style old-tree
-                          new-style $ element-style new-tree
-                        if (not= old-style new-style) (find-style-diffs collect! coord n-coord old-style new-style)
-                      let
-                          old-events $ keys-non-nil $ element-event old-tree
-                          new-events $ keys-non-nil $ element-event new-tree
-                        when (not= old-events new-events)
-                          let
-                              added-events $ difference new-events old-events
-                              removed-events $ difference old-events new-events
-                            &doseq (event-name added-events)
-                              collect! $ DomPatch :set-event coord n-coord event-name
-                            &doseq (event-name removed-events)
-                              collect! $ DomPatch :rm-event coord n-coord event-name
-                      let
-                          old-children $ element-children old-tree
-                          new-children $ element-children new-tree
-                        if
-                          and dev? $ detect-keys-dup $ map new-children
-                            fn (entry)
-                              hint-fn $ {}
-                                :args $ [] 'respo.schema/ChildPair
-                                :return 'Dynamic
-                              :key entry
-                          js/console.error "|Parent that has dups" new-tree
-                        find-children-diffs collect! coord n-coord 0 old-children new-children
-                true $ js/console.warn "|Diffing unknown params" old-tree new-tree
+          :code $ quote $ defn find-element-diffs (collect! coord n-coord old-tree new-tree)
+            cond
+                identical? old-tree new-tree
+                , &unit
+              (and (or (nil? old-tree) (component? old-tree) (element? old-tree)) (or (nil? new-tree) (component? new-tree) (element? new-tree)))
+                find-render-node-diffs collect! coord n-coord
+                  if (nil? old-tree) (Option :none)
+                    Option :some $ respo.util.detect/as-render-node old-tree
+                  if (nil? new-tree) (Option :none)
+                    Option :some $ respo.util.detect/as-render-node new-tree
+              true $ js/console.warn "|Diffing unknown params" old-tree new-tree
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
@@ -4373,6 +4317,115 @@
                 [] $ [] :class-name |new
               assert |one-replacement-is-produced $ = 1 $ count @effects
             :tags $ #{} :unit
+        'find-render-node-diffs $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn find-render-node-diffs (collect! coord n-coord old-option new-option)
+            match old-option
+              (:none)
+                match new-option
+                  (:none) &unit
+                  (:some new-node)
+                    do
+                      collect! $ DomPatch :add-element coord n-coord $ respo.util.detect/render-node-value new-node
+                      respo.render.effect/collect-mounting-node collect! coord n-coord new-node true
+              (:some old-node)
+                match new-option
+                  (:none)
+                    do (respo.render.effect/collect-unmounting-node collect! coord n-coord old-node true)
+                      collect! $ DomPatch :rm-element coord n-coord
+                  (:some new-node)
+                    match old-node
+                      (:component old-tree)
+                        match new-node
+                          (:component new-tree)
+                            if (identical? old-tree new-tree) &unit $ let
+                                next-coord $ append coord $ :name new-tree
+                              if
+                                = (:name old-tree) (:name new-tree)
+                                do (collect-updating collect! :before-update coord n-coord old-tree new-tree)
+                                  find-render-node-diffs collect! next-coord n-coord (:tree old-tree) (:tree new-tree)
+                                  collect-updating collect! :update coord n-coord old-tree new-tree
+                                do (respo.render.effect/collect-unmounting-node collect! coord n-coord old-node true)
+                                  collect! $ DomPatch :replace-element coord n-coord new-tree
+                                  respo.render.effect/collect-mounting-node collect! coord n-coord new-node true
+                          (:element new-tree)
+                            do (collect-own-unmounting collect! coord n-coord old-tree true)
+                              match (:tree old-tree)
+                                (:none)
+                                  find-render-node-diffs collect! coord n-coord (Option :none) (Option :some new-node)
+                                (:some old-child-tree)
+                                  do
+                                    find-render-node-diffs collect! coord n-coord (Option :some old-child-tree) (Option :some new-node)
+                                    collect-event-refreshing-node collect! coord n-coord new-node
+                      (:element old-tree)
+                        match new-node
+                          (:component new-tree)
+                            let
+                                new-coord $ append coord $ :name new-tree
+                              match (:tree new-tree)
+                                (:none)
+                                  find-render-node-diffs collect! new-coord n-coord (Option :some old-node) (Option :none)
+                                (:some new-child-tree)
+                                  do
+                                    find-render-node-diffs collect! new-coord n-coord (Option :some old-node) (Option :some new-child-tree)
+                                    collect-event-refreshing-node collect! new-coord n-coord new-child-tree
+                              collect-own-mounting collect! coord n-coord new-tree true
+                          (:element new-tree)
+                            if (identical? old-tree new-tree) &unit $ let
+                                legacy-nil nil
+                              if
+                                not= (:name old-tree) (:name new-tree)
+                                do (respo.render.effect/collect-unmounting-node collect! coord n-coord old-node true)
+                                  collect! $ DomPatch :replace-element coord n-coord new-tree
+                                  respo.render.effect/collect-mounting-node collect! coord n-coord new-node true
+                                do
+                                  find-props-diffs collect! coord n-coord (:attrs old-tree) (:attrs new-tree)
+                                  let
+                                      old-ref-option $ :ref old-tree
+                                      new-ref-option $ :ref new-tree
+                                    when (not= old-ref-option new-ref-option)
+                                      when (js-present? old-ref-option)
+                                        collect! $ DomPatch :effect-before-update coord n-coord $ fn (_target) (old-ref-option legacy-nil)
+                                      when (js-present? new-ref-option)
+                                        collect! $ DomPatch :effect-update coord n-coord $ fn (target) (new-ref-option target)
+                                  let
+                                      old-style $ :style old-tree
+                                      new-style $ :style new-tree
+                                    if (not= old-style new-style) (find-style-diffs collect! coord n-coord old-style new-style)
+                                  let
+                                      old-events $ keys-non-nil $ :event old-tree
+                                      new-events $ keys-non-nil $ :event new-tree
+                                    when (not= old-events new-events)
+                                      let
+                                          added-events $ difference new-events old-events
+                                          removed-events $ difference old-events new-events
+                                        &doseq (event-name added-events)
+                                          collect! $ DomPatch :set-event coord n-coord event-name
+                                        &doseq (event-name removed-events)
+                                          collect! $ DomPatch :rm-event coord n-coord event-name
+                                  let
+                                      old-children $ :children old-tree
+                                      new-children $ :children new-tree
+                                    if
+                                      and dev? $ detect-keys-dup $ map new-children
+                                        fn (entry)
+                                          hint-fn $ {}
+                                            :args $ [] 'respo.schema/ChildPair
+                                            :return 'Dynamic
+                                          :key entry
+                                      js/console.error "|Parent that has dups" new-tree
+                                    find-children-diffs collect! coord n-coord 0 old-children new-children
+            , &unit
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ []
+              :: 'Fn $ {} (:return 'Unit)
+                :args $ [] 'respo.schema/DomPatch
+              :: 'List 'CoordKey
+              :: 'List 'Number
+              :: 'Option 'respo.schema/RenderNode
+              :: 'Option 'respo.schema/RenderNode
+            :features $ #{} :js-ffi
+            :generics $ [] 'CoordKey
         'find-style-diffs $ %{} 'CodeEntry
           :doc "|Compares two style maps and collects effects for additions, removals, or updates."
           :code $ quote $ defn find-style-diffs (collect! c-coord coord old-style new-style)

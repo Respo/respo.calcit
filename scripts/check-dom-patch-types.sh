@@ -31,6 +31,14 @@ expect_failure \
   'RenderNode::element` payload 1 expects type' \
   'respo.schema/RenderNode :element 1'
 
+"$calcit_bin" eval --dep ./calcit.cirru \
+  'respo.render.diff/find-render-node-diffs (fn (op) &unit) ([]) ([]) (%:: Option :none) (%:: Option :none)' >/dev/null
+
+expect_failure \
+  'an optional Number used as a diff node' \
+  'Function `respo.render.diff/find-render-node-diffs` arg 4 expects type' \
+  'respo.render.diff/find-render-node-diffs (fn (op) &unit) ([]) ([]) (%:: Option :some 1) (%:: Option :none)'
+
 expect_failure \
   'a String in a move source index' \
   'but got `:string`' \
