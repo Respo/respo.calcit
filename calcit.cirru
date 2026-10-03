@@ -5116,10 +5116,12 @@
                     hint-fn $ {}
                       :args $ [] 'respo.schema/ChildPair
                       :return 'String
-                    match
-                      option:unwrap $ :node entry
-                      (:element child) (element->string child)
-                      (:component _) (raise |expected-purified-element)
+                    match (:node entry)
+                      (:none) |
+                      (:some node)
+                        match node
+                          (:element child) (element->string child)
+                          (:component _) (raise |expected-purified-element)
                 text-inside $ element-content (element :name) attrs children
                 tailored-props $ &let
                   props $ dissoc (dissoc attrs :innerHTML) :inner-text
@@ -5225,30 +5227,38 @@
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'String)
             :args $ [] 'Dynamic
-          :tests $ [] $ %{} 'TestEntry
-            :name |serializes-component-root-after-muting-option-tree
-            :code $ quote $ let
-                element $ %{} respo.schema/Element (:name :div)
-                  :coord $ %none
-                  :attrs $ []
-                  :style $ []
-                  :event $ {} $ :click
-                    fn (_event _dispatch!)
-                      hint-fn $ {}
-                        :args $ [] (:: 'Map 'Tag 'Dynamic)
-                          :: 'Fn $ {}
-                            :args $ [] 'Dynamic
-                            :return 'Unit
-                        :return 'Unit
-                      , &unit
-                  :children $ []
-                  :ref nil
-                component $ %{} respo.schema/Component (:name :root)
-                  :effects $ []
-                  :listeners $ []
-                  :tree $ %some $ respo.util.detect/as-render-node element
-              assert |component-root-is-serialized $ &= |<div></div> $ make-string component
-            :tags $ #{} :unit
+          :tests $ []
+            %{} 'TestEntry
+              :name |serializes-component-root-after-muting-option-tree
+              :code $ quote $ let
+                  element $ %{} respo.schema/Element (:name :div)
+                    :coord $ %none
+                    :attrs $ []
+                    :style $ []
+                    :event $ {} $ :click
+                      fn (_event _dispatch!)
+                        hint-fn $ {}
+                          :args $ [] (:: 'Map 'Tag 'Dynamic)
+                            :: 'Fn $ {}
+                              :args $ [] 'Dynamic
+                              :return 'Unit
+                          :return 'Unit
+                        , &unit
+                    :children $ []
+                    :ref nil
+                  component $ %{} respo.schema/Component (:name :root)
+                    :effects $ []
+                    :listeners $ []
+                    :tree $ %some $ respo.util.detect/as-render-node element
+                assert |component-root-is-serialized $ &= |<div></div> $ make-string component
+              :tags $ #{} :unit
+            %{} 'TestEntry (:name |skips-empty-child-pairs)
+              :code $ quote $ let
+                  leaf $ respo.core/span $ {} (:inner-text |leaf)
+                  parent $ &struct:assoc
+                    respo.core/div $ {}
+                    , :children $ [] (respo.util.detect/make-child-pair :before nil) (respo.util.detect/make-child-pair :leaf leaf) (respo.util.detect/make-child-pair :after nil)
+                assert= |<div><span>leaf</span></div> $ make-string parent
         'props->html $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn props->html (props)
             let
@@ -7230,9 +7240,7 @@
                 nil? markup
                 , nil
               (component? markup)
-                match (component-tree markup)
-                  (:none) (raise |tree-is-empty)
-                  (:some tree) (purify-element tree)
+                purify-render-node $ respo.util.detect/as-render-node markup
               (element? markup) (purify-element-node markup)
               true $ do (js/console.warn |Unknown-markup-during-purify: markup) nil
           :examples $ []
@@ -7275,17 +7283,7 @@
               :tags $ #{} :unit
         'purify-element-node $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn purify-element-node (markup)
-            let
-                element $ assert-type markup respo.schema/Element
-              -> element (assoc :ref nil)
-                assoc :event $ {}
-                assoc :children $ -> (:children element)
-                  map $ fn (pair)
-                    hint-fn $ {}
-                      :args $ [] 'respo.schema/ChildPair
-                      :return 'respo.schema/ChildPair
-                    respo.util.detect/make-child-pair (:key pair)
-                      purify-element $ respo.util.detect/child-pair-value pair
+            purify-render-node $ respo.schema/RenderNode :element $ assert-type markup respo.schema/Element
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Element)
             :args $ [] 'Dynamic
@@ -7300,6 +7298,52 @@
           :schema $ :: 'Fn $ {}
             :args $ [] $ :: 'Map 'Tag 'Dynamic
             :return $ :: 'List 'Tag
+        'purify-render-node $ %{} 'CodeEntry
+          :doc "|通过 RenderNode 变体递归清理事件和 ref，移除组件包装；保留 ChildPair key、nil 节点和空组件树报错。"
+          :code $ quote $ defn purify-render-node (node)
+            match node
+              (:component component)
+                match (:tree component)
+                  (:none) (raise |tree-is-empty)
+                  (:some tree) (purify-render-node tree)
+              (:element element)
+                -> element (assoc :ref nil)
+                  assoc :event $ {}
+                  assoc :children $ map (:children element)
+                    fn (pair)
+                      hint-fn $ {}
+                        :args $ [] 'respo.schema/ChildPair
+                        :return 'respo.schema/ChildPair
+                      &struct:assoc pair :node $ option:map (:node pair)
+                        fn (child)
+                          hint-fn $ {}
+                            :args $ [] 'respo.schema/RenderNode
+                            :return 'respo.schema/RenderNode
+                          respo.schema/RenderNode :element $ purify-render-node child
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/Element)
+            :args $ [] 'respo.schema/RenderNode
+            :features $ #{} :js-ffi
+          :tests $ [] $ %{} 'TestEntry (:name |preserves-nested-components-and-empty-child)
+            :code $ quote $ let
+                leaf $ respo.schema/Element :name :span :coord (%none) :attrs
+                  [] $ [] :inner-text |leaf
+                  , :style ([]) :children ([]) :ref nil :event $ {} (:click nil)
+                inner $ respo.schema/Component :name :inner :effects ([]) :listeners ([]) :tree $ %some (respo.util.detect/as-render-node leaf)
+                outer $ respo.schema/Component :name :outer :effects ([]) :listeners ([]) :tree $ %some (respo.util.detect/as-render-node inner)
+                root $ respo.schema/Element :name :div :coord (%none) :attrs ([]) :style ([]) :ref nil :event ({}) :children $ [] (respo.util.detect/make-child-pair 7 outer) (respo.util.detect/make-child-pair |empty nil)
+                purified $ purify-render-node $ respo.util.detect/as-render-node root
+                child $ &list:nth (:children purified) 0
+                empty-pair $ &list:nth (:children purified) 1
+                cleaned $ respo.util.detect/as-element $ respo.util.detect/child-pair-value child
+              assert= 7 $ :key child
+              assert= |empty $ :key empty-pair
+              assert |nil-child-preserved $ option:none? $ :node empty-pair
+              assert= :span $ :name cleaned
+              assert= (:attrs leaf) (:attrs cleaned)
+              assert= ({}) (:event cleaned)
+              assert= 1 $ count $ :event leaf
+              assert= outer $ respo.util.detect/child-pair-value $ &list:nth (:children root) 0
         'scalar-attribute-text $ %{} 'CodeEntry (:doc "|将 DOM/SSR 属性值边界内已识别的标量转换为文本；拒绝集合及任意宿主对象。")
           :code $ quote $ defn scalar-attribute-text (x)
             cond
