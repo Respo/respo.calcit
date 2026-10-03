@@ -4712,79 +4712,7 @@
           :doc "|internal function to create a DOM element from a virtual element. handles properties, styles, events, and recursively creates child elements."
           :code $ quote $ defn make-element (virtual-element listener-builder coord & svg-context)
             assert |coord-is-required $ some? coord
-            if (component? virtual-element)
-              make-element
-                option:unwrap $ component-tree virtual-element
-                , listener-builder
-                  append coord $ component-name virtual-element
-                  if (empty? svg-context) false $ &list:first svg-context
-              let
-                  tag-name $ turn-string $ element-name virtual-element
-                  svg? $ or (= tag-name |svg)
-                    if (empty? svg-context) false $ &list:first svg-context
-                  child-svg? $ and svg? $ not= tag-name |foreignObject
-                  attrs $ element-attrs virtual-element
-                  style $ element-style virtual-element
-                  events $ element-event virtual-element
-                  children $ element-children virtual-element
-                  element $ narrow-element $ if svg? (browser/create-element-ns |http://www.w3.org/2000/svg tag-name) (browser/create-element tag-name)
-                  child-elements $ map
-                    filter children $ fn (pair)
-                      hint-fn $ {}
-                        :args $ [] 'respo.schema/ChildPair
-                        :return 'Bool
-                      option:some? $ :node pair
-                    fn (pair)
-                      hint-fn $ {}
-                        :args $ [] 'respo.schema/ChildPair
-                        :return 'respo.dom/DomElement
-                      let
-                          k $ :key pair
-                          child $ respo.util.detect/child-pair-value pair
-                        when (nil? k) (js/console.warn |nil-key-is-bad-for-Respo)
-                        make-element child listener-builder (append coord k) child-svg?
-                each attrs $ fn (entry)
-                  hint-fn $ {}
-                    :args $ [] $ :: 'List 'Dynamic
-                    :return 'Dynamic
-                  let
-                      prop-str $ to-string $ respo.util.list/pair-key entry
-                      v $ respo.util.list/pair-value entry
-                    if (.!startsWith prop-str |data-)
-                      if (calcit.core/non-nil? v)
-                        js-set
-                          browser/element-dataset $ host-element element
-                          .!slice prop-str 5
-                          , v
-                        js-delete
-                          browser/element-dataset $ host-element element
-                          .!slice prop-str 5
-                      if svg?
-                        when (some? v)
-                          browser/element-set-attribute! (host-element element) (svg-attr-name prop-str) (respo.util.format/scalar-attribute-text v)
-                        let
-                            k $ dashed->camel prop-str
-                          if (calcit.core/non-nil? v) (aset element k v)
-                each style $ fn (entry)
-                  hint-fn $ {}
-                    :args $ [] $ :: 'List 'Dynamic
-                    :return 'Dynamic
-                  let
-                      style-name $ to-string $ respo.util.list/pair-key entry
-                      k $ dashed->camel style-name
-                      v $ respo.util.list/pair-value entry
-                    aset
-                      browser/element-style $ host-element element
-                      , k $ get-style-value v k
-                &doseq (entry events)
-                  let
-                      event-handler $ respo.util.list/pair-value entry
-                    when (some? event-handler)
-                      install-listener! element (respo.util.list/pair-key entry) listener-builder coord
-                each child-elements $ fn (child-element)
-                  if (calcit.core/non-nil? child-element)
-                    browser/append-child! (host-element element) (host-element child-element)
-                , element
+            make-render-node-element (respo.util.detect/as-render-node virtual-element) listener-builder coord $ if (empty? svg-context) false $ &list:nth svg-context 0
           :examples $ []
           :schema $ :: 'Fn $ {} (:rest 'Bool) (:return 'respo.dom/DomElement)
             :args $ [] 'Struct
@@ -4793,6 +4721,93 @@
                 :return $ :: 'Fn $ {} (:return 'Unit)
                   :args $ [] 'respo.dom/DomEvent $ :: 'List 'Dynamic
               :: 'List 'Dynamic
+            :features $ #{} :js-ffi
+        'make-render-node-element $ %{} 'CodeEntry
+          :doc "|根据 RenderNode 变体递归创建 DOM，保留组件坐标、SVG 上下文、事件和子节点创建顺序。"
+          :code $ quote $ defn make-render-node-element (node listener-builder coord svg-context)
+            match node
+              (:component component)
+                make-render-node-element
+                  option:unwrap $ :tree component
+                  , listener-builder
+                    append coord $ :name component
+                    , svg-context
+              (:element virtual-element)
+                let
+                    tag-name $ turn-string $ :name virtual-element
+                    svg? $ or (= tag-name |svg) svg-context
+                    child-svg? $ and svg? $ not= tag-name |foreignObject
+                    attrs $ :attrs virtual-element
+                    style $ :style virtual-element
+                    events $ :event virtual-element
+                    children $ :children virtual-element
+                    element $ narrow-element $ if svg? (browser/create-element-ns |http://www.w3.org/2000/svg tag-name) (browser/create-element tag-name)
+                    child-elements $ map
+                      filter children $ fn (pair)
+                        hint-fn $ {}
+                          :args $ [] 'respo.schema/ChildPair
+                          :return 'Bool
+                        option:some? $ :node pair
+                      fn (pair)
+                        hint-fn $ {}
+                          :args $ [] 'respo.schema/ChildPair
+                          :return 'respo.dom/DomElement
+                        let
+                            k $ :key pair
+                            child $ option:unwrap $ :node pair
+                          when (nil? k) (js/console.warn |nil-key-is-bad-for-Respo)
+                          make-render-node-element child listener-builder (append coord k) child-svg?
+                  each attrs $ fn (entry)
+                    hint-fn $ {}
+                      :args $ [] $ :: 'List 'Dynamic
+                      :return 'Dynamic
+                    let
+                        prop-str $ to-string $ respo.util.list/pair-key entry
+                        v $ respo.util.list/pair-value entry
+                      if (.!startsWith prop-str |data-)
+                        if (calcit.core/non-nil? v)
+                          js-set
+                            browser/element-dataset $ host-element element
+                            .!slice prop-str 5
+                            , v
+                          js-delete
+                            browser/element-dataset $ host-element element
+                            .!slice prop-str 5
+                        if svg?
+                          when (some? v)
+                            browser/element-set-attribute! (host-element element) (svg-attr-name prop-str) (respo.util.format/scalar-attribute-text v)
+                          let
+                              k $ dashed->camel prop-str
+                            if (calcit.core/non-nil? v) (aset element k v)
+                  each style $ fn (entry)
+                    hint-fn $ {}
+                      :args $ [] $ :: 'List 'Dynamic
+                      :return 'Dynamic
+                    let
+                        style-name $ to-string $ respo.util.list/pair-key entry
+                        k $ dashed->camel style-name
+                        v $ respo.util.list/pair-value entry
+                      aset
+                        browser/element-style $ host-element element
+                        , k $ get-style-value v k
+                  &doseq (entry events)
+                    let
+                        event-handler $ respo.util.list/pair-value entry
+                      when (some? event-handler)
+                        install-listener! element (respo.util.list/pair-key entry) listener-builder coord
+                  each child-elements $ fn (child-element)
+                    if (calcit.core/non-nil? child-element)
+                      browser/append-child! (host-element element) (host-element child-element)
+                  , element
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'respo.dom/DomElement)
+            :args $ [] 'respo.schema/RenderNode
+              :: 'Fn $ {}
+                :args $ [] 'Tag
+                :return $ :: 'Fn $ {} (:return 'Unit)
+                  :args $ [] 'respo.dom/DomEvent $ :: 'List 'Dynamic
+              :: 'List 'Dynamic
+              , 'Bool
             :features $ #{} :js-ffi
         'style->string $ %{} 'CodeEntry
           :doc "|this functions is used inside DOM operations, inserting styles into a `<style>` element. to render to HTML, use `style->html` instead"
