@@ -1,6 +1,6 @@
 ---
-title: "Typed dispatch with type slots"
-summary: "Bind Respo's dispatch operation type once per Calcit entry so d! shorthand is checked across the whole component call graph"
+title: "Dispatch 类型槽：配置与当前迁移状态"
+summary: "按 entry 配置应用 Op，了解尚未贯通的回调签名与 #195 的验证方式"
 scope: "module"
 kind: "guide"
 category: "ecosystem"
@@ -9,140 +9,79 @@ aliases:
   - "typed dispatch"
   - "dispatch op"
   - "dispatch-op"
-  - "d! enum shorthand"
 entry_for:
   - "calcit config set-type-slot"
   - "*dispatch-op"
-  - "d! $ ::"
-  - "invalid dispatch variant"
+  - "d! enum shorthand"
 ---
 
-# Typed dispatch with type slots
+# Dispatch 类型槽：配置与当前迁移状态
 
-Respo declares the `:dispatch-op` type slot in `respo.schema`. An application binds that slot to its own `Op` enum once for each Calcit entry. The compiler can then type the `d!` callback throughout the reachable component tree without adding a generic type parameter to every component, element, listener, and render helper.
+Respo 定义了 `respo.schema/*dispatch-op`，demo 的入口也配置了应用 Op。
+**当前事件 handler、保存的 dispatch 函数及 wrap-dispatch 签名仍使用 Dynamic，
+配置类型槽本身不能保证事件回调中的错误 Op 会被发现。** #195 正在迁移，
+不应把配置成功或正常 demo 编译成功视为 typed dispatch 的验收。
 
-## Application setup
+## 每个 entry 单独配置
 
-Define the application operation enum as usual, then bind its full definition path in the default entry configuration:
+应用先定义 Op，再配置完整的 namespace/definition 路径：
 
 ```bash
 calcit config set-type-slot :dispatch-op app.schema/Op
 calcit config type-slots
 ```
 
-The command writes this shape to `calcit.cirru`:
-
-```cirru.no-check
-:configs $ {}
-  :init-fn |app.main/main!
-  :type-slots $ {}
-    :dispatch-op |app.schema/Op
-```
-
-The type path must contain both namespace and definition. A bare `Op` is rejected because configuration is loaded before Calcit expressions are evaluated.
-
-No type-slot call belongs in `main!`:
-
-```cirru.no-check
-defn main! ()
-  render-app!
-```
-
-The selected entry installs its bindings before any definition is preprocessed, so the same choice applies to the whole reachable call graph and does not depend on which component is compiled first.
-
-## Named entries are independent
-
-A named entry is a complete configuration and does not inherit `:configs.type-slots`. Bind the slot explicitly when another entry compiles Respo components:
+命名 entry 不继承默认入口的配置；检查和生成 JS 应选择同一个 entry：
 
 ```bash
 calcit config set-type-slot --entry test :dispatch-op app.test-schema/TestOp
 calcit config type-slots --entry test
+calcit --entry test --check-only
+calcit --entry test js
 ```
 
-Client and server entries can bind the same slot to different enums because each invocation selects one entry:
+需要开放边界时，可以明确配置 `:dynamic`。不要将它作为修复错误 Op 的办法。
+入口绑定放在 config，不在 main! 中调用旧 bind-type，也不依赖
+with-type-slot wrapper。不同 Calcit 版本的未绑定 slot 行为存在差异，
+因此应检查所选 entry 的实际配置。
 
-```bash
-calcit config set-type-slot :dispatch-op app.schema/ClientOp
-calcit config set-type-slot --entry server :dispatch-op app.schema/ServerOp
-```
+## 目前可检查的具体回调标注
 
-Use `:dynamic` as an explicit opt-out when an entry intentionally does not want dispatch checking:
-
-```bash
-calcit config set-type-slot --entry test :dispatch-op :dynamic
-```
-
-## Dispatch shorthand
-
-Respo's event handler schema accepts `'*dispatch-op`. Once the entry binds that slot, the compiler knows that `d!` accepts the configured enum and can resolve the short tuple syntax:
+下面展示直接标注应用 Op 的方式；需替换为项目实际类型路径：
 
 ```cirru.no-check
 button $ {}
   :on-click $ fn (event d!)
-    d! $ :: :toggle (:id task)
+    hint-fn $ {} (:return 'Unit)
+      :args $ [] (:: 'Map 'Tag 'Dynamic)
+        :: 'Fn $ {} (:return 'Unit)
+          :args $ [] 'app.schema/Op
+    d! $ app.schema/Op :clear
 ```
 
-For `app.schema/Op`, this is checked like `%:: app.schema/Op :toggle (:id task)`. The compiler validates the variant name, payload count, and payload types. Writing an unknown variant such as `:: :toogle` blocks code generation with the enum diagnostic.
+这只能证明该回调的调用约束，不能代替框架内的类型贯通。#195 还需要让
+render!、保存的 dispatch、事件与 listener 保持同一个应用 Op，并验证
+旧 cursor list、tag 调用的兼容性。不能通过放宽成 Dynamic 伪造验收。
 
-An explicit enum tuple remains valid and can be useful outside an inferred dispatch callback:
+## 可重复的迁移探针
 
-```cirru.no-check
-d! $ %:: app.schema/Op :toggle (:id task)
-```
-
-If `d! $ :: ...` is not checked, first confirm that the selected entry binds `:dispatch-op` and that the callback schema still flows from a Respo event/listener API. A callback that has fallen back to `:dynamic` cannot drive the shorthand rewrite.
-
-## Migration from older setup
-
-Older applications may contain `bind-type` or wrap an entry body with `with-type-slot`:
-
-```cirru.no-check
-defn main! () $ with-type-slot (:dispatch-op Op)
-  render-app!
-```
-
-Move the binding to config and remove the wrapper:
+在 Respo 源码仓库中运行：
 
 ```bash
-calcit config set-type-slot :dispatch-op app.schema/Op
+CALCIT_BIN=/path/to/calcit-0.28.0 node scripts/probe-dispatch-boundary.mjs
 ```
 
-`with-type-slot` remains a compile-time compatibility form in Calcit and is erased for both single and multiple bodies; adding `do` is no longer required. Entry configuration is preferred because it states the build-wide type choice directly and avoids making a global compile decision look like runtime or lexical behavior. `bind-type` is obsolete and should not be used.
+可用 `CHECK_CALCIT_BIN` 指定候选编译器做检查；源码编辑仍由匹配项目 pin 的
+0.28.0 完成。脚本在临时副本中使用 CLI 修改 demo 入口和 handler schema，
+覆盖 map/struct props、错误 Number、合法 Op、旧 list/tag 及显式回调标注。
+输出是调查结果，不是发布门禁的成功标记；临时副本结束后删除。
 
-## Verification and troubleshooting
+最新结果、对类型槽与泛型路线的约束见
+[迁移调查记录](../../history/20261004-dispatch-boundary-probe.md)。
 
-After changing the enum or entry binding, run:
-
-```bash
-calcit config type-slots
-calcit --check-only
-calcit js
-```
-
-For a named entry, pass the same selection to inspection and compilation:
-
-```bash
-calcit config type-slots --entry server
-calcit --entry server --check-only
-calcit --entry server js
-```
-
-Common failures:
-
-- `expects a full namespace/definition path`: use `app.schema/Op`, not `Op`.
-- configured definition is missing: ensure the namespace belongs to the project or to a module listed by that same entry.
-- default entry works but a named entry does not: named entries do not inherit the default binding or module list.
-- shorthand silently stays dynamic: inspect the event/listener callback schema and ensure it accepts `'*dispatch-op`.
-- Rust execution works but generated JS fails around old slot runtime code: align the Calcit CLI and `@calcit/procs` versions, then regenerate JS; current Calcit erases `with-type-slot` before codegen.
-
-## Reusing this guide with `calcit docs`
-
-When Respo is installed as a module, search and reopen this page instead of copying its rules into each application:
+安装为模块后，可以通过 CLI 重读本指南：
 
 ```bash
 calcit docs search 'typed dispatch' --module respo.calcit
-calcit docs search 'dispatch-op' --module respo.calcit
 calcit docs read type-slots.md --full --module respo.calcit
 ```
-
-Use `calcit docs scopes` if the installed module scope has a different displayed name.

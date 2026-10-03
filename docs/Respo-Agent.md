@@ -476,7 +476,8 @@ calcit config type-slots
 
 The path must be a full `namespace/definition`. Named entries are independent and do not inherit the default binding. No `bind-type` call or `with-type-slot` wrapper belongs in `main!`.
 
-With the slot bound, Respo's `'*dispatch-op` callback schema types `d!`, and short dispatch tuples are validated against the configured enum:
+当前 #195 尚未贯通签名：配置 slot 本身不会让 Dynamic handler 的 d! 获得应用 Op。
+下面是迁移目标的示意写法，当前不能据此宣称错误 variant 已被检查：
 
 ```cirru.no-check
 button $ {}
@@ -484,7 +485,9 @@ button $ {}
     d! $ :: :toggle (:id task)
 ```
 
-The compiler resolves this like `%:: app.schema/Op :toggle ...` and checks the variant name, payload count, and payload types. If shorthand is not checked, inspect `calcit config type-slots` and the callback schema; a dynamic callback provides no enum evidence.
+需要检查当前回调时，先明确标注应用的具体 Op，并执行正反例验证。
+类型槽原型、props 回调推断与旧 list/tag 兼容性仍需处理；实际状态与可重复探针
+统一见 [dispatch 类型槽指南](./guide/type-slots.md)。
 
 ---
 
