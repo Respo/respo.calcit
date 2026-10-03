@@ -80,6 +80,9 @@ jobs:
       - name: Test keyed node moves
         run: yarn test-keyed-moves
 
+      - name: Verify mixed cursor keys
+        run: yarn test-cursor-keys
+
       - name: Test patch lookup and duplicate keys
         run: yarn test-patch-lookup
 

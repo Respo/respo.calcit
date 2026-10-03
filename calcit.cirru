@@ -2709,9 +2709,13 @@
             loop
                 current states
                 xs path
+              hint-fn $ {}
+                :args $ [] 'Dynamic $ :: 'List 'KeyInput
+                :return 'Dynamic
+                :generics $ [] 'KeyInput
               if (empty? xs) current $ let
-                  current-map $ unsafe-coerce current $ :: 'Map 'Tag (:: 'JsNullish 'Dynamic)
-                  key $ assert-type (&list:first xs) 'Tag
+                  current-map $ unsafe-coerce current $ :: 'Map 'KeyInput (:: 'JsNullish 'Dynamic)
+                  key $ &list:nth xs 0
                   next-option $ get current-map key
                   next-value $ match next-option
                     (:none) nil
@@ -2719,30 +2723,46 @@
                 recur next-value $ &list:rest xs
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ [] 'Dynamic $ :: 'List 'Tag
+            :args $ [] 'Dynamic $ :: 'List 'KeyInput
             :features $ #{} :js-ffi
+            :generics $ [] 'KeyInput
         'update-state-tree $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn update-state-tree (states cursor new-state)
-            let
-                typed-cursor $ unsafe-coerce cursor $ :: List Tag
-              assoc-in states
-                concat typed-cursor $ [] :data
-                , new-state
+            assoc-in states
+              concat cursor $ [] :data
+              , new-state
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Dynamic)
             :args $ [] 'Dynamic (:: 'List 'Dynamic) 'Dynamic
             :features $ #{} :js-ffi
-          :tests $ [] $ %{} 'TestEntry (:name |updates-root-state)
-            :code $ quote $ let
-                states1 $ update-state-tree ({}) ([]) :ready
-                value $ get-state-at states1 $ [] :data
-              assert |root-state-is-updated $ &= :ready value
-            :tags $ #{} :regression :unit
+          :tests $ []
+            %{} 'TestEntry (:name |updates-root-state)
+              :code $ quote $ let
+                  states1 $ update-state-tree ({}) ([]) :ready
+                  value $ get-state-at states1 $ [] :data
+                assert |root-state-is-updated $ &= :ready value
+              :tags $ #{} :regression :unit
+            %{} 'TestEntry (:name |preserves-mixed-tag-string-path)
+              :code $ quote $ let
+                  states $ update-state-tree ({}) ([] :panel |task-1) :ready
+                assert=
+                  {} $ :panel $ {}
+                    |task-1 $ {} $ :data :ready
+                  , states
+                assert= :ready $ get-state-at states $ [] :panel |task-1 :data
+              :tags $ #{} :regression :unit
+            %{} 'TestEntry (:name |preserves-existing-number-key)
+              :code $ quote $ let
+                  states $ update-state-tree ({}) ([] 1) :ready
+                assert=
+                  {} $ 1 $ {} (:data :ready)
+                  , states
+                assert= :ready $ get-state-at states $ [] 1 :data
+              :tags $ #{} :regression :unit
         'update-state-tree-kv $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn update-state-tree-kv (states cursor k v)
             let
-                typed-cursor $ unsafe-coerce cursor $ :: List Tag
-                path $ concat typed-cursor $ [] :data
+                path $ concat cursor $ [] :data
                 state $ get-state-at states path
               if (calcit.core/non-nil? state)
                 if (map? state)
@@ -2757,11 +2777,22 @@
           :schema $ :: 'Fn $ {} (:return 'Dynamic)
             :args $ [] 'Dynamic (:: 'List 'Dynamic) 'Dynamic 'Dynamic
             :features $ #{} :js-ffi
+          :tests $ [] $ %{} 'TestEntry (:name |updates-mixed-key-map-without-rewriting-path)
+            :code $ quote $ let
+                states $ update-state-tree ({}) ([] :panel |task-1)
+                  {} $ :draft |old
+                updated $ update-state-tree-kv states ([] :panel |task-1) :draft |new
+              assert=
+                {} $ :draft |new
+                get-state-at updated $ [] :panel |task-1 :data
+              assert=
+                {} $ :draft |old
+                get-state-at states $ [] :panel |task-1 :data
+            :tags $ #{} :regression :unit
         'update-state-tree-merge $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn update-state-tree-merge (states cursor state0 changes)
             let
-                typed-cursor $ unsafe-coerce cursor $ :: List Tag
-                path $ concat typed-cursor $ [] :data
+                path $ concat cursor $ [] :data
                 current-state $ get-state-at states path
                 state $ either current-state state0
               if (map? changes)
@@ -2790,14 +2821,28 @@
           :schema $ :: 'Fn $ {} (:return 'Dynamic)
             :args $ [] 'Dynamic (:: 'List 'Dynamic) 'Dynamic 'Dynamic
             :features $ #{} :js-ffi
-          :tests $ [] $ %{} 'TestEntry (:name |preserves-tree-on-invalid-base)
-            :code $ quote $ let
-                result $ update-state-tree-merge ({}) ([]) 1 $ {}
-              match (get result :data)
-                (:some value)
-                  assert |invalid-base-preserves-state $ &= 1 value
-                (:none) (assert |invalid-base-keeps-data false)
-            :tags $ #{} :regression :unit
+          :tests $ []
+            %{} 'TestEntry (:name |preserves-tree-on-invalid-base)
+              :code $ quote $ let
+                  result $ update-state-tree-merge ({}) ([]) 1 $ {}
+                match (get result :data)
+                  (:some value)
+                    assert |invalid-base-preserves-state $ &= 1 value
+                  (:none) (assert |invalid-base-keeps-data false)
+              :tags $ #{} :regression :unit
+            %{} 'TestEntry (:name |merges-mixed-key-map-without-rewriting-path)
+              :code $ quote $ let
+                  states $ update-state-tree ({}) ([] :panel |task-1)
+                    {} (:draft |old) (:locked? false)
+                  updated $ update-state-tree-merge states ([] :panel |task-1) ({})
+                    {} $ :draft |new
+                assert=
+                  {} (:draft |new) (:locked? false)
+                  get-state-at updated $ [] :panel |task-1 :data
+                assert=
+                  {} (:draft |old) (:locked? false)
+                  get-state-at states $ [] :panel |task-1 :data
+              :tags $ #{} :regression :unit
         'update-states $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn update-states (store cursor new-state)
             assoc store :states $ update-state-tree
@@ -2815,8 +2860,8 @@
               , cursor k v
           :examples $ []
           :schema $ :: 'Fn $ {}
-            :args $ [] (:: 'Map 'Tag 'Dynamic) (:: 'List 'Tag) 'K 'V
-            :generics $ [] 'K 'V
+            :args $ [] (:: 'Map 'Tag 'Dynamic) (:: 'List 'CursorKeyInput) 'K 'V
+            :generics $ [] 'K 'V 'CursorKeyInput
             :return $ :: 'Map 'Tag 'Dynamic
         'update-states-merge $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn update-states-merge (store cursor state0 changes)
