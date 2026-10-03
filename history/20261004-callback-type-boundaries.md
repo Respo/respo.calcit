@@ -112,9 +112,31 @@ runtime。正式质量门禁通过，没有扩大预算。
 编译器修复已保存在本地提交 `30874465`，尚未发布。全量 Rust 测试、clippy、
 TypeScript 编译已通过；`yarn check-all` 在 Agent interface 的迁移报告检查处
 失败：两个项目定义实际报告 `E_CALL_ARGUMENT_MISMATCH`，脚本预期
-`W_FN_ARG_TYPE_MISMATCH`。正在以未经修改的 main 核验来源，不能将整个编译器
-验证视为完成。已完成的 known assertion 与 spread 回归通过。
+`W_FN_ARG_TYPE_MISMATCH`。独立重建未经修改的 `b10dcad1` 后，三条诊断与修复版
+完全相同。测试预期已在本地提交 `3bd2d5bb` 精确更新，剩余集成门禁重新运行；
+不能将整个编译器验证视为完成。已完成的 known assertion 与 spread 回归通过。
 
 另一个 scratch 以 Number 单参函数调用 `build-effect`，正式与候选编译器均报告
 `W_FN_ARG_TYPE_MISMATCH`，指向调用第三个参数；确认保留泛型 callback 并未放开
 生命周期 method 的 arity 与参数合同。
+
+## #194 计数基线
+
+通过 `query search` 的结构化 AST 结果统计 project definition 的 `code@` 路径，
+排除依赖模块、schema、doc、examples 和 attached tests；保留宏模板及项目测试
+命名空间的定义代码。`b94962e` 为 124 处 `assert-type`、41 处 `unsafe-coerce`，
+当前为 125、41。新增的初值合同尚未带来 #194 要求的整体下降。
+
+当前主要区域：
+
+| 命名空间 | assert-type | unsafe-coerce |
+| --- | ---: | ---: |
+| respo.render.diff | 38 | 1 |
+| respo.render.patch | 11 | 4 |
+| respo.render.effect | 2 | 0 |
+| respo.render.html | 2 | 0 |
+| respo.core | 19 | 3 |
+| respo.cursor | 2 | 12 |
+
+完整逐项消除表、RenderNode / ChildPair 字段迁移、Tag/String cursor 合同及
+Calcium / TopixIM 两组真实下游回归仍需完成。
