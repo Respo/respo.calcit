@@ -1499,10 +1499,14 @@
                 :coord $ []
                 :args $ [] ~@args
                 :method $ fn (~args-var ~params-var)
+                  hint-fn $ {}
+                    :args $ [] (:: 'List 'Dynamic) (:: 'List 'Dynamic)
+                    :return 'Unit
                   let[] ~args ~args-var $ let[] ~params ~params-var $ ~
                     if (empty? body)
                       quasiquote $ do $ println (str-spaced |WARNING: ~effect-name "|lack code for handling effects!")
                       quasiquote $ do ~@body
+                  , &unit
           :examples $ [] $ quote
             defeffect log-message (message) (action el at-place?)
               if (= action :mount) (js/console.log message)
@@ -1510,6 +1514,17 @@
             :capabilities $ #{}
             :expansion $ :: 'Definition 'Fn
             :required $ [] 'SyntaxSymbol 'SyntaxList 'SyntaxList
+          :tests $ [] $ %{} 'TestEntry (:name |discards-body-result-after-running-effects)
+            :code $ quote $ let
+                hits $ atom 0
+                factory $ defeffect effect-result-probe (payload) (action target at?) (assert= :payload payload) (assert= :mount action) (assert= :target target) (assert= true at?) (swap! hits inc) |ignored-result
+                effect $ respo.util.detect/as-effect $ factory :payload
+              assert= &unit $
+                :method effect
+                :args effect
+                [] :mount :target true
+              assert= 1 $ deref hits
+            :tags $ #{} :regression :unit
         'defplugin $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defmacro defplugin (x params & body)
             assert "|expected symbol" $ symbol? x
