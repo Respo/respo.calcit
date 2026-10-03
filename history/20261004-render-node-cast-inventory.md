@@ -6,7 +6,10 @@
 宏模板中的转换保留。这里列出迁移路径，删除前仍需类型证明和语义回归。
 
 全项目 definition code 的计数：main `b94962e` 为 124 个 assert-type / 41 个
-unsafe-coerce；当前为 125 / 41。这个阶段尚未达到数量下降的验收要求。
+unsafe-coerce；初次盘点时为 125 / 41。该阶段尚未达到数量下降的验收要求。
+后续迁移与验证分别记录在本目录的 Component.tree、ChildPair、cursor、
+净化及事件定位说明中；这些初次盘点数字不代表最新状态。事件定位
+迁移又移除了 `find-event-target` 的两处 assert-type，未增加 unsafe-coerce。
 
 ## 消除路径
 

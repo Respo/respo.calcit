@@ -988,38 +988,48 @@
             :return $ :: 'Map 'Tag 'Dynamic
         'find-child-by-key $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn find-child-by-key (children expected-key)
+            option:map (find-child-node children expected-key) respo.util.detect/render-node-value
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'List 'respo.schema/ChildPair) 'Dynamic
+            :return $ :: 'Option 'Struct
+        'find-child-node $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn find-child-node (children expected-key)
             loop
                 xs children
               hint-fn $ {}
                 :args $ [] $ :: 'List 'respo.schema/ChildPair
-                :return $ :: 'Option 'Struct
+                :return $ :: 'Option 'respo.schema/RenderNode
               if (empty? xs) (Option :none)
                 let
                     pair $ &list:nth xs 0
                   if
                     &= (:key pair) expected-key
-                    option:map (:node pair) respo.util.detect/render-node-value
+                    :node pair
                     recur $ &list:rest xs
           :examples $ []
           :schema $ :: 'Fn $ {}
-            :args $ [] (:: 'List 'respo.schema/ChildPair) 'Dynamic
-            :return $ :: 'Option 'Struct
+            :args $ [] (:: 'List 'respo.schema/ChildPair) 'KeyInput
+            :generics $ [] 'KeyInput
+            :return $ :: 'Option 'respo.schema/RenderNode
         'find-event-target $ %{} 'CodeEntry
           :doc "|Traverses the virtual DOM to find the element that should handle a specific event."
           :code $ quote $ defn find-event-target (element coord event-name)
             assert |element-cannot-be-nil $ some? element
             assert |coord-cannot-be-nil $ some? coord
             let
-                target-element-option $ assert-type
-                  loop
-                      m-option $ get-markup-at element coord
-                    match m-option
-                      (:none) (Option :none)
-                      (:some m)
-                        if (component? m)
-                          recur $ component-tree m
-                          Option :some $ assert-type m 'respo.schema/Element
-                  :: 'Option 'respo.schema/Element
+                target-element-option $ loop
+                    m-option $ get-render-node-at (respo.util.detect/as-render-node element) coord
+                  hint-fn $ {}
+                    :args $ [] $ :: 'Option 'respo.schema/RenderNode
+                    :return $ :: 'Option 'respo.schema/Element
+                  match m-option
+                    (:none) (Option :none)
+                    (:some node)
+                      match node
+                        (:component component)
+                          recur $ :tree component
+                        (:element target) (Option :some target)
                 event-present? $ option:fold target-element-option
                   fn () false
                   fn (target-element)
@@ -1044,28 +1054,53 @@
         'get-markup-at $ %{} 'CodeEntry
           :doc "|Retrieves the virtual DOM element at the specified coordinate."
           :code $ quote $ defn get-markup-at (markup coord)
-            list-match coord
-              () $ Option :some markup
-              (coord-head cs)
-                if (component? markup)
-                  match (component-tree markup)
-                    (:none) (Option :none)
-                    (:some tree) (recur tree cs)
-                  let
-                      children $ element-children markup
-                    match (find-child-by-key children coord-head)
-                      (:some child) (get-markup-at child cs)
-                      (:none)
-                        raise $ str |child-not-found: coord $ map children
-                          fn (pair)
-                            hint-fn $ {}
-                              :args $ [] 'respo.schema/ChildPair
-                              :return 'Dynamic
-                            :key pair
+            option:map
+              get-render-node-at (respo.util.detect/as-render-node markup) coord
+              , respo.util.detect/render-node-value
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] 'Struct $ :: 'List 'Dynamic
             :return $ :: 'calcit.core/Option 'Struct
+        'get-render-node-at $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn get-render-node-at (node coord)
+            list-match coord
+              () $ Option :some node
+              (coord-head cs)
+                match node
+                  (:component component)
+                    match (:tree component)
+                      (:none) (Option :none)
+                      (:some tree) (recur tree cs)
+                  (:element element)
+                    let
+                        children $ :children element
+                      match (find-child-node children coord-head)
+                        (:some child) (get-render-node-at child cs)
+                        (:none)
+                          raise $ str |child-not-found: coord $ map children
+                            fn (pair)
+                              hint-fn $ {}
+                                :args $ [] 'respo.schema/ChildPair
+                                :return 'Dynamic
+                              :key pair
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] 'respo.schema/RenderNode $ :: 'List 'CoordKey
+            :generics $ [] 'CoordKey
+            :return $ :: 'Option 'respo.schema/RenderNode
+          :tests $ [] $ %{} 'TestEntry (:name |preserves-component-segments-and-mixed-keys)
+            :code $ quote $ let
+                leaf $ respo.core/span $ {}
+                wrapped $ respo.schema/Component :name :wrapped :effects ([]) :listeners ([]) :tree $ %some (respo.util.detect/as-render-node leaf)
+                numeric $ respo.core/div $ {}
+                parent $ &struct:assoc
+                  respo.core/div $ {}
+                  , :children $ [] (respo.util.detect/make-child-pair |7 wrapped) (respo.util.detect/make-child-pair 7 numeric)
+                root $ respo.schema/Component :name :root :effects ([]) :listeners ([]) :tree $ %some (respo.util.detect/as-render-node parent)
+              assert= wrapped $ option:unwrap $ get-markup-at root ([] :root |7)
+              assert= numeric $ option:unwrap $ get-markup-at root ([] :root 7)
+              assert= (respo.util.detect/as-render-node leaf)
+                option:unwrap $ get-render-node-at (respo.util.detect/as-render-node root) ([] :root |7 :wrapped)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.controller.resolve
           :require
