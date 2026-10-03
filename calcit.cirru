@@ -3783,36 +3783,10 @@
         'collect-event-refreshing $ %{} 'CodeEntry
           :doc "|Reattach live events with the current virtual and DOM coordinates after a component/element switch. Traverses shared descendants even when the normal diff skips identical subtrees. Ordinary diffing still handles removed events and lifecycle changes."
           :code $ quote $ defn collect-event-refreshing (collect! coord n-coord tree)
-            cond
-                component? tree
-                match (component-tree tree)
-                  (:none) &unit
-                  (:some child-tree)
-                    collect-event-refreshing collect!
-                      append coord $ component-name tree
-                      , n-coord child-tree
-              (element? tree)
-                do
-                  &doseq
-                    event-name $ keys-non-nil $ element-event tree
-                    collect! $ DomPatch :set-event coord n-coord event-name
-                  loop
-                      children $ respo.util.detect/element-children tree
-                      idx 0
-                    hint-fn $ {}
-                      :args $ [] (:: 'List 'respo.schema/ChildPair) 'Number
-                      :return 'Unit
-                    when-not (empty? children)
-                      let
-                          pair $ &list:nth children 0
-                          k $ :key pair
-                          child $ :node pair
-                        when (option:some? child)
-                          collect-event-refreshing collect! (append coord k) (append n-coord idx)
-                            respo.util.detect/render-node-value $ option:unwrap child
-                        recur (&list:rest children)
-                          if (option:some? child) (inc idx) idx
-              true &unit
+            if
+              or (component? tree) (element? tree)
+              collect-event-refreshing-node collect! coord n-coord $ respo.util.detect/as-render-node tree
+              , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
@@ -3855,6 +3829,45 @@
                 [] $ DomPatch :set-event ([] :app :live :inner) ([] 0) :click
                 , @ops
             :tags $ #{} :unit
+        'collect-event-refreshing-node $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn collect-event-refreshing-node (collect! coord n-coord tree)
+            match tree
+              (:component tree)
+                match (:tree tree)
+                  (:none) &unit
+                  (:some child-tree)
+                    collect-event-refreshing-node collect!
+                      append coord $ :name tree
+                      , n-coord child-tree
+              (:element tree)
+                do
+                  &doseq
+                    event-name $ keys-non-nil $ :event tree
+                    collect! $ DomPatch :set-event coord n-coord event-name
+                  loop
+                      children $ :children tree
+                      idx 0
+                    hint-fn $ {}
+                      :args $ [] (:: 'List 'respo.schema/ChildPair) 'Number
+                      :return 'Unit
+                    when-not (empty? children)
+                      let
+                          pair $ &list:nth children 0
+                          k $ :key pair
+                          child $ :node pair
+                        when (option:some? child)
+                          collect-event-refreshing-node collect! (append coord k) (append n-coord idx) (option:unwrap child)
+                        recur (&list:rest children)
+                          if (option:some? child) (inc idx) idx
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ []
+              :: 'Fn $ {} (:return 'Unit)
+                :args $ [] 'respo.schema/DomPatch
+              :: 'List 'K
+              :: 'List 'Number
+              , 'respo.schema/RenderNode
+            :generics $ [] 'K
         'detect-keys-dup $ %{} 'CodeEntry
           :doc "|Checks for duplicate keys in a list of children. Useful for development mode warnings."
           :code $ quote $ defn detect-keys-dup (child-keys)
