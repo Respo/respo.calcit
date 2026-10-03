@@ -4155,7 +4155,7 @@
                   duplicate-position $ %:: Option :none
                 let
                     index $ assert-type cursor Number
-                    first-position $ assert-type duplicate-position $ :: Option Number
+                    first-position $ assert-type duplicate-position $ :: 'Option 'Number
                   if (= index size)
                     match first-position
                       (:none) (%:: Option :none)
@@ -6974,15 +6974,38 @@
           :code $ quote $ defn text->html (x)
             if (nil? x) | $ &str:replace
               &str:replace
-                &str:replace (turn-string x) |& |&amp;
+                &str:replace (scalar-attribute-text x) |& |&amp;
                 , |> |&gt;
               , |< |&lt;
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'String)
             :args $ [] 'Dynamic
-          :tests $ [] $ %{} 'TestEntry (:name |preserves-literal-entities)
-            :code $ quote $ assert= |&amp;&amp;amp;&lt;&gt; (text->html |&&amp;<>)
-            :tags $ #{} :unit
+          :tests $ []
+            %{} 'TestEntry (:name |preserves-literal-entities)
+              :code $ quote $ assert= |&amp;&amp;amp;&lt;&gt; (text->html |&&amp;<>)
+              :tags $ #{} :unit
+            %{} 'TestEntry (:name |renders-supported-scalars-and-nil)
+              :code $ quote $ do
+                assert= | $ text->html nil
+                assert= |true $ text->html true
+                assert= |false $ text->html false
+                assert= |12.5 $ text->html 12.5
+                assert= |ready $ text->html :ready
+                assert= |ready $ text->html $ to-symbol |ready
+                assert= |&lt;ready&gt; $ text->html |<ready>
+              :tags $ #{} :unit
+            %{} 'TestEntry (:name |rejects-collection-text)
+              :code $ quote $ do
+                assert= "|Attribute value must be a scalar" $ try
+                  text->html $ [] 1
+                  fn (error) error
+                assert= "|Attribute value must be a scalar" $ try
+                  text->html $ {}
+                  fn (error) error
+                assert= "|Attribute value must be a scalar" $ try
+                  text->html $ #{} :ready
+                  fn (error) error
+              :tags $ #{} :unit
         'unitless-props $ %{} 'CodeEntry (:doc "|gemini suggested from popular libs\n")
           :code $ quote $ def unitless-props
             {} (|animationDelay true) (|animationDuration true) (|animationIterationCount true) (|aspectRatio true) (|borderImageOutset true) (|borderImageSlice true) (|borderImageWidth true) (|boxFlex true) (|boxFlexGroup true) (|boxOrdinalGroup true) (|columnCount true) (|columns true) (|fillOpacity true) (|flex true) (|flexGrow true) (|flexNegative true) (|flexPositive true) (|flexShrink true) (|floodOpacity true) (|fontSizeAdjust true) (|fontWeight true) (|gridArea true) (|gridColumn true) (|gridColumnEnd true) (|gridColumnSpan true) (|gridColumnStart true) (|gridRow true) (|gridRowEnd true) (|gridRowSpan true) (|gridRowStart true) (|lineClamp true) (|lineHeight true) (|opacity true) (|order true) (|orphans true) (|stopOpacity true) (|strokeDasharray true) (|strokeDashoffset true) (|strokeMiterlimit true) (|strokeOpacity true) (|strokeWidth true) (|tabSize true) (|transitionDelay true) (|transitionDuration true) (|widows true) (|zIndex true) (|zoom true)
