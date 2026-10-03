@@ -35,7 +35,12 @@ loader 仅补齐 Diary build-errors 及 bottom-tip 的两个 virtual-dom
 回归快照还修正了已有 `initial-state` 的错误 schema：实际值是 LoginState，
 原标注却是 Map。这个修改尚未整合到 Diary 仓库。
 
-当前只证明以上三种页面状态的组件 SSR。完整 Diary 客户端严格入口仍有
-ws-edn 的 WsClient / WsClient0 类型问题；正式 0.28 还有 JS-FFI 回调类型
-问题。登录后的页面、浏览器交互、完整发布构建及 typed dispatch 迁移
-尚未在这里验证。milestone 不能因此视为完成。
+当前只证明以上三种页面状态的组件 SSR。同日接入 ws-edn 状态句柄、
+Option Ref 初始化和 Fn 标注修复后，候选 0.29.0-alpha.1 的完整 Diary
+客户端 main! / reload! 严格检查与 JS 生成通过；使用这次完整入口新生成
+的输出，以上三项内容检查再次通过。
+
+正式 0.28 仍有 JS-FFI EventHost 回调及两个 add-watch 泛型回调警告。
+登录后的页面、浏览器交互、完整发布构建及 typed dispatch 迁移尚未在
+这里验证。依赖 pin 和 Diary 初始状态 schema 修复尚未整合到应用仓库，
+milestone 不能因此视为完成。
