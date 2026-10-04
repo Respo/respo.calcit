@@ -168,7 +168,7 @@ examples 或 Markdown。不是文本行数，也不将 Symbol 引用当作一次
 
 | 范围 | 基线 assert-type | 当前 assert-type | 基线 unsafe-coerce | 当前 unsafe-coerce |
 | --- | ---: | ---: | ---: | ---: |
-| 全项目 definition code | 124 | 92 | 41 | 30 |
+| 全项目 definition code | 124 | 89 | 41 | 30 |
 | `respo.controller.client` | 1 | 0 | 1 | 1 |
 | `respo.controller.resolve` | 4 | 1 | 0 | 0 |
 | `respo.core` | 20 | 13 | 3 | 3 |
@@ -251,11 +251,8 @@ examples 或 Markdown。不是文本行数，也不将 Symbol 引用当作一次
 | `respo.render.patch/apply-dom-changes` | `code@3.2.2.14.1.1.1.1` | `assert-type` | `(:: 'List 'respo.dom/DomElement)` | I1/H1：缓存与宿主列表 |
 | `respo.render.patch/apply-dom-changes` | `code@3.2.2.14.1.2.4` | `assert-type` | `(:: 'List 'respo.dom/DomElement)` | I1/H1：缓存与宿主列表 |
 | `respo.render.patch/collect-scroll-states` | `code@3.1.0.1.2` | `assert-type` | `(:: 'List 'respo.render.patch/MoveScrollState)` | I1/H1：缓存与宿主列表 |
-| `respo.render.patch/collect-scroll-states` | `code@3.2.2` | `assert-type` | `(:: 'List 'respo.render.patch/MoveScrollState)` | I1/H1：缓存与宿主列表 |
 | `respo.render.patch/find-target-cached` | `code@3.3.1.3.1.1.1` | `assert-type` | `Number` | I1/H1：缓存与宿主列表 |
 | `respo.render.patch/insert-before-target!` | `code@3.3.1.1.0.1` | `unsafe-coerce` | `'respo.dom/DomElement` | H1 |
-| `respo.render.patch/invalidate-target-children!` | `code@3.2.1.0.1` | `assert-type` | `(:: List Number)` | I1/H1：缓存与宿主列表 |
-| `respo.render.patch/invalidate-target-children!` | `code@3.2.1.1.1` | `assert-type` | `(:: Map (:: List Number) 'respo.dom/DomElement)` | I1/H1：缓存与宿主列表 |
 | `respo.render.patch/replace-prop` | `code@3.2.2.1.1.1` | `unsafe-coerce` | `JsObject` | H1 |
 | `respo.render.patch/replace-style` | `code@3.2.1` | `unsafe-coerce` | `JsObject` | H1 |
 | `respo.util.detect/component-effects` | `code@3.1.0.1` | `assert-type` | `'respo.schema/Component` | 开放节点创建边界 |

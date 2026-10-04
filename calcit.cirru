@@ -5867,9 +5867,7 @@
                   assert-type ([]) (:: 'List 'respo.render.patch/MoveScrollState)
                   [] $ MoveScrollState :node node :top node.:scroll-top :left node.:scroll-left
                 children $ snapshot-children node
-              concat own $ assert-type
-                &list:flatten $ map children collect-scroll-states
-                :: 'List 'respo.render.patch/MoveScrollState
+              concat own $ mapcat children collect-scroll-states
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] 'respo.dom/DomElement
@@ -5939,9 +5937,12 @@
             loop
                 remaining parent-coord
                 retained $ {}
+              hint-fn $ {} (:return 'Unit)
+                :args $ [] (:: 'List 'Number)
+                  :: 'Map (:: 'List 'Number) 'respo.dom/DomElement
               let
-                  path $ assert-type remaining $ :: List Number
-                  entries $ assert-type retained $ :: Map (:: List Number) 'respo.dom/DomElement
+                  path remaining
+                  entries retained
                   next $ match (get @cache path)
                     (:none) entries
                     (:some node) (assoc entries path node)
