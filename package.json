@@ -3,6 +3,7 @@
     "@calcit/procs": "0.28.0"
   },
   "scripts": {
+    "test-callback-types": "node --test test/callback-type-boundaries.test.mjs",
     "test-event-config": "calcit js && node --test test/event-config.test.mjs",
     "test-demo-scheduler": "calcit js && node --test test/demo-scheduler.test.mjs",
     "test": "calcit calcit.cirru test --require-match --summary-only --format json",
@@ -10,6 +11,7 @@
     "test-dom-patch-types": "bash scripts/check-dom-patch-types.sh",
     "test-dom-host": "calcit --init-fn respo.test.dom/main! --reload-fn respo.test.dom/verify-dom-regressions! calcit.cirru js && node test-dom.mjs",
     "test-keyed-moves": "calcit js && node --test test/keyed-moves.test.mjs",
+    "test-cursor-keys": "calcit js && node --test test/cursor-keys.test.mjs",
     "bench-keyed-moves": "calcit js && node test/keyed-moves-bench.mjs",
     "check-docs": "bash scripts/check-docs-md.sh",
     "check-quality": "calcit calcit.cirru analyze quality --baseline config/calcit-quality.cirru",

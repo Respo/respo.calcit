@@ -14,7 +14,9 @@ cd "$ROOT"
 
 ENTRY="${1:-${ENTRY:-calcit.cirru}}"
 
-if command -v calcit >/dev/null 2>&1; then
+if [ -n "${CALCIT_BIN:-}" ]; then
+  CR_CMD=("$CALCIT_BIN")
+elif command -v calcit >/dev/null 2>&1; then
   CR_CMD=(calcit)
 elif [ -x "./target/debug/calcit" ]; then
   CR_CMD=("./target/debug/calcit")

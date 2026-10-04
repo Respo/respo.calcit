@@ -39,6 +39,42 @@ function permutations(values) {
   return values.flatMap((value, index) => permutations(values.filter((_, i) => i !== index))
     .map(rest => [value, ...rest]));
 }
+test('直接 ChildPair 中的 None 支持出现、消失和重排，保持稠密 DOM 坐标', async () => {
+  const { make_child_pair } = await import('../js-out/respo.util.detect.mjs');
+  const { find_children_diffs } = await import('../js-out/respo.render.diff.mjs');
+  const layouts = [
+    [[[0, 0], [1, null], [2, 2]], [[2, 2], [1, 1], [0, null]]],
+    [[[0, null], [1, 1], [2, 2]], [[2, 2], [0, null], [1, 1]]],
+    [[[0, null], [1, null]], [[1, 1], [0, 0]]],
+    [[[0, 0], [1, 1]], [[1, null], [0, null]]],
+    [[[0, null], [1, null]], [[1, null], [0, null]]],
+  ];
+  for (const [oldPairs, newPairs] of layouts) {
+    const counts = { mounts: 0, unmounts: 0 }, rows = createRows([0, 1, 2], counts);
+    const oldKeys = oldPairs.filter(([, value]) => value !== null).map(([key]) => key);
+    const newKeys = newPairs.filter(([, value]) => value !== null).map(([key]) => key);
+    const mount = new ElementHost('main'), parent = new ElementHost();
+    mount.appendChild(parent);
+    const originals = new Map(oldKeys.map(key => {
+      const node = new ElementHost('input'); node.id = `row-${key}`; node.value = `edited-${key}`;
+      parent.appendChild(node); return [key, node];
+    }));
+    const pairs = entries => c.arrayToList(entries.map(([key, value]) =>
+      make_child_pair(key, value === null ? null : rows.get(value))));
+    const patches = [], coord = c.arrayToList([]);
+    find_children_diffs(op => { patches.push(op); }, coord, coord, 0, pairs(oldPairs), pairs(newPairs));
+    apply_dom_changes(c.arrayToList(patches), mount, () => () => {});
+    assert.deepEqual(parent.nodes.map(node => Number(node.id.slice(4))), newKeys);
+    for (const key of newKeys) if (originals.has(key)) {
+      assert.equal(parent.nodes[newKeys.indexOf(key)], originals.get(key));
+      assert.equal(originals.get(key).value, `edited-${key}`);
+    }
+    assert.deepEqual(counts, {
+      mounts: newKeys.filter(key => !oldKeys.includes(key)).length,
+      unmounts: oldKeys.filter(key => !newKeys.includes(key)).length,
+    });
+  }
+});
 function lisLength(values) {
   const lengths = values.map(() => 1);
   for (let i = 0; i < values.length; i++)

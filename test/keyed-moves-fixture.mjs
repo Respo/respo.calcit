@@ -2,6 +2,7 @@ import * as c from '../js-out/calcit.core.mjs';
 import { Component, DomProps } from '../js-out/respo.schema.mjs';
 import { div, input, list__GT_, effect_on_mount, effect_on_unmount, render_$x_ } from '../js-out/respo.core.mjs';
 import { find_children_diffs } from '../js-out/respo.render.diff.mjs';
+import { as_render_node, make_child_pair } from '../js-out/respo.util.detect.mjs';
 
 const tags = c.init_tags(['name', 'tree', 'effects', 'listeners', 'some', 'keyed-row']);
 const list = values => c.arrayToList(values);
@@ -12,9 +13,9 @@ export const childPairs = (keys, rows) => list(keys.map(key => list([key, rows.g
 export function createRows(keys, counts = { mounts: 0, unmounts: 0 }) {
   return new Map(keys.map(key => [key, c._$n__PCT__$M_(Component,
     tags.name, tags['keyed-row'], tags.tree, c._PCT__$o__$o_(c.Option, tags.some,
-      div(props({ id: `row-${key}`, style: c._$n__$M_(
+      as_render_node(div(props({ id: `row-${key}`, style: c._$n__$M_(
         c.turn_tag('height'), '40px', c.turn_tag('width'), '120px', c.turn_tag('overflow'), 'auto') }),
-        input(props({ style: c._$n__$M_(c.turn_tag('width'), '400px', c.turn_tag('margin-bottom'), '200px') })))),
+        input(props({ style: c._$n__$M_(c.turn_tag('width'), '400px', c.turn_tag('margin-bottom'), '200px') }))))),
       tags.listeners, list([]), tags.effects, list([
         effect_on_mount(() => { counts.mounts++; }),
         effect_on_unmount(() => { counts.unmounts++; }),
@@ -24,7 +25,8 @@ export function createRows(keys, counts = { mounts: 0, unmounts: 0 }) {
 export function collectPatches(oldKeys, newKeys, rows) {
   const patches = [];
   find_children_diffs(patch => { patches.push(patch); }, list([]), list([]), 0,
-    childPairs(oldKeys, rows), childPairs(newKeys, rows));
+    list(oldKeys.map(key => make_child_pair(key, rows.get(key)))),
+    list(newKeys.map(key => make_child_pair(key, rows.get(key)))));
   return patches;
 }
 /** Exercise node identity, user input, scroll and lifecycle state in a browser. */

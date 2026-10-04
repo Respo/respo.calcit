@@ -27,6 +27,19 @@ expect_failure() {
   'respo.schema/DomPatch :move-element ([]) 0 (%:: Option :some 1)' >/dev/null
 
 expect_failure \
+  'a Number used as a RenderNode element payload' \
+  'RenderNode::element` payload 1 expects type' \
+  'respo.schema/RenderNode :element 1'
+
+"$calcit_bin" eval --dep ./calcit.cirru \
+  'respo.render.diff/find-render-node-diffs (fn (op) &unit) ([]) ([]) (%:: Option :none) (%:: Option :none)' >/dev/null
+
+expect_failure \
+  'an optional Number used as a diff node' \
+  'Function `respo.render.diff/find-render-node-diffs` arg 4 expects type' \
+  'respo.render.diff/find-render-node-diffs (fn (op) &unit) ([]) ([]) (%:: Option :some 1) (%:: Option :none)'
+
+expect_failure \
   'a String in a move source index' \
   'but got `:string`' \
   'respo.schema/DomPatch :move-element ([]) |first (%:: Option :none)'
