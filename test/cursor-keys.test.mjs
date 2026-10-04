@@ -41,3 +41,27 @@ test('partial Struct updates preserve their generated nominal definition and ori
   assert.equal(c.option_$o_unwrap_or(c.get(state, fields['stop-propagation?']), null), false);
   assert.equal(c.option_$o_unwrap_or(c.get(original, fields['stop-propagation?']), null), true);
 });
+
+test('partial Map update retains a Number key without converting it to a Tag', () => {
+  const cursor = path(tags.panel, 7);
+  const original = update_state_tree(c._$n__$M_(), cursor, c._$n__$M_(4, 'old'));
+  const changed = update_state_tree_kv(original, cursor, 4, 'new');
+  const value = get_state_at(changed, path(tags.panel, 7, tags.data));
+  assert.equal(c.option_$o_unwrap_or(c.get(value, 4), null), 'new');
+  assert.equal(c.get(value, '4').tag.value, 'none');
+  assert.equal(get_state_at(original, path(tags.panel, 7, tags.data, 4)), 'old');
+});
+
+test('partial Struct field update preserves nominal identity after the shape guard', () => {
+  const fields = c.init_tags(['stop-propagation?', 'listener-mode', 'property']);
+  const original = c._$n__PCT__$M_(EventConfig,
+    fields['stop-propagation?'], true,
+    fields['listener-mode'], c._PCT__$o__$o_(ListenerMode, fields.property));
+  const states = update_state_tree(c._$n__$M_(), path(tags.panel, 'task-1'), original);
+  const changed = update_state_tree_kv(states, path(tags.panel, 'task-1'), fields['stop-propagation?'], false);
+  const value = get_state_at(changed, path(tags.panel, 'task-1', tags.data));
+  assert.equal(c._$n_struct_$o_definition(value), c._$n_struct_$o_definition(original));
+  assert.equal(c.option_$o_unwrap_or(c.get(value, fields['stop-propagation?']), null), false);
+  assert.throws(() => update_state_tree_kv(states, path(tags.panel, 'task-1'), 7, false));
+  assert.equal(c.option_$o_unwrap_or(c.get(original, fields['stop-propagation?']), null), true);
+});

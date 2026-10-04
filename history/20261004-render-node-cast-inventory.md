@@ -162,17 +162,17 @@ unsafe-coerce；初次盘点时为 125 / 41。该阶段尚未达到数量下降�
 ## 2026-10-04 当前盘点与验收补充
 
 本节替代旧表作为当前源码的计数依据；旧表保留初始问题和迁移路径。基线仍为
-main `b94962e`，当前代码为 `7644b19` 后的重复 key 循环修正。计数扫描 Snapshot
+main `b94962e`，当前代码包含 `7644b19` 后的重复 key 循环与 Map/Struct 分支证明修正。计数扫描 Snapshot
 所有 definition code 的调用 AST，包含宏模板，不包含依赖、schema、附带测试、
 examples 或 Markdown。不是文本行数，也不将 Symbol 引用当作一次调用。
 
 | 范围 | 基线 assert-type | 当前 assert-type | 基线 unsafe-coerce | 当前 unsafe-coerce |
 | --- | ---: | ---: | ---: | ---: |
-| 全项目 definition code | 124 | 92 | 41 | 33 |
+| 全项目 definition code | 124 | 92 | 41 | 30 |
 | `respo.controller.client` | 1 | 0 | 1 | 1 |
 | `respo.controller.resolve` | 4 | 1 | 0 | 0 |
 | `respo.core` | 20 | 13 | 3 | 3 |
-| `respo.cursor` | 2 | 1 | 12 | 4 |
+| `respo.cursor` | 2 | 1 | 12 | 1 |
 | `respo.render.diff` | 36 | 22 | 1 | 1 |
 | `respo.render.effect` | 2 | 0 | 0 | 0 |
 | `respo.render.html` | 2 | 2 | 0 | 0 |
@@ -218,9 +218,6 @@ examples 或 Markdown。不是文本行数，也不将 Symbol 引用当作一次
 | `respo.core/run-first-task!` | `code@3.1.0.1` | `assert-type` | `Fn` | F1 |
 | `respo.cursor/coerce-cursor-test-state` | `code@3` | `assert-type` | `CursorTestState` | 测试边界 |
 | `respo.cursor/get-state-at` | `code@3.3.3.1.0.1` | `unsafe-coerce` | `(:: 'Map 'KeyInput (:: 'JsNullish 'Dynamic))` | C2/C3 |
-| `respo.cursor/update-state-tree-kv` | `code@3.2.2.2.1.0.1` | `unsafe-coerce` | `(:: Map Dynamic Dynamic)` | C2/C3 |
-| `respo.cursor/update-state-tree-kv` | `code@3.2.2.3.2.3.1` | `unsafe-coerce` | `Struct` | C2/C3 |
-| `respo.cursor/update-state-tree-kv` | `code@3.2.2.3.2.3.2` | `unsafe-coerce` | `Tag` | C2/C3 |
 | `respo.render.diff/find-children-diffs` | `code@3.2.3.2.1.4.1.7.1.2.2` | `assert-type` | `'Number` | I1 |
 | `respo.render.diff/find-children-diffs` | `code@3.2.3.2.1.4.2.2.1.0.1` | `assert-type` | `'Number` | I1 |
 | `respo.render.diff/find-children-diffs` | `code@3.2.3.2.1.4.2.2.1.1.1` | `assert-type` | `'Number` | I1 |
@@ -296,3 +293,15 @@ watcher 告警，质量门禁仍失败；依赖与编译器修复尚未全部发
 
 本盘点尚需发布到 #194 和最终 PR；#195 的 dispatch 类型贯通、#104 与发布依赖
 完整回归也未完成。计数下降只证明这项验收的数据，不替代其他要求。
+
+### Map / Struct 分支证明
+
+update-state-tree-kv 在 map? / struct? 分支中直接使用已经收窄的 state，移除两处
+state 强转。再检查 assoc 的真实泛型 K 合同后，移除 key 的 Tag 假声明，开放 key
+交由既有底层 assoc 做原有运行验证；未新增转换或 runtime 分支。
+没有新加类型谓词、改变状态树层级、字段查找顺序或更新原子的方式。
+新增回归验证 Number 路径与 Number Map key，以及 Struct 字段更新前后的具名身份
+和原值不变。新增非支持的 Number Struct key 拒绝回归，原状态保持不变。正式/候选各 106/106 native，正式重新生成 JS 后 5/5 cursor 回归通过；
+严格检查和原 quality baseline 通过。当前扩展盘点表为 78 处转换。
+
+日志：`/private/tmp/respo-194-cursor-branch-{formal,candidate,js,check,quality}.log`。
