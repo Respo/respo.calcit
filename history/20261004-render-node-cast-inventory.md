@@ -139,3 +139,18 @@ unsafe-coerce；初次盘点时为 125 / 41。该阶段尚未达到数量下降�
 - 现有 native attached tests、重新生成 JS 的 Node/SSR/DOM lifecycle 回归通过。
 - Calcium Workflow 与 TopixIM 的真实项目分别验证并记录版本与迁移方式。
 - 使用同一统计范围报告前后数量；基线或检查不能为通过而扩大。
+
+## 当前统计复查
+
+完成 RenderNode / ChildPair 与递归消费者迁移后，再用正式 CLI 的 query search --source project --exact --format json 提取实际 AST，只计每项 code@ 路径；范围继续包含项目测试命名空间和宏模板，排除依赖、schema、doc、examples、attached tests。当前为 101 处 assert-type、38 处 unsafe-coerce，较本记录的 b94962e 基线 124/41 分别减少 23/3。不能继续引用初次盘点的 125/41 描述当前源码。
+
+| 当前区域 | assert-type | unsafe-coerce |
+| --- | ---: | ---: |
+| respo.render.diff | 31 | 1 |
+| respo.render.patch | 11 | 4 |
+| respo.render.effect | 0 | 0 |
+| respo.render.html | 2 | 0 |
+| respo.core | 13 | 3 |
+| respo.cursor | 1 | 9 |
+
+结构化结果保存在临时目录 respo-194-current-asserts.json 与 respo-194-current-coerces.json，未入库。减少计数只证明这项验收的进展；生产 dispatch 的同一 Op 关系、已发布依赖接入和完整 milestone 仍须分别验证。

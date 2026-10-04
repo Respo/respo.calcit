@@ -7316,7 +7316,14 @@
             &str:slice (turn-string x) 3
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'String)
-            :args $ [] 'Dynamic
+            :args $ [] 'T
+            :generics $ [] 'T
+            :where $ {} $ 'T 'ToString
+          :tests $ [] $ %{} 'TestEntry (:name |keeps-tag-and-string-event-names)
+            :code $ quote $ do
+              assert= |click $ respo.util.format/event->string :on-click
+              assert= |change $ respo.util.format/event->string |on-change
+            :tags $ #{} :unit
         'get-style-value $ %{} 'CodeEntry
           :doc "|Formats a style value for a given property. Adds px to numeric values when the property expects units, and returns an empty string for nil so DOM updates and SSR output can clear the declaration safely."
           :code $ quote $ defn get-style-value (x prop)
