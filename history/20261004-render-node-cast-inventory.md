@@ -154,3 +154,7 @@ unsafe-coerce；初次盘点时为 125 / 41。该阶段尚未达到数量下降�
 | respo.cursor | 1 | 9 |
 
 结构化结果保存在临时目录 respo-194-current-asserts.json 与 respo-194-current-coerces.json，未入库。减少计数只证明这项验收的进展；生产 dispatch 的同一 Op 关系、已发布依赖接入和完整 milestone 仍须分别验证。
+
+## cursor / LIS 后续清理
+
+继续移除有分支、返回类型和循环签名证明的转换后，当前计数更新为 95/33（assert-type / unsafe-coerce）。本轮减少 6/5，保留原运行时边界与空容器类型声明；正式 0.28.0 和候选均完成 100/100 native 与 12/12 keyed/cursor JS 回归。具体证明、正式循环推断失败及修复见 [cursor 与 LIS 记录](20261004-cursor-lis-proofs.md)。

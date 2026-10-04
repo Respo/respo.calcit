@@ -2954,9 +2954,8 @@
                 state $ either current-state state0
               if (map? changes)
                 let
-                    changes-map $ unsafe-coerce changes $ :: Map Dynamic Dynamic
-                    entries $ unsafe-coerce (&map:to-list changes-map)
-                      :: List $ :: List Dynamic
+                    changes-map changes
+                    entries $ &map:to-list changes-map
                   loop
                       updated state
                       xs entries
@@ -2965,12 +2964,8 @@
                           pair $ respo.util.list/first-pair xs
                           k $ respo.util.list/pair-key pair
                           v $ respo.util.list/pair-value pair
-                          next-state $ if (map? updated)
-                            &map:assoc
-                              unsafe-coerce updated $ :: Map Dynamic Dynamic
-                              , k v
-                            if (struct? updated)
-                              assoc (unsafe-coerce updated Struct) (unsafe-coerce k Tag) v
+                          next-state $ if (map? updated) (&map:assoc updated k v)
+                            if (struct? updated) (assoc updated k v)
                               raise $ str-spaced |unknown-state-to-merge updated
                         recur next-state $ &list:rest xs
                 do (eprintln |unknown-changes-to-merge changes) states
@@ -2999,6 +2994,30 @@
                 assert=
                   {} (:draft |old) (:locked? false)
                   get-state-at states $ [] :panel |task-1 :data
+              :tags $ #{} :regression :unit
+            %{} 'TestEntry (:name |merges-struct-base-without-mutating-original)
+              :code $ quote $ let
+                  original $ respo.schema/EventConfig :stop-propagation? true :listener-mode $ respo.schema/ListenerMode :property
+                  updated $ update-state-tree-merge ({}) ([]) original $ {} (:stop-propagation? false)
+                assert=
+                  respo.schema/EventConfig :stop-propagation? false :listener-mode $ respo.schema/ListenerMode :property
+                  get-state-at updated $ [] :data
+                assert= original $ respo.schema/EventConfig :stop-propagation? true :listener-mode $ respo.schema/ListenerMode :property
+              :tags $ #{} :regression :unit
+            %{} 'TestEntry (:name |keeps-tree-for-non-map-changes)
+              :code $ quote $ let
+                  original $ update-state-tree ({}) ([] :panel |task-1)
+                    {} $ :draft |old
+                assert= original $ update-state-tree-merge original ([] :panel |task-1) ({}) :not-a-map
+              :tags $ #{} :regression :unit
+            %{} 'TestEntry (:name |rejects-nonempty-merge-into-invalid-base)
+              :code $ quote $ assert= true
+                try
+                  do
+                    update-state-tree-merge ({}) ([]) 1 $ {} $ :draft |new
+                    , false
+                  fn (error)
+                    = (str error) "|unknown-state-to-merge 1"
               :tags $ #{} :regression :unit
         'update-states $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn update-states (store cursor new-state)
@@ -4701,11 +4720,12 @@
             loop
                 position cursor
                 kept $ assert-type (#{}) (:: 'Set 'Number)
+              hint-fn $ {}
+                :return $ :: 'Set 'Number
+                :args $ [] 'Number $ :: 'Set 'Number
               if (< position 0) kept $ recur
-                option:unwrap $ nth previous $ assert-type position 'Number
-                include
-                  assert-type kept $ :: 'Set 'Number
-                  option:unwrap $ nth values $ assert-type position 'Number
+                option:unwrap $ nth previous position
+                include kept $ option:unwrap $ nth values position
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] (:: 'List 'Number) (:: 'List 'Number) 'Number
@@ -4718,18 +4738,17 @@
                 tails $ assert-type ([]) (:: 'List 'Number)
                 positions $ assert-type ([]) (:: 'List 'Number)
                 previous $ assert-type ([]) (:: 'List 'Number)
+              hint-fn $ {}
+                :return $ :: 'Set 'Number
+                :args $ [] (:: 'List 'Number) 'Number (:: 'List 'Number) (:: 'List 'Number) (:: 'List 'Number)
               list-match remaining
-                () $ lis-reconstruct values
-                  assert-type previous $ :: 'List 'Number
-                  if (empty? positions) -1 $ option:unwrap $ last
-                    assert-type positions $ :: 'List 'Number
+                () $ lis-reconstruct values previous $ if (empty? positions) -1
+                  option:unwrap $ last positions
                 (value rest-values)
                   let
                       slot $ lis-lower-bound tails value
                       predecessor $ if (= slot 0) -1 $ option:unwrap
-                        nth
-                          assert-type positions $ :: 'List 'Number
-                          dec slot
+                        nth positions $ dec slot
                       new-tails $ if
                         = slot $ count tails
                         append tails value
