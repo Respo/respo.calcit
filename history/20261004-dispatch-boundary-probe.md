@@ -146,3 +146,56 @@ ignored。Agent CLI 53/53、core 451/451、冻结 API 基线、native/JS/IR
 候选后通过，literal-paths 与 typed-method 检查通过。初次完整命令因清单
 过期退出1，默认 WASM 脚本选中旧 release 的六项失败不计作候选结果。
 本地编译器提交 5727cec1，候选未发布，未将其计作正式发布成果。
+
+## 后续：泛型递归树与持有关系
+
+现有探针追加隔离持有图，总计 30 个场景。正式 0.28 CLI 在临时 Snapshot
+增加 A/B 两个不同的应用 enum（都含 :clear），删除入口 dispatch-op 绑定；
+checker 仍显式指定候选。生产框架的 schema 和运行代码未修改。
+
+原型以四个泛型名义类型表示 Controller<Op>、Element<Op>、Component<Op>
+和 Node<Op>：Controller 保存 Ref<Fn(Op)>，Element 保存事件 Map 与子节点，
+Component 保存 Option<Node<Op>>，Node 连接 Element/Component。wrap-dispatch、
+deliver、make-controller、make-tree 各声明自己的 Op，回调捕获该关系。
+make-tree 的明确返回 Node<Op> 为调用处提供证据。完整持有尝试另加
+Controller.tree: Ref<Option<Node<Op>>> 与泛型 render!，在保存后读取树并派发。
+这些名字只用于实验，没有增加对用户公开的替代 renderer。
+
+| 场景 | 5727cec1 的默认严格检查 | native |
+| --- | --- | --- |
+| 直接构造递归树，dispatch 与 handler 都是 A | 接受 | 正确交付 A |
+| 回调里 d! 42 | 拒绝，定位到 d! arg 1 | 未运行 |
+| 直接构造 A 树，Controller 是 B | **错误接受** | B 回调内检查 enum definition，收到 A，断言失败 |
+| 直接构造 B handler，Controller 是 A | **错误接受** | 未运行 |
+| 直接构造 Controller 的 Ref<Fn(A)> 字段 | **误报拒绝**：期望 Ref<Fn(Op)> | 未运行 |
+| make-tree 返回 Node<A>，Controller 是 A | 接受 | 正确交付 A |
+| make-tree 返回 Node<A>，Controller 是 B | 拒绝，deliver arg 2 期望 Node<B>、实际 Node<A> | 未运行 |
+| Controller 同时保存 Ref<Option<Node<Op>>> | **误报拒绝**：期望和实际打印为同一类型 | 未运行 |
+
+正例验证 Element → Component → Element 的递归持有、读取 Ref 中的 dispatch、
+包装回调和真实 handler 调用。跨 A/B 反例比较 enum definition 的字符串，
+不是只比较相同 tag/payload，避免值相等语义把名义差异掩盖。
+
+原型暴露两个不同位置的证据问题：直接树构造未把 Op 关系传到调用处，而
+明确返回类型的树 factory 可恢复它；Ref 包住含泛型的递归 Option/Node 后，
+相同类型的构造证明又被拒绝。前者不能把“正常树通过”计作跨持有链安全，
+后者仍阻止完整 render 持有原型通过。两种情况均保留在现有探针输出，
+没有加入 unsafe、改成 Dynamic 或删除完整失败用例。
+
+标注成本目前只覆盖此图：四个泛型名义声明，四个泛型函数声明；完整尝试
+还需要第五个泛型函数 render!，以及空树 Option 的显式类型。Controller
+与 tree factory 各是一处额外推断边界。它尚未覆盖全部 DOM diff/patch、
+组件 listener、普通 map props 的归一化与旧 list/tag 合同，不能作为整仓
+迁移量，也不能据此选择最终路线。下一步修复递归泛型在构造与 Ref 中的
+证明，再扩展生产传递链并比较实际迁移成本。
+
+同一脚本也用正式 0.28 checker 跑完 30 个场景：直接树的 A/B 混接仍
+错误接受，直接 Controller 构造接受；树 factory 正例因 Controller<dynamic>
+进入 Controller<A> 被拒绝。因此其 factory 混接拒绝不能算作正确的名义
+关系检查。候选的 factory 正例与混接负例两者都有证据，完整 tree Ref
+仍误报。脚本保留这些差异，只有已接受的 factory 正例才要求 native 通过。
+
+输出增加 checkElapsedMs（全部场景）和 nativeElapsedMs（执行的场景），
+记录子进程端到端耗时，包含启动、模块加载与检查。正式 release 与候选
+debug 的构建方式不同，结果只能用于本次复现记录，不作编译器性能比较。
+JSON 保留在临时目录，仓库只保存生成该证据的源码。

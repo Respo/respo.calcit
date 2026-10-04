@@ -4,6 +4,7 @@ import { copyFileSync, mkdtempSync, mkdirSync, rmSync, symlinkSync } from 'node:
 import { tmpdir } from 'node:os';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { probeGenericHolders } from './probe-dispatch-holders.mjs';
 
 // #195 的迁移探针；结果描述当前缺口，不是发布验收的通过标记。
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -11,9 +12,10 @@ const bin = process.env.CALCIT_BIN ?? 'calcit';
 const checkBin = process.env.CHECK_CALCIT_BIN ?? bin;
 const scratch = mkdtempSync(resolve(tmpdir(), 'respo-dispatch-probe-'));
 const invoke = (args, checker = false) => {
+  const started = performance.now();
   const result = spawnSync(checker ? checkBin : bin, args, { cwd: scratch, encoding: 'utf8' });
   if (result.error) throw result.error;
-  return { status: result.status, output: result.stdout + result.stderr };
+  return { status: result.status, output: result.stdout + result.stderr, elapsedMs: performance.now() - started };
 };
 const edit = args => {
   const result = invoke(args);
@@ -68,7 +70,7 @@ ${annotated ? `      hint-fn $ {} (:return 'Unit)
     const bindings = invoke(['config', 'type-slots']);
     assert.equal(bindings.status, 0, bindings.output);
     assert.match(bindings.output, /respo\.app\.schema\/Op/, 'the copied entry must retain its Op binding');
-    results.push({ name, accepted: result.status === 0, entryBindings: bindings.output, diagnostics: result.output });
+    results.push({ name, accepted: result.status === 0, checkElapsedMs: result.elapsedMs, entryBindings: bindings.output, diagnostics: result.output });
   }
   // A lexical Op belongs to the enclosing handler. Calling d! must not
   // specialize that fixed callback parameter as if d! declared its own Op.
@@ -94,7 +96,7 @@ ${annotated ? `      hint-fn $ {} (:return 'Unit)
     handle (respo.app.schema/Op :clear) dispatch!`]);
     edit(['edit', 'def', 'respo.main/reload!', '--overwrite', '--input-format', 'cirru', '--code', 'quote $ defn reload! () &unit']);
     const result = invoke(['--check-only'], true);
-    results.push({ name, accepted: result.status === 0, diagnostics: result.output });
+    results.push({ name, accepted: result.status === 0, checkElapsedMs: result.elapsedMs, diagnostics: result.output });
   }
   const control = name => results.find(result => result.name === name);
   assert.equal(control('annotated-concrete-valid-op').accepted, true, 'positive control must compile');
@@ -102,6 +104,14 @@ ${annotated ? `      hint-fn $ {} (:return 'Unit)
   assert.match(control('annotated-concrete-number').diagnostics, /calling `d!` arg 1/);
   assert.match(control('annotated-concrete-number').diagnostics, /respo\.main\/main!/);
   assert.equal(control('generic-forward-op').accepted, true, 'generic forwarding must preserve the caller Op');
+  probeGenericHolders({ edit, invoke, results });
+  assert.equal(control('holder-forward-op').accepted, true, `generic holder positive control must compile: ${control('holder-forward-op').diagnostics}`);
+  assert.equal(control('holder-forward-op').nativePassed, true, 'generic holder positive control must execute');
+  assert.equal(control('holder-number').accepted, false, 'generic holder must reject a concrete Number op');
+  if (control('holder-factory-forward-op').accepted) {
+    assert.equal(control('holder-factory-forward-op').nativePassed, true, 'an accepted tree factory must execute');
+    assert.equal(control('holder-factory-mismatched-controller').accepted, false, 'a typed tree factory must retain the nominal Op relationship');
+  }
   console.log(JSON.stringify({ mutationCompiler: version.output.trim(), checker: invoke(['--version'], true).output.trim(), results }, null, 2));
 } finally {
   rmSync(scratch, { recursive: true, force: true });
