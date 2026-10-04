@@ -152,3 +152,19 @@ literal-paths 与 typed-method-rem 最后两组门禁也通过。
 断言。本地编译器分支已 rebase 到该版本，重复测试提交被移除；剩余提交为
 `18899359`，只包含 nullable 集合字段证明、对应正反例和中文文档。增强后的
 Agent interface 正在重跑。对外发布需要用户授权，PR 草稿已在本地准备好。
+
+## 回调签名的持续门禁
+
+此前临时 scratch 中的静态反例现已保存为
+`test/callback-type-boundaries.test.mjs`，并通过 `yarn test-callback-types` 加入 CI。
+测试直接依赖当前项目 Snapshot，不复制 guard 或 effect 实现，不修改 Snapshot。
+
+两项正控制检查 guard 保留回调对象身份、Number 入参/返回值，以及 effect 接受
+实际的两个 List 参数和 Unit 返回值。四项负控制分别检查 guard 后的错误 String
+入参，以及 effect 的错误 arity、错误参数类型和错误返回值。
+负控制同时要求非零退出、具体诊断编号、目标调用/参数及实际类型，
+并确认未进入执行阶段；模块加载或语法错误不能冒充类型拒绝。
+
+正式 `0.28.0` 与本地 `43bd603b` 候选 `0.29.0-alpha.1` 均为 6/6。
+这六项检查只覆盖上述静态回调边界；已有 native、生成 JS、SSR 与 DOM
+测试仍承担其各自范围的验证，不将新增门禁视为整个 milestone 已完成。
