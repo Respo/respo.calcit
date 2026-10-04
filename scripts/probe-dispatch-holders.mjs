@@ -120,7 +120,19 @@ export function probeGenericHolders({ edit, invoke, results }) {
   deliver controller $ option:unwrap $ deref $ :tree controller`]);
   edit(['edit', 'schema', 'respo.probe.generic/render!', '--code', `quote $ :: 'Fn $ {} (:generics ([] 'Op)) (:return 'Unit)
   :args $ [] (:: 'respo.probe.generic/Controller 'Op) (:: 'respo.probe.generic/Node 'Op)`]);
-  edit(['edit', 'def', 'respo.main/main!', '--overwrite', '--code', viaFactory(main).replace('respo.probe.generic/deliver controller', 'respo.probe.generic/render! controller')]);
-  const treeHolder = invoke(['--check-only'], true);
-  results.push({ name: 'holder-ref-tree-forward-op', accepted: treeHolder.status === 0, checkElapsedMs: treeHolder.elapsedMs, diagnostics: treeHolder.output });
+  for (const [name, body] of [
+    ['holder-ref-tree-forward-op', main],
+    ['holder-ref-tree-mismatched-controller', mismatchedController],
+  ]) {
+    edit(['edit', 'def', 'respo.main/main!', '--overwrite', '--code', viaFactory(body).replace('respo.probe.generic/deliver controller', 'respo.probe.generic/render! controller')]);
+    const checked = invoke(['--check-only'], true);
+    const row = { name, accepted: checked.status === 0, checkElapsedMs: checked.elapsedMs, diagnostics: checked.output };
+    if (name === 'holder-ref-tree-forward-op' && row.accepted) {
+      const runtime = invoke([], true);
+      row.nativePassed = runtime.status === 0;
+      row.nativeElapsedMs = runtime.elapsedMs;
+      row.nativeDiagnostics = runtime.output;
+    }
+    results.push(row);
+  }
 }

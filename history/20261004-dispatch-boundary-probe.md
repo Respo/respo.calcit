@@ -199,3 +199,30 @@ Controller.tree: Ref<Option<Node<Op>>> 与泛型 render!，在保存后读取树
 记录子进程端到端耗时，包含启动、模块加载与检查。正式 release 与候选
 debug 的构建方式不同，结果只能用于本次复现记录，不作编译器性能比较。
 JSON 保留在临时目录，仓库只保存生成该证据的源码。
+
+## 泛型证据修复后的 31 场景复查
+
+候选编译器 `1c9902db` 进一步修复断言解析的词法泛型与空 Struct 字段的推断。
+完整树 Ref 探针增加跨 Op controller 反例，共 31 场景：
+
+| 场景 | 默认严格检查 | native |
+| --- | --- | --- |
+| 直接 A 树与 A controller | 接受 | 通过 |
+| 直接 A 树与 B controller | 拒绝 | 未运行 |
+| 直接 B handler 与 A controller | 拒绝 | 未运行 |
+| factory A 树与 A controller | 接受 | 通过 |
+| factory A 树与 B controller | 拒绝 | 未运行 |
+| render 保存并读取 Ref<Option<Node<Op>>> | 接受 | 通过 |
+| render A 树与 B controller | 拒绝 | 未运行 |
+| 直接构造 Controller 的 Ref<Fn(A)> 字段 | 仍误报拒绝 | 未运行 |
+
+这补齐了递归持有链的正例与跨 Op 负例，尚未覆盖生产 DOM diff/patch、
+listener、普通 map props 与旧 list/tag 合同。生产 schema 与工具链 pin
+仍维持当前版本，最终路线继续由完整迁移和实际标注成本决定。
+
+本轮下游回归：Respo 默认入口检查与 96 项 native 测试通过；Diary
+默认严格检查、JS 生成与加载、离线、登录三种页面 SSR 通过，断言内容
+和组件身份。编译器完整 Rust 测试 1584 passed、0 failed、1 既有 ignored；
+新增持有链回归的两项共享 native/JS 回放通过，错误 payload 的 Ref 写入
+被静态拒绝。完整集成门禁分段通过：原 check-all 在新增 JS 回放的参数
+顺序处失败，修正后的完整断言脚本与全部后续门禁均退出 0。

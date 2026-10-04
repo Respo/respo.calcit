@@ -112,6 +112,10 @@ ${annotated ? `      hint-fn $ {} (:return 'Unit)
     assert.equal(control('holder-factory-forward-op').nativePassed, true, 'an accepted tree factory must execute');
     assert.equal(control('holder-factory-mismatched-controller').accepted, false, 'a typed tree factory must retain the nominal Op relationship');
   }
+  if (control('holder-ref-tree-forward-op').accepted) {
+    assert.equal(control('holder-ref-tree-forward-op').nativePassed, true, 'an accepted tree Ref holder must execute');
+    assert.equal(control('holder-ref-tree-mismatched-controller').accepted, false, 'tree Ref holders must retain the nominal Op relationship');
+  }
   console.log(JSON.stringify({ mutationCompiler: version.output.trim(), checker: invoke(['--version'], true).output.trim(), results }, null, 2));
 } finally {
   rmSync(scratch, { recursive: true, force: true });
