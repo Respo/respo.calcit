@@ -194,6 +194,13 @@ export function probeGenericHolders({ edit, invoke, results }) {
     assert= ([] $ respo.probe.generic/A :clear) @seen
     , &unit`;
   const propsStart = appMain.indexOf('handler $');
+  const composedPropsMain = appMain.slice(0, propsStart).trimEnd() + '\n    '
+    + appMain.slice(appMain.indexOf('respo.probe.generic/save-state! app 1', propsStart)).replace(
+      'respo.probe.generic/notify app props',
+      `respo.probe.generic/notify app $ respo.probe.generic/Props :event $ &{} :click $ fn (_event d!)
+      d! $ respo.probe.generic/A :clear
+      , &unit`,
+    );
   const appCases = [
     ['holder-props-store-forward-op', appMain],
     ['holder-props-store-string-state', appMain.replace('dispatch! 0', 'dispatch! |before')
@@ -203,12 +210,15 @@ export function probeGenericHolders({ edit, invoke, results }) {
       .replaceAll("'respo.probe.generic/A)", "'respo.probe.generic/B)")
       .replace('d! $ respo.probe.generic/A :clear', 'd! $ respo.probe.generic/B :clear')],
     ['holder-props-store-mismatched-state', appMain.replace('save-state! app 1', 'save-state! app |wrong')],
+    ['holder-props-store-composed-forward-op', composedPropsMain],
+    ['holder-props-store-composed-number-op', composedPropsMain.replace('d! $ respo.probe.generic/A :clear', 'd! 42')],
   ];
   for (const [name, code] of appCases) {
     edit(['edit', 'def', 'respo.main/main!', '--overwrite', '--code', code]);
     const checked = invoke(['--check-only'], true);
     const row = { name, accepted: checked.status === 0, checkElapsedMs: checked.elapsedMs, diagnostics: checked.output };
-    if (['holder-props-store-forward-op', 'holder-props-store-string-state', 'holder-props-store-mismatched-op', 'holder-props-store-mismatched-state'].includes(name) && row.accepted) {
+    if (['holder-props-store-forward-op', 'holder-props-store-string-state', 'holder-props-store-mismatched-op', 'holder-props-store-mismatched-state',
+      'holder-props-store-composed-forward-op', 'holder-props-store-composed-number-op'].includes(name) && row.accepted) {
       const runtime = invoke([], true);
       row.nativePassed = runtime.status === 0;
       row.nativeElapsedMs = runtime.elapsedMs;

@@ -80,6 +80,8 @@ CALCIT_BIN=/path/to/calcit-0.28.0 node scripts/probe-dispatch-boundary.mjs
 检查 Number/String 状态的正确转发、错误状态写入及异类事件回调。
 同一 Props/Store 原型还提供 type-slot 版本：复用树 Ref 持有链，保留独立
 State 泛型，通过 entry 绑定固定 Op，以相同的五项输入比较泛型与槽路线。
+组合调用还检查从前项 AppController 推断 Op，再传入带内联事件回调的 Props；
+合法输入会实际执行，错误 Number 的诊断与正式版本的接受结果分别保存。
 factory 正例是否被接受取决于 checker 的实际泛型推断能力；输出会保留失败，
 不将旧 checker 的其他拒绝诊断视为名义 Op 关系已经贯通。
 输出包含每个场景的子进程端到端检查耗时（含启动与模块加载），是调查结果，

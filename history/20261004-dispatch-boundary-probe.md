@@ -294,3 +294,22 @@ native 的 dispatch 正控制明确比较 &enum:definition，不用 A/B 共享�
 Respo 默认严格检查与 96/96 native tests、Diary 默认严格检查通过。正式 0.28.0 与当前候选分别完成 44 场景；正式版的内联两例仍因 slot/裸 Fn 字段关系而拒绝，不能算作正确诊断。复查发现 docs 检查脚本此前不读取 CALCIT_BIN：先前该变量指定候选的命令实际使用 PATH 中的正式 CLI。脚本现优先采用显式 CALCIT_BIN，按当前候选重新运行，83/83 文件与 118/118 代码块通过；先前正式版的通过结果仍保留。#104 的默认 demo 可达图在正式和候选的 --warn-dyn-method --check-only 下均通过，但这个范围不代替全公共 API 或下游验收。
 
 Diary 在本项源码下重新生成 JS 后，initial/offline/login 三种 SSR 内容与组件身份通过（输出长度 271/291/1640 只是附带记录，验收仍由内容与身份断言完成）。临时 node_modules 链接在运行后删除。当前 compiler clippy all-targets -D warnings、fmt 与差异检查通过；完整 Rust 的首次沙箱运行在两个本机 HTTP bind 处被 Operation not permitted 阻止，获准的本机网络回归仍在运行，不能据分段通过写成完整通过。
+
+## 后续：组合调用中的泛型 Props 构造
+
+探针扩展为 48 个场景，新增两条路线各自的组合正例和 Number 反例：先传入携带 A 的 AppController，再在 notify 参数中直接构造 Props.event 的内联回调。复用已有定义，应用只保留 dispatch 的具体 A 签名。状态写入发生在构造 Props 之前，与前段独立 let 绑定的布局不同；标注数量不能脱离这一布局差异比较。
+
+| 组合输入 | 正式 0.28.0 | 修复前候选 | 当前候选 |
+| --- | --- | --- | --- |
+| 泛型路线：d! A | 接受；native 通过 | 错误拒绝，期望未实例化 Op | 接受；native 通过 |
+| 泛型路线：d! 42 | 接受；native 名义断言失败 | 拒绝，但同一正例也失败 | d! arg 1 拒绝，期望 A |
+| 槽路线：d! A | 因槽或字段关系拒绝 | 接受；native 通过 | 接受；native 通过 |
+| 槽路线：d! 42 | 因槽或字段关系拒绝 | d! arg 1 拒绝 | d! arg 1 拒绝，保留槽身份 |
+
+当前编译器把调用前项已证明的 Op 传入应用泛型 Struct 的字段上下文，并保留原名义声明身份。额外回归发现捕获 T 的生成回调错误返回 Number 会被返回推断掩盖；修复后该返回必须拒绝，而 callee 自己的结果变量仍可推断，即使其 source 名字与调用者的 U 相同。以上属于通用类型关系，未增加 Respo 专有 key 规则。
+
+当前固定源码重新通过 Respo 默认严格检查、96/96 native tests、48 场景探针及文档 83/83 文件、118/118 代码块；Diary 默认严格、客户端 JS 生成及随后 initial/offline/login 三种 SSR 内容与组件身份断言通过。完整编译器 Rust 与 check-all 仍在运行。JSON 与日志保存在临时目录，未入库。
+
+此结果只覆盖已声明的同质事件表与调用参数上下文。独立 let 中缺少 Op 证据的 Props 构造、生产异质 raw props、旧 cursor-list/tag 合同以及生产 renderer/listener 的迁移仍待解决。#195 的路线决策与 Calcit #1555 的 issue 反馈尚未发布。
+
+当前候选重新生成 Respo JS 后，12 个现有 Node 测试文件共 44 项通过，覆盖事件配置、nullish props、SSR、keyed、memo、patch lookup、DOM 创建、事件刷新、节点查找、component listener、effect 与 purification。随后独立生成 DOM 测试入口并执行现有 test-dom.mjs，退出 0。依赖使用同源码的候选 JS runtime，临时链接已清理；这补充类型推断修复后的运行时回归，未改变生产 dispatch 签名。
