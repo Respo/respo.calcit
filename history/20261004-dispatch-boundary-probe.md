@@ -64,3 +64,20 @@ CALCIT_BIN=/path/to/calcit-0.28.0 CHECK_CALCIT_BIN=/path/to/candidate-calcit nod
 
 结果 JSON 只留在临时目录；没有提交大快照或生成 JSON。尚未向 calcit#1555
 发布结论，当前也没有完成其所需的路线对比数据及 #195 的下游整体验收。
+
+## 后续：本地候选的 quoted slot 解析修复
+
+上表记录的是修复前的候选；后续在编译器解析器统一 quoted symbol、quote
+表达式与 bare slot 身份，再对同一 18 个场景复跑。修改后
+annotated-slot-valid-op 已通过，annotated-slot-number 在 d! 调用处拒绝；
+quoted hint-fn 与 bare hint-fn 的四个结果全部一致。
+
+编译器库测试 952 项通过、一项既有 ignored；Respo 默认严格检查与原有
+96 项 native 通过。本地编译器修复提交 fe94903f；完整 cargo test 为
+1,583 passed、0 failed、一项既有 ignored，fmt/clippy 通过。明确指定候选
+CALCIT_BIN 后完整 check-all 通过，覆盖 TS、Agent 协议与 native/JS/WASM。
+这项候选修复尚未发布，Respo 的 0.28 pin 和生产签名保持原样。
+
+slot-struct-valid-op 仍在 DomProps 字段边界被拒绝，slot-map-number 仍通过。
+接下来分别处理 handler alias 的类型关系与 map props 的回调推断，再贯通
+wrap-dispatch 的 typed/legacy 调用合同。quoted hint 的修复不是 #195 完成标记。
