@@ -226,3 +226,59 @@ listener、普通 map props 与旧 list/tag 合同。生产 schema 与工具链 
 新增持有链回归的两项共享 native/JS 回放通过，错误 payload 的 Ref 写入
 被静态拒绝。完整集成门禁分段通过：原 check-all 在新增 JS 回放的参数
 顺序处失败，修正后的完整断言脚本与全部后续门禁均退出 0。
+
+## 直接 Controller 构造的 32 场景复查
+
+候选进一步让构造器先推断自己的 Op，再验证实例化后的字段。
+直接 Controller: Ref<Fn(A)> 正例检查与 native 通过；新增直接 B controller
+与 A 树混接反例，检查拒绝并定位 deliver arg 2 的 Node<B>/Node<A> 差异。
+原 factory、递归树 Ref 与错误 handler/Number 场景仍保留。此次探针共 32
+场景，Respo 默认入口检查与 96 项 native 测试通过。
+
+构造器推断的三个附带测试已共享 native/JS 回放，错误消费者、Ref 写入
+其他回调类型、回调返回类型错误均被静态拒绝。编译器完整回归仍在运行，
+生产 dispatch schema 与最终路线尚未改变。
+
+候选编译器本轮进一步保留 where 泛型的身份与 trait 能力，避免因严格返回证明阻断 Add helper，并保持方法回调的未绑定泛型及 DOM nullish 兼容边界。重新运行 Respo 默认严格检查与 96/96 native tests、32 场景 probe 均完成：直接 Controller 构造的正例执行成功，异类 Controller/Node 组合仍在 deliver arg 2 拒绝。Diary 严格检查、JS 生成和 initial/offline/login 三种 SSR 内容与组件身份回归通过。候选尚未提交或发布；完整编译器门禁仍待最终 source 的完整验证。生产 dispatch 类型迁移、旧 cursor/tag 兼容与两路线的完整对比仍未完成。
+
+## 后续：Props 与 Store 分别保存 Op 与 State
+
+探针新增五个场景，总计 37 个。Store<State> 只保存状态，Props<Op> 保存 Map<Tag, EventHandler<Op>>，AppController<Op,State> 同时持有 Controller<Op> 和 Ref<Store<State>>。make-app-controller、save-state! 与 notify 沿用这两个独立参数；Number/String 状态不需要应用额外标注。
+
+| 场景 | 正式 0.28.0 | 当前未发布候选 |
+| --- | --- | --- |
+| A 类型 dispatch、A 事件、Number 状态 | 接受；native 通过 | 接受；native 通过 |
+| 同一 A dispatch、String 状态 | 接受；native 通过 | 接受；native 通过 |
+| 事件调用 d! 42 | 拒绝于 d! arg 1 | 拒绝于 d! arg 1 |
+| A controller 与 B 类型事件 Props 混接 | 接受；native 的名义 Op 断言失败，实际收到 B | 拒绝于 notify arg 2 |
+| Number 状态 controller 写入 String | 拒绝于 save-state! arg 2 | 拒绝于 save-state! arg 2 |
+
+native 的 dispatch 正控制明确比较 &enum:definition，不用 A/B 共享的 :clear tag 或 payload 相等代替名义身份。正式版失败后的栈序列化还报告旧 enum-def 转换错误；该附加错误不能掩盖前面的 A/B 身份断言失败。候选的错误 Props 在执行之前已由 W_FN_ARG_TYPE_MISMATCH 拒绝，错误 Number 定位为 W_LOCAL_FN_ARG_TYPE_MISMATCH。
+
+本段新增六个泛型定义、十个泛型参数声明位置，应用保留 dispatch 与事件回调的两个具体 Op 签名。这些数量描述 Props/Store 原型，不代表整个框架迁移成本；旧 plain Map props 的回调上下文、cursor-list/tag 兼容合同与 listener/生产 render 链仍须贯通。这里的 Props 是名义原型，不把原本开放的 raw props map 当作已解决。
+
+正式版与候选分别完成同一 37 场景探针，候选及正式版两项 Props/Store 正例均执行通过。现有文档门禁 83/83 文件、118/118 代码块通过；所有输出 JSON 保持在临时目录。编译器最终 source 的完整 Rust 已退出 0（1,584 passed、0 failed、1 ignored），完整 check-all 的 known-assertion 阶段已通过，其余阶段仍在进行，编译器未发布。
+
+候选随后修正了完整 bundled-public 检查中的 contextual return 误报：函数自身与捕获的泛型保持刚性，调用方待推断的 callback result 可继续推断。当前候选重新完成 Respo 严格检查、96/96 native 与同一 37 场景 probe，Props/Store 的两项 native 正例及三项拒绝结果保持不变；Diary 严格检查、JS 与三种 SSR 内容/组件身份重新通过。完整 Rust 和 check-all 正在重跑当前源码，上一段 1,584 Rust 结果对应此项后续修复之前的源码。
+
+## 同一 Store/Dispatch/Props 的两路线对比
+
+编译器本地提交 `6e954020` 的完整 Rust（1,584 passed、0 failed、1 ignored）、check-all、clippy 与格式检查均已通过。它尚未发布。探针扩展为 42 个场景：泛型与 type-slot 复用同一 Controller/Ref<Option<Node>>、Store、Props、AppController、保存状态与通知回调代码；槽版本将 Op 替换为 entry 的 dispatch-op 绑定，State 仍独立推断。A/B 定义保持相同，两条路线的应用回调保留相同具体签名。
+
+| 同一输入 | 候选：泛型 | 候选：type-slot |
+| --- | --- | --- |
+| A dispatch、A 事件、Number 状态 | 接受；native 通过 | 接受；native 通过 |
+| A dispatch、A 事件、String 状态 | 接受；native 通过 | 接受；native 通过 |
+| d! 42 | d! arg 1 拒绝，期望 A | d! arg 1 拒绝，期望 A |
+| A dispatch、B 事件 | notify arg 2 拒绝，期望 Props<A> | SlotProps 的 event 字段拒绝，期望 slot handler |
+| Number 状态写入 String | save-state! arg 2 拒绝 | Slotsave-state! arg 2 拒绝 |
+
+仅统计新增的六个 Store/Props 应用定义，泛型路线有十个泛型参数声明位置，槽路线有五个 State 参数声明位置及一项 entry Op 绑定；两者都保留两处应用具体 Op 回调签名。递归 Node 等共有持有链不计入这组数字。槽路线减少框架侧 Op 参数传递，但约束同一 entry 的应用 Op；泛型路线可在同一程序中组合独立 Op 的持有对象，并在组合调用点诊断错误。槽路线的异类事件诊断提前到 Props 构造，但显示 type-slot(dispatch-op)，没有把实际 entry 绑定 A 展开进该字段消息。
+
+正式 0.28.0 的泛型两项正例执行通过，异类 B Props 仍被接受并在 native 名义断言失败；type-slot 五项均拒绝，包含合法正例，原因涉及 quoted slot 与回调类型关系。不能把这些拒绝计作错误输入已被正确检查。候选两条路线均在各自正例通过后得到上述拒绝证据。现有探针新增条件核验：槽正例如果被接受，必须 native 执行成功，三个反例必须拒绝且对应 d!、Props event、save-state! 的诊断位置。
+
+结果包含每场景端到端耗时，含进程启动与模块加载。一次采样不足以得出性能优劣；正式与候选的构建模式也不同，不能直接比较两个二进制的时长。所有 JSON 留在临时目录。模板生成时曾误替换 Option，已修正为完整 Op token 替换；该次失败属于探针模板错误，不计作编译器缺陷。
+
+最终 42 场景在正式与候选编译器分别运行完成。五个 Props/Store 场景的检查耗时中位数：候选泛型 592.7 ms、候选槽路线 566.9 ms；正式泛型 101.8 ms、正式槽路线 100.3 ms。各组包含不同输入和通过/失败路径，数字只保存此次调查的运行成本，不是同一负载反复采样的性能结论。文档门禁 83/83 文件、118/118 代码块通过，git diff --check 通过。
+
+本原型仍未决定生产 API 的迁移路线：raw Map props 的回调上下文、生产 renderer/listener 与旧 cursor-list/tag 调用合同尚未贯通。两路线原型的成功不能证明这些验收项。此记录提供 #195 与 Calcit #1555 所需最小比较的本地证据，未代替 issue 决策或发布。

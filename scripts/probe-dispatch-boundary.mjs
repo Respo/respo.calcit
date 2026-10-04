@@ -108,6 +108,9 @@ ${annotated ? `      hint-fn $ {} (:return 'Unit)
   assert.equal(control('holder-forward-op').accepted, true, `generic holder positive control must compile: ${control('holder-forward-op').diagnostics}`);
   assert.equal(control('holder-forward-op').nativePassed, true, 'generic holder positive control must execute');
   assert.equal(control('holder-number').accepted, false, 'generic holder must reject a concrete Number op');
+  if (control('holder-direct-controller').accepted) {
+    assert.equal(control('holder-direct-controller').nativePassed, true, 'an accepted direct Controller must execute');
+  }
   if (control('holder-factory-forward-op').accepted) {
     assert.equal(control('holder-factory-forward-op').nativePassed, true, 'an accepted tree factory must execute');
     assert.equal(control('holder-factory-mismatched-controller').accepted, false, 'a typed tree factory must retain the nominal Op relationship');
@@ -115,6 +118,22 @@ ${annotated ? `      hint-fn $ {} (:return 'Unit)
   if (control('holder-ref-tree-forward-op').accepted) {
     assert.equal(control('holder-ref-tree-forward-op').nativePassed, true, 'an accepted tree Ref holder must execute');
     assert.equal(control('holder-ref-tree-mismatched-controller').accepted, false, 'tree Ref holders must retain the nominal Op relationship');
+  }
+  for (const name of ['holder-props-store-forward-op', 'holder-props-store-string-state',
+    'slot-props-store-forward-op', 'slot-props-store-string-state']) {
+    if (control(name).accepted) {
+      assert.equal(control(name).nativePassed, true, 'accepted Props/Store holders must preserve runtime dispatch and state');
+    }
+  }
+  if (control('slot-props-store-forward-op').accepted) {
+    for (const [name, diagnostic] of [
+      ['slot-props-store-number-op', /calling `d!` arg 1/],
+      ['slot-props-store-mismatched-op', /struct `SlotProps` field `:event`/],
+      ['slot-props-store-mismatched-state', /Slotsave-state!` arg 2/],
+    ]) {
+      assert.equal(control(name).accepted, false, 'a working slot holder must reject the mismatched input');
+      assert.match(control(name).diagnostics, diagnostic);
+    }
   }
   console.log(JSON.stringify({ mutationCompiler: version.output.trim(), checker: invoke(['--version'], true).output.trim(), results }, null, 2));
 } finally {

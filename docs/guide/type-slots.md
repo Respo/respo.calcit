@@ -76,7 +76,10 @@ CALCIT_BIN=/path/to/calcit-0.28.0 node scripts/probe-dispatch-boundary.mjs
 覆盖 map/struct props、错误 Number、合法 Op、旧 list/tag、显式回调标注
 及泛型回调的 Op 转发/捕获。持有链探针另测递归节点、保存 dispatch 的 Ref、
 泛型树 factory、保存整棵树后的 render 派发与两种应用 Op 混接，
-并保留直接 Controller 构造的诊断。
+并保留直接 Controller 构造的诊断。Props/Store 原型独立携带 Op 与状态类型，
+检查 Number/String 状态的正确转发、错误状态写入及异类事件回调。
+同一 Props/Store 原型还提供 type-slot 版本：复用树 Ref 持有链，保留独立
+State 泛型，通过 entry 绑定固定 Op，以相同的五项输入比较泛型与槽路线。
 factory 正例是否被接受取决于 checker 的实际泛型推断能力；输出会保留失败，
 不将旧 checker 的其他拒绝诊断视为名义 Op 关系已经贯通。
 输出包含每个场景的子进程端到端检查耗时（含启动与模块加载），是调查结果，
