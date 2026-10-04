@@ -8,11 +8,15 @@ Respo 的开发版本以 `deps.cirru` 固定 Calcit 与 js-ffi 依赖，通过�
 
 升级时同时固定 `deps.cirru :calcit-version` 和 `package.json` 的 `@calcit/procs` 为同一精确版本，并执行 `yarn install --immutable`。只更新 CLI 而沿用旧 JS runtime，可能在运行时缺失新的 trait 实现；编译成功不能代替 DOM/SSR 测试。核心 API 改写先用 `calcit fix --preset core-api-0.28-v1 --format edn` 预览，只有可证明安全的建议自动应用，剩余开放类型和 macro 建议保留人工审阅。
 
-当前编译器和 JS runtime 固定为正式 Calcit / `@calcit/procs` `0.28.0`；js-ffi 暂保留原已发布 tag `0.2.1-alpha.11`，待兼容正式版本发布后替换，不使用提交 hash。Respo `0.16.114-alpha.6` 汇集 SVG/样式源类型检查、HTML 标量边界和显式 Component adapter 的已合并修复，仍是 alpha 源码模块。模块通过普通 Calcit 引用复用 JS FFI，不需要片段专用 npm 包。版本以 `deps.cirru :version` 为准，旧 Snapshot 的镜像字段不作为发布依据。此前 alpha 工具链的历史验收见[发布依赖验收](docs/guide/calcit-0.28-alpha3-validation.md)，不代表本次正式工具链或完整 0.29 迁移的验收。
+当前编译器和 JS runtime 固定为已发布的 Calcit / `@calcit/procs` `0.29.0-alpha.6`，js-ffi 固定为已发布 Git tag `0.2.1-alpha.13`，不使用提交 hash。Respo `0.16.114-alpha.7` 将现有 typed callback、RenderNode、DOM patch 和集合合同接入这一工具链，仍是预发布源码模块。模块通过普通 Calcit 引用复用 JS FFI，不需要片段专用 npm 包。版本以 `deps.cirru :version` 为准，旧 Snapshot 的镜像字段不作为发布依据。此前 alpha 工具链的历史验收见[发布依赖验收](docs/guide/calcit-0.28-alpha3-validation.md)，不代表当前组合的完整验收。
 
 演示页前端构建使用 `https://cos-sh.tiye.me/Respo/respo.calcit/` 作为资源 base。仅 main push 在测试、构建通过后上传 `dist/`，使用 `cos-upload-action@v1.2.0` 的 `public-base-url` 内置逐文件校验，不维护额外验证脚本。PR 只构建，不读取部署 secrets。原 rsync 页面路径 `/web-assets/repo/${github.repository}` 保持不变；生产运行串行且上传前检查 main SHA，跳过已过期提交，这并非原子发布。
 
-正式 0.28 下，默认 browser 入口检查和 JS 编译、74 项 Calcit 测试、既有 JS 测试、完整 DOM host 套件、DomPatch/扩展属性正反类型检查及 CDN 构建已通过。[Map 构造及 DOM anchor 宿主断言问题](https://github.com/Respo/respo.calcit/issues/212)使用显式 browser JS FFI 与受检列表转换修正，末尾移动传入 null anchor；[SVG 属性构造](https://github.com/Respo/respo.calcit/issues/208)改用类型化的 `with-attrs`。这些结果不代表整个库的 Node target 或真实浏览器已验收；完整公开定义及 strict workflow 仍受 [Promise 宿主边界](https://github.com/calcit-lang/js-ffi/issues/154)阻止。
+当前组合保留原 definition `:tests` 与断言，通过原生 106 项测试、默认 browser 入口 192 项检查，以及 23 个框架命名空间的 325 个定义检查。SSR、DOM patch/lifecycle、正反类型检查、Markdown 示例和生产构建均已验证；真实 Chrome 验证任务添加、编辑、勾选、移除、键盘事件和刷新后交互。源码使用 canonical core 名称，字面量分支使用 `match`，不增加质量基线预算。`with-attrs` 接收已序列化的 SVG 扩展属性；DOM anchor 末尾移动使用 null，保留宿主边界的运行时验证。
+
+早期候选工具链的七项失败分为五项回调边界和两项列表构造，恢复过程见[回调边界历史记录](history/20261004-callback-type-boundaries.md)。这是历史验证，不代表当前组合；上述 106 项测试包含原有列表构造的 nil 过滤与替换/移除用例，当前均已通过。
+
+完整库的 Node target 和应用级 type-slot 贯通仍需分别验收；默认入口、框架定义检查和 demo 正例不能证明所有应用的 typed dispatch 已完成。
 
 > Inspired by React and Reagent. Previously [Respo/respo.cljs](https://github.com/Respo/respo.cljs).
 
