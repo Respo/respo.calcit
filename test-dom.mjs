@@ -90,7 +90,7 @@ const jsFfiModule = readFileSync(new URL("./js-out/js-ffi.browser.mjs", import.m
 if (!jsFfiModule.includes("JS FFI: js-ffi.browser/document-available?")) {
   throw new Error("js-ffi file expression was not embedded in its Calcit module")
 }
-if (!jsFfiModule.includes("calcit://js-ffi@0.2.1-alpha.11/js-ffi.browser/document-available%3F/file/js-ffi-assets/document-available.js")) {
+if (!jsFfiModule.includes("calcit://js-ffi@0.2.1-alpha.13/js-ffi.browser/document-available%3F/file/js-ffi-assets/document-available.js")) {
   throw new Error("js-ffi source provenance lost the installed module version or file path")
 }
 if (/^import\s+.*js-ffi-assets\//m.test(jsFfiModule)) {

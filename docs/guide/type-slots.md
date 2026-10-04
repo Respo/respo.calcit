@@ -68,11 +68,12 @@ render!、保存的 dispatch、事件与 listener 保持同一个应用 Op，并
 在 Respo 源码仓库中运行：
 
 ```bash
-CALCIT_BIN=/path/to/calcit-0.28.0 node scripts/probe-dispatch-boundary.mjs
+CALCIT_BIN=/path/to/calcit-0.29.0-alpha.6 node scripts/probe-dispatch-boundary.mjs
 ```
 
-可用 `CHECK_CALCIT_BIN` 指定候选编译器做检查；源码编辑仍由匹配项目 pin 的
-0.28.0 完成。脚本在临时副本中使用 CLI 修改 demo 入口和 handler schema，
+可用 `CHECK_CALCIT_BIN` 指定候选编译器做检查；源码编辑由与
+`deps.cirru :calcit-version` 精确匹配的已发布 CLI 完成，脚本解析该声明并拒绝不匹配的 mutator。
+脚本在临时副本中使用 CLI 修改 demo 入口和 handler schema，
 覆盖 map/struct props、错误 Number、合法 Op、旧 list/tag、显式回调标注
 及泛型回调的 Op 转发/捕获。持有链探针另测递归节点、保存 dispatch 的 Ref、
 泛型树 factory、保存整棵树后的 render 派发与两种应用 Op 混接，

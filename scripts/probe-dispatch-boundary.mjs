@@ -1,13 +1,17 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { copyFileSync, mkdtempSync, mkdirSync, rmSync, symlinkSync } from 'node:fs';
+import { copyFileSync, mkdtempSync, mkdirSync, readFileSync, rmSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { probeGenericHolders } from './probe-dispatch-holders.mjs';
+import * as c from '@calcit/procs';
 
-// #195 的迁移探针；结果描述当前缺口，不是发布验收的通过标记。
+// #195 migration probe: describe current gaps, not a release acceptance gate.
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const pinnedVersion = c.parse_cirru_edn(readFileSync(resolve(root, 'deps.cirru'), 'utf8'))
+  .get(c.turn_tag('calcit-version'));
+assert.equal(typeof pinnedVersion, 'string', 'deps.cirru must pin the mutation toolchain');
 const bin = process.env.CALCIT_BIN ?? 'calcit';
 const checkBin = process.env.CHECK_CALCIT_BIN ?? bin;
 const scratch = mkdtempSync(resolve(tmpdir(), 'respo-dispatch-probe-'));
@@ -32,7 +36,7 @@ try {
   symlinkSync(resolve(root, '.calcit/modules'), resolve(scratch, '.calcit/modules'));
   const version = invoke(['--version']);
   assert.equal(version.status, 0, version.output);
-  assert.match(version.output, /0\.28\.0/, 'mutation probe requires the project-pinned Calcit 0.28.0');
+  assert.equal(version.output.trim(), pinnedVersion, 'mutation probe requires the project-pinned Calcit version');
   for (const [name, slot, mapProps, call, annotated, variadic] of [
     ['current-struct-number', false, false, 'd! 42'],
     ['current-map-number', false, true, 'd! 42'],

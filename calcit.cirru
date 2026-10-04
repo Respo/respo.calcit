@@ -88,13 +88,14 @@
             :args $ [] 'Dynamic 'respo.app.schema/Task
         'effect-log $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defeffect effect-log (task) (action parent at-place?) (; js/console.log "|Task effect" action at-place?)
-            case-default action nil
+            match action
               :mount $ let
                   x0 $ js/Math.random
                 ; println |Stored x0
                 , nil
               :update (; println |read) nil
               :unmount (; println |read) nil
+              _ nil
             , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Effect)
@@ -419,7 +420,7 @@
                     when (= generation @*render-watch-generation) (render!)
                     , &unit
                   , enqueue-option
-              add-watch *store :rerender $ fn (_current _previous) (schedule!)
+              calcit.core/add-watch! *store :rerender $ fn (_current _previous) (schedule!)
             , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
@@ -768,7 +769,7 @@
           :doc "|A tiny spacer component that renders an empty styled `<div>` with either width or height.\n\nUse it for explicit horizontal or vertical gaps when you want spacing as a component, although plain CSS margin is often cheaper."
           :code $ quote $ defcomp comp-space (w h)
             div $ {} (:class-name style-space)
-              :style $ if (some? w) (&{} :width w) (&{} :height h)
+              :style $ if (calcit.core/non-nil? w) (&{} :width w) (&{} :height h)
           :examples $ []
             quote $ comp-space 10 nil
             quote $ comp-space nil 16px
@@ -1059,8 +1060,8 @@
         'find-event-target $ %{} 'CodeEntry
           :doc "|Traverses the virtual DOM to find the element that should handle a specific event."
           :code $ quote $ defn find-event-target (element coord event-name)
-            assert |element-cannot-be-nil $ some? element
-            assert |coord-cannot-be-nil $ some? coord
+            assert |element-cannot-be-nil $ calcit.core/non-nil? element
+            assert |coord-cannot-be-nil $ calcit.core/non-nil? coord
             let
                 target-element-option $ loop
                     m-option $ get-render-node-at (respo.util.detect/as-render-node element) coord
@@ -1298,7 +1299,7 @@
           :code $ quote $ defn confirm-child-pair (pair)
             assert "|expected pair" $ and (list? pair)
               &= 2 $ count pair
-            assert "|[Respo] keyed child requires a non-nil key" $ some? $ &list:first pair
+            assert "|[Respo] keyed child requires a non-nil key" $ calcit.core/non-nil? $ &list:first pair
             &let
               x $ &list:nth pair 1
               assert "|Invalid data in elements tree: " $ or (nil? x) (element? x) (component? x)
@@ -1332,7 +1333,7 @@
                       item $ &list:first xs
                     confirm-child item
                     recur
-                      if (some? item)
+                      if (calcit.core/non-nil? item)
                         append acc $ respo.util.detect/make-child-pair idx item
                         , acc
                       &list:rest xs
@@ -1369,7 +1370,7 @@
                 map
                   filter (map child-pairs confirm-child-pair)
                     fn (pair)
-                      some? $ respo.util.list/pair-value pair
+                      calcit.core/non-nil? $ respo.util.list/pair-value pair
                   fn (pair)
                     hint-fn $ {}
                       :args $ [] $ :: 'List 'Dynamic
@@ -1555,7 +1556,7 @@
                   let
                       component-body-result $ do $ ~@ body
                     , component-body-result
-                ~ $ turn-string comp-name
+                ~ $ calcit.core/to-string comp-name
           :examples $ []
             quote $ defcomp comp-demo () $ div ({}) (<> |Hello)
             quote $ defcomp comp-button (text)
@@ -1717,7 +1718,7 @@
               (:some cleanup!)
                 if (fn? cleanup!) &unit $ raise |[Respo/effect-watch]-expected-cleanup-callback
             build-effect :effect-watch deps $ fn (_args params)
-              let[] (action target _at-place?) params $ case-default action &unit
+              let[] (action target _at-place?) params $ match action
                 :mount $ do (setup! target) &unit
                 :before-update $ match cleanup-option
                   (:none) &unit
@@ -1728,6 +1729,7 @@
                   (:none) &unit
                   (:some cleanup!)
                     do (cleanup! target) &unit
+                _ &unit
           :examples $ [] $ quote
             effect-watch ([] 1)
               fn (_target) nil
@@ -2247,7 +2249,7 @@
                         :return $ :: 'Map 'Tag 'Dynamic
                   filter-present (&struct:to-map props)
                     fn (_k v)
-                      and (some? v) (not= v js/undefined)
+                      and (calcit.core/non-nil? v) (not= v js/undefined)
               (map? props) props
               true $ raise $ str |Expected_DOM_props_map_or_record,_got: (type-of props)
           :examples $ []
@@ -2707,7 +2709,7 @@
                   style-ns $ &map:get (&extract-code-into-edn style-name) :ns
                   ns-str $ if (string? style-ns) style-ns $ raise "|defstyle expected a namespaced symbol"
                   style-name-str $ str
-                    -> (turn-string style-name) (&str:replace |! |_EX_) (&str:replace |? |_QU_)
+                    -> (calcit.core/to-string style-name) (&str:replace |! |_EX_) (&str:replace |? |_QU_)
                     , |__ $ -> ns-str (&str:replace |. |_)
                 quasiquote $ def ~style-name $ create-style! ~style-name-str ~rules
           :examples $ []
@@ -2779,7 +2781,7 @@
                     contained $ &map:get styles-map :contained
                     css-line $ style->string $ unsafe-coerce (&map:to-list styles-map)
                       :: 'List $ :: 'List 'Dynamic
-                    block $ if (some? contained)
+                    block $ if (calcit.core/non-nil? contained)
                       str contained (char-from-code 32) |{ &newline rule-name (char-from-code 32) |{ &newline css-line &newline |} &newline |}
                       str rule-name (char-from-code 32) |{ &newline css-line &newline |}
                     next-acc $ if (empty? acc) block $ str acc &newline &newline block
@@ -3401,7 +3403,7 @@
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
             if (nil? build-errors)
-              do (remove-watch *store :rerender) (clear-cache!) (render-app! mount-target)
+              do (calcit.core/remove-watch! *store :rerender) (clear-cache!) (render-app! mount-target)
                 watch-render!
                   fn () $ render-app! mount-target
                   %:: Option :none
@@ -4341,7 +4343,7 @@
                     new-v $ respo.util.list/pair-value new-pair
                     old-follows $ &list:rest old-props
                     new-follows $ &list:rest new-props
-                  case-default (&compare old-k new-k) (eprintln |[Respo]-unknown-compare-result-for-props-keys)
+                  match (&compare old-k new-k)
                     -1 $ do
                       collect! $ DomPatch :rm-prop coord n-coord old-k
                       recur collect! coord n-coord old-follows new-props
@@ -4353,6 +4355,7 @@
                         not $ &= old-v new-v
                         collect! $ DomPatch :replace-prop coord n-coord new-k new-v
                       recur collect! coord n-coord old-follows new-follows
+                    _ $ eprintln |[Respo]-unknown-compare-result-for-props-keys
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
@@ -4513,7 +4516,7 @@
                     new-v $ respo.util.list/pair-value new-entry
                     old-follows $ &list:rest old-style
                     new-follows $ &list:rest new-style
-                  case-default (&compare old-k new-k) (eprintln |[Respo]-unknown-compare-result-for-style-keys)
+                  match (&compare old-k new-k)
                     -1 $ do
                       collect! $ DomPatch :rm-style c-coord coord old-k
                       recur collect! c-coord coord old-follows new-style
@@ -4525,6 +4528,7 @@
                         not $ identical? old-v new-v
                         collect! $ DomPatch :replace-style c-coord coord new-k new-v
                       recur collect! c-coord coord old-follows new-follows
+                    _ $ eprintln |[Respo]-unknown-compare-result-for-style-keys
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
@@ -4857,7 +4861,7 @@
         'make-element $ %{} 'CodeEntry
           :doc "|internal function to create a DOM element from a virtual element. handles properties, styles, events, and recursively creates child elements."
           :code $ quote $ defn make-element (virtual-element listener-builder coord & svg-context)
-            assert |coord-is-required $ some? coord
+            assert |coord-is-required $ calcit.core/non-nil? coord
             make-render-node-element (respo.util.detect/as-render-node virtual-element) listener-builder coord $ if (empty? svg-context) false $ &list:nth svg-context 0
           :examples $ []
           :schema $ :: 'Fn $ {} (:rest 'Bool) (:return 'respo.dom/DomElement)
@@ -4880,7 +4884,7 @@
                     , svg-context
               (:element virtual-element)
                 let
-                    tag-name $ turn-string $ :name virtual-element
+                    tag-name $ calcit.core/to-string $ :name virtual-element
                     svg? $ or (= tag-name |svg) svg-context
                     child-svg? $ and svg? $ not= tag-name |foreignObject
                     attrs $ :attrs virtual-element
@@ -4920,7 +4924,7 @@
                             browser/element-dataset $ host-element element
                             .!slice prop-str 5
                         if svg?
-                          when (some? v)
+                          when (calcit.core/non-nil? v)
                             browser/element-set-attribute! (host-element element) (svg-attr-name prop-str) (respo.util.format/scalar-attribute-text v)
                           let
                               k $ dashed->camel prop-str
@@ -4939,7 +4943,7 @@
                   &doseq (entry events)
                     let
                         event-handler $ respo.util.list/pair-value entry
-                      when (some? event-handler)
+                      when (calcit.core/non-nil? event-handler)
                         install-listener! element (respo.util.list/pair-key entry) listener-builder coord
                   each child-elements $ fn (child-element)
                     if (calcit.core/non-nil? child-element)
@@ -4969,7 +4973,7 @@
                   let
                       style-name $ cond
                           tag? k
-                          turn-string k
+                          calcit.core/to-string k
                         (string? k) k
                         true $ raise "|style->string expected a tag or string key"
                       v $ get-style-value (respo.util.list/pair-value entry) style-name
@@ -5366,7 +5370,7 @@
                           (:none) ({})
                           (:some listeners) listeners
                       set! target.:owned-event-listeners $ assoc listeners event-name handler
-                      .add-event-listener! target (turn-string event-name) handler
+                      .add-event-listener! target (calcit.core/to-string event-name) handler
             , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
@@ -5389,7 +5393,7 @@
                   (:none) &unit
                   (:some listener)
                     do
-                      .remove-event-listener! target (turn-string event-name) listener
+                      .remove-event-listener! target (calcit.core/to-string event-name) listener
                       let
                           remaining $ dissoc listeners event-name
                         if (empty? remaining) (js-delete target |__respo_calcit_event_listeners) (set! target.:owned-event-listeners remaining)
@@ -5418,7 +5422,7 @@
         'element->string $ %{} 'CodeEntry (:doc "|which is actually `element->html`")
           :code $ quote $ defn element->string (element)
             let
-                tag-name $ turn-string $ element :name
+                tag-name $ calcit.core/to-string $ element :name
                 attrs $ pairs-map $ element :attrs
                 styles $ element :style
                 children $ map (element :children)
@@ -5489,13 +5493,13 @@
                   value $ &map:get attrs :value
                 if (calcit.core/non-nil? value)
                   escape-html $ respo.util.format/scalar-attribute-text value
-                  join-str children |
+                  calcit.core/join-string children |
               let
                   html $ &map:get attrs :innerHTML
                 if (calcit.core/non-nil? html) (respo.util.format/scalar-attribute-text html)
                   let
                       text $ &map:get attrs :inner-text
-                    if (calcit.core/non-nil? text) (text->html text) (join-str children |)
+                    if (calcit.core/non-nil? text) (text->html text) (calcit.core/join-string children |)
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'String)
             :args $ [] 'Tag (:: 'Map 'Tag 'Dynamic) (:: 'List 'String)
@@ -5581,10 +5585,10 @@
                   let
                       k $ respo.util.list/pair-key pair
                       v $ respo.util.list/pair-value pair
-                    and (some? v)
-                      not $ starts-with? (turn-string k) |on-
+                    and (calcit.core/non-nil? v)
+                      not $ starts-with? (calcit.core/to-string k) |on-
                 sorted $ &list:sort-by visible respo.util.list/pair-key
-              join-str (map sorted entry->html) "| "
+              calcit.core/join-string (map sorted entry->html) "| "
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'String)
             :args $ [] $ :: 'Map 'Tag 'Dynamic
@@ -5596,13 +5600,13 @@
         'style->html $ %{} 'CodeEntry
           :doc "|this function is intended for HTML rendering since it escaped characters."
           :code $ quote $ defn style->html (styles)
-            join-str
+            calcit.core/join-string
               map styles $ fn (entry)
                 hint-fn $ {}
                   :args $ [] $ :: 'List 'Dynamic
                   :return 'String
                 let
-                    style-name $ turn-string $ respo.util.list/pair-key entry
+                    style-name $ calcit.core/to-string $ respo.util.list/pair-key entry
                     v $ get-style-value (respo.util.list/pair-value entry) (dashed->camel style-name)
                   str style-name |: (escape-html v) |;
               , |
@@ -5650,7 +5654,7 @@
           :doc "|Adds or updates a property on a DOM element. Handles data attributes and style strings."
           :code $ quote $ defn add-prop (target p prop-value)
             let
-                prop-str $ turn-string p
+                prop-str $ calcit.core/to-string p
               if (.!startsWith prop-str |data-)
                 if (calcit.core/non-nil? prop-value)
                   -> target .-dataset $ js-set (.!slice prop-str 5) prop-value
@@ -5661,8 +5665,9 @@
                     Option :none
                   let
                       prop-name $ dashed->camel prop-str
-                    case-default prop-name (js-set target prop-name prop-value)
+                    match prop-name
                       |style $ js-set target prop-name $ style->string prop-value
+                      _ $ js-set target prop-name prop-value
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'respo.dom/DomElement 'Tag 'Dynamic
@@ -5670,7 +5675,7 @@
         'add-style $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn add-style (target p v)
             let
-                style-name $ dashed->camel $ turn-string p
+                style-name $ dashed->camel $ calcit.core/to-string p
                 style-value $ get-style-value v style-name
               aset
                 unsafe-coerce (.-style target) JsObject
@@ -6013,7 +6018,7 @@
           :doc "|Updates a property on a DOM element. Handles data attributes and special cases like 'value'."
           :code $ quote $ defn replace-prop (target p prop-value)
             let
-                prop-str $ turn-string p
+                prop-str $ calcit.core/to-string p
               if (.!startsWith prop-str |data-)
                 let
                     name $ .!slice prop-str 5
@@ -6043,7 +6048,7 @@
           :doc "|Updates a single style property on a DOM element."
           :code $ quote $ defn replace-style (target p v)
             let
-                style-name $ dashed->camel $ turn-string p
+                style-name $ dashed->camel $ calcit.core/to-string p
               aset
                 unsafe-coerce (.-style target) JsObject
                 , style-name $ get-style-value v style-name
@@ -6079,14 +6084,7 @@
           :code $ quote $ defn rm-prop (target op)
             if (svg-target? target)
               set-svg-prop! target op $ Option :none
-              case-default op
-                let
-                    prop-str $ turn-string op
-                  if (.!startsWith prop-str |data-)
-                    js-delete (target.:dataset) (.!slice prop-str 5)
-                    let
-                        k $ dashed->camel prop-str
-                      aset target k nil
+              match op
                 :class-name $ target .remove-attribute! |class
                 :href $ target .remove-attribute! |href
                 :inner-text $ set! target.:inner-text |
@@ -6094,6 +6092,13 @@
                 :checked $ set! target.:checked false
                 :disabled $ set! target.:disabled false
                 :selected $ set! target.:selected false
+                _ $ let
+                    prop-str $ calcit.core/to-string op
+                  if (.!startsWith prop-str |data-)
+                    js-delete (target.:dataset) (.!slice prop-str 5)
+                    let
+                        k $ dashed->camel prop-str
+                      aset target k nil
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'respo.dom/DomElement 'Tag
@@ -6101,7 +6106,7 @@
         'rm-style $ %{} 'CodeEntry (:doc "|Removes a style property from a DOM element.")
           :code $ quote $ defn rm-style (target op)
             &let
-              style-name $ dashed->camel $ turn-string op
+              style-name $ dashed->camel $ calcit.core/to-string op
               do
                 -> (.-style target) (js-set style-name nil)
                 , &unit
@@ -6123,7 +6128,7 @@
         'set-svg-prop! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn set-svg-prop! (target p value)
             let
-                attr $ svg-attr-name $ turn-string p
+                attr $ svg-attr-name $ calcit.core/to-string p
               match value
                 (:some text)
                   browser/element-set-attribute! (host-element target) attr text
@@ -7371,9 +7376,7 @@
                 event-type $ event.:type
                 keyboard-event $ unsafe-coerce event 'respo.dom/DomKeyboardEvent
               ->
-                case-default event-type
-                  {} (:type event-type)
-                    :msg $ str "|Unhandled event: " event-type
+                match event-type
                   |click $ {} $ :type :click
                   |keydown $ &merge (map-keyboard-event keyboard-event)
                     {} (:type :keydown)
@@ -7389,6 +7392,8 @@
                   |change $ {} (:type :change)
                     :value $ input-event-value event
                   |focus $ {} $ :type :focus
+                  _ $ {} (:type event-type)
+                    :msg $ str "|Unhandled event: " event-type
                 assoc :original-event event
                 assoc :event event
           :examples $ []
@@ -7405,7 +7410,7 @@
             :args $ [] 'Tag
         'event->string $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn event->string (x)
-            &str:slice (turn-string x) 3
+            &str:slice (calcit.core/to-string x) 3
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'String)
             :args $ [] 'T
@@ -7558,7 +7563,7 @@
         'prop->attr $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn prop->attr (x)
             when (includes? x |?) (println "|[Respo] warning: property includes `?` in" x)
-            case-default x x (|class-name |class) (|tab-index |tabindex) (|read-only |readonly) (|spell-check |spellcheck)
+            match x (|class-name |class) (|tab-index |tabindex) (|read-only |readonly) (|spell-check |spellcheck) (_ x)
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'String)
             :args $ [] 'String
@@ -7621,7 +7626,7 @@
           :code $ quote $ defn purify-events (events)
             -> (&map:to-list events)
               filter $ fn (pair)
-                some? $ respo.util.list/pair-value pair
+                calcit.core/non-nil? $ respo.util.list/pair-value pair
               map respo.util.list/pair-key
           :examples $ []
           :schema $ :: 'Fn $ {}
@@ -7702,7 +7707,7 @@
               :tags $ #{} :unit
         'svg-attr-name $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn svg-attr-name (x)
-            case-default x x (|strokeWidth |stroke-width) (|strokeLinecap |stroke-linecap) (|strokeLinejoin |stroke-linejoin) (|strokeDasharray |stroke-dasharray) (|strokeDashoffset |stroke-dashoffset) (|fillRule |fill-rule) (|fillOpacity |fill-opacity) (|clipPath |clip-path) (|stopColor |stop-color) (|stopOpacity |stop-opacity) (|class-name |class)
+            match x (|strokeWidth |stroke-width) (|strokeLinecap |stroke-linecap) (|strokeLinejoin |stroke-linejoin) (|strokeDasharray |stroke-dasharray) (|strokeDashoffset |stroke-dashoffset) (|fillRule |fill-rule) (|fillOpacity |fill-opacity) (|clipPath |clip-path) (|stopColor |stop-color) (|stopOpacity |stop-opacity) (|class-name |class) (_ x)
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'String)
             :args $ [] 'String
@@ -7829,7 +7834,7 @@
                   hint-fn $ {}
                     :args $ [] 'Tag 'Dynamic
                     :return 'Bool
-                  and (some? v)
+                  and (calcit.core/non-nil? v)
                     not $ starts-with? (to-string k) |on-
                 &map:to-list
                 sort $ fn (x y)
@@ -7864,7 +7869,7 @@
                   if
                     and
                       starts-with? (to-string k) |on-
-                      some? v
+                      calcit.core/non-nil? v
                     %:: MapEntryDecision :keep
                       turn-tag $ &str:slice (to-string k) 3
                       assert-type v respo.schema/EventHandler
