@@ -33,7 +33,7 @@ try {
   const version = invoke(['--version']);
   assert.equal(version.status, 0, version.output);
   assert.match(version.output, /0\.28\.0/, 'mutation probe requires the project-pinned Calcit 0.28.0');
-  for (const [name, slot, mapProps, call, annotated] of [
+  for (const [name, slot, mapProps, call, annotated, variadic] of [
     ['current-struct-number', false, false, 'd! 42'],
     ['current-map-number', false, true, 'd! 42'],
     ['slot-struct-number', true, false, 'd! 42'],
@@ -41,6 +41,13 @@ try {
     ['slot-struct-valid-op', true, false, 'd! $ respo.app.schema/Op :clear'],
     ['slot-struct-cursor-list', true, false, 'd! ([] :field) :value'],
     ['slot-struct-tag', true, false, 'd! :clear'],
+    ['slot-variadic-struct-valid-op', true, false, 'd! $ respo.app.schema/Op :clear', undefined, true],
+    ['slot-variadic-struct-valid-op-extra-data', true, false, 'd! (respo.app.schema/Op :clear) :value', undefined, true],
+    ['slot-variadic-struct-cursor-list', true, false, 'd! ([] :field) :value', undefined, true],
+    ['slot-variadic-struct-tag', true, false, 'd! :clear', undefined, true],
+    ['slot-variadic-struct-number', true, false, 'd! 42', undefined, true],
+    ['slot-variadic-struct-invalid-variant', true, false, 'd! $ :: :not-an-op', undefined, true],
+    ['slot-variadic-map-number', true, true, 'd! 42', undefined, true],
     ['annotated-slot-number', true, true, 'd! 42', "'*dispatch-op"],
     ['annotated-slot-valid-op', true, true, 'd! $ respo.app.schema/Op :clear', "'*dispatch-op"],
     ['annotated-slot-cursor-list', true, true, 'd! ([] :field) :value', "'*dispatch-op"],
@@ -65,7 +72,9 @@ ${annotated ? `      hint-fn $ {} (:return 'Unit)
       ${call}
   , &unit`]);
     edit(['edit', 'def', 'respo.main/reload!', '--overwrite', '--code', 'quote $ defn reload! () &unit']);
-    if (slot) edit(['edit', 'schema', 'respo.schema/EventHandler', '--code', slotSchema]);
+    if (slot) edit(['edit', 'schema', 'respo.schema/EventHandler', '--code', variadic
+      ? slotSchema.replace(":args $ [] '*dispatch-op", ":args $ [] '*dispatch-op\n      :rest 'Dynamic")
+      : slotSchema]);
     const result = invoke(['--check-only'], true);
     const bindings = invoke(['config', 'type-slots']);
     assert.equal(bindings.status, 0, bindings.output);
@@ -99,6 +108,16 @@ ${annotated ? `      hint-fn $ {} (:return 'Unit)
     results.push({ name, accepted: result.status === 0, checkElapsedMs: result.elapsedMs, diagnostics: result.output });
   }
   const control = name => results.find(result => result.name === name);
+  if (control('slot-variadic-struct-valid-op').accepted) {
+    assert.equal(control('slot-variadic-struct-valid-op-extra-data').accepted, true,
+      'a rest-argument dispatch signature must accept the same Op with extra legacy data');
+    for (const name of ['slot-variadic-struct-cursor-list', 'slot-variadic-struct-tag']) {
+      if (!control(name).accepted) {
+        assert.match(control(name).diagnostics, /calling `d!` arg 1/,
+          'legacy failure must be the first operation type, not dispatch arity');
+      }
+    }
+  }
   assert.equal(control('annotated-concrete-valid-op').accepted, true, 'positive control must compile');
   assert.equal(control('annotated-concrete-number').accepted, false, 'negative control must reject the wrong op');
   assert.match(control('annotated-concrete-number').diagnostics, /calling `d!` arg 1/);

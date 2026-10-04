@@ -313,3 +313,35 @@ Diary 在本项源码下重新生成 JS 后，initial/offline/login 三种 SSR �
 此结果只覆盖已声明的同质事件表与调用参数上下文。独立 let 中缺少 Op 证据的 Props 构造、生产异质 raw props、旧 cursor-list/tag 合同以及生产 renderer/listener 的迁移仍待解决。#195 的路线决策与 Calcit #1555 的 issue 反馈尚未发布。
 
 当前候选重新生成 Respo JS 后，12 个现有 Node 测试文件共 44 项通过，覆盖事件配置、nullish props、SSR、keyed、memo、patch lookup、DOM 创建、事件刷新、节点查找、component listener、effect 与 purification。随后独立生成 DOM 测试入口并执行现有 test-dom.mjs，退出 0。依赖使用同源码的候选 JS runtime，临时链接已清理；这补充类型推断修复后的运行时回归，未改变生产 dispatch 签名。
+
+## 生产入口可变参数：55 场景复查
+
+在当前主线合并后的 Snapshot 中，继续以正式 0.28 CLI 编辑临时副本，分别使用
+正式版和当前候选检查相同 55 场景。新场景只修改 EventHandler 中 d! 的合同为
+`Fn<slot> -> Unit`，并声明 `:rest Dynamic`，避免把旧两参数 cursor 调用的 arity
+失败误当成 Op 类型失败。生产 EventHandler、wrap-dispatch 与 renderer 未改成槽签名。
+
+| 可变参数 slot handler 调用 | 正式 0.28 | 当前候选 0.29.0-alpha.1 |
+| --- | --- | --- |
+| 具名合法 Op | 接受 | 接受 |
+| 同一 Op 加额外 data | 接受 | 接受 |
+| 旧 cursor List + data | 接受 | d! arg 1 拒绝，实际 List<Tag> |
+| 旧 tag | 接受 | d! arg 1 拒绝，实际 Tag |
+| 错误 Number | 接受 | d! arg 1 拒绝 |
+| 未声明 anonymous variant | 接受 | 拒绝 |
+| 普通 props Map 内的错误 Number | 接受 | 接受 |
+
+这里 Dynamic 只表示旧可变 data 输入，并非 Op；不将声明此 slot 原型称为生产迁移。
+同一个正例接受额外 data 已证明 arity 正常，而 list/tag 的诊断仍指向第一个操作。
+正式版的 legacy 接受同时伴随 Number 和未知 variant 接受，不能用它证明兼容安全。
+脚本保留每个版本的结果；只在发生拒绝时要求 legacy 错误定位 arg 1，不通过对
+旧 checker 的错误接受强制断言来丢弃其他调查结果。
+
+这进一步约束两条路线：无论槽还是泛型，仅将首参数从 Dynamic 换成单一 Op，
+都不足以表达现有 list/tag 归一化入口。当前类型模型还没有一般的调用参数备选
+形状，raw props Map 又不能从 EventHandler 的目标合同反推已经独立求值的 callback。
+下一步需要分别证明归一化入口的可调用合同和普通 props callback 的上下文，保留
+运行语义及错误 Op 检查；不能把 legacy 输入一并恢复为 Dynamic 当作完成。
+
+输出：`/private/tmp/respo-195-variadic-{formal,current}-probe.json`，完整诊断与每个
+检查耗时都保留；生成 JSON 不入库。#195、#1555 的最终路线和反馈仍未交付。
