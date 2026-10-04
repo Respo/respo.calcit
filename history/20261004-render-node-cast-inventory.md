@@ -158,3 +158,141 @@ unsafe-coerce；初次盘点时为 125 / 41。该阶段尚未达到数量下降�
 ## cursor / LIS 后续清理
 
 继续移除有分支、返回类型和循环签名证明的转换后，当前计数更新为 95/33（assert-type / unsafe-coerce）。本轮减少 6/5，保留原运行时边界与空容器类型声明；正式 0.28.0 和候选均完成 100/100 native 与 12/12 keyed/cursor JS 回归。具体证明、正式循环推断失败及修复见 [cursor 与 LIS 记录](20261004-cursor-lis-proofs.md)。
+
+## 2026-10-04 当前盘点与验收补充
+
+本节替代旧表作为当前源码的计数依据；旧表保留初始问题和迁移路径。基线仍为
+main `b94962e`，当前代码为 `7644b19` 后的重复 key 循环修正。计数扫描 Snapshot
+所有 definition code 的调用 AST，包含宏模板，不包含依赖、schema、附带测试、
+examples 或 Markdown。不是文本行数，也不将 Symbol 引用当作一次调用。
+
+| 范围 | 基线 assert-type | 当前 assert-type | 基线 unsafe-coerce | 当前 unsafe-coerce |
+| --- | ---: | ---: | ---: | ---: |
+| 全项目 definition code | 124 | 92 | 41 | 33 |
+| `respo.controller.client` | 1 | 0 | 1 | 1 |
+| `respo.controller.resolve` | 4 | 1 | 0 | 0 |
+| `respo.core` | 20 | 13 | 3 | 3 |
+| `respo.cursor` | 2 | 1 | 12 | 4 |
+| `respo.render.diff` | 36 | 22 | 1 | 1 |
+| `respo.render.effect` | 2 | 0 | 0 | 0 |
+| `respo.render.html` | 2 | 2 | 0 | 0 |
+| `respo.render.patch` | 11 | 11 | 4 | 4 |
+| `respo.util.detect` | 14 | 13 | 0 | 0 |
+| `respo.util.list` | 4 | 4 | 1 | 1 |
+
+### 剩余转换及需要的证明
+
+扩大逐项表范围，补入 controller 与节点创建边界。表列出当前每一次转换，分类
+沿用上面的消除路径。标为保留或待证明不意味着已经证明不可消除。
+
+- N2/D1：公开创建器和 props/effects 仍接收开放数据；消费者不能从调用约定推断
+  payload 已验证。进一步收紧必须保留现有运行验证、nil 和序列化语义。
+- C2/C3：泛型 key 和开放状态仍混合 Map/Struct；需证明 branch 与 key 合同。
+  不能为了匹配 Tag/String 场景拒绝已经支持的 Number key。
+- I1：空容器声明只为新建 seed 提供类型，不验证已有容器；Map lookup、循环及
+  缓存中的其余断言仍待上下文证明。新循环保留 key 的 K 与索引 Number，未换算法。
+- F1：开放 Fn、props 回调及 DOM ref 必须保留实际参数/返回合同，不能只证明可调用。
+- H1：JS style/dataset/parent 的宿主能力需要宿主合同；RenderNode 不提供这些证明。
+- P1：BufList 生产者/消费者还需贯通 DomPatch，不能只删输出列表断言。
+- 测试边界：CursorTestState adapter 是测试定义的开放输入验证，单独列出。
+
+| 定义 | 当前 AST 坐标 | 调用 | 目标类型 | 下一项证明 |
+| --- | --- | --- | --- | --- |
+| `respo.controller.client/patch-instance!` | `code@3.2.2` | `unsafe-coerce` | `'respo.dom/DomElement` | F1 |
+| `respo.controller.resolve/build-deliver-event` | `code@3.3.1.1.1` | `assert-type` | `(:: 'Option 'respo.schema/EventHandler)` | F1 |
+| `respo.core/>>` | `code@3.1.0.1` | `assert-type` | `(:: List Dynamic)` | C3 |
+| `respo.core/>>` | `code@3.1.1.1` | `unsafe-coerce` | `(:: Map Tag (:: JsNullish Dynamic))` | C3 |
+| `respo.core/create-list-element` | `code@4.1.4.1.1` | `assert-type` | `(:: List (:: List Dynamic))` | D1/N2 |
+| `respo.core/create-list-element-open` | `code@3.3` | `assert-type` | `(:: 'List (:: 'List 'Dynamic))` | D1/N2 |
+| `respo.core/extract-effects-list` | `code@3.3.2.1.0.1` | `unsafe-coerce` | `(:: List Dynamic)` | N2：开放 effects 输入 |
+| `respo.core/mount-app!` | `code@5.6.1` | `assert-type` | `(:: List respo.schema/DomPatch)` | P1 |
+| `respo.core/normalize-dom-props` | `code@3.2.1.1.0.1` | `assert-type` | `(:: 'Fn ({} (:args ([] (:: 'Map 'Tag 'Dynamic) (:: 'Fn ({} (:args ([] 'Tag 'Dynamic)) (:return 'Bool))))) (:return (:: 'Map 'Tag 'Dynamic))))` | F1 |
+| `respo.core/normalize-ref` | `code@3.3` | `assert-type` | `(:: Fn ({} (:args ([] (:: JsNullish respo.dom/DomElement))) (:return Unit)))` | F1 |
+| `respo.core/realize-ssr!` | `code@5.3.2` | `unsafe-coerce` | `'js-ffi.browser/DomElementHost` | H1 |
+| `respo.core/realize-ssr!` | `code@5.8.1` | `assert-type` | `(:: List respo.schema/DomPatch)` | P1 |
+| `respo.core/rerender-app!` | `code@3.3.1.3.3.1.0.1` | `assert-type` | `(:: List respo.schema/DomPatch)` | P1 |
+| `respo.core/run-effect-ops!` | `code@3.2.2.1.1.0` | `assert-type` | `Fn` | F1 |
+| `respo.core/run-effect-ops!` | `code@3.2.3.1.1.0` | `assert-type` | `Fn` | F1 |
+| `respo.core/run-effect-ops!` | `code@3.2.4.1.1.0` | `assert-type` | `Fn` | F1 |
+| `respo.core/run-effect-ops!` | `code@3.2.5.1.1.0` | `assert-type` | `Fn` | F1 |
+| `respo.core/run-first-task!` | `code@3.1.0.1` | `assert-type` | `Fn` | F1 |
+| `respo.cursor/coerce-cursor-test-state` | `code@3` | `assert-type` | `CursorTestState` | 测试边界 |
+| `respo.cursor/get-state-at` | `code@3.3.3.1.0.1` | `unsafe-coerce` | `(:: 'Map 'KeyInput (:: 'JsNullish 'Dynamic))` | C2/C3 |
+| `respo.cursor/update-state-tree-kv` | `code@3.2.2.2.1.0.1` | `unsafe-coerce` | `(:: Map Dynamic Dynamic)` | C2/C3 |
+| `respo.cursor/update-state-tree-kv` | `code@3.2.2.3.2.3.1` | `unsafe-coerce` | `Struct` | C2/C3 |
+| `respo.cursor/update-state-tree-kv` | `code@3.2.2.3.2.3.2` | `unsafe-coerce` | `Tag` | C2/C3 |
+| `respo.render.diff/find-children-diffs` | `code@3.2.3.2.1.4.1.7.1.2.2` | `assert-type` | `'Number` | I1 |
+| `respo.render.diff/find-children-diffs` | `code@3.2.3.2.1.4.2.2.1.0.1` | `assert-type` | `'Number` | I1 |
+| `respo.render.diff/find-children-diffs` | `code@3.2.3.2.1.4.2.2.1.1.1` | `assert-type` | `'Number` | I1 |
+| `respo.render.diff/find-children-diffs` | `code@3.2.3.2.1.4.3.2.2.1.0.1` | `assert-type` | `'Number` | I1 |
+| `respo.render.diff/find-children-diffs` | `code@3.2.3.2.1.4.4.2.1.0.1` | `assert-type` | `'Number` | I1 |
+| `respo.render.diff/find-children-diffs` | `code@3.2.3.2.1.4.5.2.3.1.1.2` | `assert-type` | `'Number` | I1 |
+| `respo.render.diff/find-children-diffs` | `code@3.2.3.2.1.4.5.2.3.1.2.1.4.1` | `assert-type` | `(:: 'Option 'Number)` | I1 |
+| `respo.render.diff/find-children-diffs` | `code@3.2.3.2.1.4.6.2.1.0.1` | `assert-type` | `'Number` | I1 |
+| `respo.render.diff/find-children-diffs` | `code@3.2.3.3.1.3.1.1.1` | `assert-type` | `(:: 'Option 'Number)` | I1 |
+| `respo.render.diff/find-children-diffs` | `code@3.2.3.3.1.3.2.3.1.1.2` | `assert-type` | `'Number` | I1 |
+| `respo.render.diff/find-children-diffs` | `code@3.2.3.3.1.3.2.3.1.2.1.4.1` | `assert-type` | `(:: 'Option 'Number)` | I1 |
+| `respo.render.diff/first-duplicate-key-js` | `code@3.2.1.1.1` | `assert-type` | `(:: 'Option 'Number)` | I1 |
+| `respo.render.diff/first-duplicate-key-js` | `code@3.2.2.1.0.1` | `assert-type` | `Number` | I1 |
+| `respo.render.diff/first-duplicate-key-js` | `code@3.2.2.1.1.1` | `assert-type` | `(:: 'Option 'Number)` | I1 |
+| `respo.render.diff/first-duplicate-key-native` | `code@3.1.0.1.1.1.1` | `assert-type` | `(:: 'Set 'K)` | I1 |
+| `respo.render.diff/first-duplicate-key-native` | `code@3.1.0.1.1.2.1` | `assert-type` | `(:: 'Set 'K)` | I1 |
+| `respo.render.diff/keyed-boundaries` | `code@3.2.2.1.2.1.2` | `assert-type` | `'Number` | I1 |
+| `respo.render.diff/keyed-boundaries` | `code@3.2.2.1.2.2.2` | `assert-type` | `'Number` | I1 |
+| `respo.render.diff/lis-reconstruct` | `code@3.1.1.1` | `assert-type` | `(:: 'Set 'Number)` | I1 |
+| `respo.render.diff/lis-values` | `code@3.1.2.1` | `assert-type` | `(:: 'List 'Number)` | I1 |
+| `respo.render.diff/lis-values` | `code@3.1.3.1` | `assert-type` | `(:: 'List 'Number)` | I1 |
+| `respo.render.diff/lis-values` | `code@3.1.4.1` | `assert-type` | `(:: 'List 'Number)` | I1 |
+| `respo.render.diff/props-as-list` | `code@3.2` | `unsafe-coerce` | `(:: 'List (:: 'List 'Dynamic))` | D1/N2 |
+| `respo.render.html/coerce-pairs` | `code@3` | `assert-type` | `(:: 'List (:: 'List 'Dynamic))` | D1/N2 |
+| `respo.render.html/props->html` | `code@3.1.0.1` | `assert-type` | `(:: 'List (:: 'List 'Dynamic))` | D1/N2 |
+| `respo.render.patch/add-style` | `code@3.2.1` | `unsafe-coerce` | `JsObject` | H1 |
+| `respo.render.patch/apply-dom-changes` | `code@3.1.0.1.1` | `assert-type` | `(:: 'Map (:: 'List 'Number) 'respo.dom/DomElement)` | I1/H1：缓存与宿主列表 |
+| `respo.render.patch/apply-dom-changes` | `code@3.1.2.1.1` | `assert-type` | `(:: 'Map (:: 'List 'Number) (:: 'List 'respo.dom/DomElement))` | I1/H1：缓存与宿主列表 |
+| `respo.render.patch/apply-dom-changes` | `code@3.1.3.1.1` | `assert-type` | `(:: 'Map (:: 'List 'Number) (:: 'List 'respo.render.patch/MoveScrollState))` | I1/H1：缓存与宿主列表 |
+| `respo.render.patch/apply-dom-changes` | `code@3.1.4.1.3.2.2.1.0.1` | `assert-type` | `'respo.render.patch/MoveScrollState` | I1/H1：缓存与宿主列表 |
+| `respo.render.patch/apply-dom-changes` | `code@3.2.2.14.1.1.1.1` | `assert-type` | `(:: 'List 'respo.dom/DomElement)` | I1/H1：缓存与宿主列表 |
+| `respo.render.patch/apply-dom-changes` | `code@3.2.2.14.1.2.4` | `assert-type` | `(:: 'List 'respo.dom/DomElement)` | I1/H1：缓存与宿主列表 |
+| `respo.render.patch/collect-scroll-states` | `code@3.1.0.1.2` | `assert-type` | `(:: 'List 'respo.render.patch/MoveScrollState)` | I1/H1：缓存与宿主列表 |
+| `respo.render.patch/collect-scroll-states` | `code@3.2.2` | `assert-type` | `(:: 'List 'respo.render.patch/MoveScrollState)` | I1/H1：缓存与宿主列表 |
+| `respo.render.patch/find-target-cached` | `code@3.3.1.3.1.1.1` | `assert-type` | `Number` | I1/H1：缓存与宿主列表 |
+| `respo.render.patch/insert-before-target!` | `code@3.3.1.1.0.1` | `unsafe-coerce` | `'respo.dom/DomElement` | H1 |
+| `respo.render.patch/invalidate-target-children!` | `code@3.2.1.0.1` | `assert-type` | `(:: List Number)` | I1/H1：缓存与宿主列表 |
+| `respo.render.patch/invalidate-target-children!` | `code@3.2.1.1.1` | `assert-type` | `(:: Map (:: List Number) 'respo.dom/DomElement)` | I1/H1：缓存与宿主列表 |
+| `respo.render.patch/replace-prop` | `code@3.2.2.1.1.1` | `unsafe-coerce` | `JsObject` | H1 |
+| `respo.render.patch/replace-style` | `code@3.2.1` | `unsafe-coerce` | `JsObject` | H1 |
+| `respo.util.detect/component-effects` | `code@3.1.0.1` | `assert-type` | `'respo.schema/Component` | 开放节点创建边界 |
+| `respo.util.detect/component-listeners` | `code@3.1.0.1` | `assert-type` | `'respo.schema/Component` | 开放节点创建边界 |
+| `respo.util.detect/component-name` | `code@3.1.0.1` | `assert-type` | `'respo.schema/Component` | 开放节点创建边界 |
+| `respo.util.detect/component-tree` | `code@3.1.0.1` | `assert-type` | `'respo.schema/Component` | 开放节点创建边界 |
+| `respo.util.detect/effect-args` | `code@3.1.0.1` | `assert-type` | `'respo.schema/Effect` | 开放节点创建边界 |
+| `respo.util.detect/effect-method` | `code@3.1.0.1` | `assert-type` | `'respo.schema/Effect` | 开放节点创建边界 |
+| `respo.util.detect/effect-name` | `code@3.1.0.1` | `assert-type` | `'respo.schema/Effect` | 开放节点创建边界 |
+| `respo.util.detect/element-attrs` | `code@3.1.0.1` | `assert-type` | `'respo.schema/Element` | 开放节点创建边界 |
+| `respo.util.detect/element-event` | `code@3.1.0.1` | `assert-type` | `'respo.schema/Element` | 开放节点创建边界 |
+| `respo.util.detect/element-name` | `code@3.1.0.1` | `assert-type` | `'respo.schema/Element` | 开放节点创建边界 |
+| `respo.util.detect/element-ref` | `code@3.1.0.1` | `assert-type` | `'respo.schema/Element` | 开放节点创建边界 |
+| `respo.util.detect/element-style` | `code@3.1.0.1` | `assert-type` | `'respo.schema/Element` | 开放节点创建边界 |
+| `respo.util.detect/listener-handler` | `code@3.1.0.1` | `assert-type` | `'respo.schema/RespoListener` | 开放节点创建边界 |
+| `respo.util.list/first-pair` | `code@3` | `assert-type` | `(:: 'List 'Dynamic)` | D1/I1 |
+| `respo.util.list/index-of-dynamic` | `code@3.2.3.2.2` | `assert-type` | `'Number` | D1/I1 |
+| `respo.util.list/pair-key` | `code@3` | `assert-type` | `'Tag` | D1/I1 |
+| `respo.util.list/pick-event` | `code@3.1.1.1.2` | `unsafe-coerce` | `(:: Map Tag respo.schema/EventHandler)` | F1 |
+| `respo.util.list/pick-event` | `code@3.1.2.1.2.3.2.4` | `assert-type` | `respo.schema/EventHandler` | F1 |
+
+### 当前验证与尚未完成的验收
+
+重复 key 回归覆盖空输入、Tag/String 同名但不同 key、按原输入顺序选择重复 key，
+以及 hash bucket 中代表索引的顺序与无匹配结果。非空读取使用 nth 0；Set<K>
+声明只用于两个新空 seed，循环合同保持同一 K。正式 0.28 和候选各 103/103 native
+通过，正式重新生成 JS 后 keyed moves 全通过，`yarn test-dom-host` 通过；正式严格
+检查与原 quality baseline 通过。未增加预算，也未提交生成的 JS/JSON。
+
+实际下游 Calcium 与 Cumulo Reel 的迁移记录分别在各自工作区。Calcium 两入口严格
+检查和 67 项回归已验证；Cumulo 候选两入口严格检查、24 项 native、共享协议 JS、
+Node runtime、Vite 和浏览器注册/路由/退出通过。Cumulo 正式 0.28 仍有两条 nullable
+watcher 告警，质量门禁仍失败；依赖与编译器修复尚未全部发布，因此不能把本地
+候选组合写成正式下游 CI 或整个 milestone 已完成。
+
+本盘点尚需发布到 #194 和最终 PR；#195 的 dispatch 类型贯通、#104 与发布依赖
+完整回归也未完成。计数下降只证明这项验收的数据，不替代其他要求。

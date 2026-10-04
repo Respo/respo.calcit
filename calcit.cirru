@@ -4583,19 +4583,23 @@
             let
                 repeated $ loop
                     remaining child-keys
-                    seen $ #{}
-                    duplicates $ #{}
+                    seen $ assert-type (#{}) (:: 'Set 'K)
+                    duplicates $ assert-type (#{}) (:: 'Set 'K)
+                  hint-fn $ {}
+                    :args $ [] (:: 'List 'K) (:: 'Set 'K) (:: 'Set 'K)
+                    :return $ :: 'Set 'K
                   if (empty? remaining) duplicates $ let
-                      key $ assert-type (&list:first remaining) 'K
-                      seen $ assert-type seen $ :: Set 'K
-                      duplicates $ assert-type duplicates $ :: Set 'K
+                      key $ &list:nth remaining 0
                     recur (&list:rest remaining) (include seen key)
                       if (contains? seen key) (include duplicates key) duplicates
               if (empty? repeated) (%:: Option :none)
                 loop
                     remaining child-keys
+                  hint-fn $ {}
+                    :args $ [] $ :: 'List 'K
+                    :return $ :: 'Option 'K
                   let
-                      key $ assert-type (&list:first remaining) 'K
+                      key $ &list:nth remaining 0
                     if (contains? repeated key) (%:: Option :some key)
                       recur $ &list:rest remaining
           :examples $ []
@@ -4604,14 +4608,29 @@
             :generics $ [] 'K
             :return $ :: 'Option 'K
           :tags $ #{} :internal
+          :tests $ []
+            %{} 'TestEntry (:name |empty-and-distinct-keys)
+              :code $ quote $ do
+                assert= (Option :none)
+                  first-duplicate-key-native $ []
+                assert= (Option :none)
+                  first-duplicate-key-native $ [] :a |a :b |b
+              :tags $ #{} :unit
+            %{} 'TestEntry (:name |earliest-repeated-original-key)
+              :code $ quote $ assert= (Option :some :a)
+                first-duplicate-key-native $ [] :a |a |b |b :a
+              :tags $ #{} :unit
         'index-of-equal-key $ %{} 'CodeEntry
           :doc "|Compare the candidate against representative input keys inside one hash bucket. Hash collisions never imply equality."
           :code $ quote $ defn index-of-equal-key (child-keys positions key)
             loop
                 remaining positions
+              hint-fn $ {}
+                :args $ [] $ :: 'List 'Number
+                :return $ :: 'Option 'Number
               if (empty? remaining) (%:: Option :none)
                 let
-                    index $ assert-type (&list:first remaining) Number
+                    index $ &list:nth remaining 0
                   if
                     &= key $ &list:nth child-keys index
                     %:: Option :some index
@@ -4622,6 +4641,13 @@
             :generics $ [] 'K
             :return $ :: 'Option 'Number
           :tags $ #{} :internal
+          :tests $ [] $ %{} 'TestEntry (:name |equal-key-index-keeps-bucket-order)
+            :code $ quote $ do
+              assert= (Option :some 2)
+                index-of-equal-key ([] :a |a :a) ([] 1 2 0) :a
+              assert= (Option :none)
+                index-of-equal-key ([] :a |a) ([] 0) |a
+            :tags $ #{} :unit
         'key-bucket-positions $ %{} 'CodeEntry
           :doc "|Read a native Array of representative indices from the private, locally constructed JS Map. Absence remains JsNullish; the caller converts and validates the number list."
           :code $ quote $ defn key-bucket-positions (buckets key-hash) (raise |JS-only-key-bucket-read)
