@@ -8,9 +8,39 @@ const { Component, Effect } = await import('../js-out/respo.schema.mjs');
 const { div, span } = await import('../js-out/respo.core.mjs');
 const { as_render_node, make_child_pair } = await import('../js-out/respo.util.detect.mjs');
 const { collect_mounting, collect_unmounting } = await import('../js-out/respo.render.effect.mjs');
-const { apply_dom_changes } = await import('../js-out/respo.render.patch.mjs');
+const { apply_dom_changes, run_effect } = await import('../js-out/respo.render.patch.mjs');
 const t = c.init_tags(['name', 'effects', 'listeners', 'tree', 'coord', 'args', 'method', 'children', 'ref', 'outer', 'first', 'second']);
 const list = c.arrayToList;
+
+test('missing effect targets warn without calling the method; present targets preserve identity', () => {
+  const warnings = [], calls = [];
+  const coord = list([2, 1]);
+  const originalWarn = console.warn;
+  console.warn = (...args) => { warnings.push(args); };
+  try {
+    for (const target of [null, undefined]) run_effect(target, value => { calls.push(value); }, coord);
+    const target = new ElementHost('div');
+    run_effect(target, value => { calls.push(value); }, coord);
+    assert.deepEqual(calls, [target]);
+    assert.deepEqual(warnings, [
+      ['Unknown effects target:', coord], ['Unknown effects target:', coord],
+    ]);
+  } finally {
+    console.warn = originalWarn;
+  }
+});
+
+test('effect callback exceptions propagate unchanged after one invocation', () => {
+  const target = new ElementHost('div');
+  const failure = new Error('effect fixture');
+  let calls = 0;
+  assert.throws(() => run_effect(target, value => {
+    assert.equal(value, target);
+    calls += 1;
+    throw failure;
+  }, list([])), error => error === failure);
+  assert.equal(calls, 1);
+});
 
 function fixture(includeEmpty) {
   const calls = [];

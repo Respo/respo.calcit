@@ -27,6 +27,17 @@ const effect = (args, types, result, body) => `respo.core/build-effect :test ([]
     hint-fn $ {} (:args ([] ${types})) (:return '${result})
     , ${body}`;
 const lists = "(:: 'List 'Dynamic) (:: 'List 'Dynamic)";
+const patchEffect = (variant, args, types, result, body) => `respo.schema/DomPatch :${variant} ([]) ([])
+  fn (${args})
+    hint-fn $ {} (:args ([] ${types})) (:return '${result})
+    , ${body}`;
+
+for (const variant of ['effect-mount', 'effect-unmount', 'effect-update', 'effect-before-update']) {
+  test(`${variant} retains a one-DOM-target Unit callback`, () => {
+    const result = evaluate(patchEffect(variant, 'target', "'respo.dom/DomElement", 'Unit', '&unit'));
+    assert.equal(result.status, 0, result.output);
+  });
+}
 
 for (const [name, source] of [
   ['guard preserves callback identity and result', guarded(`do
@@ -50,6 +61,14 @@ for (const [name, source, diagnostics] of [
     [/W_FN_ARG_TYPE_MISMATCH/, /Function `respo.core\/build-effect` arg 3/, /but got `fn\(:number, :number\) -> :unit`/]],
   ['effect rejects a non-Unit callback result', effect('args params', lists, 'Number', '42'),
     [/W_FN_ARG_TYPE_MISMATCH/, /Function `respo.core\/build-effect` arg 3/, /but got `fn\(list<dynamic>, list<dynamic>\) -> :number`/]],
+  ['mount patch rejects Number as callback target', patchEffect('effect-mount', 'target', "'Number", 'Unit', '&unit'),
+    [/Enum `DomPatch::effect-mount` payload 3 expects type/, /but got `fn\(:number\) -> :unit`/]],
+  ['unmount patch rejects two callback parameters', patchEffect('effect-unmount', 'a b', "'respo.dom/DomElement 'respo.dom/DomElement", 'Unit', '&unit'),
+    [/Enum `DomPatch::effect-unmount` payload 3 expects type/, /but got `fn\([^)]*,[^)]*\) -> :unit`/]],
+  ['update patch rejects non-Unit result', patchEffect('effect-update', 'target', "'respo.dom/DomElement", 'Number', '42'),
+    [/Enum `DomPatch::effect-update` payload 3 expects type/, /but got `fn\([^)]*\) -> :number`/]],
+  ['before-update patch rejects Number as callback target', patchEffect('effect-before-update', 'target', "'Number", 'Unit', '&unit'),
+    [/Enum `DomPatch::effect-before-update` payload 3 expects type/, /but got `fn\(:number\) -> :unit`/]],
 ]) {
   test(name, () => {
     const result = evaluate(source);

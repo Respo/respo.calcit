@@ -5158,7 +5158,7 @@
                 next-coord $ append coord $ component-name tree
               &doseq (effect effects)
                 let
-                    method $ effect-method effect
+                    method $ :method effect
                   collect! $ DomPatch :effect-mount next-coord n-coord $ fn (target)
                     method (effect-args effect) ([] :mount target at-place?)
           :examples $ []
@@ -5180,7 +5180,7 @@
                 next-coord $ append coord $ component-name tree
               &doseq (effect effects)
                 let
-                    method $ effect-method effect
+                    method $ :method effect
                   collect! $ DomPatch :effect-unmount next-coord n-coord $ fn (target)
                     method (effect-args effect) ([] :unmount target at-place?)
           :examples $ []
@@ -5287,7 +5287,7 @@
                               =seq (effect-args new-effect) (effect-args old-effect)
                               let
                                   effect $ if (= action :before-update) old-effect new-effect
-                                  method $ effect-method effect
+                                  method $ :method effect
                                 collect! $ if (= :update action)
                                   DomPatch :effect-update next-coord n-coord $ fn (target)
                                     method (effect-args effect) ([] action target false)
@@ -5295,7 +5295,7 @@
                                     method (effect-args effect) ([] action target false)
                             let
                                 effect $ if (= action :before-update) old-effect new-effect
-                                method $ effect-method effect
+                                method $ :method effect
                                 lifecycle-action $ if (= action :before-update) :unmount :mount
                               collect! $ if (= :update action)
                                 DomPatch :effect-update next-coord n-coord $ fn (target)
@@ -5306,7 +5306,7 @@
                         do
                           when (= action :before-update)
                             let
-                                method $ effect-method old-effect
+                                method $ :method old-effect
                               collect! $ DomPatch :effect-before-update next-coord n-coord $ fn (target)
                                 method (effect-args old-effect) ([] :unmount target false)
                           , &unit
@@ -5315,7 +5315,7 @@
                       when-let (new-effect new-effect-option)
                         when (= action :update)
                           let
-                              method $ effect-method new-effect
+                              method $ :method new-effect
                             collect! $ DomPatch :effect-update next-coord n-coord $ fn (target)
                               method (effect-args new-effect) ([] :mount target false)
                       , &unit
@@ -6112,10 +6112,13 @@
         'run-effect $ %{} 'CodeEntry
           :doc "|Runs side effect functions.\n\nParameters:\n  target - Target DOM element or component instance, nil if target not found\n  method - Method function to execute on the target\n  coord - Coordinate information for identifying location in console warnings\n\nFunctionality:\n  If target exists, calls method function on target; if target is nil, outputs warning to console.\n  Mainly used to execute various side effects during rendering patch process, such as event listening, DOM operations, etc."
           :code $ quote $ defn run-effect (target method coord)
-            if (calcit.core/non-nil? target) (method target) (js/console.warn "|Unknown effects target:" coord)
+            if (js-present? target) (method target) (js/console.warn "|Unknown effects target:" coord)
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'Dynamic 'Fn $ :: 'List 'Number
+            :args $ [] (:: 'JsNullish 'respo.dom/DomElement)
+              :: 'Fn $ {} (:return 'Unit)
+                :args $ [] 'respo.dom/DomElement
+              :: 'List 'Number
             :features $ #{} :js-ffi
         'set-svg-prop! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn set-svg-prop! (target p value)
@@ -6438,10 +6441,18 @@
             :replace-element (:: 'List 'Dynamic) (:: 'List 'Number) 'Struct
             :append-element (:: 'List 'Dynamic) (:: 'List 'Number) 'Struct
             :move-element (:: 'List 'Number) 'Number $ :: 'Option 'Number
-            :effect-mount (:: 'List 'Dynamic) (:: 'List 'Number) 'Fn
-            :effect-unmount (:: 'List 'Dynamic) (:: 'List 'Number) 'Fn
-            :effect-update (:: 'List 'Dynamic) (:: 'List 'Number) 'Fn
-            :effect-before-update (:: 'List 'Dynamic) (:: 'List 'Number) 'Fn
+            :effect-mount (:: 'List 'Dynamic) (:: 'List 'Number)
+              :: 'Fn $ {} (:return 'Unit)
+                :args $ [] 'respo.dom/DomElement
+            :effect-unmount (:: 'List 'Dynamic) (:: 'List 'Number)
+              :: 'Fn $ {} (:return 'Unit)
+                :args $ [] 'respo.dom/DomElement
+            :effect-update (:: 'List 'Dynamic) (:: 'List 'Number)
+              :: 'Fn $ {} (:return 'Unit)
+                :args $ [] 'respo.dom/DomElement
+            :effect-before-update (:: 'List 'Dynamic) (:: 'List 'Number)
+              :: 'Fn $ {} (:return 'Unit)
+                :args $ [] 'respo.dom/DomElement
           :examples $ []
           :schema $ :: 'EnumDef
           :tests $ []
