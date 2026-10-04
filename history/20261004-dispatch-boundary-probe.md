@@ -100,3 +100,49 @@ wrap-dispatch 的 typed/legacy 调用合同。quoted hint 的修复不是 #195 �
 本地编译器提交 bc0d4556；完整 cargo test 1,584 passed、0 failed、一项既有
 ignored，fmt/clippy 与完整 check-all 通过，Agent CLI 53/53；core 与
 native/JS/WASM、FFI、literal-paths、typed-method 回归通过。候选尚未发布。
+
+## 后续：泛型回调中的 Op 身份
+
+探针增加四个泛型场景，总计 22 个。最小 handle 用一个 Op 参数与
+Fn(Op)->Unit 回调关联同一个类型，调用处给它真实应用 Op 及应用 dispatch。
+
+| 泛型函数体 | 本地修复前候选 | 修复后候选 |
+| --- | --- | --- |
+| d! op：转发输入 Op | 接受 | 接受 |
+| d! 42：凭空创建 Number | 接受 | 拒绝，定位到 d! arg 1 |
+| d! ([] :field) :value | 接受 | 拒绝，定位到 d! arg 1 |
+| d! :clear | 接受 | 拒绝，定位到 d! arg 1 |
+
+修改前的“兼容”只是回调调用把外层 Op 重绑定为 Number/List/Tag，不能
+计作有效的泛型路线。候选修复将局部回调推断限制为它自己声明的 generics，
+捕获的外层 Op 固定；局部泛型 identity 仍能按两次调用分别推断 Number/String。
+固定、嵌套 List 与 rest 参数都有负例，实际泛型 Op 转发有 Calcit :tests。
+
+本原型的 handle 有一处 :generics 声明、两个关联参数位置，并有一处应用
+dispatch 的具体 Op 标注；slot 原型改 EventHandler 一处并使用已有 entry
+绑定。它们只比较最小回调合同，未统计整个渲染/事件/Ref 持有链的迁移量，
+不能从这些局部数量推断整条路线的标注成本。
+
+两条路线目前均可在明确 Op 合同时拒绝 Number，也均拒绝旧 list/tag。
+rest Dynamic 只能容纳附加 data，不能令第一个 Op 同时接受 legacy 输入。
+普通 map props 的错误值仍通过，公开 PropsInput 泛型与归一化后的
+Map<Tag,Dynamic> 没有提供事件字段的 dispatch 上下文。下一步仍需解决
+这些接口合同与泛型持有链原型；生产 schema、正式 pin 与运行时语义未迁移。
+
+加强检查暴露 core Map helper 的 K/V 丢失，候选已改用现有 MapDestruct<K,V>
+传递 key/value；没有放宽捕获的 Op。相关 native/JS 共享回归通过。
+
+随后 bundled core 严格源码检查暴露 update-in 原有 Option<T> 合同缺少
+叶子证据。动态路径的回调输入修正为 Option<Dynamic>，独立返回 U；
+实现与缺失路径行为保留。core 公共检查 639/639，冻结 API 基线通过。
+定义附带用例覆盖叶子变更类型、空路径和缺失路径，并复用 native/JS 回放。
+
+最终候选的 Respo 默认严格检查及 96/96 native 通过，22 个探针保持上述
+结果。真实 Diary 客户端严格检查和 JS 生成通过，initial/offline/login
+三种 SSR 内容断言通过。Respo 文档 83 文件、118 代码块通过。
+编译器 fmt/clippy 与完整 Rust 测试 1,584 passed、0 failed、一项既有
+ignored。Agent CLI 53/53、core 451/451、冻结 API 基线、native/JS/IR
+通过。更新 Dynamic 分类清单后，剩余门禁逐阶段通过；WASM 显式指定 debug
+候选后通过，literal-paths 与 typed-method 检查通过。初次完整命令因清单
+过期退出1，默认 WASM 脚本选中旧 release 的六项失败不计作候选结果。
+本地编译器提交 5727cec1，候选未发布，未将其计作正式发布成果。

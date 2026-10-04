@@ -70,11 +70,38 @@ ${annotated ? `      hint-fn $ {} (:return 'Unit)
     assert.match(bindings.output, /respo\.app\.schema\/Op/, 'the copied entry must retain its Op binding');
     results.push({ name, accepted: result.status === 0, entryBindings: bindings.output, diagnostics: result.output });
   }
+  // A lexical Op belongs to the enclosing handler. Calling d! must not
+  // specialize that fixed callback parameter as if d! declared its own Op.
+  for (const [name, call] of [
+    ['generic-forward-op', 'd! op'],
+    ['generic-number', 'd! 42'],
+    ['generic-cursor-list', 'd! ([] :field) :value'],
+    ['generic-tag', 'd! :clear'],
+  ]) {
+    copyFileSync(resolve(root, 'calcit.cirru'), resolve(scratch, 'calcit.cirru'));
+    edit(['edit', 'def', 'respo.main/main!', '--overwrite', '--input-format', 'cirru', '--code', `quote $ defn main! ()
+  let
+      handle $ fn (op d!)
+        hint-fn $ {} (:generics ([] 'Op)) (:return 'Unit)
+          :args $ [] 'Op
+            :: 'Fn $ {} (:rest 'Dynamic) (:return 'Unit)
+              :args $ [] 'Op
+        ${call}
+      dispatch! $ fn (_op & _data)
+        hint-fn $ {} (:return 'Unit) (:rest 'Dynamic)
+          :args $ [] 'respo.app.schema/Op
+        , &unit
+    handle (respo.app.schema/Op :clear) dispatch!`]);
+    edit(['edit', 'def', 'respo.main/reload!', '--overwrite', '--input-format', 'cirru', '--code', 'quote $ defn reload! () &unit']);
+    const result = invoke(['--check-only'], true);
+    results.push({ name, accepted: result.status === 0, diagnostics: result.output });
+  }
   const control = name => results.find(result => result.name === name);
   assert.equal(control('annotated-concrete-valid-op').accepted, true, 'positive control must compile');
   assert.equal(control('annotated-concrete-number').accepted, false, 'negative control must reject the wrong op');
   assert.match(control('annotated-concrete-number').diagnostics, /calling `d!` arg 1/);
   assert.match(control('annotated-concrete-number').diagnostics, /respo\.main\/main!/);
+  assert.equal(control('generic-forward-op').accepted, true, 'generic forwarding must preserve the caller Op');
   console.log(JSON.stringify({ mutationCompiler: version.output.trim(), checker: invoke(['--version'], true).output.trim(), results }, null, 2));
 } finally {
   rmSync(scratch, { recursive: true, force: true });

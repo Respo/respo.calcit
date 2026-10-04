@@ -73,7 +73,8 @@ CALCIT_BIN=/path/to/calcit-0.28.0 node scripts/probe-dispatch-boundary.mjs
 
 可用 `CHECK_CALCIT_BIN` 指定候选编译器做检查；源码编辑仍由匹配项目 pin 的
 0.28.0 完成。脚本在临时副本中使用 CLI 修改 demo 入口和 handler schema，
-覆盖 map/struct props、错误 Number、合法 Op、旧 list/tag 及显式回调标注。
+覆盖 map/struct props、错误 Number、合法 Op、旧 list/tag、显式回调标注
+及泛型回调的 Op 转发/捕获。
 输出是调查结果，不是发布门禁的成功标记；临时副本结束后删除。
 
 最新结果、对类型槽与泛型路线的约束见
