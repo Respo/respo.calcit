@@ -14,6 +14,8 @@ Respo 的开发版本以 `deps.cirru` 固定 Calcit 与 js-ffi 依赖，通过�
 
 当前组合保留原 definition `:tests` 与断言，通过原生 106 项测试、默认 browser 入口 192 项检查，以及 23 个框架命名空间的 325 个定义检查。SSR、DOM patch/lifecycle、正反类型检查、Markdown 示例和生产构建均已验证；真实 Chrome 验证任务添加、编辑、勾选、移除、键盘事件和刷新后交互。源码使用 canonical core 名称，字面量分支使用 `match`，不增加质量基线预算。`with-attrs` 接收已序列化的 SVG 扩展属性；DOM anchor 末尾移动使用 null，保留宿主边界的运行时验证。
 
+早期候选工具链的七项失败分为五项回调边界和两项列表构造，恢复过程见[回调边界历史记录](history/20261004-callback-type-boundaries.md)。这是历史验证，不代表当前组合；上述 106 项测试包含原有列表构造的 nil 过滤与替换/移除用例，当前均已通过。
+
 完整库的 Node target 和应用级 type-slot 贯通仍需分别验收；默认入口、框架定义检查和 demo 正例不能证明所有应用的 typed dispatch 已完成。
 
 > Inspired by React and Reagent. Previously [Respo/respo.cljs](https://github.com/Respo/respo.cljs).
