@@ -305,3 +305,16 @@ state 强转。再检查 assoc 的真实泛型 K 合同后，移除 key 的 Tag 
 严格检查和原 quality baseline 通过。当前扩展盘点表为 78 处转换。
 
 日志：`/private/tmp/respo-194-cursor-branch-{formal,candidate,js,check,quality}.log`。
+
+
+### Draft PR 与持续回归
+
+当前分支已创建中文 draft PR #221。70a8f23 的 GitHub Actions run 37198815100
+实际完成并成功；逐步骤确认 Snapshot 格式/严格检查/quality、native tests、DOM
+host、cursor keys、Markdown 和 Vite build 均为 success。PR 的限制和未发布依赖
+明确保留，不关闭 issue。
+
+核对 workflow 时发现 6 个新增渲染遍历测试文件尚未由 CI 调用。正式 0.28 重新
+生成 JS 后，该组 15/15 Node 测试通过，已作为 Test typed render traversal 接入
+workflow，涵盖 DOM 创建、effects、事件刷新、listener、事件定位与 purification。
+本记录的首轮 CI 成功对应加入这一新步骤之前的提交，新步骤仍需新 run 验证。

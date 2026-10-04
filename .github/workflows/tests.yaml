@@ -83,6 +83,16 @@ jobs:
       - name: Verify mixed cursor keys
         run: yarn test-cursor-keys
 
+      - name: Test typed render traversal
+        run: |
+          node --test \
+            test/component-listener-traversal.test.mjs \
+            test/event-node-lookup.test.mjs \
+            test/purify-render-node.test.mjs \
+            test/typed-dom-creation.test.mjs \
+            test/typed-effect-traversal.test.mjs \
+            test/typed-event-refresh.test.mjs
+
       - name: Test patch lookup and duplicate keys
         run: yarn test-patch-lookup
 
