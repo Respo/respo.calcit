@@ -246,7 +246,18 @@ export function probeGenericHolders({ edit, invoke, results }) {
     edit(['edit', 'schema', `respo.probe.generic/${slotName(name)}`, '--code',
       `quote $ ${slotCode(schema.startsWith("'") ? ':: ' + schema : schema)}`]);
   }
-  for (const [name, code] of appCases) {
+  const inlinePropsMain = appMain.slice(0, propsStart)
+    + appMain.slice(appMain.indexOf('props $', propsStart)).replace(
+      'props $ respo.probe.generic/Props :event $ &{} :click handler',
+      `props $ respo.probe.generic/Props :event $ &{} :click $ fn (_event d!)
+        d! $ respo.probe.generic/A :clear
+        , &unit`,
+    );
+  const slotCases = [...appCases,
+    ['holder-props-store-inline-forward-op', inlinePropsMain],
+    ['holder-props-store-inline-number-op', inlinePropsMain.replace('d! $ respo.probe.generic/A :clear', 'd! 42')],
+  ];
+  for (const [name, code] of slotCases) {
     const slotCase = name.replace('holder-props-store-', 'slot-props-store-');
     edit(['edit', 'def', 'respo.main/main!', '--overwrite', '--code', rename(code)]);
     const checked = invoke(['--check-only'], true);

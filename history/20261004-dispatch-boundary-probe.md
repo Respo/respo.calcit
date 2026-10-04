@@ -282,3 +282,15 @@ native 的 dispatch 正控制明确比较 &enum:definition，不用 A/B 共享�
 最终 42 场景在正式与候选编译器分别运行完成。五个 Props/Store 场景的检查耗时中位数：候选泛型 592.7 ms、候选槽路线 566.9 ms；正式泛型 101.8 ms、正式槽路线 100.3 ms。各组包含不同输入和通过/失败路径，数字只保存此次调查的运行成本，不是同一负载反复采样的性能结论。文档门禁 83/83 文件、118/118 代码块通过，git diff --check 通过。
 
 本原型仍未决定生产 API 的迁移路线：raw Map props 的回调上下文、生产 renderer/listener 与旧 cursor-list/tag 调用合同尚未贯通。两路线原型的成功不能证明这些验收项。此记录提供 #195 与 Calcit #1555 所需最小比较的本地证据，未代替 issue 决策或发布。
+
+## 后续：事件表内联回调上下文
+
+在同一 SlotProps 原型中再加入两个场景，总计 44 个：直接在 `&{} :click` 的值位置声明 fn，不手写该事件回调的 hint-fn。原候选把合法 A 与错误 Number 都拒绝于 Props event 字段，因为值推断成裸 Fn；这不是错误 Op 的有效拒绝证据。
+
+编译器将已有 List/Set literal 成员上下文扩展到完整、无 spread 的 &{} 键值序列，按声明的 Map key/value 类型递归预处理。修复后，内联合法 A 回调静态通过并 native 执行成功；d! 42 在 d! arg 1 拒绝，诊断保留 type-slot(dispatch-op) 身份。本例的应用只需 dispatch 的具体 A 签名，不再需要事件 lambda 的第二处具体签名；前段两路线五场景的两处标注统计保持原样，不能拿不同代码布局直接比较标注成本。
+
+现有探针核验新的内联正例如果被接受就必须执行成功，负例必须拒绝于 d! arg 1。新增 compiler definition test 覆盖直接与嵌套 Map 回调的 native/JS 回放。这里解决的是已声明同质 Map<Tag,EventHandler> 的上下文，生产的异质 Map<Tag,Dynamic> props 仍没有业务 key 的静态合同；未宣称 raw props、旧 list/tag 或生产 render 链已完成。完整编译器门禁正在针对本项新源码重跑。
+
+Respo 默认严格检查与 96/96 native tests、Diary 默认严格检查通过。正式 0.28.0 与当前候选分别完成 44 场景；正式版的内联两例仍因 slot/裸 Fn 字段关系而拒绝，不能算作正确诊断。复查发现 docs 检查脚本此前不读取 CALCIT_BIN：先前该变量指定候选的命令实际使用 PATH 中的正式 CLI。脚本现优先采用显式 CALCIT_BIN，按当前候选重新运行，83/83 文件与 118/118 代码块通过；先前正式版的通过结果仍保留。#104 的默认 demo 可达图在正式和候选的 --warn-dyn-method --check-only 下均通过，但这个范围不代替全公共 API 或下游验收。
+
+Diary 在本项源码下重新生成 JS 后，initial/offline/login 三种 SSR 内容与组件身份通过（输出长度 271/291/1640 只是附带记录，验收仍由内容与身份断言完成）。临时 node_modules 链接在运行后删除。当前 compiler clippy all-targets -D warnings、fmt 与差异检查通过；完整 Rust 的首次沙箱运行在两个本机 HTTP bind 处被 Operation not permitted 阻止，获准的本机网络回归仍在运行，不能据分段通过写成完整通过。

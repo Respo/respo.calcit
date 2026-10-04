@@ -120,10 +120,14 @@ ${annotated ? `      hint-fn $ {} (:return 'Unit)
     assert.equal(control('holder-ref-tree-mismatched-controller').accepted, false, 'tree Ref holders must retain the nominal Op relationship');
   }
   for (const name of ['holder-props-store-forward-op', 'holder-props-store-string-state',
-    'slot-props-store-forward-op', 'slot-props-store-string-state']) {
+    'slot-props-store-forward-op', 'slot-props-store-string-state', 'slot-props-store-inline-forward-op']) {
     if (control(name).accepted) {
       assert.equal(control(name).nativePassed, true, 'accepted Props/Store holders must preserve runtime dispatch and state');
     }
+  }
+  if (control('slot-props-store-inline-forward-op').accepted) {
+    assert.equal(control('slot-props-store-inline-number-op').accepted, false);
+    assert.match(control('slot-props-store-inline-number-op').diagnostics, /calling `d!` arg 1/);
   }
   if (control('slot-props-store-forward-op').accepted) {
     for (const [name, diagnostic] of [
