@@ -81,3 +81,22 @@ CALCIT_BIN 后完整 check-all 通过，覆盖 TS、Agent 协议与 native/JS/WA
 slot-struct-valid-op 仍在 DomProps 字段边界被拒绝，slot-map-number 仍通过。
 接下来分别处理 handler alias 的类型关系与 map props 的回调推断，再贯通
 wrap-dispatch 的 typed/legacy 调用合同。quoted hint 的修复不是 #195 完成标记。
+
+## 后续：同名槽的回调组合
+
+合法 struct handler 误报进一步缩小为两个相同的 Fn(*payload)->Unit
+回调组合：绑定存在，但证明第二次展开同名槽时触发递归守卫。候选编译器
+改为在一次守卫内比较实际绑定与自身，仍验证绑定、不按槽名字直接放行。
+
+现有 type-slot fixture 附带的 Calcit :tests 在修复前只报同签名回调不匹配，
+修复后 1/1 通过，strict-default 已调用该测试并要求非空选择。Rust 内部
+循环/未绑定/显式 Dynamic 边界回归仍通过，库测试 953 passed、一项 ignored。
+
+18 个同一探针中 slot-struct-valid-op 已通过，slot-struct-number 仍拒绝，
+其余结果与 quoted slot 修复后一致；Respo 原有 96/96 native 与默认严格检查
+通过。下一步重点是 map props 的上下文传播和旧 list/tag 的合法调用合同，
+再与贯通持有关系的泛型路线比较。未将 probe 改成发布 gate，也未更新正式 pin。
+
+本地编译器提交 bc0d4556；完整 cargo test 1,584 passed、0 failed、一项既有
+ignored，fmt/clippy 与完整 check-all 通过，Agent CLI 53/53；core 与
+native/JS/WASM、FFI、literal-paths、typed-method 回归通过。候选尚未发布。
