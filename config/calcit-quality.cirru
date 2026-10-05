@@ -1840,10 +1840,10 @@
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 2
+      :schemaDynamic 0
       :typeNone 0
-      :typeNotFull 1
-      :unresolved 2
+      :typeNotFull 0
+      :unresolved 0
       :unsafeCoerce 0
     |respo.util.list/pair-key $ {} (:codeDynamic 0)
       :codeNil 0
@@ -1858,10 +1858,10 @@
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 2
+      :schemaDynamic 0
       :typeNone 0
-      :typeNotFull 1
-      :unresolved 2
+      :typeNotFull 0
+      :unresolved 0
       :unsafeCoerce 0
     |respo.util.list/pick-attrs $ {} (:codeDynamic 0)
       :codeNil 0
@@ -1903,10 +1903,10 @@
     :codeNil 33
     :declaredOptional 0
     :deprecatedCalls 0
-    :schemaDynamic 191
+    :schemaDynamic 187
     :typeNone 3
-    :typeNotFull 190
-    :unresolved 219
+    :typeNotFull 188
+    :unresolved 215
     :unsafeCoerce 41
   :scope $ {} (:includeDependencies false)
     :namespace nil

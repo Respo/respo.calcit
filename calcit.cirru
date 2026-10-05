@@ -7790,7 +7790,7 @@
               if (empty? rest-xs) (Option :none)
                 if
                   &= (&list:first rest-xs) needle
-                  Option :some $ assert-type idx 'Number
+                  Option :some idx
                   recur (&list:rest rest-xs) (inc idx)
           :examples $ []
           :schema $ :: 'Fn $ {}
@@ -7812,8 +7812,9 @@
         'pair-first $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn pair-first (pair) (&list:nth pair 0)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ [] $ :: 'List 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'T)
+            :args $ [] $ :: 'List 'T
+            :generics $ [] 'T
         'pair-key $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn pair-key (pair)
             assert-type (&list:nth pair 0) 'Tag
@@ -7823,8 +7824,9 @@
         'pair-value $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn pair-value (pair) (&list:nth pair 1)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ [] $ :: 'List 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'T)
+            :args $ [] $ :: 'List 'T
+            :generics $ [] 'T
         'pick-attrs $ %{} 'CodeEntry
           :doc "|Extracts HTML attributes from a properties map, filtering out internal keys like :on, :event, :style."
           :code $ quote $ defn pick-attrs (props)

@@ -15,6 +15,31 @@ function evaluate(source) {
   return { status: result.status, output: result.stdout + result.stderr };
 }
 
+for (const helper of ['pair-first', 'pair-value']) {
+  const selectedCallback = call => `let
+    callback $ fn (value)
+      hint-fn $ {} (:args ([] 'Number)) (:return 'Number)
+      + value 1
+    selected $ respo.util.list/${helper} $ [] callback callback
+  ${call}`;
+
+  test(`${helper} preserves the selected callback identity and result`, () => {
+    const result = evaluate(selectedCallback(`do
+    assert= callback selected
+    assert= 3 $ selected 2
+    , &unit`));
+    assert.equal(result.status, 0, result.output);
+  });
+
+  test(`${helper} rejects String at the selected Number callback call`, () => {
+    const result = evaluate(selectedCallback('selected |wrong'));
+    assert.notEqual(result.status, 0, 'the selected callback must retain its parameter type');
+    assert.match(result.output, /calling `selected` arg 1/);
+    assert.match(result.output, /expects type `:number`, but got `:string`/);
+    assert.doesNotMatch(result.output, /took [\d.]+ms:/, 'the invalid callback must not run');
+  });
+}
+
 const guarded = call => `let
     callback $ fn (value)
       hint-fn $ {} (:args ([] 'Number)) (:return 'Number)
