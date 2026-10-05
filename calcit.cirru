@@ -5923,7 +5923,7 @@
                 raise |[Respo/insert-before-target!]-target-has-no-parent-element
               (:some parent)
                 let
-                    parent-element $ unsafe-coerce parent 'respo.dom/DomElement
+                    parent-element parent
                   .insert-before! parent-element new-element target
                   , &unit
           :examples $ []
@@ -6016,7 +6016,7 @@
               if (.!startsWith prop-str |data-)
                 let
                     name $ .!slice prop-str 5
-                    dataset $ unsafe-coerce (.-dataset target) JsObject
+                    dataset target.:dataset
                   if (calcit.core/non-nil? prop-value)
                     if
                       not $ &= prop-value $ aget dataset name

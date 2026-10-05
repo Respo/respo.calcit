@@ -56,3 +56,31 @@ schemaDynamic / typeNotFull / unresolved 保持 183 / 186 / 209。
 
 分析 JSON、诊断日志和生成 JS 未入库。生产 dispatch 合同和 legacy 输入
 兼容仍属 #195 的待办；这些转换的删除不代表 milestone 全部验收完成。
+
+## 2026-10-06：dataset 与 parent 的已有 DOM 合同
+
+继续复用 `respo.dom/DomElement` 已声明的能力，移除两处重复 `unsafe-coerce`：
+
+| 定义 | 原转换 | 已有证明与实际改动 |
+| --- | --- | --- |
+| `replace-prop` | `.-dataset target` → JsObject | target 已是 DomElement，dataset 字段声明为 JsObject；使用 `target.:dataset` 读取同一宿主属性 |
+| `insert-before-target!` | parent → DomElement | parent-element 声明为 JsNullish<DomElement>，Option 的 some 分支已得到 DomElement；直接保留 parent |
+
+保留函数签名、dataset 名称计算、比较相同值后不写入、nil 删除，以及父节点不存在时
+原有的显式错误。父节点读取、原 new-element/target 对象与 insertBefore 调用顺序不变。
+没有改动状态树或 dispatch 运行语义；JS 宿主真正的转换边界仍保留。
+
+同口径项目 definition code 的 `unsafe-coerce` 24 → 22，`assert-type` 保持 84；
+相对原始 `b94962e` 的 124 / 41，分别减少 40 / 19。两个定义的 unsafeCoerce
+预算都从 1 收紧到 0，聚合预算同样减少 2，其他预算保持不变。
+
+已发布 alpha.6 验证：严格检查与 `--warn-dyn-method`、收紧后的 quality、
+106/106 原有附带测试、21/21 callback 类型回归通过。重新生成默认 JS 后，
+SSR/CSS、event configuration、keyed moves 和 typed DOM creation 合计 22/22 通过。
+新增 dataset 回归用同一对象记录 getter、写入与删除，确认读取顺序、相同值不重复
+写入、nil 清空、未涉及属性不变以及 Unit 返回。
+
+独立 DOM host 入口重新生成并执行通过，既有测试检查 parentElement.insertBefore
+接收原 new-element 和 target，以及 detached target 的错误消息；随后恢复默认入口
+生成产物。生成 JS、完整分析 JSON 和日志不入库。真实下游的正式 CI 与 issue
+盘点发布仍待完成，不将这两处消除视为 milestone 已验收。

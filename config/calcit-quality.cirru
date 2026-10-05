@@ -1286,7 +1286,7 @@
       :typeNone 0
       :typeNotFull 0
       :unresolved 0
-      :unsafeCoerce 1
+      :unsafeCoerce 0
     |respo.render.patch/replace-element $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -1304,7 +1304,7 @@
       :typeNone 0
       :typeNotFull 1
       :unresolved 0
-      :unsafeCoerce 1
+      :unsafeCoerce 0
     |respo.render.patch/replace-style $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -1907,7 +1907,7 @@
     :typeNone 3
     :typeNotFull 188
     :unresolved 215
-    :unsafeCoerce 35
+    :unsafeCoerce 33
   :scope $ {} (:includeDependencies false)
     :namespace nil
     :namespacePrefix nil
