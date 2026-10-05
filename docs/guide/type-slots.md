@@ -104,6 +104,8 @@ holder 的 `defstruct` 字段类型表达式也使用 bare `*dispatch-op`；持�
 不会跳过反例检查后记作通过。legacy 失败需定位首参数。
 holder 的输入位置修正与本地候选完整对照见
 [slot holder 复查](../../history/20261006-slot-holder-inputs.md)。
+探针还用单个 callback 字段对照具体 Op、同 slot 和 Number 三种标注，
+区分 slot 关系失败与树、Ref 或状态泛型造成的其他失败。
 
 安装为模块后，可以通过 CLI 重读本指南：
 

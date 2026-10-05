@@ -135,7 +135,9 @@ ${variadic ? "          :rest 'Dynamic\n" : ''}\
     assert.match(control('bare-slot-variadic-number').diagnostics, /calling `d!` arg 1/);
     assert.equal(control('bare-slot-variadic-invalid-variant').accepted, false);
     for (const name of ['bare-slot-variadic-cursor-list', 'bare-slot-variadic-tag']) {
-      if (!control(name).accepted) assert.match(control(name).diagnostics, /calling `d!` arg 1/);
+      assert.equal(control(name).accepted, false,
+        `${name} must be rejected by a callback whose first argument is the bound Op`);
+      assert.match(control(name).diagnostics, /calling `d!` arg 1/);
     }
   }
   if (control('slot-variadic-struct-valid-op').accepted) {
@@ -188,6 +190,21 @@ ${variadic ? "          :rest 'Dynamic\n" : ''}\
       assert.equal(control(name).accepted, false, 'a working slot holder must reject the mismatched input');
       assert.match(control(name).diagnostics, diagnostic);
     }
+  }
+  assert.equal(control('slot-callback-concrete-op').accepted, true,
+    'a slot callback field must accept the entry-bound concrete Op callback');
+  assert.equal(control('slot-callback-concrete-op').nativePassed, true,
+    'the concrete Op callback stored in a slot field must execute');
+  assert.equal(control('slot-callback-number').accepted, false,
+    'a slot callback field must reject a Number callback');
+  assert.match(control('slot-callback-number').diagnostics, /struct `SlotCallback` field `:callback`/);
+  if (control('slot-callback-same-slot').accepted) {
+    assert.equal(control('slot-callback-same-slot').nativePassed, true,
+      'an accepted callback using the same entry-bound slot must execute');
+  } else {
+    assert.match(control('slot-callback-same-slot').diagnostics,
+      /field `:callback` expects type `fn\(type-slot\(dispatch-op\)\) -> :unit`, but got `fn\(type-slot\(dispatch-op\)\) -> :unit`/,
+      'record the isolated slot-to-slot mismatch rather than an unrelated holder failure');
   }
   console.log(JSON.stringify({ mutationCompiler: version.output.trim(), checker: invoke(['--version'], true).output.trim(), results }, null, 2));
 } finally {
