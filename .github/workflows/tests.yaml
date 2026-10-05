@@ -56,6 +56,9 @@ jobs:
       - name: "test"
         run: calcit calcit.cirru test --require-match --summary-only --format json
 
+      - name: Check framework definitions and dynamic methods
+        run: yarn check-framework-types
+
       - name: Test nominal DOM patch protocol
         run: yarn test-dom-patch-types
 

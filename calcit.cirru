@@ -7453,7 +7453,7 @@
         'input-event-checked? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn input-event-checked? (event)
             let
-                input-event $ unsafe-coerce event 'respo.dom/DomInputEvent
+                input-event event
               match
                 js-nullish->option $ input-event.:target
                 (:none)
@@ -7466,7 +7466,7 @@
         'input-event-value $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn input-event-value (event)
             let
-                input-event $ unsafe-coerce event 'respo.dom/DomInputEvent
+                input-event event
               match
                 js-nullish->option $ input-event.:target
                 (:none) (raise |[Respo/input-event-value]-event-has-no-target)

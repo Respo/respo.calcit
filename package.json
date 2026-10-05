@@ -15,6 +15,7 @@
     "bench-keyed-moves": "calcit js && node test/keyed-moves-bench.mjs",
     "check-docs": "bash scripts/check-docs-md.sh",
     "check-quality": "calcit calcit.cirru analyze quality --baseline config/calcit-quality.cirru",
+    "check-framework-types": "bash scripts/check-framework-types.sh",
     "test-patch-lookup": "calcit js && node --test test/patch-lookup.test.mjs",
     "bench-render": "calcit js && node test/render-performance-bench.mjs",
     "test-memo": "calcit js && node --test test/memo.test.mjs",
