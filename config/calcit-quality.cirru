@@ -1655,7 +1655,7 @@
       :typeNone 0
       :typeNotFull 0
       :unresolved 0
-      :unsafeCoerce 1
+      :unsafeCoerce 0
     |respo.util.format/coerce-component $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -1907,7 +1907,7 @@
     :typeNone 3
     :typeNotFull 188
     :unresolved 215
-    :unsafeCoerce 33
+    :unsafeCoerce 32
   :scope $ {} (:includeDependencies false)
     :namespace nil
     :namespacePrefix nil

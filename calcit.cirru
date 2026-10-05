@@ -7305,14 +7305,14 @@
         'text-width $ %{} 'CodeEntry
           :doc "|Measures text with a shared Canvas 2D context. Returns 0 when Canvas is unavailable, including server-side rendering and Node.js tests."
           :code $ quote $ defn text-width (content font-size font-family)
-            if (js-present? shared-canvas-context)
-              let
-                  context $ unsafe-coerce shared-canvas-context 'respo.dom/DomCanvasContext
-                set! context.:font $ str font-size |px (char-from-code 32) font-family
-                let
-                    metrics $ context .measure-text content
-                  metrics.:width
-              , 0
+            match (js-nullish->option shared-canvas-context)
+              (:none) 0
+              (:some context)
+                do
+                  set! context.:font $ str font-size |px (char-from-code 32) font-family
+                  let
+                      metrics $ context .measure-text content
+                    metrics.:width
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Number)
             :args $ [] 'String 'Number 'String
