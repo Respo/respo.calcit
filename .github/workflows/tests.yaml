@@ -62,6 +62,11 @@ jobs:
       - name: Test callback type boundaries
         run: yarn test-callback-types
 
+      - name: Characterize dispatch migration boundaries
+        run: |
+          node scripts/probe-dispatch-boundary.mjs > "$RUNNER_TEMP/dispatch-boundary-probe.json"
+          node -e 'const r=require(process.argv[1]); console.log(`Dispatch migration probe: ${r.results.length} scenarios; checker ${r.checker}`)' "$RUNNER_TEMP/dispatch-boundary-probe.json"
+
       - name: "test typed DOM host"
         run: yarn test-dom-host
 

@@ -19,10 +19,15 @@ const invoke = (args, checker = false) => {
   const started = performance.now();
   const result = spawnSync(checker ? checkBin : bin, args, { cwd: scratch, encoding: 'utf8' });
   if (result.error) throw result.error;
-  return { status: result.status, output: result.stdout + result.stderr, elapsedMs: performance.now() - started };
+  return { status: result.status, stdout: result.stdout, output: result.stdout + result.stderr, elapsedMs: performance.now() - started };
 };
 const edit = args => {
-  const result = invoke(args);
+  const transaction = ['edit', 'transaction', '--code', JSON.stringify([args]), '--format', 'json'];
+  const preview = invoke([...transaction, '--dry-run']);
+  assert.equal(preview.status, 0, preview.output);
+  const { original_revision: revision } = JSON.parse(preview.stdout.slice(preview.stdout.indexOf('{')));
+  assert.match(revision, /^md5:/, 'every mutation must use its dry-run Snapshot revision');
+  const result = invoke([...transaction, '--expect-revision', revision]);
   assert.equal(result.status, 0, result.output);
 };
 const results = [];
@@ -34,6 +39,7 @@ const slotSchema = `quote $ :: 'Fn $ {} (:return 'Unit)
 try {
   mkdirSync(resolve(scratch, '.calcit'));
   symlinkSync(resolve(root, '.calcit/modules'), resolve(scratch, '.calcit/modules'));
+  copyFileSync(resolve(root, 'deps.cirru'), resolve(scratch, 'deps.cirru'));
   const version = invoke(['--version']);
   assert.equal(version.status, 0, version.output);
   assert.equal(version.output.trim(), pinnedVersion, 'mutation probe requires the project-pinned Calcit version');
@@ -63,6 +69,12 @@ try {
     ['bare-slot-valid-op', false, true, 'd! $ respo.app.schema/Op :clear', '*dispatch-op'],
     ['bare-slot-cursor-list', false, true, 'd! ([] :field) :value', '*dispatch-op'],
     ['bare-slot-tag', false, true, 'd! :clear', '*dispatch-op'],
+    ['bare-slot-variadic-valid-op', false, true, 'd! $ respo.app.schema/Op :clear', '*dispatch-op', true],
+    ['bare-slot-variadic-valid-op-extra-data', false, true, 'd! (respo.app.schema/Op :clear) :value', '*dispatch-op', true],
+    ['bare-slot-variadic-cursor-list', false, true, 'd! ([] :field) :value', '*dispatch-op', true],
+    ['bare-slot-variadic-tag', false, true, 'd! :clear', '*dispatch-op', true],
+    ['bare-slot-variadic-number', false, true, 'd! 42', '*dispatch-op', true],
+    ['bare-slot-variadic-invalid-variant', false, true, 'd! $ :: :not-an-op', '*dispatch-op', true],
   ]) {
     copyFileSync(resolve(root, 'calcit.cirru'), resolve(scratch, 'calcit.cirru'));
     edit(['edit', 'def', 'respo.main/main!', '--overwrite', '--code', `quote $ defn main! ()
@@ -72,6 +84,7 @@ ${annotated ? `      hint-fn $ {} (:return 'Unit)
         :args $ [] (:: 'Map 'Tag 'Dynamic)
           :: 'Fn $ {} (:return 'Unit)
             :args $ [] ${annotated}
+${variadic ? "          :rest 'Dynamic\n" : ''}\
 ` : ''}\
       ${call}
   , &unit`]);
@@ -112,6 +125,17 @@ ${annotated ? `      hint-fn $ {} (:return 'Unit)
     results.push({ name, accepted: result.status === 0, checkElapsedMs: result.elapsedMs, diagnostics: result.output });
   }
   const control = name => results.find(result => result.name === name);
+  if (control('bare-slot-variadic-valid-op').accepted) {
+    assert.equal(control('bare-slot-variadic-valid-op-extra-data').accepted, true,
+      'inline slot annotation must preserve variadic data for a valid Op');
+    assert.equal(control('bare-slot-variadic-number').accepted, false,
+      'inline slot annotation must reject a concrete Number op');
+    assert.match(control('bare-slot-variadic-number').diagnostics, /calling `d!` arg 1/);
+    assert.equal(control('bare-slot-variadic-invalid-variant').accepted, false);
+    for (const name of ['bare-slot-variadic-cursor-list', 'bare-slot-variadic-tag']) {
+      if (!control(name).accepted) assert.match(control(name).diagnostics, /calling `d!` arg 1/);
+    }
+  }
   if (control('slot-variadic-struct-valid-op').accepted) {
     assert.equal(control('slot-variadic-struct-valid-op-extra-data').accepted, true,
       'a rest-argument dispatch signature must accept the same Op with extra legacy data');

@@ -73,7 +73,8 @@ CALCIT_BIN=/path/to/calcit-0.29.0-alpha.6 node scripts/probe-dispatch-boundary.m
 
 可用 `CHECK_CALCIT_BIN` 指定候选编译器做检查；源码编辑由与
 `deps.cirru :calcit-version` 精确匹配的已发布 CLI 完成，脚本解析该声明并拒绝不匹配的 mutator。
-脚本在临时副本中使用 CLI 修改 demo 入口和 handler schema，
+脚本复制 Snapshot 与固定版本的 deps 到临时目录，使用 CLI dry-run、
+`--expect-revision` 事务修改 demo 入口和 handler schema；根项目源码不变。
 覆盖 map/struct props、错误 Number、合法 Op、旧 list/tag、显式回调标注
 及泛型回调的 Op 转发/捕获。持有链探针另测递归节点、保存 dispatch 的 Ref、
 泛型树 factory、保存整棵树后的 render 派发与两种应用 Op 混接，
@@ -92,8 +93,12 @@ factory 正例是否被接受取决于 checker 的实际泛型推断能力；输
 输出包含每个场景的子进程端到端检查耗时（含启动与模块加载），是调查结果，
 不是发布门禁的成功标记；临时副本结束后删除。
 
-最新结果、对类型槽与泛型路线的约束见
+已发布 alpha.6 的实际检查与正例失败见
+[发布版复查](../../history/20261005-dispatch-published-alpha6.md)。
+此前正式 0.28 与本地候选的实验见
 [迁移调查记录](../../history/20261004-dispatch-boundary-probe.md)。
+内联 `hint-fn` 的 bare slot 与持久化 schema 的 quoted symbol 分别检查，
+可变参数正例同时调用合法 Op 与额外 data；legacy 失败需定位首参数。
 
 安装为模块后，可以通过 CLI 重读本指南：
 
