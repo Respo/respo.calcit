@@ -23,7 +23,7 @@ js-ffi `0.2.1-alpha.13`。
 `first-pair` 的 `&list:first` 会在空列表返回 nil，原来的 List 检查仍承担
 运行时失败语义，因此保留。开放的事件、attrs 和状态容器不在本轮收窄。
 
-## 同口径数量
+## 首次提交 `2053864` 的同口径数量
 
 转换数量由 CLI `query search --exact --format json` 的 project definition
 code 路径计数，包含项目测试命名空间及宏模板，排除依赖、schema 和附带元数据。
@@ -51,3 +51,25 @@ code 路径计数，包含项目测试命名空间及宏模板，排除依赖、
 本轮修改未改变原有附带测试、examples、状态树及渲染行为。生成 JS、分析
 JSON 和日志保留在忽略目录或临时目录。#194 的 issue 盘点发布与整体下游
 验收，以及 #195 的生产 dispatch 合同仍需继续完成。
+
+## 后续：keyed 移动循环的索引与 anchor
+
+`find-children-diffs` 的普通重排与 rotation 两个移动循环显式声明
+`List<Number>, Option<Number> -> Unit`。普通重排的 source-order 来自已验证
+为 Number 的 Map 索引；rotation 的 sources 来自两个 range 的 concat。
+每次递归传入列表剩余部分与 `Option.some source`，保留索引关系。
+
+移除循环体内两处 source 的 Number 断言与两处 anchor 的 Option<Number>
+断言。保留 Map 查找结果的 Number 检查：`&map:get` 的返回值可能缺失，
+它们仍承担运行时验证。rotation 的初始空 Option 类型声明保留。
+原有从右到左的移动顺序、LIS 保留集合、index-offset、anchor 映射、DomPatch
+内容与递归实参均保持原样；增加的循环 hint 不参与运行时求值。
+
+同一计数范围内 `assert-type` 88 → 84，`unsafe-coerce` 仍为 30。
+相对 `b94962e` 的 124 / 41，分别下降 40 / 11。quality 指标保持上述
+183 / 186 / 209，预算未改动。
+
+默认严格检查与 `--warn-dyn-method --check-only` 通过；106/106 原有附带
+测试通过。生成当前 JS 后，现有 keyed move 与 patch lookup 共 15/15
+回归通过，包含六键全部 720 个排列的最少移动数与节点身份、混合增删、
+嵌套坐标、None 子节点、公共前后缀中的 ref 位置及移动批次快照。

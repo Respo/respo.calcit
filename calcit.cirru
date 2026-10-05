@@ -4078,15 +4078,14 @@
                             anchor $ if (> suffix 0)
                               %:: Option :some $ count retained-keys
                               %:: Option :none
+                          hint-fn $ {} (:return 'Unit)
+                            :args $ [] (:: 'List 'Number) (:: 'calcit.core/Option 'Number)
                           list-match remaining
                             () &unit
                             (source rest-sources)
-                              when-not
-                                contains? kept $ assert-type source 'Number
+                              when-not (contains? kept source)
                                 collect! $ DomPatch :move-element n-coord (+ index-offset source)
-                                  option:map
-                                    assert-type anchor $ :: 'Option 'Number
-                                    fn (position) (+ index-offset position)
+                                  option:map anchor $ fn (position) (+ index-offset position)
                               recur rest-sources $ %:: Option :some source
                         &doseq (key added-keys)
                           let
@@ -4120,15 +4119,14 @@
                       loop
                           remaining $ reverse sources
                           anchor $ assert-type (%:: Option :none) (:: 'Option 'Number)
+                        hint-fn $ {} (:return 'Unit)
+                          :args $ [] (:: 'List 'Number) (:: 'calcit.core/Option 'Number)
                         list-match remaining
                           () &unit
                           (source rest-sources)
-                            when-not
-                              contains? kept $ assert-type source 'Number
+                            when-not (contains? kept source)
                               collect! $ DomPatch :move-element n-coord (+ index source)
-                                option:map
-                                  assert-type anchor $ :: 'Option 'Number
-                                  fn (position) (+ index position)
+                                option:map anchor $ fn (position) (+ index position)
                             recur rest-sources $ %:: Option :some source
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
