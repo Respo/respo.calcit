@@ -98,7 +98,12 @@ factory 正例是否被接受取决于 checker 的实际泛型推断能力；输
 此前正式 0.28 与本地候选的实验见
 [迁移调查记录](../../history/20261004-dispatch-boundary-probe.md)。
 内联 `hint-fn` 的 bare slot 与持久化 schema 的 quoted symbol 分别检查，
-可变参数正例同时调用合法 Op 与额外 data；legacy 失败需定位首参数。
+holder 的 `defstruct` 字段类型表达式也使用 bare `*dispatch-op`；持久化 schema
+仍使用 `'*dispatch-op`，不能对两个输入位置套用同一种替换。
+可变参数正例必须先通过，才检查合法 Op 与额外 data；该正例失败会使探针退出失败，
+不会跳过反例检查后记作通过。legacy 失败需定位首参数。
+holder 的输入位置修正与本地候选完整对照见
+[slot holder 复查](../../history/20261006-slot-holder-inputs.md)。
 
 安装为模块后，可以通过 CLI 重读本指南：
 

@@ -125,6 +125,8 @@ ${variadic ? "          :rest 'Dynamic\n" : ''}\
     results.push({ name, accepted: result.status === 0, checkElapsedMs: result.elapsedMs, diagnostics: result.output });
   }
   const control = name => results.find(result => result.name === name);
+  assert.equal(control('bare-slot-variadic-valid-op').accepted, true,
+    'inline slot variadic positive control must compile before checking its negative cases');
   if (control('bare-slot-variadic-valid-op').accepted) {
     assert.equal(control('bare-slot-variadic-valid-op-extra-data').accepted, true,
       'inline slot annotation must preserve variadic data for a valid Op');

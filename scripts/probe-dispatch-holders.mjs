@@ -252,7 +252,9 @@ export function probeGenericHolders({ edit, invoke, results }) {
   };
   edit(['config', 'set-type-slot', ':dispatch-op', 'respo.probe.generic/A']);
   for (const [name, code, schema] of [...slotDefs, ...appDefs]) {
-    edit(['edit', 'def', `respo.probe.generic/${slotName(name)}`, '--code', `quote $ ${slotCode(code)}`]);
+    // Source type expressions use bare slots; schema payloads require quoted EDN symbols.
+    const source = slotCode(code).replaceAll("'*dispatch-op", '*dispatch-op');
+    edit(['edit', 'def', `respo.probe.generic/${slotName(name)}`, '--code', `quote $ ${source}`]);
     edit(['edit', 'schema', `respo.probe.generic/${slotName(name)}`, '--code',
       `quote $ ${slotCode(schema.startsWith("'") ? ':: ' + schema : schema)}`]);
   }
