@@ -224,7 +224,7 @@
       :typeNone 0
       :typeNotFull 1
       :unresolved 0
-      :unsafeCoerce 1
+      :unsafeCoerce 0
     |respo.controller.client/wrap-dispatch $ {} (:codeDynamic 0)
       :codeNil 1
       :declaredOptional 0
@@ -467,7 +467,7 @@
       :typeNone 0
       :typeNotFull 1
       :unresolved 0
-      :unsafeCoerce 1
+      :unsafeCoerce 0
     |respo.core/for-keyed $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -845,7 +845,7 @@
       :typeNone 0
       :typeNotFull 1
       :unresolved 0
-      :unsafeCoerce 3
+      :unsafeCoerce 1
     |respo.css/warn-style-literals $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -1259,7 +1259,7 @@
       :typeNone 0
       :typeNotFull 1
       :unresolved 0
-      :unsafeCoerce 1
+      :unsafeCoerce 0
     |respo.render.patch/append-element $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -1313,7 +1313,7 @@
       :typeNone 0
       :typeNotFull 1
       :unresolved 0
-      :unsafeCoerce 1
+      :unsafeCoerce 0
     |respo.render.patch/rm-event $ {} (:codeDynamic 0)
       :codeNil 1
       :declaredOptional 0
@@ -1907,7 +1907,7 @@
     :typeNone 3
     :typeNotFull 188
     :unresolved 215
-    :unsafeCoerce 41
+    :unsafeCoerce 35
   :scope $ {} (:includeDependencies false)
     :namespace nil
     :namespacePrefix nil

@@ -821,7 +821,7 @@
           :code $ quote $ defn patch-instance! (changes mount-point deliver-event)
             let
                 listener-builder $ fn (event-name) (build-listener event-name deliver-event)
-              apply-dom-changes changes (unsafe-coerce mount-point 'respo.dom/DomElement) listener-builder
+              apply-dom-changes changes mount-point listener-builder
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] (:: 'List 'respo.schema/DomPatch) 'respo.dom/DomElement $ :: 'Fn
@@ -1925,7 +1925,7 @@
                 span $ {}
               if (list? markup-tree)
                 let
-                    items $ unsafe-coerce markup-tree $ :: List Dynamic
+                    items markup-tree
                   loop
                       node-option $ none-render-node
                       effects $ empty-effects
@@ -2766,8 +2766,7 @@
           :doc "|Generates a CSS string block from a map of style rules."
           :code $ quote $ defn render-css-block (style-name rules)
             let
-                entries $ unsafe-coerce (&map:to-list rules)
-                  :: 'List $ :: 'List 'Dynamic
+                entries $ &map:to-list rules
               loop
                   acc |
                   xs entries
@@ -2779,8 +2778,7 @@
                     class-rule $ str |. style-name
                     rule-name $ &str:replace (&str:replace k |$0 class-rule) |& class-rule
                     contained $ &map:get styles-map :contained
-                    css-line $ style->string $ unsafe-coerce (&map:to-list styles-map)
-                      :: 'List $ :: 'List 'Dynamic
+                    css-line $ style->string $ &map:to-list styles-map
                     block $ if (calcit.core/non-nil? contained)
                       str contained (char-from-code 32) |{ &newline rule-name (char-from-code 32) |{ &newline css-line &newline |} &newline |}
                       str rule-name (char-from-code 32) |{ &newline css-line &newline |}
@@ -5675,13 +5673,11 @@
             let
                 style-name $ dashed->camel $ calcit.core/to-string p
                 style-value $ get-style-value v style-name
-              aset
-                unsafe-coerce (.-style target) JsObject
-                , style-name style-value
+              aset (.-style target) style-name style-value
             , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'Dynamic 'Tag 'Dynamic
+            :args $ [] 'respo.dom/DomElement 'Tag 'Dynamic
             :features $ #{} :js-ffi
         'append-element $ %{} 'CodeEntry
           :doc "|Appends a new DOM element to the target container."
@@ -6047,13 +6043,11 @@
           :code $ quote $ defn replace-style (target p v)
             let
                 style-name $ dashed->camel $ calcit.core/to-string p
-              aset
-                unsafe-coerce (.-style target) JsObject
-                , style-name $ get-style-value v style-name
+              aset (.-style target) style-name $ get-style-value v style-name
             , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'Dynamic 'Tag 'Dynamic
+            :args $ [] 'respo.dom/DomElement 'Tag 'Dynamic
             :features $ #{} :js-ffi
         'rm-element $ %{} 'CodeEntry (:doc "|Removes the DOM element from the document.")
           :code $ quote $ defn rm-element (target)

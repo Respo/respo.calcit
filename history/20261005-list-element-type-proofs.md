@@ -73,3 +73,7 @@ JSON 和日志保留在忽略目录或临时目录。#194 的 issue 盘点发布
 测试通过。生成当前 JS 后，现有 keyed move 与 patch lookup 共 15/15
 回归通过，包含六键全部 720 个排列的最少移动数与节点身份、混合增删、
 嵌套坐标、None 子节点、公共前后缀中的 ref 位置及移动批次快照。
+
+后续复用 DomElement 参数、list? 分支与 Map-to-List 返回合同，并贯通两项
+style helper 的 DOM 宿主合同，又移除六处 unsafe-coerce，最新计数为 84 / 24；证明及验证范围见
+[已有容器证明](20261005-proven-container-casts.md)。

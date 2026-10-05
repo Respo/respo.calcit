@@ -23,11 +23,28 @@ const { Component } = await import('../js-out/respo.schema.mjs');
 const { div, span } = await import('../js-out/respo.core.mjs');
 const { as_render_node, make_child_pair } = await import('../js-out/respo.util.detect.mjs');
 const { make_element } = await import('../js-out/respo.render.dom.mjs');
+const { add_style, replace_style } = await import('../js-out/respo.render.patch.mjs');
 const t = c.init_tags(['name', 'effects', 'listeners', 'tree', 'children', 'root', 'child']);
 const event = c.init_tags(['event', 'click', 'input']);
 const component = (name, element) => c._$n__PCT__$M_(Component,
   t.name, name, t.effects, c.arrayToList([]), t.listeners, c.arrayToList([]),
   t.tree, c._PCT_some(as_render_node(element)));
+
+test('style updates retain the style object, camel names, units and clearing', () => {
+  const target = new Host('div');
+  const style = target.style;
+  const props = c.init_tags(['padding', 'opacity', 'background-color']);
+  add_style(target, props.padding, 4);
+  replace_style(target, props.padding, 8);
+  add_style(target, props.opacity, 0.5);
+  replace_style(target, props['background-color'], 'red');
+  assert.equal(target.style, style);
+  assert.equal(style.padding, '8px');
+  assert.equal(style.opacity, '0.5');
+  assert.equal(style.backgroundColor, 'red');
+  replace_style(target, props.padding, null);
+  assert.equal(style.padding, '');
+});
 
 test('DOM creation keeps child order, component event coordinates, properties and styles', () => {
   creation.length = 0;

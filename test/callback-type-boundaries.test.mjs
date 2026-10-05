@@ -47,6 +47,26 @@ const guarded = call => `let
     checked $ respo.util.detect/expect-function callback |expected-fn
   ${call}`;
 
+test('style updates accept the declared DomElement capability', () => {
+  const result = evaluate(`let
+    update! $ fn (target)
+      hint-fn $ {} (:args ([] 'respo.dom/DomElement)) (:return 'Unit)
+      respo.render.patch/add-style target :padding 4
+      respo.render.patch/replace-style target :opacity 0.5
+  , &unit`);
+  assert.equal(result.status, 0, result.output);
+});
+
+for (const helper of ['add-style', 'replace-style']) {
+  test(`${helper} rejects Number as its DOM target before execution`, () => {
+    const result = evaluate(`respo.render.patch/${helper} 42 :padding 4`);
+    assert.notEqual(result.status, 0, 'a Number is not a DOM capability');
+    assert.match(result.output, /W_FN_ARG_TYPE_MISMATCH/);
+    assert.match(result.output, new RegExp(`Function .respo.render.patch/${helper}. arg 1`));
+    assert.doesNotMatch(result.output, /took [\d.]+ms:/, 'the invalid style update must not run');
+  });
+}
+
 const effect = (args, types, result, body) => `respo.core/build-effect :test ([])
   fn (${args})
     hint-fn $ {} (:args ([] ${types})) (:return '${result})
