@@ -1498,19 +1498,19 @@
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 0
       :typeNone 0
-      :typeNotFull 1
-      :unresolved 1
+      :typeNotFull 0
+      :unresolved 0
       :unsafeCoerce 0
     |respo.util.detect/component-tree $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 0
       :typeNone 0
-      :typeNotFull 1
-      :unresolved 1
+      :typeNotFull 0
+      :unresolved 0
       :unsafeCoerce 0
     |respo.util.detect/component? $ {} (:codeDynamic 0)
       :codeNil 0
@@ -1561,10 +1561,10 @@
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 2
+      :schemaDynamic 1
       :typeNone 0
       :typeNotFull 1
-      :unresolved 2
+      :unresolved 1
       :unsafeCoerce 0
     |respo.util.detect/element-children $ {} (:codeDynamic 0)
       :codeNil 0
@@ -1579,10 +1579,10 @@
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 0
       :typeNone 0
-      :typeNotFull 1
-      :unresolved 1
+      :typeNotFull 0
+      :unresolved 0
       :unsafeCoerce 0
     |respo.util.detect/element-name $ {} (:codeDynamic 0)
       :codeNil 0
@@ -1597,10 +1597,10 @@
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 2
+      :schemaDynamic 1
       :typeNone 0
       :typeNotFull 1
-      :unresolved 2
+      :unresolved 1
       :unsafeCoerce 0
     |respo.util.detect/element? $ {} (:codeDynamic 0)
       :codeNil 0
@@ -1624,10 +1624,10 @@
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 0
       :typeNone 0
-      :typeNotFull 1
-      :unresolved 1
+      :typeNotFull 0
+      :unresolved 0
       :unsafeCoerce 0
     |respo.util.detect/listener? $ {} (:codeDynamic 0)
       :codeNil 0
@@ -1903,10 +1903,10 @@
     :codeNil 33
     :declaredOptional 0
     :deprecatedCalls 0
-    :schemaDynamic 185
+    :schemaDynamic 179
     :typeNone 3
-    :typeNotFull 187
-    :unresolved 213
+    :typeNotFull 183
+    :unresolved 207
     :unsafeCoerce 30
   :scope $ {} (:includeDependencies false)
     :namespace nil

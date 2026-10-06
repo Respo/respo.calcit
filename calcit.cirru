@@ -7045,7 +7045,7 @@
               :listeners component
           :examples $ []
           :schema $ :: 'Fn $ {}
-            :args $ [] 'Struct
+            :args $ [] 'respo.schema/Component
             :return $ :: 'List 'respo.schema/RespoListener
         'component-name $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn component-name (value)
@@ -7054,7 +7054,7 @@
               :name component
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Tag)
-            :args $ [] 'Dynamic
+            :args $ [] 'respo.schema/Component
         'component-tree $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn component-tree (value)
             let
@@ -7062,7 +7062,7 @@
               option:map (:tree component) respo.util.detect/render-node-value
           :examples $ []
           :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic
+            :args $ [] 'respo.schema/Component
             :return $ :: 'calcit.core/Option 'Struct
         'component? $ %{} 'CodeEntry
           :doc "|check if value is a Respo component. returns true for component records, false otherwise."
@@ -7117,7 +7117,7 @@
               :attrs element
           :examples $ []
           :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic
+            :args $ [] 'respo.schema/Element
             :return $ :: 'List $ :: 'List 'Dynamic
         'element-children $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn element-children (value)
@@ -7134,7 +7134,7 @@
               :event element
           :examples $ []
           :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic
+            :args $ [] 'respo.schema/Element
             :return $ :: 'Map 'Tag $ :: 'JsNullish 'respo.schema/EventHandler
         'element-name $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn element-name (value)
@@ -7162,7 +7162,7 @@
               :style element
           :examples $ []
           :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic
+            :args $ [] 'respo.schema/Element
             :return $ :: 'List $ :: 'List 'Dynamic
         'element? $ %{} 'CodeEntry
           :doc "|check if value is a Respo element. returns true for element records, false otherwise."
@@ -7215,7 +7215,7 @@
               :handler listener
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Fn)
-            :args $ [] 'Dynamic
+            :args $ [] 'respo.schema/RespoListener
         'listener? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn listener? (item)
             and (struct? item)

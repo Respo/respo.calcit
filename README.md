@@ -24,10 +24,11 @@ Respo 的开发版本以 `deps.cirru` 固定 Calcit 与 js-ffi 依赖，通过�
 宿主，也不能替代 DOM host 和真实下游回归。事件 target 的现行合同见
 [DOM events](docs/guide/dom-events.md#原生事件的类型边界)。
 
-`yarn test-nominal-accessors` 检查 Component/Effect 访问器的名义类型参数、
-错误类型的编译期拒绝，以及原有 effects/args 列表的身份。`component-effects`
-接收 Component，`effect-args` 和 `effect-name` 接收 Effect；开放输入应先在
-调用方完成分类或受检转换。该检查不证明 effect 参数及生命周期回调已全部封闭。
+`yarn test-nominal-accessors` 检查 Component、Effect、Element 和 RespoListener
+访问器的名义类型参数、20 个错误类型的编译期拒绝，以及原有列表、事件表、回调
+和 tree payload 的身份。开放输入应先在调用方完成分类或受检转换。
+`component-tree` 保留 `Option<Struct>` 兼容返回值；该检查不证明 effect 参数、
+Listener 回调或整个 strict workflow 已全部封闭。
 
 > Inspired by React and Reagent. Previously [Respo/respo.cljs](https://github.com/Respo/respo.cljs).
 

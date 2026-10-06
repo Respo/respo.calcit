@@ -36,3 +36,40 @@ typeNotFull 186 → 185，unresolved 209 → 207。仅下调两个 Effect 访问
 不要通过未经证明的 identity facade 或新增 unsafe-coerce 满足该签名。
 本轮未将旧 as-element/as-component/as-effect/as-listener 的开放返回声明
 认定为类型证明，也未改变它们的运行时行为。
+
+## 后续：字段访问器的剩余输入
+
+继续审阅同一调用链，收紧七个参数 schema：component-name、component-tree、
+component-listeners 接收 Component；element-event、element-attrs、element-style
+接收 Element；listener-handler 接收 RespoListener。这七个函数的运行时代码与
+断言同样不变。没有框架调用的 helper 由其字段所属的名义类型确定公共参数合同，
+不以一次测试样本推断泛型或回调签名。
+
+component-tree 保留 Option<Struct> 返回值；attrs/style 保留 List<List<Dynamic>>，
+listener-handler 保留 Fn 返回值。它们的开放 payload / callable 不能通过参数
+收窄自动获得更具体的合同。element-name 的调用方仍会读取兼容 Struct tree，
+element-ref 则经过开放 purify-element 返回值，本轮没有用裸声明收窄这些输入。
+
+同一检查脚本扩展为 20 个静态反例，以及 events/attrs/style/listeners 的容器
+身份、Listener handler 身份、Element 与 Component 两种 tree payload 身份和
+None tree 正例。正式 alpha.6 的默认与 325/325 框架定义检查、106/106 原有
+native 测试、listener/event lookup/effect traversal JS 9/9 回归通过。
+
+正式 registry alpha.7 的六个定向 assert-type-proof-v1 审计由基线
+220c0e3 的 E_ASSERT_TYPE_UNPROVEN 变为零 diagnostics：component-name、
+component-listeners、element-event、element-attrs、element-style、listener-handler。
+component-tree 的审计仍失败，编译器要求独立审阅 producer render-node-value：
+后者从 RenderNode 的 Element / Component 分支原样返回具体 Struct payload，
+但 concrete-return-proof-v1 报 E_FN_RETURN_UNPROVEN，推断结果为 unknown。
+这项仍是待解决的返回证据，不能把普通检查或身份回归通过当作 proof 通过。
+
+可用固定正式 alpha.7 CLI 复查：
+
+```sh
+calcit fix --rule concrete-return-proof-v1 --ns respo.util.detect --def render-node-value --format json
+calcit fix --rule assert-type-proof-v1 --ns respo.util.detect --def component-tree --format json
+```
+
+本批源码 schemaDynamic 181 → 175、typeNotFull 185 → 181、unresolved 207 → 201；
+unsafe19/assert84 保持不变。仅下调对应定义和聚合预算。原始报告留在临时目录；
+完整 strict workflow、typed dispatch 和两个真实下游的验收仍未完成。
