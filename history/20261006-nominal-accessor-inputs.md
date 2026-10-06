@@ -73,3 +73,21 @@ calcit fix --rule assert-type-proof-v1 --ns respo.util.detect --def component-tr
 本批源码 schemaDynamic 181 → 175、typeNotFull 185 → 181、unresolved 207 → 201；
 unsafe19/assert84 保持不变。仅下调对应定义和聚合预算。原始报告留在临时目录；
 完整 strict workflow、typed dispatch 和两个真实下游的验收仍未完成。
+
+
+## 后续：Effect method 的输入证据
+
+完整 strict workflow 的诊断中，effect-method 的参数仍为 Dynamic，无法
+证明对 Effect 的断言。本轮将参数声明为 respo.schema/Effect；函数体、
+assert-type、字段读取和 Fn 返回合同保持原样。该 getter 不会为异构
+effect payload 或 lifecycle callback 建立更具体的调用合同。
+
+既有检查脚本扩展为 22 个静态反例，新增 Number / Component 对
+effect-method 的调用参数拒绝，并确认返回原有 method 对象。正式 alpha.6
+的默认与 325/325 框架定义检查、106/106 native 测试、相关 effect/listener
+JS 回归和 quality 通过；正式 registry alpha.7 的同范围
+assert-type-proof-v1 审计从 E_ASSERT_TYPE_UNPROVEN 变为零 diagnostics。
+
+源码 schemaDynamic 175 → 174、typeNotFull 181 → 180、unresolved 201 → 200；
+unsafe19/assert84 保持。该定义的三个预算从 1 降为 0，聚合预算分别降为
+178 / 182 / 206，其余预算保持原值。完整严格迁移与真实下游仍未验收。

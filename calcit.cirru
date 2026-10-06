@@ -7093,7 +7093,7 @@
               :method effect
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Fn)
-            :args $ [] 'Dynamic
+            :args $ [] 'respo.schema/Effect
         'effect-name $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn effect-name (value)
             let

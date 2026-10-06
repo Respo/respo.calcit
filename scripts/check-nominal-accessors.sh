@@ -21,7 +21,7 @@ expect_argument_failure() {
 component='(respo.schema/Component :name :probe :effects ([]) :listeners ([]) :tree (%none))'
 effect='(respo.schema/Effect :name :probe :coord ([]) :args ([]) :method (fn (args params) &unit))'
 
-for accessor in effect-args effect-name; do
+for accessor in effect-args effect-name effect-method; do
   expect_argument_failure "$accessor" 42
   expect_argument_failure "$accessor" "$component"
 done
@@ -41,6 +41,7 @@ positive=$(cat <<'CIRRU'
       &let (component $ respo.schema/Component :name :probe :effects effects :listeners ([]) :tree (%none))
         assert |preserves-effect-list-identity $ identical? effects $ respo.util.detect/component-effects component
         assert |preserves-effect-args-identity $ identical? args $ respo.util.detect/effect-args effect
+        assert |preserves-effect-method-identity $ identical? (:method effect) $ respo.util.detect/effect-method effect
         assert= :probe $ respo.util.detect/effect-name effect
 CIRRU
 )
@@ -69,4 +70,4 @@ fields_positive=$(cat <<'CIRRU'
 CIRRU
 )
 "$calcit_bin" eval --dep ./calcit.cirru "$fields_positive" >/dev/null
-printf 'Nominal accessors: identity checks and 20 static rejection cases passed.\n'
+printf 'Nominal accessors: identity checks and 22 static rejection cases passed.\n'
