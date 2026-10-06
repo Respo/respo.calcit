@@ -252,7 +252,9 @@ export function probeGenericHolders({ edit, invoke, results }) {
   };
   edit(['config', 'set-type-slot', ':dispatch-op', 'respo.probe.generic/A']);
   for (const [name, code, schema] of [...slotDefs, ...appDefs]) {
-    edit(['edit', 'def', `respo.probe.generic/${slotName(name)}`, '--code', `quote $ ${slotCode(code)}`]);
+    // Source type expressions use bare slots; schema payloads require quoted EDN symbols.
+    const source = slotCode(code).replaceAll("'*dispatch-op", '*dispatch-op');
+    edit(['edit', 'def', `respo.probe.generic/${slotName(name)}`, '--code', `quote $ ${source}`]);
     edit(['edit', 'schema', `respo.probe.generic/${slotName(name)}`, '--code',
       `quote $ ${slotCode(schema.startsWith("'") ? ':: ' + schema : schema)}`]);
   }
@@ -272,6 +274,32 @@ export function probeGenericHolders({ edit, invoke, results }) {
     edit(['edit', 'def', 'respo.main/main!', '--overwrite', '--code', rename(code)]);
     const checked = invoke(['--check-only'], true);
     const row = { name: slotCase, accepted: checked.status === 0, checkElapsedMs: checked.elapsedMs, diagnostics: checked.output };
+    if (row.accepted) {
+      const runtime = invoke([], true);
+      row.nativePassed = runtime.status === 0;
+      row.nativeElapsedMs = runtime.elapsedMs;
+      row.nativeDiagnostics = runtime.output;
+    }
+    results.push(row);
+  }
+
+  // Isolate a slot-to-slot callback relation from recursive holders and state generics.
+  edit(['edit', 'def', 'respo.probe.generic/SlotCallback', '--code', `quote $ defstruct SlotCallback
+  :callback $ :: 'Fn $ {} (:args ([] *dispatch-op)) (:return 'Unit)`]);
+  edit(['edit', 'schema', 'respo.probe.generic/SlotCallback', '--code', "quote $ :: 'StructDef"]);
+  for (const [name, annotation] of [
+    ['slot-callback-concrete-op', "'respo.probe.generic/A"],
+    ['slot-callback-same-slot', '*dispatch-op'],
+    ['slot-callback-number', "'Number"],
+  ]) {
+    edit(['edit', 'def', 'respo.main/main!', '--overwrite', '--code', `quote $ defn main! ()
+  let
+      holder $ respo.probe.generic/SlotCallback :callback $ fn (op)
+        hint-fn $ {} (:args ([] ${annotation})) (:return 'Unit)
+        , &unit
+    (:callback holder) $ respo.probe.generic/A :clear`]);
+    const checked = invoke(['--check-only'], true);
+    const row = { name, accepted: checked.status === 0, checkElapsedMs: checked.elapsedMs, diagnostics: checked.output };
     if (row.accepted) {
       const runtime = invoke([], true);
       row.nativePassed = runtime.status === 0;

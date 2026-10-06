@@ -19,10 +19,15 @@ const invoke = (args, checker = false) => {
   const started = performance.now();
   const result = spawnSync(checker ? checkBin : bin, args, { cwd: scratch, encoding: 'utf8' });
   if (result.error) throw result.error;
-  return { status: result.status, output: result.stdout + result.stderr, elapsedMs: performance.now() - started };
+  return { status: result.status, stdout: result.stdout, output: result.stdout + result.stderr, elapsedMs: performance.now() - started };
 };
 const edit = args => {
-  const result = invoke(args);
+  const transaction = ['edit', 'transaction', '--code', JSON.stringify([args]), '--format', 'json'];
+  const preview = invoke([...transaction, '--dry-run']);
+  assert.equal(preview.status, 0, preview.output);
+  const { original_revision: revision } = JSON.parse(preview.stdout.slice(preview.stdout.indexOf('{')));
+  assert.match(revision, /^md5:/, 'every mutation must use its dry-run Snapshot revision');
+  const result = invoke([...transaction, '--expect-revision', revision]);
   assert.equal(result.status, 0, result.output);
 };
 const results = [];
@@ -34,11 +39,23 @@ const slotSchema = `quote $ :: 'Fn $ {} (:return 'Unit)
 try {
   mkdirSync(resolve(scratch, '.calcit'));
   symlinkSync(resolve(root, '.calcit/modules'), resolve(scratch, '.calcit/modules'));
+  copyFileSync(resolve(root, 'deps.cirru'), resolve(scratch, 'deps.cirru'));
   const version = invoke(['--version']);
   assert.equal(version.status, 0, version.output);
   assert.equal(version.output.trim(), pinnedVersion, 'mutation probe requires the project-pinned Calcit version');
+  copyFileSync(resolve(root, 'calcit.cirru'), resolve(scratch, 'calcit.cirru'));
+  const propsQuery = invoke(['query', 'def', 'respo.schema/DomProps', '--format', 'json']);
+  assert.equal(propsQuery.status, 0, propsQuery.output);
+  const { data: { code: propsCode } } = JSON.parse(propsQuery.stdout);
+  assert.equal(propsCode[0], 'defstruct');
+  const propsFields = propsCode.slice(2).map(field => field[0]);
+  assert.ok(propsFields.every(field => field.startsWith(':')), 'derive fields from the actual DomProps definition');
+  assert.ok(propsFields.includes(':on-click'), 'the positive control must target the real click field');
+  const emptyPropsFields = propsFields.filter(field => field !== ':on-click')
+    .map(field => `    ${field} nil`).join('\n');
   for (const [name, slot, mapProps, call, annotated, variadic] of [
     ['current-struct-number', false, false, 'd! 42'],
+    ['current-struct-valid-op', false, false, 'd! $ respo.app.schema/Op :clear'],
     ['current-map-number', false, true, 'd! 42'],
     ['slot-struct-number', true, false, 'd! 42'],
     ['slot-map-number', true, true, 'd! 42'],
@@ -63,15 +80,23 @@ try {
     ['bare-slot-valid-op', false, true, 'd! $ respo.app.schema/Op :clear', '*dispatch-op'],
     ['bare-slot-cursor-list', false, true, 'd! ([] :field) :value', '*dispatch-op'],
     ['bare-slot-tag', false, true, 'd! :clear', '*dispatch-op'],
+    ['bare-slot-variadic-valid-op', false, true, 'd! $ respo.app.schema/Op :clear', '*dispatch-op', true],
+    ['bare-slot-variadic-valid-op-extra-data', false, true, 'd! (respo.app.schema/Op :clear) :value', '*dispatch-op', true],
+    ['bare-slot-variadic-cursor-list', false, true, 'd! ([] :field) :value', '*dispatch-op', true],
+    ['bare-slot-variadic-tag', false, true, 'd! :clear', '*dispatch-op', true],
+    ['bare-slot-variadic-number', false, true, 'd! 42', '*dispatch-op', true],
+    ['bare-slot-variadic-invalid-variant', false, true, 'd! $ :: :not-an-op', '*dispatch-op', true],
   ]) {
     copyFileSync(resolve(root, 'calcit.cirru'), resolve(scratch, 'calcit.cirru'));
     edit(['edit', 'def', 'respo.main/main!', '--overwrite', '--code', `quote $ defn main! ()
   respo.core/button $ ${mapProps ? '{}' : '%{} respo.schema/DomProps'}
+${mapProps ? '' : `${emptyPropsFields}\n`}\
     :on-click $ fn (event d!)
 ${annotated ? `      hint-fn $ {} (:return 'Unit)
         :args $ [] (:: 'Map 'Tag 'Dynamic)
           :: 'Fn $ {} (:return 'Unit)
             :args $ [] ${annotated}
+${variadic ? "          :rest 'Dynamic\n" : ''}\
 ` : ''}\
       ${call}
   , &unit`]);
@@ -112,6 +137,23 @@ ${annotated ? `      hint-fn $ {} (:return 'Unit)
     results.push({ name, accepted: result.status === 0, checkElapsedMs: result.elapsedMs, diagnostics: result.output });
   }
   const control = name => results.find(result => result.name === name);
+  assert.equal(control('current-struct-valid-op').accepted, true,
+    `a complete DomProps with a legal Op must compile: ${control('current-struct-valid-op').diagnostics}`);
+  assert.equal(control('bare-slot-variadic-valid-op').accepted, true,
+    'inline slot variadic positive control must compile before checking its negative cases');
+  if (control('bare-slot-variadic-valid-op').accepted) {
+    assert.equal(control('bare-slot-variadic-valid-op-extra-data').accepted, true,
+      'inline slot annotation must preserve variadic data for a valid Op');
+    assert.equal(control('bare-slot-variadic-number').accepted, false,
+      'inline slot annotation must reject a concrete Number op');
+    assert.match(control('bare-slot-variadic-number').diagnostics, /calling `d!` arg 1/);
+    assert.equal(control('bare-slot-variadic-invalid-variant').accepted, false);
+    for (const name of ['bare-slot-variadic-cursor-list', 'bare-slot-variadic-tag']) {
+      assert.equal(control(name).accepted, false,
+        `${name} must be rejected by a callback whose first argument is the bound Op`);
+      assert.match(control(name).diagnostics, /calling `d!` arg 1/);
+    }
+  }
   if (control('slot-variadic-struct-valid-op').accepted) {
     assert.equal(control('slot-variadic-struct-valid-op-extra-data').accepted, true,
       'a rest-argument dispatch signature must accept the same Op with extra legacy data');
@@ -162,6 +204,21 @@ ${annotated ? `      hint-fn $ {} (:return 'Unit)
       assert.equal(control(name).accepted, false, 'a working slot holder must reject the mismatched input');
       assert.match(control(name).diagnostics, diagnostic);
     }
+  }
+  assert.equal(control('slot-callback-concrete-op').accepted, true,
+    'a slot callback field must accept the entry-bound concrete Op callback');
+  assert.equal(control('slot-callback-concrete-op').nativePassed, true,
+    'the concrete Op callback stored in a slot field must execute');
+  assert.equal(control('slot-callback-number').accepted, false,
+    'a slot callback field must reject a Number callback');
+  assert.match(control('slot-callback-number').diagnostics, /struct `SlotCallback` field `:callback`/);
+  if (control('slot-callback-same-slot').accepted) {
+    assert.equal(control('slot-callback-same-slot').nativePassed, true,
+      'an accepted callback using the same entry-bound slot must execute');
+  } else {
+    assert.match(control('slot-callback-same-slot').diagnostics,
+      /field `:callback` expects type `fn\(type-slot\(dispatch-op\)\) -> :unit`, but got `fn\(type-slot\(dispatch-op\)\) -> :unit`/,
+      'record the isolated slot-to-slot mismatch rather than an unrelated holder failure');
   }
   console.log(JSON.stringify({ mutationCompiler: version.output.trim(), checker: invoke(['--version'], true).output.trim(), results }, null, 2));
 } finally {

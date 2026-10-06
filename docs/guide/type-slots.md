@@ -73,7 +73,8 @@ CALCIT_BIN=/path/to/calcit-0.29.0-alpha.6 node scripts/probe-dispatch-boundary.m
 
 可用 `CHECK_CALCIT_BIN` 指定候选编译器做检查；源码编辑由与
 `deps.cirru :calcit-version` 精确匹配的已发布 CLI 完成，脚本解析该声明并拒绝不匹配的 mutator。
-脚本在临时副本中使用 CLI 修改 demo 入口和 handler schema，
+脚本复制 Snapshot 与固定版本的 deps 到临时目录，使用 CLI dry-run、
+`--expect-revision` 事务修改 demo 入口和 handler schema；根项目源码不变。
 覆盖 map/struct props、错误 Number、合法 Op、旧 list/tag、显式回调标注
 及泛型回调的 Op 转发/捕获。持有链探针另测递归节点、保存 dispatch 的 Ref、
 泛型树 factory、保存整棵树后的 render 派发与两种应用 Op 混接，
@@ -92,8 +93,19 @@ factory 正例是否被接受取决于 checker 的实际泛型推断能力；输
 输出包含每个场景的子进程端到端检查耗时（含启动与模块加载），是调查结果，
 不是发布门禁的成功标记；临时副本结束后删除。
 
-最新结果、对类型槽与泛型路线的约束见
+已发布 alpha.6 的实际检查与正例失败见
+[发布版复查](../../history/20261005-dispatch-published-alpha6.md)。
+此前正式 0.28 与本地候选的实验见
 [迁移调查记录](../../history/20261004-dispatch-boundary-probe.md)。
+内联 `hint-fn` 的 bare slot 与持久化 schema 的 quoted symbol 分别检查，
+holder 的 `defstruct` 字段类型表达式也使用 bare `*dispatch-op`；持久化 schema
+仍使用 `'*dispatch-op`，不能对两个输入位置套用同一种替换。
+可变参数正例必须先通过，才检查合法 Op 与额外 data；该正例失败会使探针退出失败，
+不会跳过反例检查后记作通过。legacy 失败需定位首参数。
+holder 的输入位置修正与本地候选完整对照见
+[slot holder 复查](../../history/20261006-slot-holder-inputs.md)。
+探针还用单个 callback 字段对照具体 Op、同 slot 和 Number 三种标注，
+区分 slot 关系失败与树、Ref 或状态泛型造成的其他失败。
 
 安装为模块后，可以通过 CLI 重读本指南：
 
