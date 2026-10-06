@@ -185,11 +185,13 @@ jobs:
           yarn install --immutable
           caps verify --toolchain
           cp "$(command -v calcit)" "$RUNNER_TEMP/calcit-probe-mutation"
+          mkdir -p .calcit/dispatch-alpha7
+          printf '%s\n' '{} (:calcit-version |0.29.0-alpha.7)' > .calcit/dispatch-alpha7/deps.cirru
 
       - uses: calcit-lang/setup-calcit@v1.5.0
         with:
           tools: calcit
-          version: 0.29.0-alpha.7
+          deps-file: .calcit/dispatch-alpha7/deps.cirru
 
       - name: Check the same fixtures with published alpha.7
         run: |

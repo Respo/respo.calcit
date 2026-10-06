@@ -23,6 +23,11 @@ CI 新增独立 alpha.7 job：先严格安装固定 alpha.6 依赖并保留其 m
 继续验证现有应用与 JS runtime。新 job 不生成应用 JS，也不把 runtime alpha.6
 描述为与 alpha.7 的生产配对验证；完整探针 JSON 只写入 runner 临时目录。
 
+首次双版本 CI 在安装阶段被 setup-calcit 的版本一致性门禁拒绝，尚未执行
+alpha.7 探针。修正为在忽略的 .calcit/dispatch-alpha7 中声明独立 checker 的
+alpha.7 deps 文件，并按 action 的 deps-file 输入安装。项目 deps 和 mutation
+CLI 均保留 alpha.6，两个版本均由探针结果显式核实，没有关闭版本门禁。
+
 ## 独立的 alpha.7 框架回归
 
 在临时 Respo #224 `f2f03d8` 副本中，正式 registry alpha.7 CLI 与 procs
