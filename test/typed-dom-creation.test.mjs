@@ -23,11 +23,60 @@ const { Component } = await import('../js-out/respo.schema.mjs');
 const { div, span } = await import('../js-out/respo.core.mjs');
 const { as_render_node, make_child_pair } = await import('../js-out/respo.util.detect.mjs');
 const { make_element } = await import('../js-out/respo.render.dom.mjs');
+const { add_style, replace_style, replace_prop } = await import('../js-out/respo.render.patch.mjs');
 const t = c.init_tags(['name', 'effects', 'listeners', 'tree', 'children', 'root', 'child']);
 const event = c.init_tags(['event', 'click', 'input']);
 const component = (name, element) => c._$n__PCT__$M_(Component,
   t.name, name, t.effects, c.arrayToList([]), t.listeners, c.arrayToList([]),
   t.tree, c._PCT_some(as_render_node(element)));
+
+test('dataset updates preserve object identity, read order and unchanged-value writes', () => {
+  const operations = [];
+  const values = { name: 'before', keep: 'untouched' };
+  const dataset = new Proxy(values, {
+    set(object, key, value) {
+      operations.push(`set:${key}:${value}`);
+      object[key] = value;
+      return true;
+    },
+    deleteProperty(object, key) {
+      operations.push(`delete:${key}`);
+      return Reflect.deleteProperty(object, key);
+    },
+  });
+  const target = new Host('div');
+  Object.defineProperty(target, 'dataset', {
+    get() { operations.push('dataset'); return dataset; },
+  });
+  const prop = c.init_tags(['data-name'])['data-name'];
+  assert.equal(replace_prop(target, prop, 'after'), undefined);
+  assert.deepEqual(operations, ['dataset', 'set:name:after']);
+  assert.deepEqual(values, { name: 'after', keep: 'untouched' });
+  operations.length = 0;
+  replace_prop(target, prop, 'after');
+  assert.deepEqual(operations, ['dataset']);
+  operations.length = 0;
+  replace_prop(target, prop, null);
+  assert.deepEqual(operations, ['dataset', 'delete:name']);
+  assert.deepEqual(values, { keep: 'untouched' });
+  assert.equal(target.dataset, dataset);
+});
+
+test('style updates retain the style object, camel names, units and clearing', () => {
+  const target = new Host('div');
+  const style = target.style;
+  const props = c.init_tags(['padding', 'opacity', 'background-color']);
+  add_style(target, props.padding, 4);
+  replace_style(target, props.padding, 8);
+  add_style(target, props.opacity, 0.5);
+  replace_style(target, props['background-color'], 'red');
+  assert.equal(target.style, style);
+  assert.equal(style.padding, '8px');
+  assert.equal(style.opacity, '0.5');
+  assert.equal(style.backgroundColor, 'red');
+  replace_style(target, props.padding, null);
+  assert.equal(style.padding, '');
+});
 
 test('DOM creation keeps child order, component event coordinates, properties and styles', () => {
   creation.length = 0;

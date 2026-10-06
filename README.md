@@ -18,6 +18,18 @@ Respo 的开发版本以 `deps.cirru` 固定 Calcit 与 js-ffi 依赖，通过�
 
 完整库的 Node target 和应用级 type-slot 贯通仍需分别验收；默认入口、框架定义检查和 demo 正例不能证明所有应用的 typed dispatch 已完成。
 
+`yarn check-framework-types` 使用当前固定工具链检查默认入口的动态方法，并逐一
+检查 23 个非空框架命名空间中的全部定义；CI 执行相同命令，避免遗漏 demo 没有
+调用的 helper。空的 `respo.schema.listener` 不计作覆盖；检查不执行 JavaScript
+宿主，也不能替代 DOM host 和真实下游回归。事件 target 的现行合同见
+[DOM events](docs/guide/dom-events.md#原生事件的类型边界)。
+
+`yarn test-nominal-accessors` 检查 Component、Effect、Element 和 RespoListener
+访问器的名义类型参数、22 个错误类型的编译期拒绝，以及原有列表、事件表、回调
+和 tree payload 的身份。开放输入应先在调用方完成分类或受检转换。
+`component-tree` 保留 `Option<Struct>` 兼容返回值；该检查不证明 effect 参数、
+Listener 回调或整个 strict workflow 已全部封闭。
+
 > Inspired by React and Reagent. Previously [Respo/respo.cljs](https://github.com/Respo/respo.cljs).
 
 - Home http://respo-mvc.org

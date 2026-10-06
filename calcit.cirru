@@ -452,22 +452,22 @@
             :hit-first 'String
             :toggle 'String
           :examples $ []
-          :schema $ :: 'Enum
+          :schema $ :: 'EnumDef
         'Store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Store
             :tasks $ :: 'List 'respo.app.schema/Task
             :states 'Dynamic
             :cursor $ :: 'List 'Dynamic
           :examples $ []
-          :schema $ :: 'Enum
+          :schema $ :: 'StructDef
         'Task $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Task (:id 'String) (:text 'String) (:done? 'Bool)
           :examples $ []
-          :schema $ :: 'Enum
+          :schema $ :: 'StructDef
         'TodoState $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct TodoState (:draft 'String) (:locked? 'Bool) (:message 'String)
           :examples $ []
-          :schema $ :: 'Enum
+          :schema $ :: 'StructDef
         'store $ %{} 'CodeEntry
           :doc "|Default immutable Store record value used by the example application."
           :code $ quote $ def store
@@ -821,7 +821,7 @@
           :code $ quote $ defn patch-instance! (changes mount-point deliver-event)
             let
                 listener-builder $ fn (event-name) (build-listener event-name deliver-event)
-              apply-dom-changes changes (unsafe-coerce mount-point 'respo.dom/DomElement) listener-builder
+              apply-dom-changes changes mount-point listener-builder
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] (:: 'List 'respo.schema/DomPatch) 'respo.dom/DomElement $ :: 'Fn
@@ -1925,7 +1925,7 @@
                 span $ {}
               if (list? markup-tree)
                 let
-                    items $ unsafe-coerce markup-tree $ :: List Dynamic
+                    items markup-tree
                   loop
                       node-option $ none-render-node
                       effects $ empty-effects
@@ -2766,8 +2766,7 @@
           :doc "|Generates a CSS string block from a map of style rules."
           :code $ quote $ defn render-css-block (style-name rules)
             let
-                entries $ unsafe-coerce (&map:to-list rules)
-                  :: 'List $ :: 'List 'Dynamic
+                entries $ &map:to-list rules
               loop
                   acc |
                   xs entries
@@ -2779,8 +2778,7 @@
                     class-rule $ str |. style-name
                     rule-name $ &str:replace (&str:replace k |$0 class-rule) |& class-rule
                     contained $ &map:get styles-map :contained
-                    css-line $ style->string $ unsafe-coerce (&map:to-list styles-map)
-                      :: 'List $ :: 'List 'Dynamic
+                    css-line $ style->string $ &map:to-list styles-map
                     block $ if (calcit.core/non-nil? contained)
                       str contained (char-from-code 32) |{ &newline rule-name (char-from-code 32) |{ &newline css-line &newline |} &newline |}
                       str rule-name (char-from-code 32) |{ &newline css-line &newline |}
@@ -2856,7 +2854,7 @@
         'CursorTestState $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct CursorTestState (:draft 'String) (:locked? 'Bool) (:message 'String)
           :examples $ []
-          :schema $ :: 'Enum
+          :schema $ :: 'StructDef
         'coerce-cursor-test-state $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn coerce-cursor-test-state (value) (assert-type value CursorTestState)
           :examples $ []
@@ -3464,7 +3462,7 @@
             :value 'Dynamic
             :children $ :: 'Set 'respo.memo/MemoCacheKey
           :examples $ []
-          :schema $ :: 'Enum
+          :schema $ :: 'StructDef
         'abort-memo-frame! $ %{} 'CodeEntry (:doc "|丢弃失败渲染帧的临时条目和依赖栈，保留上一次成功提交的缓存。")
           :code $ quote $ defn abort-memo-frame! () (reset! *memo-frame-active? false)
             reset! *frame-component-caches $ {}
@@ -4078,15 +4076,14 @@
                             anchor $ if (> suffix 0)
                               %:: Option :some $ count retained-keys
                               %:: Option :none
+                          hint-fn $ {} (:return 'Unit)
+                            :args $ [] (:: 'List 'Number) (:: 'calcit.core/Option 'Number)
                           list-match remaining
                             () &unit
                             (source rest-sources)
-                              when-not
-                                contains? kept $ assert-type source 'Number
+                              when-not (contains? kept source)
                                 collect! $ DomPatch :move-element n-coord (+ index-offset source)
-                                  option:map
-                                    assert-type anchor $ :: 'Option 'Number
-                                    fn (position) (+ index-offset position)
+                                  option:map anchor $ fn (position) (+ index-offset position)
                               recur rest-sources $ %:: Option :some source
                         &doseq (key added-keys)
                           let
@@ -4120,15 +4117,14 @@
                       loop
                           remaining $ reverse sources
                           anchor $ assert-type (%:: Option :none) (:: 'Option 'Number)
+                        hint-fn $ {} (:return 'Unit)
+                          :args $ [] (:: 'List 'Number) (:: 'calcit.core/Option 'Number)
                         list-match remaining
                           () &unit
                           (source rest-sources)
-                            when-not
-                              contains? kept $ assert-type source 'Number
+                            when-not (contains? kept source)
                               collect! $ DomPatch :move-element n-coord (+ index source)
-                                option:map
-                                  assert-type anchor $ :: 'Option 'Number
-                                  fn (position) (+ index position)
+                                option:map anchor $ fn (position) (+ index position)
                             recur rest-sources $ %:: Option :some source
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
@@ -5677,13 +5673,11 @@
             let
                 style-name $ dashed->camel $ calcit.core/to-string p
                 style-value $ get-style-value v style-name
-              aset
-                unsafe-coerce (.-style target) JsObject
-                , style-name style-value
+              aset (.-style target) style-name style-value
             , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'Dynamic 'Tag 'Dynamic
+            :args $ [] 'respo.dom/DomElement 'Tag 'Dynamic
             :features $ #{} :js-ffi
         'append-element $ %{} 'CodeEntry
           :doc "|Appends a new DOM element to the target container."
@@ -5929,7 +5923,7 @@
                 raise |[Respo/insert-before-target!]-target-has-no-parent-element
               (:some parent)
                 let
-                    parent-element $ unsafe-coerce parent 'respo.dom/DomElement
+                    parent-element parent
                   .insert-before! parent-element new-element target
                   , &unit
           :examples $ []
@@ -6022,7 +6016,7 @@
               if (.!startsWith prop-str |data-)
                 let
                     name $ .!slice prop-str 5
-                    dataset $ unsafe-coerce (.-dataset target) JsObject
+                    dataset target.:dataset
                   if (calcit.core/non-nil? prop-value)
                     if
                       not $ &= prop-value $ aget dataset name
@@ -6049,13 +6043,11 @@
           :code $ quote $ defn replace-style (target p v)
             let
                 style-name $ dashed->camel $ calcit.core/to-string p
-              aset
-                unsafe-coerce (.-style target) JsObject
-                , style-name $ get-style-value v style-name
+              aset (.-style target) style-name $ get-style-value v style-name
             , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'Dynamic 'Tag 'Dynamic
+            :args $ [] 'respo.dom/DomElement 'Tag 'Dynamic
             :features $ #{} :js-ffi
         'rm-element $ %{} 'CodeEntry (:doc "|Removes the DOM element from the document.")
           :code $ quote $ defn rm-element (target)
@@ -6197,7 +6189,7 @@
           :doc "|Immutable request lifecycle enum: :started carries request-id; :ready carries request-id and data; :failed carries request-id and error."
           :code $ quote $ defenum ResourceAction (:started 'Number) (:ready 'Number 'Dynamic) (:failed 'Number 'Dynamic)
           :examples $ []
-          :schema $ :: 'Enum
+          :schema $ :: 'EnumDef
           :tags $ #{} :data
         'ResourceState $ %{} 'CodeEntry
           :doc "|Immutable resource state record. :data and :error are application payload boundaries; :status and :request-id drive deterministic reducer transitions."
@@ -6206,7 +6198,7 @@
             :data 'Dynamic
             :error 'Dynamic
           :examples $ []
-          :schema $ :: 'Enum
+          :schema $ :: 'StructDef
           :tags $ #{} :data
         'load-resource! $ %{} 'CodeEntry
           :doc "|Invokes a zero-argument fetcher once, normalizes its value or Promise, and emits immutable :started then :ready or :failed ResourceAction values. Synchronous fetch errors and Promise-chain errors become :failed. Returns the numeric request id; it does not mutate application state."
@@ -6541,7 +6533,7 @@
             :accept $ :: 'JsNullish 'String
             :ref $ :: 'JsNullish 'Fn
           :examples $ []
-          :schema $ :: 'Enum
+          :schema $ :: 'StructDef
         'Effect $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Effect (:name 'Tag)
             :coord $ :: 'List 'Dynamic
@@ -6601,7 +6593,7 @@
             :shift? $ :: 'JsNullish 'Bool
             :msg $ :: 'JsNullish 'String
           :examples $ []
-          :schema $ :: 'Enum
+          :schema $ :: 'StructDef
         'RespoListener $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct RespoListener (:name 'Tag) (:handler 'Fn)
           :examples $ []
@@ -7044,7 +7036,7 @@
               :effects component
           :examples $ []
           :schema $ :: 'Fn $ {}
-            :args $ [] 'Struct
+            :args $ [] 'respo.schema/Component
             :return $ :: 'List 'respo.schema/Effect
         'component-listeners $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn component-listeners (value)
@@ -7053,7 +7045,7 @@
               :listeners component
           :examples $ []
           :schema $ :: 'Fn $ {}
-            :args $ [] 'Struct
+            :args $ [] 'respo.schema/Component
             :return $ :: 'List 'respo.schema/RespoListener
         'component-name $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn component-name (value)
@@ -7062,7 +7054,7 @@
               :name component
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Tag)
-            :args $ [] 'Dynamic
+            :args $ [] 'respo.schema/Component
         'component-tree $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn component-tree (value)
             let
@@ -7070,7 +7062,7 @@
               option:map (:tree component) respo.util.detect/render-node-value
           :examples $ []
           :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic
+            :args $ [] 'respo.schema/Component
             :return $ :: 'calcit.core/Option 'Struct
         'component? $ %{} 'CodeEntry
           :doc "|check if value is a Respo component. returns true for component records, false otherwise."
@@ -7092,7 +7084,7 @@
               :args effect
           :examples $ []
           :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic
+            :args $ [] 'respo.schema/Effect
             :return $ :: 'List 'Dynamic
         'effect-method $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn effect-method (value)
@@ -7101,7 +7093,7 @@
               :method effect
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Fn)
-            :args $ [] 'Dynamic
+            :args $ [] 'respo.schema/Effect
         'effect-name $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn effect-name (value)
             let
@@ -7109,7 +7101,7 @@
               :name effect
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Tag)
-            :args $ [] 'Dynamic
+            :args $ [] 'respo.schema/Effect
         'effect? $ %{} 'CodeEntry
           :doc "|Checks if the given value is a Respo Effect record."
           :code $ quote $ defn effect? (x)
@@ -7125,7 +7117,7 @@
               :attrs element
           :examples $ []
           :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic
+            :args $ [] 'respo.schema/Element
             :return $ :: 'List $ :: 'List 'Dynamic
         'element-children $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn element-children (value)
@@ -7142,7 +7134,7 @@
               :event element
           :examples $ []
           :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic
+            :args $ [] 'respo.schema/Element
             :return $ :: 'Map 'Tag $ :: 'JsNullish 'respo.schema/EventHandler
         'element-name $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn element-name (value)
@@ -7170,7 +7162,7 @@
               :style element
           :examples $ []
           :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic
+            :args $ [] 'respo.schema/Element
             :return $ :: 'List $ :: 'List 'Dynamic
         'element? $ %{} 'CodeEntry
           :doc "|check if value is a Respo element. returns true for element records, false otherwise."
@@ -7223,7 +7215,7 @@
               :handler listener
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Fn)
-            :args $ [] 'Dynamic
+            :args $ [] 'respo.schema/RespoListener
         'listener? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn listener? (item)
             and (struct? item)
@@ -7313,14 +7305,14 @@
         'text-width $ %{} 'CodeEntry
           :doc "|Measures text with a shared Canvas 2D context. Returns 0 when Canvas is unavailable, including server-side rendering and Node.js tests."
           :code $ quote $ defn text-width (content font-size font-family)
-            if (js-present? shared-canvas-context)
-              let
-                  context $ unsafe-coerce shared-canvas-context 'respo.dom/DomCanvasContext
-                set! context.:font $ str font-size |px (char-from-code 32) font-family
-                let
-                    metrics $ context .measure-text content
-                  metrics.:width
-              , 0
+            match (js-nullish->option shared-canvas-context)
+              (:none) 0
+              (:some context)
+                do
+                  set! context.:font $ str font-size |px (char-from-code 32) font-family
+                  let
+                      metrics $ context .measure-text content
+                    metrics.:width
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Number)
             :args $ [] 'String 'Number 'String
@@ -7461,7 +7453,7 @@
         'input-event-checked? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn input-event-checked? (event)
             let
-                input-event $ unsafe-coerce event 'respo.dom/DomInputEvent
+                input-event event
               match
                 js-nullish->option $ input-event.:target
                 (:none)
@@ -7474,7 +7466,7 @@
         'input-event-value $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn input-event-value (event)
             let
-                input-event $ unsafe-coerce event 'respo.dom/DomInputEvent
+                input-event event
               match
                 js-nullish->option $ input-event.:target
                 (:none) (raise |[Respo/input-event-value]-event-has-no-target)
@@ -7790,7 +7782,7 @@
               if (empty? rest-xs) (Option :none)
                 if
                   &= (&list:first rest-xs) needle
-                  Option :some $ assert-type idx 'Number
+                  Option :some idx
                   recur (&list:rest rest-xs) (inc idx)
           :examples $ []
           :schema $ :: 'Fn $ {}
@@ -7812,8 +7804,9 @@
         'pair-first $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn pair-first (pair) (&list:nth pair 0)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ [] $ :: 'List 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'T)
+            :args $ [] $ :: 'List 'T
+            :generics $ [] 'T
         'pair-key $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn pair-key (pair)
             assert-type (&list:nth pair 0) 'Tag
@@ -7823,8 +7816,9 @@
         'pair-value $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn pair-value (pair) (&list:nth pair 1)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ [] $ :: 'List 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'T)
+            :args $ [] $ :: 'List 'T
+            :generics $ [] 'T
         'pick-attrs $ %{} 'CodeEntry
           :doc "|Extracts HTML attributes from a properties map, filtering out internal keys like :on, :event, :style."
           :code $ quote $ defn pick-attrs (props)

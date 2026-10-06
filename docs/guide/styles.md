@@ -126,7 +126,7 @@ div $ {}
       + 24 $ text-width title 16 |BlinkMacSystemFont
 ```
 
-`text-width` returns `0` when Canvas is unavailable, so the same immutable style calculation is safe during SSR and Node.js tests. A `nil` inline style value is normalized to an empty string, which clears the CSS declaration without serializing `nil` into DOM or HTML output.
+Canvas 不可用时，`text-width` 返回 `0`，包括没有 `document` 或 `getContext` 返回 null / undefined 的情况，因此 SSR 与 Node.js 测试可复用同一套不可变样式计算。可空 context 通过 `JsNullish → Option` 的分支取得类型证明；非空时仍使用原 context，先设置 font，再调用 `measureText`。inline style 的 `nil` 值会规范化为空字符串以清除 CSS 声明，不会把 `nil` 序列化到 DOM 或 HTML。
 
 #### Extract from `:style`
 

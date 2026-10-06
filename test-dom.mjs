@@ -273,13 +273,42 @@ for (const [name, readInput] of [
   ["input-event-checked?", input_event_checked_$q_],
   ["input-event-value", input_event_value],
 ]) {
-  try {
-    readInput({ target: null })
-    throw new Error(`${name} should reject an event without a target`)
-  } catch (error) {
-    if (!String(error).includes("event-has-no-target")) {
-      throw new Error(`${name} failed without the explicit boundary message: ${error}`)
+  for (const target of [null, undefined]) {
+    try {
+      readInput({ target })
+      throw new Error(`${name} should reject an event without a target`)
+    } catch (error) {
+      if (!String(error).includes(`Respo/${name}]-event-has-no-target`)) {
+        throw new Error(`${name} failed without the explicit boundary message: ${error}`)
+      }
     }
+  }
+}
+
+// 读取原宿主的 target 和字段各一次；false、空字符串与开放 value 均保留。
+const opaqueInputValue = { selected: "original-host-value" }
+for (const [readInput, field, value] of [
+  [input_event_checked_$q_, "checked", false],
+  [input_event_value, "value", ""],
+  [input_event_value, "value", opaqueInputValue],
+]) {
+  const calls = []
+  const target = {
+    get [field]() {
+      if (this !== target) throw new Error("input field lost its original target receiver")
+      calls.push(field)
+      return value
+    },
+  }
+  const nativeEvent = {
+    get target() {
+      if (this !== nativeEvent) throw new Error("input target lost its original event receiver")
+      calls.push("target")
+      return target
+    },
+  }
+  if (readInput(nativeEvent) !== value || JSON.stringify(calls) !== JSON.stringify(["target", field])) {
+    throw new Error("input event changed the field value, identity or getter order")
   }
 }
 

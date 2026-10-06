@@ -20,7 +20,7 @@ entry_for:
 - [API Reference](../api.md)
 - [All Guides](./): [Why Respo](./why-respo.md) | [Base Components](./base-components.md) | [Virtual DOM](./virtual-dom.md) | [Component States](./component-states.md)
 
-Here is a simple demo handling `input` events:
+输入事件处理示例：
 
 ```cirru.no-check
 input $ {}
@@ -28,45 +28,41 @@ input $ {}
     println (:value e)
 ```
 
-`e` is a HashMap with several entries:
+`e` 是不可变 Map，包含事件类型、表单字段和原生事件。输入事件的
+`:type` 是 Tag `:input`；未单独识别的事件（例如 paste）保留原生类型字符串。
 
 ```cirru.no-check
 ; ns app.demo
 
 let
     e $ {}
-      :type "|input"
+      :type :input
+      :value |draft
+      :checked false
       :original-event nil
   :type e
 ```
 
-The details:
+### 原生事件的类型边界
 
-```cirru.no-check
-defn event->edn (event)
-  ; js/console.log "|simplify event:" event
-  ->
-    case-default (.-type event)
-      {}
-        :msg (str "|Unhandled event: " (.-type event))
-        :type (.-type event)
-      |click $ {}
-        :type :click
-      |keydown $ {}
-        :key-code (.-keyCode event)
-        :type :keydown
-      |keyup $ {}
-        :key-code (.-keyCode event)
-        :type :keyup
-      |input $ {}
-        :value (aget (.-target event) "|value")
-        :type :input
-      |change $ {}
-        :value (aget (.-target event) "|value")
-        :type :change
-      |focus $ {}
-        :type :focus
-  assoc :original-event event
+框架通过 `respo.util.format/event->edn` 转换事件，`:original-event` 与
+`:event` 都保留同一个原生对象。读取事件类型使用 `respo.dom/DomEvent`；
+input / change 的 target 使用该接口已经声明的
+`JsNullish<DomElement>`，不需要再次强转事件。
+
+`input-event-value` 与 `input-event-checked?` 将 target 转为 Option 后读取
+原宿主字段。null 或 undefined target 会抛出各 helper 原有的
+`event-has-no-target` 错误，空字符串和 `false` 保持原值。value 仍是开放类型，
+这里没有添加字段校验、类型转换或默认值。
+
+键盘分支使用 `DomKeyboardEvent` 描述 key、code 和修饰键等宿主字段；
+这一真实事件种类边界的转换仍保留。应用读写额外的原生字段时，也应在
+自己的浏览器边界声明相应合同。可查询当前实现与签名：
+
+```bash
+calcit query def 'respo.util.format/event->edn'
+calcit query def 'respo.util.format/input-event-checked?'
+calcit query def respo.dom/DomEvent
 ```
 
 默认通过元素的 `on*` 属性绑定事件，Respo 在交付事件后调用 `stopPropagation`。
@@ -99,13 +95,18 @@ document 级的外部点击检测等集成可使用 `:stop-propagation? false`�
 热更新保留初始配置：应在启动时、首次渲染前配置，不要放入 reload 回调。
 处理单个事件时仍可对 `:original-event` 调用 `preventDefault` 或 `stopPropagation`。
 
-`DomProps` supports `:on-paste` with the same nullable `EventHandler` type as other event fields. For example:
+`DomProps` 的 `:on-paste` 与其他事件字段一样，使用可空 `EventHandler`：
 
 ```cirru
 respo.core/textarea $ {}
   :on-paste $ fn (event dispatch!) &unit
 ```
 
-Paste follows the existing generic event conversion: `:type` is the string `"paste"`, and both `:original-event` and `:event` hold the native event. Read clipboard data from the native event's `clipboardData` at the browser boundary. By default, Respo stops propagation and leaves the browser's default paste action enabled; call `preventDefault` on the original event when the application needs to override it. Removing `:on-paste` removes the Respo handler according to the configured listener mode.
+Paste 沿用通用事件转换：`:type` 是字符串 `"paste"`，`:original-event` 和
+`:event` 均保留原生事件。剪贴板数据从浏览器边界的 `clipboardData` 读取。
+默认阻止传播，但保留浏览器粘贴行为；应用需要覆盖默认行为时，对原生事件调用
+`preventDefault`。移除 `:on-paste` 会按照配置的监听模式移除 Respo 处理器。
 
-When a position switches between a `defcomp` component and a plain element, Respo refreshes event coordinates throughout the resulting subtree. Root and descendant events resolve the current handlers, including descendants whose virtual nodes are reused unchanged. Removing an event prop still removes its DOM handler.
+同一位置在 `defcomp` 组件与普通元素之间切换时，Respo 会刷新结果子树的事件
+坐标。根节点与后代事件均解析当前处理器，包括复用未变化虚拟节点的后代。
+移除事件 prop 仍会移除对应 DOM 处理器。

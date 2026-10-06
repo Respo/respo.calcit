@@ -224,7 +224,7 @@
       :typeNone 0
       :typeNotFull 1
       :unresolved 0
-      :unsafeCoerce 1
+      :unsafeCoerce 0
     |respo.controller.client/wrap-dispatch $ {} (:codeDynamic 0)
       :codeNil 1
       :declaredOptional 0
@@ -467,7 +467,7 @@
       :typeNone 0
       :typeNotFull 1
       :unresolved 0
-      :unsafeCoerce 1
+      :unsafeCoerce 0
     |respo.core/for-keyed $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -845,7 +845,7 @@
       :typeNone 0
       :typeNotFull 1
       :unresolved 0
-      :unsafeCoerce 3
+      :unsafeCoerce 1
     |respo.css/warn-style-literals $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -1259,7 +1259,7 @@
       :typeNone 0
       :typeNotFull 1
       :unresolved 0
-      :unsafeCoerce 1
+      :unsafeCoerce 0
     |respo.render.patch/append-element $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -1286,7 +1286,7 @@
       :typeNone 0
       :typeNotFull 0
       :unresolved 0
-      :unsafeCoerce 1
+      :unsafeCoerce 0
     |respo.render.patch/replace-element $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -1304,7 +1304,7 @@
       :typeNone 0
       :typeNotFull 1
       :unresolved 0
-      :unsafeCoerce 1
+      :unsafeCoerce 0
     |respo.render.patch/replace-style $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -1313,7 +1313,7 @@
       :typeNone 0
       :typeNotFull 1
       :unresolved 0
-      :unsafeCoerce 1
+      :unsafeCoerce 0
     |respo.render.patch/rm-event $ {} (:codeDynamic 0)
       :codeNil 1
       :declaredOptional 0
@@ -1498,19 +1498,19 @@
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 0
       :typeNone 0
-      :typeNotFull 1
-      :unresolved 1
+      :typeNotFull 0
+      :unresolved 0
       :unsafeCoerce 0
     |respo.util.detect/component-tree $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 0
       :typeNone 0
-      :typeNotFull 1
-      :unresolved 1
+      :typeNotFull 0
+      :unresolved 0
       :unsafeCoerce 0
     |respo.util.detect/component? $ {} (:codeDynamic 0)
       :codeNil 0
@@ -1525,28 +1525,28 @@
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 2
+      :schemaDynamic 1
       :typeNone 0
       :typeNotFull 1
-      :unresolved 2
+      :unresolved 1
       :unsafeCoerce 0
     |respo.util.detect/effect-method $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 0
       :typeNone 0
-      :typeNotFull 1
-      :unresolved 1
+      :typeNotFull 0
+      :unresolved 0
       :unsafeCoerce 0
     |respo.util.detect/effect-name $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 0
       :typeNone 0
-      :typeNotFull 1
-      :unresolved 1
+      :typeNotFull 0
+      :unresolved 0
       :unsafeCoerce 0
     |respo.util.detect/effect? $ {} (:codeDynamic 0)
       :codeNil 0
@@ -1561,10 +1561,10 @@
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 2
+      :schemaDynamic 1
       :typeNone 0
       :typeNotFull 1
-      :unresolved 2
+      :unresolved 1
       :unsafeCoerce 0
     |respo.util.detect/element-children $ {} (:codeDynamic 0)
       :codeNil 0
@@ -1579,10 +1579,10 @@
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 0
       :typeNone 0
-      :typeNotFull 1
-      :unresolved 1
+      :typeNotFull 0
+      :unresolved 0
       :unsafeCoerce 0
     |respo.util.detect/element-name $ {} (:codeDynamic 0)
       :codeNil 0
@@ -1597,10 +1597,10 @@
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 2
+      :schemaDynamic 1
       :typeNone 0
       :typeNotFull 1
-      :unresolved 2
+      :unresolved 1
       :unsafeCoerce 0
     |respo.util.detect/element? $ {} (:codeDynamic 0)
       :codeNil 0
@@ -1624,10 +1624,10 @@
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 0
       :typeNone 0
-      :typeNotFull 1
-      :unresolved 1
+      :typeNotFull 0
+      :unresolved 0
       :unsafeCoerce 0
     |respo.util.detect/listener? $ {} (:codeDynamic 0)
       :codeNil 0
@@ -1655,7 +1655,7 @@
       :typeNone 0
       :typeNotFull 0
       :unresolved 0
-      :unsafeCoerce 1
+      :unsafeCoerce 0
     |respo.util.format/coerce-component $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -1727,7 +1727,7 @@
       :typeNone 0
       :typeNotFull 0
       :unresolved 0
-      :unsafeCoerce 1
+      :unsafeCoerce 0
     |respo.util.format/input-event-value $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -1736,7 +1736,7 @@
       :typeNone 0
       :typeNotFull 1
       :unresolved 0
-      :unsafeCoerce 1
+      :unsafeCoerce 0
     |respo.util.format/map-keyboard-event $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -1840,10 +1840,10 @@
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 2
+      :schemaDynamic 0
       :typeNone 0
-      :typeNotFull 1
-      :unresolved 2
+      :typeNotFull 0
+      :unresolved 0
       :unsafeCoerce 0
     |respo.util.list/pair-key $ {} (:codeDynamic 0)
       :codeNil 0
@@ -1858,10 +1858,10 @@
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 2
+      :schemaDynamic 0
       :typeNone 0
-      :typeNotFull 1
-      :unresolved 2
+      :typeNotFull 0
+      :unresolved 0
       :unsafeCoerce 0
     |respo.util.list/pick-attrs $ {} (:codeDynamic 0)
       :codeNil 0
@@ -1903,11 +1903,11 @@
     :codeNil 33
     :declaredOptional 0
     :deprecatedCalls 0
-    :schemaDynamic 191
+    :schemaDynamic 178
     :typeNone 3
-    :typeNotFull 190
-    :unresolved 219
-    :unsafeCoerce 41
+    :typeNotFull 182
+    :unresolved 206
+    :unsafeCoerce 30
   :scope $ {} (:includeDependencies false)
     :namespace nil
     :namespacePrefix nil
