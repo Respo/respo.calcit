@@ -155,3 +155,45 @@ jobs:
       - name: Display status from deploy
         if: steps.production.outputs.current == 'true'
         run: echo "${{ steps.deploy.outputs.status }}"
+
+  dispatch-alpha7:
+    name: Published alpha.7 dispatch probe
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v6.5.0
+        with:
+          node-version: 24
+
+      - name: Enable Corepack
+        run: |
+          corepack enable
+          corepack prepare yarn@4.18.0 --activate
+
+      - uses: calcit-lang/setup-calcit@v1.5.0
+        with:
+          tools: calcit,caps
+          version: 0.29.0-alpha.6
+          caps-version: 0.1.1
+
+      - name: Install pinned probe dependencies
+        run: |
+          caps --strict --ci
+          yarn install --immutable
+          caps verify --toolchain
+          cp "$(command -v calcit)" "$RUNNER_TEMP/calcit-probe-mutation"
+
+      - uses: calcit-lang/setup-calcit@v1.5.0
+        with:
+          tools: calcit
+          version: 0.29.0-alpha.7
+
+      - name: Check the same fixtures with published alpha.7
+        run: |
+          export CALCIT_BIN="$RUNNER_TEMP/calcit-probe-mutation"
+          export CHECK_CALCIT_BIN="$(command -v calcit)"
+          node scripts/probe-dispatch-boundary.mjs > "$RUNNER_TEMP/dispatch-alpha7-probe.json"
+          node -e 'const assert=require("node:assert/strict"); const r=require(process.argv[1]); assert.equal(r.mutationCompiler,"0.29.0-alpha.6"); assert.equal(r.checker,"0.29.0-alpha.7"); console.log(`Dispatch migration probe: ${r.results.length} scenarios; mutation ${r.mutationCompiler}; checker ${r.checker}`)' "$RUNNER_TEMP/dispatch-alpha7-probe.json"

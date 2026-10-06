@@ -43,8 +43,19 @@ try {
   const version = invoke(['--version']);
   assert.equal(version.status, 0, version.output);
   assert.equal(version.output.trim(), pinnedVersion, 'mutation probe requires the project-pinned Calcit version');
+  copyFileSync(resolve(root, 'calcit.cirru'), resolve(scratch, 'calcit.cirru'));
+  const propsQuery = invoke(['query', 'def', 'respo.schema/DomProps', '--format', 'json']);
+  assert.equal(propsQuery.status, 0, propsQuery.output);
+  const { data: { code: propsCode } } = JSON.parse(propsQuery.stdout);
+  assert.equal(propsCode[0], 'defstruct');
+  const propsFields = propsCode.slice(2).map(field => field[0]);
+  assert.ok(propsFields.every(field => field.startsWith(':')), 'derive fields from the actual DomProps definition');
+  assert.ok(propsFields.includes(':on-click'), 'the positive control must target the real click field');
+  const emptyPropsFields = propsFields.filter(field => field !== ':on-click')
+    .map(field => `    ${field} nil`).join('\n');
   for (const [name, slot, mapProps, call, annotated, variadic] of [
     ['current-struct-number', false, false, 'd! 42'],
+    ['current-struct-valid-op', false, false, 'd! $ respo.app.schema/Op :clear'],
     ['current-map-number', false, true, 'd! 42'],
     ['slot-struct-number', true, false, 'd! 42'],
     ['slot-map-number', true, true, 'd! 42'],
@@ -79,6 +90,7 @@ try {
     copyFileSync(resolve(root, 'calcit.cirru'), resolve(scratch, 'calcit.cirru'));
     edit(['edit', 'def', 'respo.main/main!', '--overwrite', '--code', `quote $ defn main! ()
   respo.core/button $ ${mapProps ? '{}' : '%{} respo.schema/DomProps'}
+${mapProps ? '' : `${emptyPropsFields}\n`}\
     :on-click $ fn (event d!)
 ${annotated ? `      hint-fn $ {} (:return 'Unit)
         :args $ [] (:: 'Map 'Tag 'Dynamic)
@@ -125,6 +137,8 @@ ${variadic ? "          :rest 'Dynamic\n" : ''}\
     results.push({ name, accepted: result.status === 0, checkElapsedMs: result.elapsedMs, diagnostics: result.output });
   }
   const control = name => results.find(result => result.name === name);
+  assert.equal(control('current-struct-valid-op').accepted, true,
+    `a complete DomProps with a legal Op must compile: ${control('current-struct-valid-op').diagnostics}`);
   assert.equal(control('bare-slot-variadic-valid-op').accepted, true,
     'inline slot variadic positive control must compile before checking its negative cases');
   if (control('bare-slot-variadic-valid-op').accepted) {
