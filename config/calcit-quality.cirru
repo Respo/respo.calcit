@@ -1525,10 +1525,10 @@
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 2
+      :schemaDynamic 1
       :typeNone 0
       :typeNotFull 1
-      :unresolved 2
+      :unresolved 1
       :unsafeCoerce 0
     |respo.util.detect/effect-method $ {} (:codeDynamic 0)
       :codeNil 0
@@ -1543,10 +1543,10 @@
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 0
       :typeNone 0
-      :typeNotFull 1
-      :unresolved 1
+      :typeNotFull 0
+      :unresolved 0
       :unsafeCoerce 0
     |respo.util.detect/effect? $ {} (:codeDynamic 0)
       :codeNil 0
@@ -1903,10 +1903,10 @@
     :codeNil 33
     :declaredOptional 0
     :deprecatedCalls 0
-    :schemaDynamic 187
+    :schemaDynamic 185
     :typeNone 3
-    :typeNotFull 188
-    :unresolved 215
+    :typeNotFull 187
+    :unresolved 213
     :unsafeCoerce 30
   :scope $ {} (:includeDependencies false)
     :namespace nil

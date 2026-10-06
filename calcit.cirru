@@ -7036,7 +7036,7 @@
               :effects component
           :examples $ []
           :schema $ :: 'Fn $ {}
-            :args $ [] 'Struct
+            :args $ [] 'respo.schema/Component
             :return $ :: 'List 'respo.schema/Effect
         'component-listeners $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn component-listeners (value)
@@ -7084,7 +7084,7 @@
               :args effect
           :examples $ []
           :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic
+            :args $ [] 'respo.schema/Effect
             :return $ :: 'List 'Dynamic
         'effect-method $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn effect-method (value)
@@ -7101,7 +7101,7 @@
               :name effect
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Tag)
-            :args $ [] 'Dynamic
+            :args $ [] 'respo.schema/Effect
         'effect? $ %{} 'CodeEntry
           :doc "|Checks if the given value is a Respo Effect record."
           :code $ quote $ defn effect? (x)

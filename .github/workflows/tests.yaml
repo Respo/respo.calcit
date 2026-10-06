@@ -59,6 +59,9 @@ jobs:
       - name: Check framework definitions and dynamic methods
         run: yarn check-framework-types
 
+      - name: Check nominal accessor boundaries
+        run: yarn test-nominal-accessors
+
       - name: Test nominal DOM patch protocol
         run: yarn test-dom-patch-types
 
