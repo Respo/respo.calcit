@@ -91,3 +91,19 @@ assert-type-proof-v1 审计从 E_ASSERT_TYPE_UNPROVEN 变为零 diagnostics。
 源码 schemaDynamic 175 → 174、typeNotFull 181 → 180、unresolved 201 → 200；
 unsafe19/assert84 保持。该定义的三个预算从 1 降为 0，聚合预算分别降为
 178 / 182 / 206，其余预算保持原值。完整严格迁移与真实下游仍未验收。
+
+
+## 后续：定义值与实例的 schema 区分
+
+逐个查询全部 defstruct / defenum 后发现十项遗留 Enum 声明与定义值不符：
+Store、Task、TodoState、CursorTestState、MemoEntry、ResourceState、DomProps、
+RespoEvent 是 StructDef；Op、ResourceAction 是 EnumDef。仅用受保护事务
+修正这十项 schema，原构造器、字段、变体、默认值和运行时代码保持原样。
+
+全部 17 个 Struct / 5 个 Enum 定义的 schema 与实际 native type-of、
+发布版 JS runtime 类型逐项一致。正式 alpha.6 默认与 325/325 框架定义
+检查、106/106 native 和 quality 通过，JS 重新生成成功；Snapshot format
+dry-run 无变化。schemaDynamic174、typeNotFull180、unresolved200、
+unsafe19/assert84 保持，原预算未改。临时核对脚本与 JSON 报告未入库。
+
+字段中的开放数据、独立 proof 与真实下游验收继续按各自结果记录。

@@ -452,22 +452,22 @@
             :hit-first 'String
             :toggle 'String
           :examples $ []
-          :schema $ :: 'Enum
+          :schema $ :: 'EnumDef
         'Store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Store
             :tasks $ :: 'List 'respo.app.schema/Task
             :states 'Dynamic
             :cursor $ :: 'List 'Dynamic
           :examples $ []
-          :schema $ :: 'Enum
+          :schema $ :: 'StructDef
         'Task $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Task (:id 'String) (:text 'String) (:done? 'Bool)
           :examples $ []
-          :schema $ :: 'Enum
+          :schema $ :: 'StructDef
         'TodoState $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct TodoState (:draft 'String) (:locked? 'Bool) (:message 'String)
           :examples $ []
-          :schema $ :: 'Enum
+          :schema $ :: 'StructDef
         'store $ %{} 'CodeEntry
           :doc "|Default immutable Store record value used by the example application."
           :code $ quote $ def store
@@ -2854,7 +2854,7 @@
         'CursorTestState $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct CursorTestState (:draft 'String) (:locked? 'Bool) (:message 'String)
           :examples $ []
-          :schema $ :: 'Enum
+          :schema $ :: 'StructDef
         'coerce-cursor-test-state $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn coerce-cursor-test-state (value) (assert-type value CursorTestState)
           :examples $ []
@@ -3462,7 +3462,7 @@
             :value 'Dynamic
             :children $ :: 'Set 'respo.memo/MemoCacheKey
           :examples $ []
-          :schema $ :: 'Enum
+          :schema $ :: 'StructDef
         'abort-memo-frame! $ %{} 'CodeEntry (:doc "|丢弃失败渲染帧的临时条目和依赖栈，保留上一次成功提交的缓存。")
           :code $ quote $ defn abort-memo-frame! () (reset! *memo-frame-active? false)
             reset! *frame-component-caches $ {}
@@ -6189,7 +6189,7 @@
           :doc "|Immutable request lifecycle enum: :started carries request-id; :ready carries request-id and data; :failed carries request-id and error."
           :code $ quote $ defenum ResourceAction (:started 'Number) (:ready 'Number 'Dynamic) (:failed 'Number 'Dynamic)
           :examples $ []
-          :schema $ :: 'Enum
+          :schema $ :: 'EnumDef
           :tags $ #{} :data
         'ResourceState $ %{} 'CodeEntry
           :doc "|Immutable resource state record. :data and :error are application payload boundaries; :status and :request-id drive deterministic reducer transitions."
@@ -6198,7 +6198,7 @@
             :data 'Dynamic
             :error 'Dynamic
           :examples $ []
-          :schema $ :: 'Enum
+          :schema $ :: 'StructDef
           :tags $ #{} :data
         'load-resource! $ %{} 'CodeEntry
           :doc "|Invokes a zero-argument fetcher once, normalizes its value or Promise, and emits immutable :started then :ready or :failed ResourceAction values. Synchronous fetch errors and Promise-chain errors become :failed. Returns the numeric request id; it does not mutate application state."
@@ -6533,7 +6533,7 @@
             :accept $ :: 'JsNullish 'String
             :ref $ :: 'JsNullish 'Fn
           :examples $ []
-          :schema $ :: 'Enum
+          :schema $ :: 'StructDef
         'Effect $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Effect (:name 'Tag)
             :coord $ :: 'List 'Dynamic
@@ -6593,7 +6593,7 @@
             :shift? $ :: 'JsNullish 'Bool
             :msg $ :: 'JsNullish 'String
           :examples $ []
-          :schema $ :: 'Enum
+          :schema $ :: 'StructDef
         'RespoListener $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct RespoListener (:name 'Tag) (:handler 'Fn)
           :examples $ []
