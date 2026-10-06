@@ -15,8 +15,12 @@ fixture 只给 1 个字段，并未指向 dispatch。不能据此声称错误 Op
 回调，其余可空字段显式填写 nil。新增 current-struct-valid-op 对照，必须通过
 后才能讨论同形状的错误 Op；共 65 个场景。生产源码与原有其余场景未改动。
 修正后的正式 alpha.6 本地 65 个场景及原有断言全部通过，完整 Struct 的合法
-Op 对照通过。新的双版本完整结果须由同一提交的 Actions 核实；旧 Struct
-失败不能作为其依据。
+Op 对照通过。随后核实 `0c5c091` 的完整
+[Actions](https://github.com/Respo/respo.calcit/actions/runs/37392589718)：
+alpha.6 主 job 与独立 alpha.7 job 均成功。alpha.7 job 实际输出 65 个场景，
+并核实 mutation CLI 为 alpha.6、checker 为 alpha.7；合法 Struct 对照的
+强制断言通过。旧 Struct 失败不能作为其依据，也不能把探针断言通过解释为
+生产 typed dispatch 已验收。
 
 CI 新增独立 alpha.7 job：先严格安装固定 alpha.6 依赖并保留其 mutation CLI，
 再用官方 alpha.7 release CLI 检查完全相同的 fixture。原 alpha.6 主 job
