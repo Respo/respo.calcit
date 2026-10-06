@@ -373,6 +373,7 @@
             let
                 store $ updater @*store op $ generate-id!
               reset! *store store
+            , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'respo.app.schema/Op
@@ -3467,6 +3468,7 @@
           :code $ quote $ defn abort-memo-frame! () (reset! *memo-frame-active? false)
             reset! *frame-component-caches $ {}
             reset! *memo-dependency-stack $ []
+            , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
@@ -3503,6 +3505,7 @@
             reset! *frame-component-caches $ {}
             reset! *memo-frame-active? true
             reset! *memo-dependency-stack $ []
+            , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
@@ -3555,6 +3558,7 @@
             reset! *memo-frame-active? false
             reset! *frame-component-caches $ {}
             reset! *memo-dependency-stack $ []
+            , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
@@ -3789,6 +3793,7 @@
                   index $ dec $ count @*memo-dependency-stack
                   children $ assert-type (&list:nth @*memo-dependency-stack index) (:: Set MemoCacheKey)
                 reset! *memo-dependency-stack $ assoc @*memo-dependency-stack index $ include children cache-key
+            , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'respo.memo/MemoCacheKey
@@ -3799,9 +3804,35 @@
             reset! *frame-component-caches $ {}
             reset! *memo-frame-active? false
             reset! *memo-dependency-stack $ []
+            , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
+          :tests $ [] $ %{} 'TestEntry (:name |unit-memo-lifecycle)
+            :code $ quote $ let
+                callback $ fn () 1
+                key $ MemoCacheKey :callback callback :key :unit-contract
+              assert= &unit $ reset-component-caches!
+              assert= 0 $ component-cache-size
+              assert= false @*memo-frame-active?
+              assert= ([]) @*memo-dependency-stack
+              assert= &unit $ record-memo-child! key
+              assert= ([]) @*memo-dependency-stack
+              assert= &unit $ begin-memo-frame!
+              reset! *memo-dependency-stack $ [] $ #{}
+              assert= &unit $ record-memo-child! key
+              assert=
+                [] $ #{} key
+                , @*memo-dependency-stack
+              assert= &unit $ abort-memo-frame!
+              assert= false @*memo-frame-active?
+              assert= ([]) @*memo-dependency-stack
+              assert= &unit $ begin-memo-frame!
+              assert= &unit $ finish-memo-frame!
+              assert= false @*memo-frame-active?
+              assert= ([]) @*memo-dependency-stack
+              assert= &unit $ reset-component-caches!
+            :tags $ #{} :ref-write :unit
         'retain-memo-children! $ %{} 'CodeEntry
           :doc "|内部缓存命中依赖遍历。递归提升旧缓存中的子条目，优先保留当前帧已计算的条目；已访问 key 阻止共享路径和依赖环的重复处理。"
           :code $ quote $ defn retain-memo-children! (entry)
@@ -4159,7 +4190,7 @@
                   old-children $ [] (respo.util.detect/make-child-pair :empty nil) (respo.util.detect/make-child-pair :live leaf)
                   new-children $ [] (respo.util.detect/make-child-pair :empty leaf) (respo.util.detect/make-child-pair :live nil)
                 find-children-diffs
-                  fn (op) (swap! ops append op)
+                  fn (op) (swap! ops append op) &unit
                   [] :parent
                   []
                   , 0 old-children new-children
@@ -5727,12 +5758,14 @@
                         aset (:node entry) |scrollLeft $ :left entry
                   reset! scroll-snapshot $ {}
                   reset! child-snapshots $ {}
+                  , &unit
                 invalidate-at! $ fn (n-coord)
                   hint-fn $ {} (:return 'Unit)
                     :args $ [] $ :: 'List 'Number
                   if (empty? n-coord)
                     reset! target-cache $ {}
                     invalidate-target-children! target-cache $ slice n-coord 0 $ dec (count n-coord)
+                  , &unit
               &doseq (op changes)
                 match op
                   (:replace-prop _coord n-coord key value)
@@ -5945,7 +5978,8 @@
                   next $ match (get @cache path)
                     (:none) entries
                     (:some node) (assoc entries path node)
-                if (empty? path) (reset! cache next)
+                if (empty? path)
+                  do (reset! cache next) &unit
                   recur
                     slice path 0 $ dec $ count path
                     , next
@@ -5955,6 +5989,15 @@
               :: 'Ref $ :: 'Map (:: 'List 'Number) 'respo.dom/DomElement
               :: 'List 'Number
           :tags $ #{} :internal
+          :tests $ [] $ %{} 'TestEntry (:name |unit-empty-target-cache)
+            :code $ quote $ let
+                cache $ atom $ assert-type ({})
+                  :: 'Map (:: 'List 'Number) 'respo.dom/DomElement
+              assert= &unit $ invalidate-target-children! cache $ [] 1 2
+              assert= ({}) @cache
+              assert= &unit $ invalidate-target-children! cache $ []
+              assert= ({}) @cache
+            :tags $ #{} :ref-write :unit
         'move-element! $ %{} 'CodeEntry
           :doc "|Move a source node before its snapshot anchor, or to the end. Prefer state-preserving moveBefore for connected nodes; fall back to insertion with focus and subtree scroll restoration."
           :code $ quote $ defn move-element! (parent nodes source anchor)

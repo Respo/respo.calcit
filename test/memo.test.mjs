@@ -5,18 +5,19 @@ import * as m from '../js-out/respo.memo.mjs';
 import { render_with_$x_ } from '../js-out/respo.core.mjs';
 
 test('a failed render aborts its memo frame without committing partial entries', () => {
-  m.reset_component_caches_$x_();
+  assert.equal(m.reset_component_caches_$x_(), undefined);
   let calls = 0;
   const derive = value => { calls++; return value; };
-  m.begin_memo_frame_$x_();
+  assert.equal(m.begin_memo_frame_$x_(), undefined);
   m.memo_value_by('committed', derive, 1);
-  m.finish_memo_frame_$x_();
+  assert.equal(m.finish_memo_frame_$x_(), undefined);
 
   assert.throws(() => render_with_$x_(null, () => {
     m.memo_value_by('partial', derive, 2);
     throw new Error('tree construction failed');
   }, () => {}), { message: 'tree construction failed' });
   assert.equal(m.component_cache_size(), 1);
+  assert.equal(m.abort_memo_frame_$x_(), undefined);
   // Both old and partially computed keys must bypass caches outside a frame.
   m.memo_value_by('committed', derive, 1);
   m.memo_value_by('partial', derive, 2);
