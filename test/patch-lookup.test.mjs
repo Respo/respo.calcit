@@ -13,7 +13,10 @@ const patch = (tag, coord, ...args) => c._PCT__$o__$o_(DomPatch, c.turn_tag(tag)
 const prop = (coord, value) => patch('replace-prop', coord, c.turn_tag('title'), value);
 const element = id => div(c._$n__PCT__$M_(DomProps, ...DomProps.fields.flatMap(field =>
   [field, field.value === 'id' ? id : undefined])));
-const apply = (mount, changes) => apply_dom_changes(list(changes), mount, () => () => {});
+const apply = (mount, changes) => {
+  // Calcit Unit lowers to undefined on the JavaScript target.
+  assert.equal(apply_dom_changes(list(changes), mount, () => () => {}), undefined);
+};
 const move = (source, anchor) => c._PCT__$o__$o_(DomPatch, c.turn_tag('move-element'), list([]), source,
   anchor === undefined ? c._PCT__$o__$o_(c.Option, c.turn_tag('none')) :
     c._PCT__$o__$o_(c.Option, c.turn_tag('some'), anchor));
