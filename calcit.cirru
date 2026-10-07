@@ -5009,7 +5009,7 @@
                     let
                         event-handler $ respo.util.list/pair-value entry
                       when (calcit.core/non-nil? event-handler)
-                        install-listener! element (respo.util.list/pair-key entry) listener-builder coord
+                        install-listener! element (respo.util.list/pair-tag-key entry) listener-builder coord
                   each child-elements $ fn (child-element)
                     if (calcit.core/non-nil? child-element)
                       browser/append-child! (host-element element) (host-element child-element)
@@ -7536,9 +7536,8 @@
         'hsl $ %{} 'CodeEntry
           :doc "|Generates HSL color string. Arguments: h, s (percent), l (percent), optional alpha (0-1)."
           :code $ quote $ defn hsl (h s l & alpha-values)
-            hint-fn $ {} $ :return 'String
             let
-                a $ if (empty? alpha-values) 1 $ assert-type (&list:first alpha-values) Number
+                a $ if (empty? alpha-values) 1 $ &list:nth alpha-values 0
               str "|hsl(" h |, s |%, l |%, a "|)"
           :examples $ []
             quote $ hsl 200 80 50
@@ -7921,6 +7920,14 @@
           :code $ quote $ defn pair-key (pair) (&list:nth pair 0)
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] $ :: 'List 'Dynamic
+        'pair-tag-key $ %{} 'CodeEntry (:doc "|读取键值对的 Tag 键并在运行时校验，用于事件名等必须为 Tag 的位置。")
+          :code $ quote $ defn pair-tag-key (pair)
+            &let
+              k $ &list:nth pair 0
+              if (tag? k) k $ raise $ str "|[Respo] expected a Tag key, got: " k
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Tag)
             :args $ [] $ :: 'List 'Dynamic
         'pair-value $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn pair-value (pair) (&list:nth pair 1)
