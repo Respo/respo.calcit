@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "@calcit/procs": "0.29.0-alpha.6"
+    "@calcit/procs": "0.29.0-alpha.17"
   },
   "scripts": {
     "test-callback-types": "node --test test/callback-type-boundaries.test.mjs",
