@@ -324,6 +324,15 @@
       :typeNotFull 1
       :unresolved 2
       :unsafeCoerce 0
+    |respo.core/as-states-map $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 2
+      :typeNone 0
+      :typeNotFull 1
+      :unresolved 2
+      :unsafeCoerce 0
     |respo.core/blockquote $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -620,7 +629,7 @@
       :typeNone 0
       :typeNotFull 1
       :unresolved 0
-      :unsafeCoerce 0
+      :unsafeCoerce 2
     |respo.core/normalize-dom-props $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -666,6 +675,15 @@
       :typeNotFull 1
       :unresolved 1
       :unsafeCoerce 0
+    |respo.core/props-style-map $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 3
+      :typeNone 0
+      :typeNotFull 1
+      :unresolved 3
+      :unsafeCoerce 0
     |respo.core/realize-ssr! $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -674,7 +692,7 @@
       :typeNone 0
       :typeNotFull 1
       :unresolved 0
-      :unsafeCoerce 1
+      :unsafeCoerce 2
     |respo.core/render! $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -701,7 +719,7 @@
       :typeNone 0
       :typeNotFull 1
       :unresolved 0
-      :unsafeCoerce 0
+      :unsafeCoerce 1
     |respo.core/resolve-element-constructor $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -836,6 +854,15 @@
       :typeNone 0
       :typeNotFull 1
       :unresolved 2
+      :unsafeCoerce 0
+    |respo.css/present-element $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 0
+      :typeNone 0
+      :typeNotFull 1
+      :unresolved 0
       :unsafeCoerce 0
     |respo.css/render-css-block $ {} (:codeDynamic 0)
       :codeNil 0
@@ -1269,6 +1296,24 @@
       :typeNotFull 1
       :unresolved 0
       :unsafeCoerce 0
+    |respo.render.patch/apply-dom-changes $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 0
+      :typeNone 0
+      :typeNotFull 1
+      :unresolved 0
+      :unsafeCoerce 0
+    |respo.render.patch/as-move-scroll-state $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 1
+      :typeNone 0
+      :typeNotFull 1
+      :unresolved 1
+      :unsafeCoerce 0
     |respo.render.patch/find-target $ {} (:codeDynamic 0)
       :codeNil 1
       :declaredOptional 0
@@ -1350,6 +1395,15 @@
       :typeNotFull 1
       :unresolved 0
       :unsafeCoerce 0
+    |respo.render.patch/snapshot-children $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 0
+      :typeNone 0
+      :typeNotFull 0
+      :unresolved 0
+      :unsafeCoerce 1
     |respo.resource/resource-action? $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -1417,10 +1471,10 @@
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 2
+      :schemaDynamic 3
       :typeNone 0
       :typeNotFull 1
-      :unresolved 2
+      :unresolved 3
       :unsafeCoerce 0
     |respo.schema/cache-info $ {} (:codeDynamic 0)
       :codeNil 3
@@ -1710,6 +1764,15 @@
       :typeNotFull 1
       :unresolved 1
       :unsafeCoerce 0
+    |respo.util.format/event-base-edn $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 0
+      :typeNone 0
+      :typeNotFull 1
+      :unresolved 0
+      :unsafeCoerce 0
     |respo.util.format/get-style-value $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -1809,6 +1872,15 @@
       :typeNotFull 1
       :unresolved 2
       :unsafeCoerce 0
+    |respo.util.list/checked-pairs $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 2
+      :typeNone 0
+      :typeNotFull 1
+      :unresolved 2
+      :unsafeCoerce 0
     |respo.util.list/first-pair $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -1849,6 +1921,24 @@
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
+      :schemaDynamic 2
+      :typeNone 0
+      :typeNotFull 1
+      :unresolved 2
+      :unsafeCoerce 0
+    |respo.util.list/pair-key-text $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 1
+      :typeNone 0
+      :typeNotFull 1
+      :unresolved 1
+      :unsafeCoerce 0
+    |respo.util.list/pair-tag-key $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
       :schemaDynamic 1
       :typeNone 0
       :typeNotFull 1
@@ -1881,6 +1971,15 @@
       :typeNotFull 1
       :unresolved 0
       :unsafeCoerce 1
+    |respo.util.list/pick-on-events $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 1
+      :typeNone 0
+      :typeNotFull 1
+      :unresolved 1
+      :unsafeCoerce 0
     |respo.util.list/val-exists? $ {} (:codeDynamic 0)
       :codeNil 1
       :declaredOptional 0
@@ -1903,11 +2002,11 @@
     :codeNil 33
     :declaredOptional 0
     :deprecatedCalls 0
-    :schemaDynamic 178
+    :schemaDynamic 191
     :typeNone 3
-    :typeNotFull 182
-    :unresolved 206
-    :unsafeCoerce 30
+    :typeNotFull 192
+    :unresolved 219
+    :unsafeCoerce 35
   :scope $ {} (:includeDependencies false)
     :namespace nil
     :namespacePrefix nil
