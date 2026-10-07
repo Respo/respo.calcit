@@ -51,7 +51,9 @@
         'comp-task $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-task (states task)
             let
-                cursor $ decode-map-as (either (&map:get states :cursor) ([])) (:: 'List 'Dynamic)
+                cursor $ decode-map-as
+                  either (&map:get states :cursor) ([])
+                  :: 'List 'Dynamic
                 state $ either (&map:get states :data) |
                 task-id $ :id task
                 task-text $ :text task
@@ -82,7 +84,8 @@
                         d! $ Op :remove task-id
                     <> |Remove
                   =< 8 0
-                  div ({}) (<> $ str state)
+                  div ({})
+                    <> $ str state
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
             :args $ [] 'Dynamic 'respo.app.schema/Task
@@ -126,7 +129,9 @@
         'comp-todolist $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-todolist (states tasks)
             let
-                cursor $ decode-map-as (either (&map:get states :cursor) ([])) (:: 'List 'Dynamic)
+                cursor $ decode-map-as
+                  either (&map:get states :cursor) ([])
+                  :: 'List 'Dynamic
                 state $ assert-type
                   either (&map:get states :data) (respo.app.schema/TodoState :draft | :locked? false :message "|Press Ctrl+M to change message")
                   , respo.app.schema/TodoState
@@ -675,9 +680,10 @@
                         {}
                           :args $ [] 'js-ffi.browser/EventHost
                           :return 'Unit
-                    if (js-present? prev-listener) (browser/remove-event-listener! event-name listener)
+                    if (js-present? prev-listener)
+                      browser/remove-event-listener! (str event-name) listener
                   aset el dirty-field handler
-                  browser/add-event-listener! event-name handler
+                  browser/add-event-listener! (str event-name) handler
               (= action :unmount)
                 let
                     handler $ aget el dirty-field
@@ -685,7 +691,8 @@
                       {}
                         :args $ [] 'js-ffi.browser/EventHost
                         :return 'Unit
-                  if (js-present? handler) (browser/remove-event-listener! event-name listener)
+                  if (js-present? handler)
+                    browser/remove-event-listener! (str event-name) listener
                   js-delete el dirty-field
               true nil
           :examples $ []
@@ -1021,7 +1028,10 @@
                   dispatch-wrap $ wrap-dispatch *dispatch-fn
                 match target-listener-option
                   (:none) &unit
-                  (:some target-listener) (&let (_handled $ target-listener simple-event dispatch-wrap) &unit)
+                  (:some target-listener)
+                    &let
+                      _handled $ target-listener simple-event dispatch-wrap
+                      , &unit
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ []
@@ -2413,7 +2423,7 @@
               collect-mounting collect! ([]) ([]) element true
               reset! *dispatch-fn dispatch!
               reset! *global-element $ Option :some element
-              patch-instance! (deref *changes) target deliver-event
+              patch-instance! (deref *changes) (unsafe-coerce target 'respo.dom/DomElement) deliver-event
             , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
@@ -2852,7 +2862,7 @@
                   xs entries
                 if (empty? xs) acc $ let
                     pair $ respo.util.list/first-pair xs
-                    k $ str $ respo.util.list/pair-key pair
+                    k $ respo.util.list/pair-key-text pair
                     raw-styles $ respo.util.list/pair-value pair
                     styles-map $ if (map? raw-styles) raw-styles $ raise
                       str "|render-css-block expected a style map, got: " $ type-of raw-styles
@@ -3411,7 +3421,7 @@
     'respo.ffi.browser $ %{} 'FileEntry
       :defs $ {}
         'host-element $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn host-element (element) (js-cast element 'js-ffi.browser/DomElementHost)
+          :code $ quote $ defn host-element (element) (unsafe-coerce element 'js-ffi.browser/DomElementHost)
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'js-ffi.browser/DomElementHost)
             :args $ [] 'T
@@ -5027,7 +5037,7 @@
                       :args $ [] $ :: 'List 'Dynamic
                       :return 'Dynamic
                     let
-                        prop-str $ str $ respo.util.list/pair-key entry
+                        prop-str $ respo.util.list/pair-key-text entry
                         v $ respo.util.list/pair-value entry
                       if (.!startsWith prop-str |data-)
                         if (calcit.core/non-nil? v)
@@ -5049,7 +5059,7 @@
                       :args $ [] $ :: 'List 'Dynamic
                       :return 'Dynamic
                     let
-                        style-name $ str $ respo.util.list/pair-key entry
+                        style-name $ respo.util.list/pair-key-text entry
                         k $ dashed->camel style-name
                         v $ respo.util.list/pair-value entry
                       aset
@@ -5700,7 +5710,9 @@
                       k $ respo.util.list/pair-key pair
                       v $ respo.util.list/pair-value pair
                     and (calcit.core/non-nil? v)
-                      not $ starts-with? (if (tag? k) (to-string k) (str k)) |on-
+                      not $ starts-with?
+                        if (tag? k) (to-string k) (str k)
+                        , |on-
                 sorted $ &list:sort-by visible respo.util.list/pair-key
               calcit.core/join-string (map sorted entry->html) "| "
           :examples $ []
@@ -5720,7 +5732,7 @@
                   :args $ [] $ :: 'List 'Dynamic
                   :return 'String
                 let
-                    style-name $ str $ respo.util.list/pair-key entry
+                    style-name $ respo.util.list/pair-key-text entry
                     v $ get-style-value (respo.util.list/pair-value entry) (dashed->camel style-name)
                   str style-name |: (escape-html v) |;
               , |
@@ -7995,6 +8007,14 @@
           :code $ quote $ defn pair-key (pair) (&list:nth pair 0)
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] $ :: 'List 'Dynamic
+        'pair-key-text $ %{} 'CodeEntry (:doc "|把键值对的键转成文本：Tag 去掉冒号，其他值按显示文本。")
+          :code $ quote $ defn pair-key-text (pair)
+            &let
+              k $ &list:nth pair 0
+              if (tag? k) (to-string k) (str k)
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'String)
             :args $ [] $ :: 'List 'Dynamic
         'pair-tag-key $ %{} 'CodeEntry (:doc "|读取键值对的 Tag 键并在运行时校验，用于事件名等必须为 Tag 的位置。")
           :code $ quote $ defn pair-tag-key (pair)
