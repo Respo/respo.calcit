@@ -1116,7 +1116,7 @@
                   (:component component)
                     match (:tree component)
                       (:none) (Option :none)
-                      (:some tree) (recur tree cs)
+                      (:some tree) (get-render-node-at tree cs)
                   (:element element)
                     let
                         children $ :children element
@@ -2251,7 +2251,19 @@
                   filter-present (&struct:to-map props)
                     fn (_k v)
                       and (calcit.core/non-nil? v) (not= v js/undefined)
-              (map? props) props
+              (map? props)
+                foldl props ({})
+                  defn %normalize-dom-prop (acc pair)
+                    hint-fn $ {}
+                      :args $ []
+                        :: (quote Map) (quote Tag) (quote Dynamic)
+                        :: (quote List) (quote Dynamic)
+                      :return $ :: (quote Map) (quote Tag) (quote Dynamic)
+                    &let
+                      k $ &list:nth pair 0
+                      if (tag? k)
+                        &map:assoc acc k $ &list:nth pair 1
+                        raise $ str "|Expected DOM prop keys to be tags, got: " k
               true $ raise $ str |Expected_DOM_props_map_or_record,_got: (type-of props)
           :examples $ []
           :schema $ :: 'Fn $ {}
@@ -2767,7 +2779,8 @@
           :doc "|Generates a CSS string block from a map of style rules."
           :code $ quote $ defn render-css-block (style-name rules)
             let
-                entries $ &map:to-list rules
+                entries $ if (map? rules) (&map:to-list rules)
+                  raise $ str "|render-css-block expected a map of rules, got: " $ type-of rules
               loop
                   acc |
                   xs entries
@@ -7004,22 +7017,34 @@
           :schema $ :: 'Fn $ {} (:return 'Bool)
             :args $ [] (:: 'List 'Dynamic) (:: 'List 'Dynamic)
         'as-component $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn as-component (value) value
+          :code $ quote $ defn as-component (value)
+            if (struct? value)
+              if (&struct:matches? value respo.schema/Component) value $ raise $ str "|as-component expected a Component, but received: " (type-of value)
+              raise $ str "|as-component expected a Component, but received: " $ type-of value
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
             :args $ [] 'Dynamic
         'as-effect $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn as-effect (value) value
+          :code $ quote $ defn as-effect (value)
+            if (struct? value)
+              if (&struct:matches? value respo.schema/Effect) value $ raise $ str "|as-effect expected a Effect, but received: " (type-of value)
+              raise $ str "|as-effect expected a Effect, but received: " $ type-of value
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Effect)
             :args $ [] 'Dynamic
         'as-element $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn as-element (value) value
+          :code $ quote $ defn as-element (value)
+            if (struct? value)
+              if (&struct:matches? value respo.schema/Element) value $ raise $ str "|as-element expected an Element, but received: " (type-of value)
+              raise $ str "|as-element expected an Element, but received: " $ type-of value
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Element)
             :args $ [] 'Dynamic
         'as-listener $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn as-listener (value) value
+          :code $ quote $ defn as-listener (value)
+            if (struct? value)
+              if (&struct:matches? value respo.schema/RespoListener) value $ raise $ str "|as-listener expected a RespoListener, but received: " (type-of value)
+              raise $ str "|as-listener expected a RespoListener, but received: " $ type-of value
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/RespoListener)
             :args $ [] 'Dynamic
@@ -7812,7 +7837,9 @@
       :defs $ {}
         'first-pair $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn first-pair (entries)
-            assert-type (&list:first entries) (:: 'List 'Dynamic)
+            &let
+              pair $ &list:first entries
+              if (nil? pair) (raise "|first-pair expected a non-empty list of pairs") pair
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] $ :: 'List (:: 'List 'Dynamic)
