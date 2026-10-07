@@ -51,7 +51,9 @@
         'comp-task $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-task (states task)
             let
-                cursor $ either (&map:get states :cursor) ([])
+                cursor $ assert-type
+                  either (&map:get states :cursor) ([])
+                  :: 'List 'Dynamic
                 state $ either (&map:get states :data) |
                 task-id $ :id task
                 task-text $ :text task
@@ -82,7 +84,8 @@
                         d! $ Op :remove task-id
                     <> |Remove
                   =< 8 0
-                  div ({}) (<> state)
+                  div ({})
+                    <> $ assert-type state String
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
             :args $ [] 'Dynamic 'respo.app.schema/Task
@@ -126,7 +129,9 @@
         'comp-todolist $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-todolist (states tasks)
             let
-                cursor $ either (&map:get states :cursor) ([])
+                cursor $ assert-type
+                  either (&map:get states :cursor) ([])
+                  :: 'List 'Dynamic
                 state $ assert-type
                   either (&map:get states :data) (respo.app.schema/TodoState :draft | :locked? false :message "|Press Ctrl+M to change message")
                   , respo.app.schema/TodoState
@@ -396,7 +401,7 @@
               , dispatch!
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'Dynamic
+            :args $ [] $ :: 'JsNullish 'respo.dom/DomElement
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.app.core
           :require
@@ -2217,7 +2222,7 @@
           :examples $ [] $ quote
             mount-app! mount-target (comp-app) *dispatch-fn
           :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'Dynamic 'respo.schema/Component $ :: 'Ref
+            :args $ [] 'respo.dom/DomElement 'respo.schema/Component $ :: 'Ref
               :: 'Fn $ {} (:return 'Unit)
                 :args $ [] 'Dynamic
             :features $ #{} :js-ffi
@@ -2360,16 +2365,26 @@
         'render! $ %{} 'CodeEntry
           :doc "|Synchronize a component tree to a mount target.\n\nThe first call mounts the app. Later calls diff against `*global-element` and patch the existing DOM. `dispatch!` is stored internally and used by generated event listeners to deliver action tuples.\n\nThe stored example wraps the call in a function so `check-examples` validates the public call shape without executing browser DOM effects."
           :code $ quote $ defn render! (target markup dispatch!) (reset! *dispatch-fn dispatch!)
-            match @*global-element
-              (:none) (mount-app! target markup *dispatch-fn)
-              (:some _) (rerender-app! target markup *dispatch-fn)
+            if (js-nullish? target) (raise |[Respo/render!]-expected-mount-target)
+              match @*global-element
+                (:none) (mount-app! target markup *dispatch-fn)
+                (:some _) (rerender-app! target markup *dispatch-fn)
           :examples $ [] $ quote
             fn (mount-target component dispatch!) (render! mount-target component dispatch!)
           :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'Dynamic 'respo.schema/Component $ :: 'Fn
+            :args $ [] (:: 'JsNullish 'respo.dom/DomElement) 'respo.schema/Component $ :: 'Fn
               {} (:return 'Unit)
                 :args $ [] 'Dynamic
             :features $ #{} :js-ffi
+          :tests $ [] $ %{} 'TestEntry (:name |rejects-nil-mount-target)
+            :code $ quote $ let
+                caught? $ atom false
+                component $ respo.schema/Component :name :empty :effects ([]) :listeners ([]) :tree $ Option :none
+              try
+                render! nil component $ fn (op) &unit
+                fn (error) (assert= |[Respo/render!]-expected-mount-target error) (reset! caught? true)
+              assert |nil-mount-target-rejected @caught?
+            :tags $ #{} :unit
         'render-with! $ %{} 'CodeEntry
           :doc "|在受管理的 memo 帧中构建 Component 树，清理不再活跃的组件 key，然后渲染。传入零参数树构建函数，使 memo 调用位于帧内。向外传播的渲染错误会中止当前帧并重新抛出，保留上次成功提交的缓存。"
           :code $ quote $ defn render-with! (target render-tree dispatch!) (memo/begin-memo-frame!)
@@ -2384,7 +2399,7 @@
               fn () $ comp-container @*store
               , dispatch!
           :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'Dynamic
+            :args $ [] (:: 'JsNullish 'respo.dom/DomElement)
               :: 'Fn $ {} (:return 'respo.schema/Component)
                 :args $ []
               , 'Fn
@@ -2410,7 +2425,7 @@
           :examples $ [] $ quote
             rerender-app! mount-target (comp-demo) *dispatch-fn
           :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'Dynamic 'respo.schema/Component $ :: 'Ref
+            :args $ [] 'respo.dom/DomElement 'respo.schema/Component $ :: 'Ref
               :: 'Fn $ {} (:return 'Unit)
                 :args $ [] 'Dynamic
             :features $ #{} :js-ffi
@@ -5693,7 +5708,8 @@
                   let
                       prop-name $ dashed->camel prop-str
                     match prop-name
-                      |style $ js-set target prop-name $ style->string prop-value
+                      |style $ js-set target prop-name $ style->string
+                        assert-type prop-value $ :: 'List $ :: 'List 'Dynamic
                       _ $ js-set target prop-name prop-value
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
