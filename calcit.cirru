@@ -792,7 +792,12 @@
           :doc "|Create and mount the initial DOM tree into a mount point.\n\nThis function clears previous content, builds event listeners from `deliver-event`, and appends the rendered root element. It is an internal mounting step used by `mount-app!`."
           :code $ quote $ defn activate-instance! (entire-dom mount-point deliver-event)
             let
-                listener-builder $ fn (event-name) (build-listener event-name deliver-event)
+                listener-builder $ fn (event-name)
+                  hint-fn $ {}
+                    :args $ [] 'Tag
+                    :return $ :: 'Fn $ {} (:return 'Unit)
+                      :args $ [] 'respo.dom/DomEvent $ :: 'List 'Dynamic
+                  build-listener event-name deliver-event
               set! mount-point.:inner-html |
               mount-point .append-child! $ make-element entire-dom listener-builder $ []
             , &unit
@@ -806,6 +811,8 @@
           :doc "|Creates a DOM event listener that converts events and dispatches them to Respo."
           :code $ quote $ defn build-listener (event-name deliver-event)
             fn (event coord)
+              hint-fn $ {} (:return 'Unit)
+                :args $ [] 'respo.dom/DomEvent $ :: 'List 'Dynamic
               let
                   simple-event $ event->edn event
                 deliver-event coord event-name simple-event
@@ -821,7 +828,12 @@
           :doc "|Apply collected patch operations to the mounted DOM root.\n\nIt builds event listeners from `deliver-event` and delegates concrete DOM mutations to `apply-dom-changes`."
           :code $ quote $ defn patch-instance! (changes mount-point deliver-event)
             let
-                listener-builder $ fn (event-name) (build-listener event-name deliver-event)
+                listener-builder $ fn (event-name)
+                  hint-fn $ {}
+                    :args $ [] 'Tag
+                    :return $ :: 'Fn $ {} (:return 'Unit)
+                      :args $ [] 'respo.dom/DomEvent $ :: 'List 'Dynamic
+                  build-listener event-name deliver-event
               apply-dom-changes changes mount-point listener-builder
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
@@ -996,13 +1008,15 @@
                   target-element-option $ find-event-target
                     option:unwrap $ deref *global-element
                     , coord event-name
-                  target-listener-option $ assert-type
-                    match target-element-option
-                      (:none)
-                        do (js/console.warn |found-no-element coord event-name) (Option :none)
-                      (:some target-element)
+                  target-listener-option $ match target-element-option
+                    (:none)
+                      do (js/console.warn |found-no-element coord event-name) (Option :none)
+                    (:some target-element)
+                      match
                         get (element-event target-element) event-name
-                    :: 'Option 'respo.schema/EventHandler
+                        (:none) (Option :none)
+                        (:some handler)
+                          if (js-present? handler) (Option :some handler) (Option :none)
                   dispatch-wrap $ wrap-dispatch *dispatch-fn
                 match target-listener-option
                   (:none) &unit
@@ -1318,7 +1332,7 @@
                 ref! $ normalize-ref ref-value "|[Respo/create-element] expected :ref to be a function or nil"
                 attrs $ pick-attrs props-map
                 styles $ ->
-                  either (&map:get props-map :style) ({})
+                  props-style-map $ &map:get props-map :style
                   &map:to-list
                   sort $ fn (x y)
                     &compare (&list:nth x 0) (&list:nth y 0)
@@ -1362,7 +1376,7 @@
                 attrs $ pick-attrs props-map
                 styles $ sort
                   assert-type
-                    &map:to-list $ either (&map:get props-map :style) ({})
+                    &map:to-list $ props-style-map $ &map:get props-map :style
                     :: List $ :: List Dynamic
                   fn (x y)
                     &compare (&list:first x) (&list:first y)
@@ -2284,17 +2298,12 @@
         'normalize-ref $ %{} 'CodeEntry
           :doc "|在 props 的开放数据边界验证 ref，返回明确的 nullable DOM 回调；nil 保留，非法函数沿用调用方消息。"
           :code $ quote $ defn normalize-ref (value message)
-            if (nil? value) nil $ assert-type (expect-function value message)
-              :: Fn $ {}
-                :args $ [] $ :: JsNullish respo.dom/DomElement
-                :return Unit
+            if (nil? value) nil $ if (fn? value) value $ raise message
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] 'RefInput 'String
             :generics $ [] 'RefInput
-            :return $ :: 'JsNullish $ :: 'Fn
-              {} (:return 'Unit)
-                :args $ [] $ :: 'JsNullish 'respo.dom/DomElement
+            :return $ :: 'JsNullish 'Fn
           :tags $ #{} :internal
           :tests $ []
             %{} 'TestEntry (:name |preserves-nil-and-callback)
@@ -2342,6 +2351,14 @@
           :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
             :args $ [] 'PropsInput
             :generics $ [] 'PropsInput
+        'props-style-map $ %{} 'CodeEntry (:doc "|在 props 开放数据边界检查 :style，nil 视为空 map。")
+          :code $ quote $ defn props-style-map (value)
+            if (nil? value) ({})
+              if (map? value) value $ raise $ str "|[Respo] expected :style to be a map, got: " (type-of value)
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] 'Dynamic
+            :return $ :: 'Map 'Dynamic 'Dynamic
         'realize-ssr! $ %{} 'CodeEntry
           :doc "|Adopt server-rendered DOM before the first client render. It compares the component tree to the existing HTML, attaches events by diffing a muted tree against the live tree, and mounts effects once. The live tree and shared dispatch reference are recorded before patches run, so events work immediately and later render! calls update handlers and dispatch without remounting."
           :code $ quote $ defn realize-ssr! (target element dispatch!)
@@ -2693,7 +2710,7 @@
                     if
                       &= rules $ :rules cached-entry
                       , style-name $ let
-                          style-el $ unsafe-coerce (:el cached-entry) 'respo.dom/DomElement
+                          style-el $ present-element $ :el cached-entry
                           css-block $ render-css-block style-name rules
                         respo.dom/set-inner-html! style-el css-block
                         swap! *style-caches assoc style-name $ StyleCacheEntry :rules rules :el style-el
@@ -2702,7 +2719,7 @@
                   let
                       css-block $ render-css-block style-name rules
                     let
-                        style-el $ unsafe-coerce (js/document.createElement |style) 'respo.dom/DomElement
+                        style-el $ present-element $ js/document.createElement |style
                       respo.dom/set-inner-html! style-el css-block
                       js-set style-el :id style-name
                       js/document.head.appendChild style-el
@@ -2775,6 +2792,13 @@
           :code $ quote $ def nodejs? (detect-nodejs?)
           :examples $ []
           :schema $ :: 'Bool
+        'present-element $ %{} 'CodeEntry (:doc "|在 DOM 边界确认样式元素存在。")
+          :code $ quote $ defn present-element (value)
+            if (js-present? value) (js-cast value 'respo.dom/DomElement) (raise |[Respo]-expected-a-DOM-element-for-style-cache)
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'respo.dom/DomElement)
+            :args $ [] $ :: 'JsNullish 'Dynamic
+            :features $ #{} :js-ffi
         'render-css-block $ %{} 'CodeEntry
           :doc "|Generates a CSS string block from a map of style rules."
           :code $ quote $ defn render-css-block (style-name rules)
@@ -2788,7 +2812,8 @@
                     pair $ respo.util.list/first-pair xs
                     k $ to-string $ respo.util.list/pair-key pair
                     raw-styles $ respo.util.list/pair-value pair
-                    styles-map $ unsafe-coerce raw-styles $ :: 'Map 'Tag 'Dynamic
+                    styles-map $ if (map? raw-styles) raw-styles $ raise
+                      str "|render-css-block expected a style map, got: " $ type-of raw-styles
                     class-rule $ str |. style-name
                     rule-name $ &str:replace (&str:replace k |$0 class-rule) |& class-rule
                     contained $ &map:get styles-map :contained
@@ -3344,7 +3369,7 @@
     'respo.ffi.browser $ %{} 'FileEntry
       :defs $ {}
         'host-element $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn host-element (element) (unsafe-coerce element 'js-ffi.browser/DomElementHost)
+          :code $ quote $ defn host-element (element) (js-cast element 'js-ffi.browser/DomElementHost)
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'js-ffi.browser/DomElementHost)
             :args $ [] 'T
@@ -6605,9 +6630,7 @@
             :style $ :: 'List $ :: 'List 'Dynamic
             :event $ :: 'Map 'Tag $ :: 'JsNullish 'respo.schema/EventHandler
             :children $ :: 'List 'respo.schema/ChildPair
-            :ref $ :: 'JsNullish $ :: 'Fn
-              {} (:return 'Unit)
-                :args $ [] $ :: 'JsNullish 'respo.dom/DomElement
+            :ref $ :: 'JsNullish 'Fn
           :examples $ []
           :schema $ :: 'StructDef
         'EventConfig $ %{} 'CodeEntry
@@ -6622,7 +6645,7 @@
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] (:: 'Map 'Tag 'Dynamic)
-              :: 'Fn $ {} (:return 'Unit)
+              :: 'Fn $ {} (:rest 'Dynamic) (:return 'Unit)
                 :args $ [] 'Dynamic
         'ListenerMode $ %{} 'CodeEntry
           :doc "|Event installation policy. :property preserves the existing on* property behavior; :add-event-listener preserves external property handlers and registers independent Respo callbacks."
@@ -7416,7 +7439,9 @@
         'dashed->camel $ %{} 'CodeEntry
           :doc "|convert dashed-case CSS property names to camelCase. e.g. \"background-color\" -> \"backgroundColor\"."
           :code $ quote $ defn dashed->camel (x)
-            if (= x |spell-check) |spellcheck $ .!replace x dashed-letter-pattern uppercase-dashed-match
+            if (= x |spell-check) |spellcheck $ &let
+              result $ .!replace x dashed-letter-pattern uppercase-dashed-match
+              if (string? result) result $ raise "|dashed->camel expected a String result"
           :examples $ []
             quote $ dashed->camel |background-color
             quote $ dashed->camel |font-size
@@ -7435,27 +7460,7 @@
             let
                 event-type $ event.:type
                 keyboard-event $ unsafe-coerce event 'respo.dom/DomKeyboardEvent
-              ->
-                match event-type
-                  |click $ {} $ :type :click
-                  |keydown $ &merge (map-keyboard-event keyboard-event)
-                    {} (:type :keydown)
-                      :key-code $ keyboard-event.:key-code
-                      :keycode $ keyboard-event.:key-code
-                  |keypress $ &merge (map-keyboard-event keyboard-event)
-                    {} $ :type :keypress
-                  |keyup $ &merge (map-keyboard-event keyboard-event)
-                    {} $ :type :keyup
-                  |input $ {} (:type :input)
-                    :value $ input-event-value event
-                    :checked $ input-event-checked? event
-                  |change $ {} (:type :change)
-                    :value $ input-event-value event
-                  |focus $ {} $ :type :focus
-                  _ $ {} (:type event-type)
-                    :msg $ str "|Unhandled event: " event-type
-                assoc :original-event event
-                assoc :event event
+              -> (event-base-edn event event-type keyboard-event) (assoc :original-event event) (assoc :event event)
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] 'respo.dom/DomEvent
@@ -7481,6 +7486,28 @@
               assert= |click $ respo.util.format/event->string :on-click
               assert= |change $ respo.util.format/event->string |on-change
             :tags $ #{} :unit
+        'event-base-edn $ %{} 'CodeEntry (:doc "|按事件类型构造事件 EDN 的基础字段。")
+          :code $ quote $ defn event-base-edn (event event-type keyboard-event)
+            match event-type
+              |click $ {} $ :type :click
+              |keydown $ -> (map-keyboard-event keyboard-event) (&map:assoc :type :keydown)
+                &map:assoc :key-code $ keyboard-event.:key-code
+                &map:assoc :keycode $ keyboard-event.:key-code
+              |keypress $ &map:assoc (map-keyboard-event keyboard-event) :type :keypress
+              |keyup $ &map:assoc (map-keyboard-event keyboard-event) :type :keyup
+              |input $ {} (:type :input)
+                :value $ input-event-value event
+                :checked $ input-event-checked? event
+              |change $ {} (:type :change)
+                :value $ input-event-value event
+              |focus $ {} $ :type :focus
+              _ $ {} (:type event-type)
+                :msg $ str "|Unhandled event: " event-type
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] 'respo.dom/DomEvent 'String 'respo.dom/DomKeyboardEvent
+            :features $ #{} :js-ffi
+            :return $ :: 'Map 'Tag 'Dynamic
         'get-style-value $ %{} 'CodeEntry
           :doc "|Formats a style value for a given property. Adds px to numeric values when the property expects units, and returns an empty string for nil so DOM updates and SSR output can clear the declaration safely."
           :code $ quote $ defn get-style-value (x prop)
@@ -7835,6 +7862,19 @@
             respo.dom :refer $ DomEvent DomKeyboardEvent
     'respo.util.list $ %{} 'FileEntry
       :defs $ {}
+        'as-event-handler $ %{} 'CodeEntry
+          :doc "|把 props 中的开放函数适配为 EventHandler 合同；事件差异只比较事件名，适配不会触发重新挂载。"
+          :code $ quote $ defn as-event-handler (f)
+            fn (event dispatch!)
+              hint-fn $ {} (:return 'Unit)
+                :args $ [] (:: 'Map 'Tag 'Dynamic)
+                  :: 'Fn $ {} (:rest 'Dynamic) (:return 'Unit)
+                    :args $ [] 'Dynamic
+              f event dispatch!
+              , &unit
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/EventHandler)
+            :args $ [] 'Fn
         'first-pair $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn first-pair (entries)
             &let
@@ -7878,10 +7918,9 @@
             :args $ [] $ :: 'List 'T
             :generics $ [] 'T
         'pair-key $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn pair-key (pair)
-            assert-type (&list:nth pair 0) 'Tag
+          :code $ quote $ defn pair-key (pair) (&list:nth pair 0)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Tag)
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
             :args $ [] $ :: 'List 'Dynamic
         'pair-value $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn pair-value (pair) (&list:nth pair 1)
@@ -7923,22 +7962,21 @@
           :code $ quote $ defn pick-event (props)
             let
                 raw-on $ &map:get props :on
-                base-events $ if (map? raw-on)
-                  unsafe-coerce raw-on $ :: Map Tag respo.schema/EventHandler
-                  {}
+                base-events $ pick-on-events raw-on
                 property-events $ filter-map-kv props $ fn (k v)
                   hint-fn $ {}
                     :args $ [] 'Tag 'Dynamic
-                    :return $ :: 'MapEntryDecision
+                    :return $ :: 'MapEntryDecision 'Tag 'respo.schema/EventHandler
                   if
-                    and
-                      starts-with? (to-string k) |on-
-                      calcit.core/non-nil? v
-                    %:: MapEntryDecision :keep
-                      turn-tag $ &str:slice (to-string k) 3
-                      assert-type v respo.schema/EventHandler
+                    starts-with? (to-string k) |on-
+                    if (fn? v)
+                      %:: MapEntryDecision :keep
+                        to-tag $ &str:slice (to-string k) 3
+                        as-event-handler v
+                      if (nil? v) (%:: MapEntryDecision :drop)
+                        raise $ str "|[Respo] expected event listener to be a function: " k
                     %:: MapEntryDecision :drop
-              merge base-events property-events
+              &merge base-events property-events
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] $ :: 'Map 'Tag 'Dynamic
@@ -7954,6 +7992,25 @@
               assert |click-event-is-kept $ identical? click! $ &map:get events :click
               assert |input-event-is-merged $ identical? input! $ &map:get events :input
             :tags $ #{} :unit
+        'pick-on-events $ %{} 'CodeEntry (:doc "|校验 :on 事件 map，并把监听函数适配为 EventHandler。")
+          :code $ quote $ defn pick-on-events (raw-on)
+            if (map? raw-on)
+              filter-map-kv raw-on $ fn (k v)
+                hint-fn $ {}
+                  :args $ [] 'Dynamic 'Dynamic
+                  :return $ :: 'MapEntryDecision 'Tag 'respo.schema/EventHandler
+                if (tag? k)
+                  if (fn? v)
+                    %:: MapEntryDecision :keep k $ as-event-handler v
+                    if (nil? v) (%:: MapEntryDecision :drop)
+                      raise $ str "|[Respo] expected event listener to be a function: " k
+                  raise $ str "|[Respo] expected event names in :on to be tags: " k
+              if (nil? raw-on) ({})
+                raise $ str "|[Respo] expected :on to be a map, got: " $ type-of raw-on
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] 'Dynamic
+            :return $ :: 'Map 'Tag 'respo.schema/EventHandler
         'val-exists? $ %{} 'CodeEntry
           :doc "|Predicate to check if a key-value pair has a non-nil value."
           :code $ quote $ defn val-exists? (pair)
