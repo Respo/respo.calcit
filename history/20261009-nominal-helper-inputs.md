@@ -1,5 +1,23 @@
 # #194：名义 helper 的输入证据
 
+## HTML 键值对追加阶段
+
+在 `e60a28e` 基础上，将 `coerce-pairs` 改为保持输入类型和身份的泛型恒等
+函数，移除其未经证明的嵌套 List 断言与不准确的 FFI 标记。它不负责验证
+键值对结构：开放的 style 入口使用已有 `checked-pairs` 提供结构证据。
+该校验保留成员和顺序，不增加 pair 长度约束。`props->html` 的 Map 参数
+已经通过 `&map:to-list` 提供结构类型，因此移除重复断言。
+
+未采用嵌套成员泛型 `List<List<Item>>`：其空列表实参在正式 alpha.19 被
+`E_ERASED_GENERIC_RELATION` 拒绝。当前恒等合同直接保持整个输入类型，
+不宣称成员类型转换，混合成员及原始空列表的身份回归均实际执行通过。
+
+当前项目断言 **72→65**，unsafe 仍为19；完整 strict 诊断 **27→20**，
+仍未完成全部 strict 要求。111 native / 84 Node tests 通过；新增 HTML
+回归验证混合键值、回调身份、空 style、属性过滤、排序、转义及输入不变。
+质量实际计数185/183/211，退还 coerce-pairs 的 typeNotFull 预算，
+总预算190/187/218，未提高预算。后续章节保留各阶段的历史数据。
+
 ## 当前追加阶段
 
 在首轮 `7424ad6` 基础上继续修复 `element-ref`、`purify-element-node` 与

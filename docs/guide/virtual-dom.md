@@ -119,3 +119,14 @@ Element 字段一致：它保留原回调身份，不承诺该字段尚未证明
 `purify-events` 的事件名必须为 Tag。沿用 `non-nil?` 的规则：nil 被过滤，
 JS undefined 的 key 仍保留。
 它先过滤再校验留下的 key，不把 String key 转换成 Tag，也不检查或改写 handler。
+
+### HTML 键值对边界
+
+`respo.render.html/coerce-pairs` 现在是 `Fn<Value> (Value) -> Value` 的泛型恒等
+helper：保留输入的类型和对象身份，不提供键值对结构证明。已有代码可以继续
+调用它，混合成员和空列表均保留；不能用它将开放数据声明为键值对列表。
+
+HTML 的开放 `:style` 值先经过 `respo.util.list/checked-pairs` 检查外层和每个
+成员都是 List，再进入 `style->html`。成员值、顺序、空列表及既有样式转换规则
+保留；该检查不增加“必须两项”的长度约束。具有 `Map<Tag, Dynamic>` 类型的
+props 直接使用 `&map:to-list` 的结果，无须再次断言。

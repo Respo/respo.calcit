@@ -5546,13 +5546,22 @@
     'respo.render.html $ %{} 'FileEntry
       :defs $ {}
         'coerce-pairs $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn coerce-pairs (value)
-            assert-type value $ :: 'List $ :: 'List 'Dynamic
+          :code $ quote $ defn coerce-pairs (value) value
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic
-            :features $ #{} :js-ffi
-            :return $ :: 'List $ :: 'List 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Value)
+            :args $ [] 'Value
+            :generics $ [] 'Value
+          :tests $ [] $ %{} 'TestEntry (:name |preserves-mixed-and-empty-pair-lists)
+            :code $ quote $ let
+                callback $ fn (value) value
+                pairs $ [] ([] :id |probe) ([] :count 42) ([] :handler callback) ([] :missing nil)
+                result $ coerce-pairs pairs
+                empty-pairs $ []
+              assert |same-pair-list $ identical? pairs result
+              assert= pairs result
+              assert |same-callback $ identical? callback $ &list:nth (&list:nth result 2) 1
+              assert |same-empty-list $ identical? empty-pairs $ coerce-pairs empty-pairs
+            :tags $ #{} :unit
         'element->string $ %{} 'CodeEntry (:doc "|which is actually `element->html`")
           :code $ quote $ defn element->string (element)
             let
@@ -5644,7 +5653,7 @@
                 v $ respo.util.list/pair-value entry
                 value-text $ cond
                     = k :style
-                    style->html $ coerce-pairs v
+                    style->html $ coerce-pairs $ respo.util.list/checked-pairs v
                   (string? v) (escape-html v)
                   true $ respo.util.format/scalar-attribute-text v
               str
@@ -5710,8 +5719,7 @@
         'props->html $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn props->html (props)
             let
-                pairs $ assert-type (&map:to-list props)
-                  :: 'List $ :: 'List 'Dynamic
+                pairs $ &map:to-list props
                 visible $ filter pairs $ fn (pair)
                   hint-fn $ {}
                     :args $ [] $ :: 'List 'Dynamic

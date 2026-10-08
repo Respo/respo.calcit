@@ -1194,7 +1194,7 @@
       :deprecatedCalls 0
       :schemaDynamic 0
       :typeNone 0
-      :typeNotFull 1
+      :typeNotFull 0
       :unresolved 0
       :unsafeCoerce 0
     |respo.render.html/element-content $ {} (:codeDynamic 0)
@@ -2004,7 +2004,7 @@
     :deprecatedCalls 0
     :schemaDynamic 190
     :typeNone 3
-    :typeNotFull 188
+    :typeNotFull 187
     :unresolved 218
     :unsafeCoerce 35
   :scope $ {} (:includeDependencies false)
