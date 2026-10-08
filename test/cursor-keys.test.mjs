@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import * as c from '../js-out/calcit.core.mjs';
-import { get_state_at, update_state_tree, update_state_tree_kv, update_state_tree_merge } from '../js-out/respo.cursor.mjs';
+import { CursorTestState, coerce_cursor_test_state, get_state_at, update_state_tree, update_state_tree_kv, update_state_tree_merge } from '../js-out/respo.cursor.mjs';
 import { EventConfig, ListenerMode } from '../js-out/respo.schema.mjs';
 
 const tags = c.init_tags(['panel', 'data', 'draft', 'locked?']);
@@ -64,4 +64,23 @@ test('partial Struct field update preserves nominal identity after the shape gua
   assert.equal(c.option_$o_unwrap_or(c.get(value, fields['stop-propagation?']), null), false);
   assert.throws(() => update_state_tree_kv(states, path(tags.panel, 'task-1'), 7, false));
   assert.equal(c.option_$o_unwrap_or(c.get(original, fields['stop-propagation?']), null), true);
+});
+
+
+test('cursor Struct regression validates nominal identity after consecutive updates', () => {
+  const fields = c.init_tags(['draft', 'locked?', 'message']);
+  const original = c._$n__PCT__$M_(CursorTestState, fields.draft, 'a', fields['locked?'], false, fields.message, 'ready');
+  assert.equal(coerce_cursor_test_state(original), original);
+  const first = update_state_tree_merge(c._$n__$M_(), path(), original, c._$n__$M_(fields.draft, 'b'));
+  const second = update_state_tree_merge(first, path(), original, c._$n__$M_(fields.draft, 'c'));
+  const state = get_state_at(second, path(tags.data));
+  assert.equal(coerce_cursor_test_state(state), state);
+  assert.equal(c.option_$o_unwrap(c.get(state, fields.draft)), 'c');
+  assert.equal(c.option_$o_unwrap(c.get(state, fields.message)), 'ready');
+  assert.equal(c.option_$o_unwrap(c.get(original, fields.draft)), 'a');
+  const sameFields = c._$n__$M_(fields.draft, 'a', fields['locked?'], false, fields.message, 'ready');
+  const otherStruct = c._$n__PCT__$M_(EventConfig, c.turn_tag('stop-propagation?'), false, c.turn_tag('listener-mode'), c._PCT__$o__$o_(ListenerMode, c.turn_tag('property')));
+  for (const invalid of [null, undefined, 42, c.arrayToList([]), sameFields, otherStruct]) {
+    assert.throws(() => coerce_cursor_test_state(invalid), { message: '[Respo/test]-expected-CursorTestState' });
+  }
 });

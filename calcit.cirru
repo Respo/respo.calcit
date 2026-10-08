@@ -2957,11 +2957,30 @@
           :examples $ []
           :schema $ :: 'StructDef
         'coerce-cursor-test-state $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn coerce-cursor-test-state (value) (assert-type value CursorTestState)
+          :code $ quote $ defn coerce-cursor-test-state (value)
+            if (struct? value)
+              if (&struct:matches? value CursorTestState) value $ raise |[Respo/test]-expected-CursorTestState
+              raise |[Respo/test]-expected-CursorTestState
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'CursorTestState)
-            :args $ [] 'Dynamic
-            :features $ #{} :js-ffi
+            :args $ [] 'StateInput
+            :generics $ [] 'StateInput
+          :tests $ [] $ %{} 'TestEntry (:name |checks-nominal-identity)
+            :code $ quote $ let
+                original $ %{} CursorTestState (:draft |a) (:locked? false) (:message |ready)
+                caught $ atom 0
+              assert |same-state $ identical? original $ coerce-cursor-test-state original
+              &doseq
+                value $ [] nil 42 ({})
+                  {} (:draft |a) (:locked? false) (:message |ready)
+                  %{} respo.schema/Component (:name :other)
+                    :effects $ []
+                    :listeners $ []
+                    :tree $ %none
+                try (coerce-cursor-test-state value)
+                  fn (error) (assert= |[Respo/test]-expected-CursorTestState error) (swap! caught inc)
+              assert= 5 @caught
+            :tags $ #{} :unit
         'get-state-at $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn get-state-at (states path)
             loop
