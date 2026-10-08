@@ -1,3 +1,13 @@
+## 追加：demo 事件和状态读取边界
+
+- 两个组件的 input handler 先解码 Map<Tag, Dynamic>，draft / task text 再解码 String。局部状态 input 仍传递开放 value；没有把已有 Dynamic 存储强行改成 String。
+- Ctrl+M listener 检查匿名键盘事件的 Map payload，保留 key / ctrl 判断、立即修改消息和 2000ms 后恢复消息。
+- demo 组件读取 states 前解码 Map<Dynamic, Dynamic>，保留混合 key；TodoState 用 Struct 身份 guard 检查并保持原对象。移除重复 state / tasks 断言，非法名义 Struct 或容器拒绝。
+
+新增 JS 回归直接调用实际渲染出的 input handler，验证 dispatch 内容、非法容器 / key / 文本在 dispatch 前失败、开放局部 state 原值、TodoState 身份及 Ctrl+M 定时恢复。相关 Node 文件 9/9、117/117 native、335/335 框架定义、DOM host / Canvas、quality baseline 和 Snapshot 格式检查通过。
+
+项目 definition code AST：assert-type **56→51**，unsafe-coerce 保持15。完整 strict 诊断 **7→4**，源码证明提示 **8→5**，类型审查项仍227。剩余四项为 core conj / pairs-map、render-with! callable 合同及重复 type slot；完整 strict 仍未通过。中文记录保留历史阶段，下游源码组合尚未更新至这次修改，正式下游验收和 #195 路线决定仍待完成。生成 JS / JSON 不入库。
+
 ## 追加：effect 队列、props 和计时边界
 
 - 测试用 effect / task helper 在调用前检查 `fn?`，保留 effect 顺序、原 target 和仅执行首项的行为；非法回调明确报错。这些 helper 的 target 仍为开放测试数据。

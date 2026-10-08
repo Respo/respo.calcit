@@ -51,6 +51,7 @@
         'comp-task $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-task (states task)
             let
+                states $ decode-map-as states $ :: 'Map 'Dynamic 'Dynamic
                 cursor $ decode-map-as
                   either (&map:get states :cursor) ([])
                   :: 'List 'Dynamic
@@ -71,12 +72,16 @@
                   input $ {} (:value task-text) (:class-name widget/style-input)
                     :on-input $ fn (e d!)
                       let
-                          text $ str $ assert-type (&map:get e :value) String
-                        d! $ Op :update task-id text
+                          event $ decode-map-as e $ :: 'Map 'Tag 'Dynamic
+                        let
+                            text $ str $ decode-map-as (&map:get event :value) 'String
+                          d! $ Op :update task-id text
                   =< 8 0
                   input $ {} (:value state) (:class-name widget/style-input)
                     :on-input $ fn (e d!)
-                      d! $ Op :states cursor $ &map:get e :value
+                      let
+                          event $ decode-map-as e $ :: 'Map 'Tag 'Dynamic
+                        d! $ Op :states cursor $ &map:get event :value
                   =< 8 0
                   div
                     {} (:class-name widget/style-button)
@@ -129,17 +134,18 @@
         'comp-todolist $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-todolist (states tasks)
             let
+                states $ decode-map-as states $ :: 'Map 'Dynamic 'Dynamic
                 cursor $ decode-map-as
                   either (&map:get states :cursor) ([])
                   :: 'List 'Dynamic
-                state $ assert-type
-                  either (&map:get states :data) (respo.app.schema/TodoState :draft | :locked? false :message "|Press Ctrl+M to change message")
-                  , respo.app.schema/TodoState
+                state $ let
+                    stored-state $ either (&map:get states :data) (respo.app.schema/TodoState :draft | :locked? false :message "|Press Ctrl+M to change message")
+                  if (struct? stored-state)
+                    if (&struct:matches? stored-state respo.app.schema/TodoState) stored-state $ raise "|[Respo/demo] expected TodoState"
+                    raise "|[Respo/demo] expected TodoState"
                 draft $ :draft state
                 locked? $ :locked? state
                 message $ :message state
-              assert-type state 'respo.app.schema/TodoState
-              assert-type tasks $ :: 'List 'respo.app.schema/Task
               [] (on-keydown cursor state) (effect-focus |#draft-input)
                 div
                   {} (:class-name style-todo-root) (:data-name |todolist)
@@ -150,8 +156,10 @@
                       :style $ {} $ :width
                         &max 200 $ + 24 $ text-width draft 16 |BlinkMacSystemFont
                       :on-input $ fn (e d!)
-                        d! $ Op :states-merge cursor state $ {}
-                          :draft $ assert-type (&map:get e :value) String
+                        let
+                            event $ decode-map-as e $ :: 'Map 'Tag 'Dynamic
+                          d! $ Op :states-merge cursor state $ {}
+                            :draft $ decode-map-as (&map:get event :value) 'String
                       :on-focus on-focus
                     =< 8 0
                     span
@@ -238,15 +246,17 @@
             respo.schema/RespoListener :name :on-keydown :handler $ fn (event dispatch!)
               match event $
                 :keydown info
-                when
-                  and
-                    &= |m $ &map:get info :key
-                    identical? true $ &map:get info :ctrl
-                  do
-                    dispatch! $ Op :states cursor $ assoc state :message "|Message changed by Ctrl+M!"
-                    js/window.setTimeout
-                      fn () $ dispatch! $ Op :states cursor (assoc state :message "|Press Ctrl+M to change message")
-                      , 2000
+                let
+                    info $ decode-map-as info $ :: 'Map 'Tag 'Dynamic
+                  when
+                    and
+                      &= |m $ &map:get info :key
+                      identical? true $ &map:get info :ctrl
+                    do
+                      dispatch! $ Op :states cursor $ assoc state :message "|Message changed by Ctrl+M!"
+                      js/window.setTimeout
+                        fn () $ dispatch! $ Op :states cursor (assoc state :message "|Press Ctrl+M to change message")
+                        , 2000
           :examples $ [] $ quote (on-keydown cursor state)
           :schema $ :: 'Fn $ {} (:return 'respo.schema/RespoListener)
             :args $ [] (:: 'List 'Dynamic) 'respo.app.schema/TodoState
