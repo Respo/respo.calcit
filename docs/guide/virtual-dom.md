@@ -110,3 +110,12 @@ SSR 的 `make-string` 与 `realize-ssr!` 在净化后使用同一校验边界；
 Element/Component 的净化顺序、HTML 内容、事件与 ref 清理方式保持不变。
 应用从开放宿主数据获得 Component 时，可使用 `as-component` 校验后再调用
 `coerce-component`，而已经具有名义类型的值可直接调用 helper。
+
+`purify-element-node` 同样要求具体的 Element；开放 markup 继续使用
+`purify-element`。`element-ref` 接收 Element，返回 `JsNullish<Fn>`，与当前
+Element 字段一致：它保留原回调身份，不承诺该字段尚未证明的参数类型或 Unit
+返回值。需要具体回调签名的应用应在创建回调的边界保留自己的类型合同。
+
+`purify-events` 的事件名必须为 Tag。沿用 `non-nil?` 的规则：nil 被过滤，
+JS undefined 的 key 仍保留。
+它先过滤再校验留下的 key，不把 String key 转换成 Tag，也不检查或改写 handler。

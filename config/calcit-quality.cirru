@@ -1824,7 +1824,7 @@
       :deprecatedCalls 0
       :schemaDynamic 0
       :typeNone 0
-      :typeNotFull 1
+      :typeNotFull 0
       :unresolved 0
       :unsafeCoerce 0
     |respo.util.format/purify-render-node $ {} (:codeDynamic 0)
@@ -2004,7 +2004,7 @@
     :deprecatedCalls 0
     :schemaDynamic 190
     :typeNone 3
-    :typeNotFull 189
+    :typeNotFull 188
     :unresolved 218
     :unsafeCoerce 35
   :scope $ {} (:includeDependencies false)

@@ -7331,14 +7331,12 @@
         'element-ref $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn element-ref (value)
             let
-                element $ assert-type value 'respo.schema/Element
+                element value
               :ref element
           :examples $ []
           :schema $ :: 'Fn $ {}
-            :args $ [] 'Struct
-            :return $ :: 'JsNullish $ :: 'Fn
-              {} (:return 'Unit)
-                :args $ [] $ :: 'JsNullish 'respo.dom/DomElement
+            :args $ [] 'respo.schema/Element
+            :return $ :: 'JsNullish 'Fn
         'element-style $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn element-style (value)
             let
@@ -7752,7 +7750,8 @@
                 , nil
               (component? markup)
                 purify-render-node $ respo.util.detect/as-render-node markup
-              (element? markup) (purify-element-node markup)
+              (element? markup)
+                purify-element-node $ respo.util.detect/as-element markup
               true $ do (js/console.warn |Unknown-markup-during-purify: markup) nil
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Dynamic)
@@ -7794,21 +7793,30 @@
               :tags $ #{} :unit
         'purify-element-node $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn purify-element-node (markup)
-            purify-render-node $ respo.schema/RenderNode :element $ assert-type markup respo.schema/Element
+            purify-render-node $ respo.schema/RenderNode :element markup
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Element)
-            :args $ [] 'Dynamic
-            :features $ #{} :js-ffi
+            :args $ [] 'respo.schema/Element
         'purify-events $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn purify-events (events)
             -> (&map:to-list events)
               filter $ fn (pair)
                 calcit.core/non-nil? $ respo.util.list/pair-value pair
-              map respo.util.list/pair-key
+              map respo.util.list/pair-tag-key
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] $ :: 'Map 'Tag 'Dynamic
             :return $ :: 'List 'Tag
+          :tests $ [] $ %{} 'TestEntry (:name |keeps-live-tag-keys)
+            :code $ quote $ let
+                events $ {}
+                  :click $ fn () 42
+                  :gone nil
+                  :zero 0
+                names $ purify-events events
+              assert= 2 $ count names
+              assert= (#{} :click :zero) (.to-set names)
+            :tags $ #{} :unit
         'purify-render-node $ %{} 'CodeEntry
           :doc "|通过 RenderNode 变体递归清理事件和 ref，移除组件包装；保留 ChildPair key、nil 节点和空组件树报错。"
           :code $ quote $ defn purify-render-node (node)

@@ -27,7 +27,7 @@ Memo 帧生命周期、依赖记录、DOM 缓存失效和 demo 派发的 Unit �
 [DOM events](docs/guide/dom-events.md#原生事件的类型边界)。
 
 `yarn test-nominal-accessors` 检查 Component、Effect、Element 和 RespoListener
-访问器和转换 helper 的名义类型参数、31 个错误或未验证输入的编译期拒绝，以及原有列表、事件表、回调
+访问器和转换 helper 的名义类型参数、37 个错误或未验证输入的编译期拒绝，以及原有列表、事件表、回调
 和 tree payload 的身份。开放输入应先在调用方完成分类或受检转换。
 `component-tree` 保留 `Option<Struct>` 兼容返回值；该检查不证明 effect 参数、
 Listener 回调或整个 strict workflow 已全部封闭。

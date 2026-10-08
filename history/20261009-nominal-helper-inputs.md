@@ -1,5 +1,31 @@
 # #194：名义 helper 的输入证据
 
+## 当前追加阶段
+
+在首轮 `7424ad6` 基础上继续修复 `element-ref`、`purify-element-node` 与
+`purify-events`。当前项目断言 **72→67**，unsafe 仍为19；完整 strict
+诊断 **27→21**，静态拒绝用例37项，110 native / 83 Node tests 通过。
+实际质量计数为185/184/211，总预算190/188/218。下文首轮数据保留历史含义。
+
+`element-ref` 现在要求 Element，并返回与当前字段一致的 `JsNullish<Fn>`；
+字段没有具体参数/返回合同，访问器不能凭读取宣称 Unit 返回值。native 与 JS
+回归用一个返回 Number 的已有回调验证身份保持，不调用或改写它。
+
+`purify-element-node` 要求 Element，移除断言和不准确的 FFI 标记；开放
+`purify-element` 在原 element 分支中复用 `as-element` 校验。它的现有 nil、
+未知 markup、递归清理及空组件树逻辑保留。
+
+`purify-events` 复用 `pair-tag-key`，为 `List<Tag>` 返回值提供实际 key
+证据。仍先按 `non-nil?` 过滤：nil 去除，JS undefined 的事件名保留，与独立
+main 的运行回放一致；其他非 nil 值也保留。存活的 String key 被拒绝，nil
+值的 String key 仍在校验前被过滤，不转换 key 或改写 handler。
+
+新增 native 事件名回归、JS nil/undefined 与非法 key 回归。37项静态拒绝、
+335个框架定义、DOM host/Canvas、文档与 JS/Vite 验证通过；退还
+`purify-element-node` 的一项 typeNotFull 预算，未提高预算。
+
+## 首轮阶段：7424ad6
+
 基于 main `37f55cd`，使用正式 Calcit / procs `0.29.0-alpha.19` 和
 js-ffi `0.2.1-alpha.15`。这是独立于混合 cursor key 修复 #229 的变更。
 

@@ -29,7 +29,7 @@ for accessor in component-effects component-listeners component-name component-t
   expect_argument_failure "respo.util.detect/$accessor" 42
   expect_argument_failure "respo.util.detect/$accessor" "$effect"
 done
-for accessor in element-event element-attrs element-style listener-handler; do
+for accessor in element-event element-attrs element-style element-ref listener-handler; do
   expect_argument_failure "respo.util.detect/$accessor" 42
   expect_argument_failure "respo.util.detect/$accessor" "$component"
 done
@@ -40,9 +40,11 @@ for target in respo.util.detect/element-name respo.util.format/coerce-element; d
 done
 expect_argument_failure respo.util.format/coerce-component 42
 expect_argument_failure respo.util.format/coerce-component "$effect"
+expect_argument_failure respo.util.format/purify-element-node 42
+expect_argument_failure respo.util.format/purify-element-node "$component"
 
 element='(respo.schema/Element :name :span :coord (%none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref nil)'
-for target in respo.util.detect/element-name respo.util.format/coerce-element respo.util.format/coerce-component; do
+for target in respo.util.detect/element-name respo.util.detect/element-ref respo.util.format/coerce-element respo.util.format/coerce-component respo.util.format/purify-element-node; do
   if output=$("$calcit_bin" eval --dep ./calcit.cirru "$target (respo.util.format/purify-element $element)" 2>&1); then
     printf 'Expected %s to reject an unvalidated Dynamic producer.\n' "$target" >&2
     exit 1
@@ -74,6 +76,9 @@ fields_positive=$(cat <<'CIRRU'
       &let (element $ respo.schema/Element :name :span :coord (%none) :attrs attrs :style styles :event events :children ([]) :ref nil)
         assert= :span $ respo.util.detect/element-name element
         assert |preserves-element-identity $ identical? element $ respo.util.format/coerce-element element
+        &let (opaque-ref $ fn (target) 42)
+          &let (with-ref $ assoc element :ref opaque-ref)
+            assert |preserves-opaque-ref-identity $ identical? opaque-ref $ respo.util.detect/element-ref with-ref
         assert |preserves-attrs-identity $ identical? attrs $ respo.util.detect/element-attrs element
         assert |preserves-style-identity $ identical? styles $ respo.util.detect/element-style element
         assert |preserves-event-map-identity $ identical? events $ respo.util.detect/element-event element
@@ -92,4 +97,4 @@ fields_positive=$(cat <<'CIRRU'
 CIRRU
 )
 "$calcit_bin" eval --dep ./calcit.cirru "$fields_positive" >/dev/null
-printf 'Nominal accessors: identity checks and 31 static rejection cases passed.\n'
+printf 'Nominal accessors: identity checks and 37 static rejection cases passed.\n'
