@@ -57,7 +57,7 @@ cursor 是开放值，不能直接作为 List payload。
 标记，避免将泛型参数丢失的结果写回 `ReelState<Db>` atom。它未将旧 base
 输入收紧为 Db。候选修改尚未提交下游或宣称通过最终回归。
 
-## PR #230 源码集成的限制与失败
+## PR #230 单独源码集成：第一轮限制与失败
 
 源码冻结为 `66ac85a4fdbe26b5ead8621b2cec37445dbbf089`。
 直接附加绝对模块路径时，递归模块仍加载发布版 Respo，出现重复 FFI source
@@ -87,3 +87,42 @@ alpha.8，实际没有加载该 PR。
 #194 继续开放：当前两个发布基线通过，不等于新框架的两个下游最终回归。
 完整 Respo strict 仍有17项诊断，dispatch路线与跨项目结论仍待完成。
 生成 JS、JSON 报告与临时模块覆盖不进入仓库。
+
+## 第二轮：保留反例后恢复 Calcium 完整本地回归
+
+发现 Recollect 已发布 `0.0.57`，其中将 Struct 字段更新异常转换为带路径
+的 PatchError。隔离候选升级到此版本，其他解析变化包括 UI alpha.6、
+Value 0.5.15、Router alpha.7；这些请求与旧传递依赖仍存在版本冲突。
+
+损坏 Store、Card、PartitionView 及 Reel 的测试通过序列化字段构造输入，
+保留原字段路径和旧 Reel base 合同。三个 Reel 反例仅在测试中显式
+assert-type，故意将损坏历史输入送入原合同；不将它视为生产数据证明。
+非法 color patch 现在精确验证 `:invalid-patch` 内的 `:type-mismatch`、
+`[:field :color]`、`:field-value`、`:number`，原 count/color 保持不变。
+post-patch decoder 错误与 publication/revision/resume 测试仍保留。
+JS decoder 反例同步迁移，StorageHost 桩补齐真实接口并拒绝写入。
+
+#230 单独源码仍在 Kanban String detail cursor 的 SSR 回归失败，直接证实
+必须保留 #229 的 mixed key 修复。使用官方 edit transaction，将 #229
+`61f887f` 的 `as-states-map` / `>>` 与 `66ac85a` 组合在独立源码目录。
+六个下游组件的 states 参数改为如实接受异构 key，并保留真实 cursor 解码。
+没有将 String key 改成 Tag 来绕过失败，没有修改 dispatch 路线。
+
+在该未发布源码组合和本地迁移代码上：
+
+- client native 44/44、server native 68/68，通过全部原有数量的测试。
+- 157/157、239/239 公开定义通过（新增一个测试辅助定义）。
+- 严格入口通过，两个入口 dynamic findings 0、deprecated calls 0。
+- fresh JS、Vite、六组现有 Node 业务回归、diff/patch smoke、27 namespace
+  模板边界全部通过。
+- 两个真实 WebSocket 客户端对隔离原生服务器的 Kanban e2e 通过：共享
+  board patch、cold detail/history、私有 history、logout drop、匿名读取拒绝。
+  测试服务器已停止；不等于浏览器交互验证。
+
+应用迁移已保存到本地分支 `codex/calcium-alpha19-source-integration-194`，
+提交 `dd2e1d9`，工作树位于 `calcium-alpha19-source-integration-194`。
+其中文记录详细说明源组合、测试专用声明与发布限制；尚未推送或创建下游 PR。
+
+#194 仍开放：Caps strict/receipt 与最终发布依赖尚未验证，Timegrass 尚未
+迁移到相同新框架，完整 Respo strict 仍有17项。已有两个发布基线不能
+替代两个下游在最终框架上的完整验收。
