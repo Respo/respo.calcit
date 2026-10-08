@@ -8,8 +8,22 @@ const c = await import('../js-out/calcit.core.mjs');
 const { apply_dom_changes } = await import('../js-out/respo.render.patch.mjs');
 const { createRows, collectPatches } = await import('./keyed-moves-fixture.mjs');
 const { DomProps, DomPatch } = await import('../js-out/respo.schema.mjs');
-const { list__GT_ } = await import('../js-out/respo.core.mjs');
+const { list__GT_, create_list_element_open, span } = await import('../js-out/respo.core.mjs');
 const { find_element_diffs } = await import('../js-out/respo.render.diff.mjs');
+
+test('open keyed children validate nested lists before constructing an Element', () => {
+  const tags = c.init_tags(['div', 'live', 'omitted']);
+  const child = span(c._$n__$M_());
+  const tree = create_list_element_open(tags.div, c._$n__$M_(),
+    c.arrayToList([c.arrayToList([tags.omitted, null]), c.arrayToList([tags.live, child])]));
+  assert.equal(tree.name.value, 'Element');
+  const children = tree.values[tree.fields.findIndex(field => field.value === 'children')];
+  assert.equal(c.count(children), 1);
+  for (const invalid of [null, 42, c._$n__$M_(), c.arrayToList([42]),
+    c.arrayToList([c.arrayToList([tags.live])]), c.arrayToList([c.arrayToList([null, child])])]) {
+    assert.throws(() => create_list_element_open(tags.div, c._$n__$M_(), invalid));
+  }
+});
 
 function verify(oldKeys, newKeys, rows) {
   const mount = new ElementHost('main');

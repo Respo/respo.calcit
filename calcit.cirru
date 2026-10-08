@@ -226,7 +226,7 @@
           :schema $ :: 'Fn $ {} (:return 'Number)
             :args $ [] 'Number 'Number
         'on-focus $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn on-focus (e dispatch!) (println "|Just focused~")
+          :code $ quote $ defn on-focus (e dispatch!) (println "|Just focused~") &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] (:: 'Map 'Tag 'Dynamic)
@@ -390,7 +390,7 @@
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'Dynamic
         'new-fn $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn new-fn () (println |hello)
+          :code $ quote $ defn new-fn () (println |hello) &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
@@ -523,9 +523,7 @@
           :code $ quote $ defn normalize-task (data)
             cond
                 struct? data
-                let
-                    task $ assert-type data 'respo.app.schema/Task
-                  Option :some task
+                if (&struct:matches? data Task) (Option :some data) (Option :none)
               (map? data)
                 match (try-decode-map-as data 'respo.app.schema/Task)
                   (:ok task) (Option :some task)
@@ -535,20 +533,36 @@
           :schema $ :: 'Fn $ {}
             :args $ [] 'Dynamic
             :return $ :: 'calcit.core/Option 'respo.app.schema/Task
-          :tests $ [] $ %{} 'TestEntry (:name |restores-valid-task-data)
-            :code $ quote $ do
-              let
-                  task $ %{} Task (:id |task-1) (:text |saved) (:done? false)
-                  normalized $ option:unwrap $ normalize-task task
-                assert |struct-id-is-kept $ = |task-1 $ &struct:nth normalized 1 :id
-                assert |struct-text-is-kept $ = |saved $ &struct:nth normalized 2 :text
-                assert |struct-status-is-kept $ = false $ &struct:nth normalized 0 :done?
-              let
-                  normalized $ option:unwrap $ normalize-task
-                    {} (:id |task-2) (:text |mapped) (:done? true)
-                assert |map-input-is-restored $ = |task-2 $ &struct:nth normalized 1 :id
-              assert |invalid-data-is-rejected $ option:none? $ normalize-task
-                {} $ :id |missing-fields
+          :tests $ []
+            %{} 'TestEntry (:name |restores-valid-task-data)
+              :code $ quote $ do
+                let
+                    task $ %{} Task (:id |task-1) (:text |saved) (:done? false)
+                    normalized $ option:unwrap $ normalize-task task
+                  assert |struct-id-is-kept $ = |task-1 $ &struct:nth normalized 1 :id
+                  assert |struct-text-is-kept $ = |saved $ &struct:nth normalized 2 :text
+                  assert |struct-status-is-kept $ = false $ &struct:nth normalized 0 :done?
+                let
+                    normalized $ option:unwrap $ normalize-task
+                      {} (:id |task-2) (:text |mapped) (:done? true)
+                  assert |map-input-is-restored $ = |task-2 $ &struct:nth normalized 1 :id
+                assert |invalid-data-is-rejected $ option:none? $ normalize-task
+                  {} $ :id |missing-fields
+            %{} 'TestEntry (:name |rejects-invalid-task-fields)
+              :code $ quote $ do
+                assert |invalid-task-shape-or-field-is-rejected $ option:none? $ normalize-task nil
+                assert |invalid-task-shape-or-field-is-rejected $ option:none? $ normalize-task 42
+                assert |invalid-task-shape-or-field-is-rejected $ option:none? $ normalize-task
+                  {} (:id |t) (:text |text) (:done? |wrong)
+                assert |invalid-task-shape-or-field-is-rejected $ option:none? $ normalize-task
+                  {} (:id 42) (:text |text) (:done? false)
+                assert |invalid-task-shape-or-field-is-rejected $ option:none? $ normalize-task
+                  {} (:id |t) (:text |text)
+              :tags $ #{} :unit
+            %{} 'TestEntry (:name |rejects-other-nominal-struct)
+              :code $ quote $ assert |other-nominal-struct-is-rejected
+                option:none? $ normalize-task $ respo.core/span ({})
+              :tags $ #{} :unit
         'normalize-tasks $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn normalize-tasks (items)
             loop
@@ -1494,9 +1508,9 @@
               :tags $ #{} :unit
         'create-list-element-open $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn create-list-element-open (name attrs children)
-            create-list-element name attrs $ assert-type children $ :: 'List (:: 'List 'Dynamic)
+            create-list-element name attrs $ decode-map-as children $ :: 'List (:: 'List 'Dynamic)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/Element)
             :args $ [] 'Tag (:: 'Map 'Tag 'Dynamic) 'Dynamic
             :features $ #{} :js-ffi
         'decorate-defcomp $ %{} 'CodeEntry
@@ -3479,7 +3493,7 @@
                     not $ list? decoded
                     raise |[Respo/main!]-expected-saved-tasks-as-a-list
                   let
-                      tasks $ unsafe-coerce decoded $ :: 'List 'Dynamic
+                      tasks $ decode-map-as decoded $ :: 'List 'Dynamic
                       restored $ respo.app.task/normalize-tasks tasks
                     reset! *store $ assoc @*store :tasks restored
             render-app! mount-target
@@ -7141,7 +7155,7 @@
                   assert |nil-body-becomes-renderable-span $ &= :span $ respo.util.detect/element-name tree
             :tags $ #{} :unit
         'reload! $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn reload! () (println |reload.)
+          :code $ quote $ defn reload! () (println |reload.) &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []

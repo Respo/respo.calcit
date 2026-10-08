@@ -1,3 +1,18 @@
+## 追加：开放列表、持久化任务和 Unit 返回
+
+- `create-list-element-open` 使用 `decode-map-as` 检查嵌套 List，返回类型如实为 Element。key、pair 长度、子节点类型及 nil 过滤仍由原有构造流程检查。
+- `normalize-task` 对 Struct 使用 `&struct:matches?` 检查 Task 身份，合法 Task 原对象透传；Map 继续使用字段 decoder。新增错误字段及其他名义 Struct 反例。
+- 存储读取的已解析列表在进入 normalize-tasks 前受检解码，移除 unsafe-coerce。
+- 三个已声明 Unit 的日志回调明确返回 Unit，保留原副作用。
+
+当前源码 AST 精确计数：assert-type 63→61，unsafe-coerce 19→18。原始 Snapshot 文本含文档及附带 metadata，不作为源码计数。
+
+验证：115/115 原生 attached tests；新增任务身份、Map 字段及开放 keyed children 的 JS 回归，相关 14 项 Node 测试全通过；335/335 框架定义检查；DOM host / Canvas、37 项名义访问器静态反例、100 文件 / 120 文档代码块、quality baseline 通过。
+
+完整 strict 仍失败：独立预处理诊断 17→12，源码证明提示 16→11，类型审查项 231→230。剩余包括 demo Map / 时间边界、effect queue 盲断言、props-as-list 返回证明、render-with! dispatch 契约、core conj / pairs-map 及重复 slot 诊断。类型加强和下游完整验收尚未结束。
+
+本轮下游源码组合仍冻结在此前 66ac85a + #229，不能将其历史回归结果作为本次新增代码的完整下游证据。
+
 # #194：名义 helper 的输入证据
 
 ## HTML 键值对追加阶段
