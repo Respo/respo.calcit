@@ -55,3 +55,15 @@ comp-global-keydown
 Internally it listens events on `window` and dispatches events to a `<span/>` element.
 
 `defcomp` adds the component name to its root element as `data-comp`. This marker stays in the sorted attribute list used by property diffing, so adding, changing, or removing other props preserves it. Decorating the same root again updates the existing marker instead of adding a duplicate.
+
+### 全局键盘的禁用命令
+
+`comp-global-keydown` / `comp-global-keyup` 的 `:disabled-commands` 必须是
+字符串 Set，例如 `#{} |s |p`。未提供时沿用默认 `p`、`s`；空 Set 表示
+不禁用快捷键。按下集合中的键且同时使用 Ctrl 或 Meta 时调用
+`preventDefault`，事件仍按原逻辑转发给组件。
+
+监听器挂载或更新前会通过 `decode-map-as` 校验集合和每个成员，不能用 Tag
+代替字符串，也不能传入 nil、List 或 Map。校验失败时尚未注册新的监听器，
+更新场景也保留原监听器。合法输入不改写 options 或其集合；更新先移除旧
+监听器，再注册新监听器，卸载时清理监听器及保存的 handler。

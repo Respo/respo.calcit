@@ -888,7 +888,7 @@
       :deprecatedCalls 0
       :schemaDynamic 0
       :typeNone 0
-      :typeNotFull 1
+      :typeNotFull 0
       :unresolved 0
       :unsafeCoerce 0
     |respo.cursor/get-state-at $ {} (:codeDynamic 0)
@@ -1194,7 +1194,7 @@
       :deprecatedCalls 0
       :schemaDynamic 0
       :typeNone 0
-      :typeNotFull 1
+      :typeNotFull 0
       :unresolved 0
       :unsafeCoerce 0
     |respo.render.html/element-content $ {} (:codeDynamic 0)
@@ -1642,10 +1642,10 @@
       :codeNil 0
       :declaredOptional 0
       :deprecatedCalls 0
-      :schemaDynamic 1
+      :schemaDynamic 0
       :typeNone 0
-      :typeNotFull 1
-      :unresolved 1
+      :typeNotFull 0
+      :unresolved 0
       :unsafeCoerce 0
     |respo.util.detect/element-style $ {} (:codeDynamic 0)
       :codeNil 0
@@ -1716,7 +1716,7 @@
       :deprecatedCalls 0
       :schemaDynamic 0
       :typeNone 0
-      :typeNotFull 1
+      :typeNotFull 0
       :unresolved 0
       :unsafeCoerce 0
     |respo.util.format/coerce-element $ {} (:codeDynamic 0)
@@ -1725,7 +1725,7 @@
       :deprecatedCalls 0
       :schemaDynamic 0
       :typeNone 0
-      :typeNotFull 1
+      :typeNotFull 0
       :unresolved 0
       :unsafeCoerce 0
     |respo.util.format/create-dashed-letter-pattern $ {} (:codeDynamic 0)
@@ -1824,7 +1824,7 @@
       :deprecatedCalls 0
       :schemaDynamic 0
       :typeNone 0
-      :typeNotFull 1
+      :typeNotFull 0
       :unresolved 0
       :unsafeCoerce 0
     |respo.util.format/purify-render-node $ {} (:codeDynamic 0)
@@ -2002,10 +2002,10 @@
     :codeNil 33
     :declaredOptional 0
     :deprecatedCalls 0
-    :schemaDynamic 191
+    :schemaDynamic 190
     :typeNone 3
-    :typeNotFull 192
-    :unresolved 219
+    :typeNotFull 186
+    :unresolved 218
     :unsafeCoerce 35
   :scope $ {} (:includeDependencies false)
     :namespace nil

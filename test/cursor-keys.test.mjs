@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { spawnSync } from 'node:child_process';
 import * as c from '../js-out/calcit.core.mjs';
-import { get_state_at, update_state_tree, update_state_tree_kv, update_state_tree_merge } from '../js-out/respo.cursor.mjs';
+import { CursorTestState, coerce_cursor_test_state, get_state_at, update_state_tree, update_state_tree_kv, update_state_tree_merge } from '../js-out/respo.cursor.mjs';
 import { EventConfig, ListenerMode } from '../js-out/respo.schema.mjs';
 
 const tags = c.init_tags(['panel', 'data', 'draft', 'locked?']);
@@ -64,4 +65,68 @@ test('partial Struct field update preserves nominal identity after the shape gua
   assert.equal(c.option_$o_unwrap_or(c.get(value, fields['stop-propagation?']), null), false);
   assert.throws(() => update_state_tree_kv(states, path(tags.panel, 'task-1'), 7, false));
   assert.equal(c.option_$o_unwrap_or(c.get(original, fields['stop-propagation?']), null), true);
+});
+
+
+test('cursor Struct regression validates nominal identity after consecutive updates', () => {
+  const fields = c.init_tags(['draft', 'locked?', 'message']);
+  const original = c._$n__PCT__$M_(CursorTestState, fields.draft, 'a', fields['locked?'], false, fields.message, 'ready');
+  assert.equal(coerce_cursor_test_state(original), original);
+  const first = update_state_tree_merge(c._$n__$M_(), path(), original, c._$n__$M_(fields.draft, 'b'));
+  const second = update_state_tree_merge(first, path(), original, c._$n__$M_(fields.draft, 'c'));
+  const state = get_state_at(second, path(tags.data));
+  assert.equal(coerce_cursor_test_state(state), state);
+  assert.equal(c.option_$o_unwrap(c.get(state, fields.draft)), 'c');
+  assert.equal(c.option_$o_unwrap(c.get(state, fields.message)), 'ready');
+  assert.equal(c.option_$o_unwrap(c.get(original, fields.draft)), 'a');
+  const sameFields = c._$n__$M_(fields.draft, 'a', fields['locked?'], false, fields.message, 'ready');
+  const otherStruct = c._$n__PCT__$M_(EventConfig, c.turn_tag('stop-propagation?'), false, c.turn_tag('listener-mode'), c._PCT__$o__$o_(ListenerMode, c.turn_tag('property')));
+  for (const invalid of [null, undefined, 42, c.arrayToList([]), sameFields, otherStruct]) {
+    assert.throws(() => coerce_cursor_test_state(invalid), { message: '[Respo/test]-expected-CursorTestState' });
+  }
+});
+
+test('state writes preserve assoc-in behavior for nil, mixed Map keys and List fallback', () => {
+  const value = c.parse_cirru_edn('{} (:payload |unchanged)');
+  const cases = [
+    [null, path()],
+    [c._$n__$M_(), path(tags.panel, 'task-1', 7)],
+    [c._$n__$M_(tags.panel, null), path(tags.panel, 'task-1')],
+    [c.arrayToList([c._$n__$M_()]), path(0)],
+    [c._$n__$M_(tags.panel, c.arrayToList([c._$n__$M_()])), path(tags.panel, 0)],
+  ];
+  for (const [states, cursor] of cases) {
+    const fullPath = c.concat(cursor, path(tags.data));
+    const expected = c.assoc_in(states, fullPath, value);
+    const actual = update_state_tree(states, cursor, value);
+    assert.equal(c.format_cirru_edn(actual), c.format_cirru_edn(expected));
+    assert.equal(get_state_at(actual, fullPath), value, 'written value retains identity');
+  }
+});
+
+test('Struct cursor updates accept String fields and reject invalid fields and values', () => {
+  const fields = c.init_tags(['draft', 'locked?', 'message']);
+  const original = c._$n__PCT__$M_(CursorTestState,
+    fields.draft, 'old', fields['locked?'], false, fields.message, 'ready');
+  const states = update_state_tree(c._$n__$M_(), path(tags.panel), original);
+  const changed = update_state_tree_kv(states, path(tags.panel), 'draft', 'new');
+  assert.equal(c.option_$o_unwrap(c.get(get_state_at(changed, path(tags.panel, tags.data)), fields.draft)), 'new');
+  assert.equal(c.option_$o_unwrap(c.get(original, fields.draft)), 'old');
+  for (const key of [42, 'missing-field']) {
+    assert.throws(() => update_state_tree_kv(states, path(tags.panel), key, 'bad'));
+    assert.throws(() => update_state_tree_merge(states, path(tags.panel), original, c._$n__$M_(key, 'bad')));
+  }
+  assert.throws(() => update_state_tree_kv(states, path(tags.panel), fields['locked?'], 'bad'));
+});
+
+test('native framework regressions emit no dynamic method or untyped host access warnings', () => {
+  const result = spawnSync(process.env.CALCIT_BIN ?? 'calcit',
+    ['calcit.cirru', '--warn-dyn-method', 'test', '--require-match', '--summary-only', '--format', 'json'],
+    { encoding: 'utf8', timeout: 30000 });
+  assert.ifError(result.error);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  const summary = JSON.parse(result.stdout);
+  assert.ok(summary.selected > 0);
+  assert.equal(summary.failed, 0);
+  assert.doesNotMatch(result.stderr, /\[warn-dyn-method\]|W_JS_FFI_UNTYPED_ACCESS/);
 });

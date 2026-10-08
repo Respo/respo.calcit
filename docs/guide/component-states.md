@@ -214,3 +214,9 @@ In `comp-task` of "task-1", you also get `state` and `cursor`, so call `(dispatc
 ```
 
 And that's how Respo states is maintained.
+
+## 状态路径校验与宿主无关的更新
+
+状态树仍使用原有 Map 和 `:data` 存取方式。Map / nil 路径写入使用 Map 原语，保留 Tag、String 以及已有 Number key；nil 中间分支按旧行为创建 Map。其他已有容器继续走 `assoc-in`，例如 Number 索引的 List。读取不再把每一级节点强转为 Map，而由已有 `get` 检查实际容器。
+
+局部 Struct 的单字段和合并更新使用 `struct-with`，保持合法对象的名义定义与未修改字段。String 字段名可以使用；不存在的字段、错误 key 或与字段类型不符的值会被拒绝。更新产生新值，原始状态不变。

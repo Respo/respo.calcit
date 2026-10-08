@@ -51,6 +51,7 @@
         'comp-task $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-task (states task)
             let
+                states $ decode-map-as states $ :: 'Map 'Dynamic 'Dynamic
                 cursor $ decode-map-as
                   either (&map:get states :cursor) ([])
                   :: 'List 'Dynamic
@@ -71,12 +72,16 @@
                   input $ {} (:value task-text) (:class-name widget/style-input)
                     :on-input $ fn (e d!)
                       let
-                          text $ str $ assert-type (&map:get e :value) String
-                        d! $ Op :update task-id text
+                          event $ decode-map-as e $ :: 'Map 'Tag 'Dynamic
+                        let
+                            text $ str $ decode-map-as (&map:get event :value) 'String
+                          d! $ Op :update task-id text
                   =< 8 0
                   input $ {} (:value state) (:class-name widget/style-input)
                     :on-input $ fn (e d!)
-                      d! $ Op :states cursor $ &map:get e :value
+                      let
+                          event $ decode-map-as e $ :: 'Map 'Tag 'Dynamic
+                        d! $ Op :states cursor $ &map:get event :value
                   =< 8 0
                   div
                     {} (:class-name widget/style-button)
@@ -129,17 +134,18 @@
         'comp-todolist $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-todolist (states tasks)
             let
+                states $ decode-map-as states $ :: 'Map 'Dynamic 'Dynamic
                 cursor $ decode-map-as
                   either (&map:get states :cursor) ([])
                   :: 'List 'Dynamic
-                state $ assert-type
-                  either (&map:get states :data) (respo.app.schema/TodoState :draft | :locked? false :message "|Press Ctrl+M to change message")
-                  , respo.app.schema/TodoState
+                state $ let
+                    stored-state $ either (&map:get states :data) (respo.app.schema/TodoState :draft | :locked? false :message "|Press Ctrl+M to change message")
+                  if (struct? stored-state)
+                    if (&struct:matches? stored-state respo.app.schema/TodoState) stored-state $ raise "|[Respo/demo] expected TodoState"
+                    raise "|[Respo/demo] expected TodoState"
                 draft $ :draft state
                 locked? $ :locked? state
                 message $ :message state
-              assert-type state 'respo.app.schema/TodoState
-              assert-type tasks $ :: 'List 'respo.app.schema/Task
               [] (on-keydown cursor state) (effect-focus |#draft-input)
                 div
                   {} (:class-name style-todo-root) (:data-name |todolist)
@@ -150,8 +156,10 @@
                       :style $ {} $ :width
                         &max 200 $ + 24 $ text-width draft 16 |BlinkMacSystemFont
                       :on-input $ fn (e d!)
-                        d! $ Op :states-merge cursor state $ {}
-                          :draft $ assert-type (&map:get e :value) String
+                        let
+                            event $ decode-map-as e $ :: 'Map 'Tag 'Dynamic
+                          d! $ Op :states-merge cursor state $ {}
+                            :draft $ decode-map-as (&map:get event :value) 'String
                       :on-focus on-focus
                     =< 8 0
                     span
@@ -226,7 +234,7 @@
           :schema $ :: 'Fn $ {} (:return 'Number)
             :args $ [] 'Number 'Number
         'on-focus $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn on-focus (e dispatch!) (println "|Just focused~")
+          :code $ quote $ defn on-focus (e dispatch!) (println "|Just focused~") &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] (:: 'Map 'Tag 'Dynamic)
@@ -238,15 +246,17 @@
             respo.schema/RespoListener :name :on-keydown :handler $ fn (event dispatch!)
               match event $
                 :keydown info
-                when
-                  and
-                    &= |m $ &map:get info :key
-                    identical? true $ &map:get info :ctrl
-                  do
-                    dispatch! $ Op :states cursor $ assoc state :message "|Message changed by Ctrl+M!"
-                    js/window.setTimeout
-                      fn () $ dispatch! $ Op :states cursor (assoc state :message "|Press Ctrl+M to change message")
-                      , 2000
+                let
+                    info $ decode-map-as info $ :: 'Map 'Tag 'Dynamic
+                  when
+                    and
+                      &= |m $ &map:get info :key
+                      identical? true $ &map:get info :ctrl
+                    do
+                      dispatch! $ Op :states cursor $ assoc state :message "|Message changed by Ctrl+M!"
+                      js/window.setTimeout
+                        fn () $ dispatch! $ Op :states cursor (assoc state :message "|Press Ctrl+M to change message")
+                        , 2000
           :examples $ [] $ quote (on-keydown cursor state)
           :schema $ :: 'Fn $ {} (:return 'respo.schema/RespoListener)
             :args $ [] (:: 'List 'Dynamic) 'respo.app.schema/TodoState
@@ -293,7 +303,7 @@
         'try-test! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn try-test! (dispatch! acc)
             let
-                started $ unsafe-coerce (js/Date.now) Number
+                started $ shared/now-ms
               dispatch! $ Op :clear
               loop
                   x 20
@@ -312,9 +322,7 @@
                 if (> x 0)
                   recur $ dec x
               shared/queue-microtask! $ fn () $ let
-                  cost $ -
-                    unsafe-coerce (js/Date.now) Number
-                    , started
+                  cost $ - (shared/now-ms) started
                 if
                   < (count acc) 40
                   js/setTimeout
@@ -390,7 +398,7 @@
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'Dynamic
         'new-fn $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn new-fn () (println |hello)
+          :code $ quote $ defn new-fn () (println |hello) &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
@@ -523,9 +531,7 @@
           :code $ quote $ defn normalize-task (data)
             cond
                 struct? data
-                let
-                    task $ assert-type data 'respo.app.schema/Task
-                  Option :some task
+                if (&struct:matches? data Task) (Option :some data) (Option :none)
               (map? data)
                 match (try-decode-map-as data 'respo.app.schema/Task)
                   (:ok task) (Option :some task)
@@ -535,20 +541,36 @@
           :schema $ :: 'Fn $ {}
             :args $ [] 'Dynamic
             :return $ :: 'calcit.core/Option 'respo.app.schema/Task
-          :tests $ [] $ %{} 'TestEntry (:name |restores-valid-task-data)
-            :code $ quote $ do
-              let
-                  task $ %{} Task (:id |task-1) (:text |saved) (:done? false)
-                  normalized $ option:unwrap $ normalize-task task
-                assert |struct-id-is-kept $ = |task-1 $ &struct:nth normalized 1 :id
-                assert |struct-text-is-kept $ = |saved $ &struct:nth normalized 2 :text
-                assert |struct-status-is-kept $ = false $ &struct:nth normalized 0 :done?
-              let
-                  normalized $ option:unwrap $ normalize-task
-                    {} (:id |task-2) (:text |mapped) (:done? true)
-                assert |map-input-is-restored $ = |task-2 $ &struct:nth normalized 1 :id
-              assert |invalid-data-is-rejected $ option:none? $ normalize-task
-                {} $ :id |missing-fields
+          :tests $ []
+            %{} 'TestEntry (:name |restores-valid-task-data)
+              :code $ quote $ do
+                let
+                    task $ %{} Task (:id |task-1) (:text |saved) (:done? false)
+                    normalized $ option:unwrap $ normalize-task task
+                  assert |struct-id-is-kept $ = |task-1 $ &struct:nth normalized 1 :id
+                  assert |struct-text-is-kept $ = |saved $ &struct:nth normalized 2 :text
+                  assert |struct-status-is-kept $ = false $ &struct:nth normalized 0 :done?
+                let
+                    normalized $ option:unwrap $ normalize-task
+                      {} (:id |task-2) (:text |mapped) (:done? true)
+                  assert |map-input-is-restored $ = |task-2 $ &struct:nth normalized 1 :id
+                assert |invalid-data-is-rejected $ option:none? $ normalize-task
+                  {} $ :id |missing-fields
+            %{} 'TestEntry (:name |rejects-invalid-task-fields)
+              :code $ quote $ do
+                assert |invalid-task-shape-or-field-is-rejected $ option:none? $ normalize-task nil
+                assert |invalid-task-shape-or-field-is-rejected $ option:none? $ normalize-task 42
+                assert |invalid-task-shape-or-field-is-rejected $ option:none? $ normalize-task
+                  {} (:id |t) (:text |text) (:done? |wrong)
+                assert |invalid-task-shape-or-field-is-rejected $ option:none? $ normalize-task
+                  {} (:id 42) (:text |text) (:done? false)
+                assert |invalid-task-shape-or-field-is-rejected $ option:none? $ normalize-task
+                  {} (:id |t) (:text |text)
+              :tags $ #{} :unit
+            %{} 'TestEntry (:name |rejects-other-nominal-struct)
+              :code $ quote $ assert |other-nominal-struct-is-rejected
+                option:none? $ normalize-task $ respo.core/span ({})
+              :tags $ #{} :unit
         'normalize-tasks $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn normalize-tasks (items)
             loop
@@ -659,7 +681,7 @@
                 let
                     disabled-commands $ let
                         raw-disabled $ option:unwrap-or (get options :disabled-commands) (#{} |p |s)
-                      assert-type raw-disabled $ :: 'Set 'String
+                      decode-map-as raw-disabled $ :: 'Set 'String
                     handler $ fn (event)
                       hint-fn $ {}
                         :args $ [] 'js-ffi.browser/EventHost
@@ -1494,9 +1516,9 @@
               :tags $ #{} :unit
         'create-list-element-open $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn create-list-element-open (name attrs children)
-            create-list-element name attrs $ assert-type children $ :: 'List (:: 'List 'Dynamic)
+            create-list-element name attrs $ decode-map-as children $ :: 'List (:: 'List 'Dynamic)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/Element)
             :args $ [] 'Tag (:: 'Map 'Tag 'Dynamic) 'Dynamic
             :features $ #{} :js-ffi
         'decorate-defcomp $ %{} 'CodeEntry
@@ -2417,7 +2439,7 @@
                 deliver-event $ build-deliver-event *global-element *dispatch-fn
               if (js-nullish? app-element) (raise "|Detected no element from SSR!")
               compare-to-dom!
-                respo.util.format/coerce-element $ purify-element element
+                respo.util.format/coerce-element $ respo.util.detect/as-element $ purify-element element
                 unsafe-coerce app-element 'js-ffi.browser/DomElementHost
               find-element-diffs collect! ([]) ([]) (mute-element element) element
               collect-mounting collect! ([]) ([]) element true
@@ -2519,23 +2541,19 @@
               match op
                 (:effect-mount _coord _n-coord run!)
                   do
-                      assert-type run! Fn
-                      , target
+                    if (fn? run!) (run! target) (raise "|[Respo/test] expected effect callback")
                     , &unit
                 (:effect-unmount _coord _n-coord run!)
                   do
-                      assert-type run! Fn
-                      , target
+                    if (fn? run!) (run! target) (raise "|[Respo/test] expected effect callback")
                     , &unit
                 (:effect-before-update _coord _n-coord run!)
                   do
-                      assert-type run! Fn
-                      , target
+                    if (fn? run!) (run! target) (raise "|[Respo/test] expected effect callback")
                     , &unit
                 (:effect-update _coord _n-coord run!)
                   do
-                      assert-type run! Fn
-                      , target
+                    if (fn? run!) (run! target) (raise "|[Respo/test] expected effect callback")
                     , &unit
                 _ &unit
             , &unit
@@ -2546,13 +2564,25 @@
         'run-first-task! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn run-first-task! (tasks)
             let
-                task! $ assert-type (&list:nth tasks 0) Fn
-              task!
+                task! $ &list:nth tasks 0
+              if (fn? task!) (task!) (raise "|[Respo/test] expected queued task callback")
               , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] $ :: 'List 'Dynamic
             :features $ #{} :js-ffi
+          :tests $ [] $ %{} 'TestEntry (:name |checks-queued-task-callability)
+            :code $ quote $ let
+                calls $ atom 0
+                caught? $ atom false
+              run-first-task! $ [] $ fn () (swap! calls inc)
+              assert= 1 @calls
+              try
+                run-first-task! $ [] 42
+                fn (error) (assert= "|[Respo/test] expected queued task callback" error) (reset! caught? true)
+              assert |invalid-task-rejected @caught?
+              assert= 1 @calls
+            :tags $ #{} :unit
         'script $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn script (props & children) (create-element :script props & children)
           :examples $ []
@@ -2957,11 +2987,30 @@
           :examples $ []
           :schema $ :: 'StructDef
         'coerce-cursor-test-state $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn coerce-cursor-test-state (value) (assert-type value CursorTestState)
+          :code $ quote $ defn coerce-cursor-test-state (value)
+            if (struct? value)
+              if (&struct:matches? value CursorTestState) value $ raise |[Respo/test]-expected-CursorTestState
+              raise |[Respo/test]-expected-CursorTestState
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'CursorTestState)
-            :args $ [] 'Dynamic
-            :features $ #{} :js-ffi
+            :args $ [] 'StateInput
+            :generics $ [] 'StateInput
+          :tests $ [] $ %{} 'TestEntry (:name |checks-nominal-identity)
+            :code $ quote $ let
+                original $ %{} CursorTestState (:draft |a) (:locked? false) (:message |ready)
+                caught $ atom 0
+              assert |same-state $ identical? original $ coerce-cursor-test-state original
+              &doseq
+                value $ [] nil 42 ({})
+                  {} (:draft |a) (:locked? false) (:message |ready)
+                  %{} respo.schema/Component (:name :other)
+                    :effects $ []
+                    :listeners $ []
+                    :tree $ %none
+                try (coerce-cursor-test-state value)
+                  fn (error) (assert= |[Respo/test]-expected-CursorTestState error) (swap! caught inc)
+              assert= 5 @caught
+            :tags $ #{} :unit
         'get-state-at $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn get-state-at (states path)
             loop
@@ -2972,9 +3021,8 @@
                 :return 'Dynamic
                 :generics $ [] 'KeyInput
               if (empty? xs) current $ let
-                  current-map $ unsafe-coerce current $ :: 'Map 'KeyInput (:: 'JsNullish 'Dynamic)
                   key $ &list:nth xs 0
-                  next-option $ get current-map key
+                  next-option $ get current key
                   next-value $ match next-option
                     (:none) nil
                     (:some value) value
@@ -2986,9 +3034,16 @@
             :generics $ [] 'KeyInput
         'update-state-tree $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn update-state-tree (states cursor new-state)
-            assoc-in states
-              concat cursor $ [] :data
-              , new-state
+            if (nil? states)
+              update-state-tree ({}) cursor new-state
+              if (map? states)
+                if (empty? cursor) (&map:assoc states :data new-state)
+                  let
+                      key $ &list:nth cursor 0
+                    &map:assoc states key $ update-state-tree (&map:get states key) (&list:rest cursor) new-state
+                assoc-in states
+                  concat cursor $ [] :data
+                  , new-state
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Dynamic)
             :args $ [] 'Dynamic (:: 'List 'Dynamic) 'Dynamic
@@ -3026,9 +3081,9 @@
                 if (map? state)
                   let
                       state-map state
-                    assoc-in states path $ &map:assoc state-map k v
+                    update-state-tree states cursor $ &map:assoc state-map k v
                   if (struct? state)
-                    assoc-in states path $ assoc state k v
+                    update-state-tree states cursor $ struct-with state $ k v
                     do (eprintln |:states-kv-invalid-state state) states
                 do (eprintln |:states-kv-missing-state) states
           :examples $ []
@@ -3095,13 +3150,14 @@
                   loop
                       updated state
                       xs entries
-                    if (empty? xs) (assoc-in states path updated)
+                    if (empty? xs) (update-state-tree states cursor updated)
                       let
                           pair $ respo.util.list/first-pair xs
                           k $ respo.util.list/pair-key pair
                           v $ respo.util.list/pair-value pair
                           next-state $ if (map? updated) (&map:assoc updated k v)
-                            if (struct? updated) (assoc updated k v)
+                            if (struct? updated)
+                              struct-with updated $ k v
                               raise $ str-spaced |unknown-state-to-merge updated
                         recur next-state $ &list:rest xs
                 do (eprintln |unknown-changes-to-merge changes) states
@@ -3460,7 +3516,7 @@
                     not $ list? decoded
                     raise |[Respo/main!]-expected-saved-tasks-as-a-list
                   let
-                      tasks $ unsafe-coerce decoded $ :: 'List 'Dynamic
+                      tasks $ decode-map-as decoded $ :: 'List 'Dynamic
                       restored $ respo.app.task/normalize-tasks tasks
                     reset! *store $ assoc @*store :tasks restored
             render-app! mount-target
@@ -3616,10 +3672,22 @@
               when
                 not $ component? value
                 raise "|[Respo/memo-comp-by] component function must return respo.schema/Component"
-              , value
+              respo.util.detect/as-component value
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
             :args $ [] 'Fn $ :: 'List 'Dynamic
+          :tests $ [] $ %{} 'TestEntry (:name |keeps-component-identity-and-calls-once)
+            :code $ quote $ let
+                expected $ %{} respo.schema/Component (:name :probe)
+                  :effects $ []
+                  :listeners $ []
+                  :tree $ %none
+                calls $ atom 0
+                build $ fn (number text) (swap! calls inc) (assert= 42 number) (assert= |probe text) expected
+                actual $ call-component build $ [] 42 |probe
+              assert |same-component $ identical? expected actual
+              assert= 1 @calls
+            :tags $ #{} :unit
         'call-value $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-value (f args)
             when
@@ -3669,7 +3737,7 @@
               when
                 not $ component? value
                 raise "|[Respo/memo-comp-by] component function must return respo.schema/Component"
-              , value
+              respo.util.detect/as-component value
           :examples $ []
           :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Component)
             :args $ [] 'Dynamic 'Fn
@@ -3718,9 +3786,18 @@
                   cache-key $ %{} MemoCacheKey (:callback f) (:key key)
                 record-memo-child! cache-key
                 let
-                    frame-entry-option $ get @*frame-component-caches cache-key
+                    frame-entry-option $ let
+                        cache @*frame-component-caches
+                      if (&map:contains? cache cache-key)
+                        Option :some $ &map:get cache cache-key
+                        Option :none
                     entry-option $ match frame-entry-option
-                      (:none) (get @*component-caches cache-key)
+                      (:none)
+                        let
+                            cache @*component-caches
+                          if (&map:contains? cache cache-key)
+                            Option :some $ &map:get cache cache-key
+                            Option :none
                       (:some entry) (Option :some entry)
                     hit? $ match entry-option
                       (:none) false
@@ -3731,7 +3808,7 @@
                         (:none) (raise |missing-memo-entry)
                         (:some entry) entry
                       compute-memo-entry f args
-                  swap! *frame-component-caches assoc cache-key resolved-entry
+                  swap! *frame-component-caches &map:assoc cache-key resolved-entry
                   when hit? $ retain-memo-children! resolved-entry
                   memo-entry-value resolved-entry
           :examples $ []
@@ -3937,15 +4014,14 @@
           :doc "|内部缓存命中依赖遍历。递归提升旧缓存中的子条目，优先保留当前帧已计算的条目；已访问 key 阻止共享路径和依赖环的重复处理。"
           :code $ quote $ defn retain-memo-children! (entry)
             &doseq
-              key $ :children entry
-              let
-                  child-key $ assert-type key MemoCacheKey
-                when
-                  not $ contains? @*frame-component-caches child-key
-                  match (get @*component-caches child-key)
-                    (:none) &unit
-                    (:some child)
-                      do (swap! *frame-component-caches assoc child-key child) (retain-memo-children! child)
+              child-key $ :children entry
+              when
+                not $ &map:contains? @*frame-component-caches child-key
+                when (&map:contains? @*component-caches child-key)
+                  let
+                      child $ &map:get @*component-caches child-key
+                    swap! *frame-component-caches &map:assoc child-key child
+                    retain-memo-children! child
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'respo.memo/MemoEntry
@@ -4976,13 +5052,29 @@
         'props-as-list $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn props-as-list (props)
             if (list? props)
-              unsafe-coerce props $ :: 'List $ :: 'List 'Dynamic
-              if (map? props) (&map:to-list props) ([])
+              decode-map-as props $ :: 'List $ :: 'List 'Dynamic
+              if (map? props)
+                decode-map-as (&map:to-list props)
+                  :: 'List $ :: 'List 'Dynamic
+                []
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] 'Dynamic
             :features $ #{} :js-ffi
             :return $ :: 'List $ :: 'List 'Dynamic
+          :tests $ [] $ %{} 'TestEntry (:name |checks-open-props-list-shape)
+            :code $ quote $ do
+              assert=
+                [] $ [] :title |hello
+                props-as-list $ {} $ :title |hello
+              assert= ([]) (props-as-list nil)
+              let
+                  caught? $ atom false
+                try
+                  props-as-list $ [] 42
+                  fn (_error) (reset! caught? true)
+                assert |non-pair-list-entry-rejected @caught?
+            :tags $ #{} :unit
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.render.diff
           :require
@@ -5546,13 +5638,22 @@
     'respo.render.html $ %{} 'FileEntry
       :defs $ {}
         'coerce-pairs $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn coerce-pairs (value)
-            assert-type value $ :: 'List $ :: 'List 'Dynamic
+          :code $ quote $ defn coerce-pairs (value) value
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic
-            :features $ #{} :js-ffi
-            :return $ :: 'List $ :: 'List 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Value)
+            :args $ [] 'Value
+            :generics $ [] 'Value
+          :tests $ [] $ %{} 'TestEntry (:name |preserves-mixed-and-empty-pair-lists)
+            :code $ quote $ let
+                callback $ fn (value) value
+                pairs $ [] ([] :id |probe) ([] :count 42) ([] :handler callback) ([] :missing nil)
+                result $ coerce-pairs pairs
+                empty-pairs $ []
+              assert |same-pair-list $ identical? pairs result
+              assert= pairs result
+              assert |same-callback $ identical? callback $ &list:nth (&list:nth result 2) 1
+              assert |same-empty-list $ identical? empty-pairs $ coerce-pairs empty-pairs
+            :tags $ #{} :unit
         'element->string $ %{} 'CodeEntry (:doc "|which is actually `element->html`")
           :code $ quote $ defn element->string (element)
             let
@@ -5644,7 +5745,7 @@
                 v $ respo.util.list/pair-value entry
                 value-text $ cond
                     = k :style
-                    style->html $ coerce-pairs v
+                    style->html $ coerce-pairs $ respo.util.list/checked-pairs v
                   (string? v) (escape-html v)
                   true $ respo.util.format/scalar-attribute-text v
               str
@@ -5671,7 +5772,7 @@
         'make-string $ %{} 'CodeEntry
           :doc "|Render a component tree to an HTML string for SSR.\n\nIt strips live event handlers and serializes a purified tree so the output stays stable across environments. This is the current HTML output API that replaces older `make-html` references."
           :code $ quote $ defn make-string (element)
-            element->string $ respo.util.format/coerce-element $ purify-element element
+            element->string $ respo.util.format/coerce-element $ respo.util.detect/as-element (purify-element element)
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'String)
             :args $ [] 'Dynamic
@@ -5710,8 +5811,7 @@
         'props->html $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn props->html (props)
             let
-                pairs $ assert-type (&map:to-list props)
-                  :: 'List $ :: 'List 'Dynamic
+                pairs $ &map:to-list props
                 visible $ filter pairs $ fn (pair)
                   hint-fn $ {}
                     :args $ [] $ :: 'List 'Dynamic
@@ -7102,7 +7202,7 @@
                   assert |nil-body-becomes-renderable-span $ &= :span $ respo.util.detect/element-name tree
             :tags $ #{} :unit
         'reload! $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn reload! () (println |reload.)
+          :code $ quote $ defn reload! () (println |reload.) &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
@@ -7323,22 +7423,20 @@
         'element-name $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn element-name (value)
             let
-                element $ assert-type value 'respo.schema/Element
+                element value
               :name element
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Tag)
-            :args $ [] 'Dynamic
+            :args $ [] 'respo.schema/Element
         'element-ref $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn element-ref (value)
             let
-                element $ assert-type value 'respo.schema/Element
+                element value
               :ref element
           :examples $ []
           :schema $ :: 'Fn $ {}
-            :args $ [] 'Struct
-            :return $ :: 'JsNullish $ :: 'Fn
-              {} (:return 'Unit)
-                :args $ [] $ :: 'JsNullish 'respo.dom/DomElement
+            :args $ [] 'respo.schema/Element
+            :return $ :: 'JsNullish 'Fn
         'element-style $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn element-style (value)
             let
@@ -7511,17 +7609,15 @@
     'respo.util.format $ %{} 'FileEntry
       :defs $ {}
         'coerce-component $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn coerce-component (markup) (assert-type markup respo.schema/Component)
+          :code $ quote $ defn coerce-component (markup) markup
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] 'Dynamic
-            :features $ #{} :js-ffi
+            :args $ [] 'respo.schema/Component
         'coerce-element $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn coerce-element (markup) (assert-type markup respo.schema/Element)
+          :code $ quote $ defn coerce-element (markup) markup
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Element)
-            :args $ [] 'Dynamic
-            :features $ #{} :js-ffi
+            :args $ [] 'respo.schema/Element
         'create-dashed-letter-pattern $ %{} 'CodeEntry
           :doc "|Creates the JavaScript RegExp behind an explicit FFI function so dashed-letter-pattern remains a value."
           :code $ quote $ defn create-dashed-letter-pattern () (new js/RegExp |-[a-z] |g)
@@ -7754,7 +7850,8 @@
                 , nil
               (component? markup)
                 purify-render-node $ respo.util.detect/as-render-node markup
-              (element? markup) (purify-element-node markup)
+              (element? markup)
+                purify-element-node $ respo.util.detect/as-element markup
               true $ do (js/console.warn |Unknown-markup-during-purify: markup) nil
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Dynamic)
@@ -7777,7 +7874,7 @@
                     :event $ {}
                     :children $ [] $ respo.util.detect/make-child-pair :child child
                     :ref $ fn (_target) &unit
-                  purified $ coerce-element $ purify-element parent
+                  purified $ coerce-element $ respo.util.detect/as-element (purify-element parent)
                   purified-child $ respo.util.detect/as-element $ respo.util.detect/child-pair-value
                     &list:nth (element-children purified) 0
                 assert |parent-ref-is-removed $ js-nullish? $ element-ref purified
@@ -7796,21 +7893,30 @@
               :tags $ #{} :unit
         'purify-element-node $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn purify-element-node (markup)
-            purify-render-node $ respo.schema/RenderNode :element $ assert-type markup respo.schema/Element
+            purify-render-node $ respo.schema/RenderNode :element markup
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Element)
-            :args $ [] 'Dynamic
-            :features $ #{} :js-ffi
+            :args $ [] 'respo.schema/Element
         'purify-events $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn purify-events (events)
             -> (&map:to-list events)
               filter $ fn (pair)
                 calcit.core/non-nil? $ respo.util.list/pair-value pair
-              map respo.util.list/pair-key
+              map respo.util.list/pair-tag-key
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] $ :: 'Map 'Tag 'Dynamic
             :return $ :: 'List 'Tag
+          :tests $ [] $ %{} 'TestEntry (:name |keeps-live-tag-keys)
+            :code $ quote $ let
+                events $ {}
+                  :click $ fn () 42
+                  :gone nil
+                  :zero 0
+                names $ purify-events events
+              assert= 2 $ count names
+              assert= (#{} :click :zero) (.to-set names)
+            :tags $ #{} :unit
         'purify-render-node $ %{} 'CodeEntry
           :doc "|通过 RenderNode 变体递归清理事件和 ref，移除组件包装；保留 ChildPair key、nil 节点和空组件树报错。"
           :code $ quote $ defn purify-render-node (node)
