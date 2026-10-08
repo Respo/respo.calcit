@@ -3021,9 +3021,8 @@
                 :return 'Dynamic
                 :generics $ [] 'KeyInput
               if (empty? xs) current $ let
-                  current-map $ unsafe-coerce current $ :: 'Map 'KeyInput (:: 'JsNullish 'Dynamic)
                   key $ &list:nth xs 0
-                  next-option $ get current-map key
+                  next-option $ get current key
                   next-value $ match next-option
                     (:none) nil
                     (:some value) value
@@ -3035,9 +3034,16 @@
             :generics $ [] 'KeyInput
         'update-state-tree $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn update-state-tree (states cursor new-state)
-            assoc-in states
-              concat cursor $ [] :data
-              , new-state
+            if (nil? states)
+              update-state-tree ({}) cursor new-state
+              if (map? states)
+                if (empty? cursor) (&map:assoc states :data new-state)
+                  let
+                      key $ &list:nth cursor 0
+                    &map:assoc states key $ update-state-tree (&map:get states key) (&list:rest cursor) new-state
+                assoc-in states
+                  concat cursor $ [] :data
+                  , new-state
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Dynamic)
             :args $ [] 'Dynamic (:: 'List 'Dynamic) 'Dynamic
@@ -3075,9 +3081,9 @@
                 if (map? state)
                   let
                       state-map state
-                    assoc-in states path $ &map:assoc state-map k v
+                    update-state-tree states cursor $ &map:assoc state-map k v
                   if (struct? state)
-                    assoc-in states path $ assoc state k v
+                    update-state-tree states cursor $ struct-with state $ k v
                     do (eprintln |:states-kv-invalid-state state) states
                 do (eprintln |:states-kv-missing-state) states
           :examples $ []
@@ -3144,13 +3150,14 @@
                   loop
                       updated state
                       xs entries
-                    if (empty? xs) (assoc-in states path updated)
+                    if (empty? xs) (update-state-tree states cursor updated)
                       let
                           pair $ respo.util.list/first-pair xs
                           k $ respo.util.list/pair-key pair
                           v $ respo.util.list/pair-value pair
                           next-state $ if (map? updated) (&map:assoc updated k v)
-                            if (struct? updated) (assoc updated k v)
+                            if (struct? updated)
+                              struct-with updated $ k v
                               raise $ str-spaced |unknown-state-to-merge updated
                         recur next-state $ &list:rest xs
                 do (eprintln |unknown-changes-to-merge changes) states
@@ -3779,9 +3786,18 @@
                   cache-key $ %{} MemoCacheKey (:callback f) (:key key)
                 record-memo-child! cache-key
                 let
-                    frame-entry-option $ get @*frame-component-caches cache-key
+                    frame-entry-option $ let
+                        cache @*frame-component-caches
+                      if (&map:contains? cache cache-key)
+                        Option :some $ &map:get cache cache-key
+                        Option :none
                     entry-option $ match frame-entry-option
-                      (:none) (get @*component-caches cache-key)
+                      (:none)
+                        let
+                            cache @*component-caches
+                          if (&map:contains? cache cache-key)
+                            Option :some $ &map:get cache cache-key
+                            Option :none
                       (:some entry) (Option :some entry)
                     hit? $ match entry-option
                       (:none) false
@@ -3792,7 +3808,7 @@
                         (:none) (raise |missing-memo-entry)
                         (:some entry) entry
                       compute-memo-entry f args
-                  swap! *frame-component-caches assoc cache-key resolved-entry
+                  swap! *frame-component-caches &map:assoc cache-key resolved-entry
                   when hit? $ retain-memo-children! resolved-entry
                   memo-entry-value resolved-entry
           :examples $ []
@@ -3998,15 +4014,14 @@
           :doc "|内部缓存命中依赖遍历。递归提升旧缓存中的子条目，优先保留当前帧已计算的条目；已访问 key 阻止共享路径和依赖环的重复处理。"
           :code $ quote $ defn retain-memo-children! (entry)
             &doseq
-              key $ :children entry
-              let
-                  child-key $ assert-type key MemoCacheKey
-                when
-                  not $ contains? @*frame-component-caches child-key
-                  match (get @*component-caches child-key)
-                    (:none) &unit
-                    (:some child)
-                      do (swap! *frame-component-caches assoc child-key child) (retain-memo-children! child)
+              child-key $ :children entry
+              when
+                not $ &map:contains? @*frame-component-caches child-key
+                when (&map:contains? @*component-caches child-key)
+                  let
+                      child $ &map:get @*component-caches child-key
+                    swap! *frame-component-caches &map:assoc child-key child
+                    retain-memo-children! child
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'respo.memo/MemoEntry

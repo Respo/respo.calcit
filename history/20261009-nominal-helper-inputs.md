@@ -1,3 +1,13 @@
+## 追加：cursor Map 原语与运行时告警门禁
+
+- Map / nil 状态路径写入直接使用 Map 原语，其他容器保留 assoc-in fallback。移除 get-state-at 将开放节点强转为 Map 的 unsafe-coerce。混合 key、缺失分支创建、List fallback 和写入值身份与原 assoc-in 对照通过。
+- Struct 局部更新使用已有受检 struct-with，保留名义定义和原对象；验证 String 字段、非法字段 / key / 字段值。
+- Memo 使用已声明 Map 的直接查询 / 写入，移除 children 的重复名义断言。Memo 原生 10 项修改前后均无动态告警；不能把 cursor 的告警减少归因于 memo。既有嵌套命中、裁剪、回调异常及缓存行为保持。
+
+同一 alpha.19、同一原生 attached tests 对照：b51cb9c 的 117/117 测试有44次 runtime dynamic-method 告警；本次117/117通过且0次。cursor 子集14项是44→0，新增 Node 门禁重跑全部原生测试并拒绝 dynamic-method / untyped-host-access 告警。相关13项Node、335项框架定义、DOM host / Canvas、quality baseline 和格式检查通过，预算未提高。
+
+definition code AST：assert-type **51→50**，unsafe-coerce **15→14**。完整 strict 仍有4项诊断、5项源码证明提示，类型审查项 **227→226**；core 泛型、render-with! callable 及 type slot 仍待处理。运行时告警门禁只覆盖实际执行的 attached tests，不能代替浏览器 UI 或正式依赖发布验收。本次最新源码尚未加入下游组合，后续回归记录按精确版本追加。
+
 ## 追加：demo 事件和状态读取边界
 
 - 两个组件的 input handler 先解码 Map<Tag, Dynamic>，draft / task text 再解码 String。局部状态 input 仍传递开放 value；没有把已有 Dynamic 存储强行改成 String。
