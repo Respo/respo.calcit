@@ -63,7 +63,7 @@ let
       :display "|inline-block"
       :height "|1px"
     compute $ fn (w h)
-      if (some? w)
+      if (non-nil? w)
         assoc style-space :width w
         assoc style-space :height h
     comp-space $ fn (w h)
@@ -270,7 +270,7 @@ defn watch-render! ()
           when (= generation @*render-generation) (render-app!)
           , &unit
         %:: Option :none
-    add-watch *store :rerender $ fn (_current _previous) (schedule!)
+    add-watch! *store :rerender $ fn (_current _previous) (schedule!)
 
 defn main! ()
   render-app!
@@ -291,7 +291,7 @@ defn reload! ()
 
 Notice that `clear-cache!` is from `respo.core` and it clears component caches after code updated.
 Caching is a mechanism to speed up virtual DOM rendering. It's invalidated after code changes.
-`add-watch` replaces the watch registered under the same key. The generation guard
+`add-watch!` replaces the watch registered under the same key. The generation guard
 also skips callbacks queued by the previous registration during hot swapping.
 
 `render!` and `render-with!` remain synchronous. A scheduled watch updates the DOM
@@ -299,7 +299,7 @@ after the current call stack; use the following watch when callers or tests need
 to read the updated DOM immediately after `dispatch!`:
 
 ```cirru.no-check
-add-watch *store :rerender $ fn (_current _previous) (render-app!)
+add-watch! *store :rerender $ fn (_current _previous) (render-app!)
 ```
 
 For scheduled integration tests, await the queued microtask before checking the DOM.

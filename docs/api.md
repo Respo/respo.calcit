@@ -102,7 +102,7 @@ let
     schedule! $ respo.core/make-render-scheduler
       fn () $ render-app!
       %:: Option :none
-  add-watch *store :rerender $ fn (_current _previous) (schedule!)
+  add-watch! *store :rerender $ fn (_current _previous) (schedule!)
 ```
 
 The scheduler stores only a queued flag. It resets that flag before invoking the

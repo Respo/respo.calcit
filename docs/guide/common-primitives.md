@@ -225,7 +225,7 @@ let
           fn () (comp-container @*store)
           , dispatch!
       %:: Option :none
-  add-watch *store :changes $ fn (_current _previous)
+  add-watch! *store :changes $ fn (_current _previous)
     schedule-render!
   schedule-render!
 ```
