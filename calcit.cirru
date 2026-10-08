@@ -293,7 +293,7 @@
         'try-test! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn try-test! (dispatch! acc)
             let
-                started $ unsafe-coerce (js/Date.now) Number
+                started $ shared/now-ms
               dispatch! $ Op :clear
               loop
                   x 20
@@ -312,9 +312,7 @@
                 if (> x 0)
                   recur $ dec x
               shared/queue-microtask! $ fn () $ let
-                  cost $ -
-                    unsafe-coerce (js/Date.now) Number
-                    , started
+                  cost $ - (shared/now-ms) started
                 if
                   < (count acc) 40
                   js/setTimeout
@@ -2533,23 +2531,19 @@
               match op
                 (:effect-mount _coord _n-coord run!)
                   do
-                      assert-type run! Fn
-                      , target
+                    if (fn? run!) (run! target) (raise "|[Respo/test] expected effect callback")
                     , &unit
                 (:effect-unmount _coord _n-coord run!)
                   do
-                      assert-type run! Fn
-                      , target
+                    if (fn? run!) (run! target) (raise "|[Respo/test] expected effect callback")
                     , &unit
                 (:effect-before-update _coord _n-coord run!)
                   do
-                      assert-type run! Fn
-                      , target
+                    if (fn? run!) (run! target) (raise "|[Respo/test] expected effect callback")
                     , &unit
                 (:effect-update _coord _n-coord run!)
                   do
-                      assert-type run! Fn
-                      , target
+                    if (fn? run!) (run! target) (raise "|[Respo/test] expected effect callback")
                     , &unit
                 _ &unit
             , &unit
@@ -2560,13 +2554,25 @@
         'run-first-task! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn run-first-task! (tasks)
             let
-                task! $ assert-type (&list:nth tasks 0) Fn
-              task!
+                task! $ &list:nth tasks 0
+              if (fn? task!) (task!) (raise "|[Respo/test] expected queued task callback")
               , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] $ :: 'List 'Dynamic
             :features $ #{} :js-ffi
+          :tests $ [] $ %{} 'TestEntry (:name |checks-queued-task-callability)
+            :code $ quote $ let
+                calls $ atom 0
+                caught? $ atom false
+              run-first-task! $ [] $ fn () (swap! calls inc)
+              assert= 1 @calls
+              try
+                run-first-task! $ [] 42
+                fn (error) (assert= "|[Respo/test] expected queued task callback" error) (reset! caught? true)
+              assert |invalid-task-rejected @caught?
+              assert= 1 @calls
+            :tags $ #{} :unit
         'script $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn script (props & children) (create-element :script props & children)
           :examples $ []
@@ -5021,13 +5027,29 @@
         'props-as-list $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn props-as-list (props)
             if (list? props)
-              unsafe-coerce props $ :: 'List $ :: 'List 'Dynamic
-              if (map? props) (&map:to-list props) ([])
+              decode-map-as props $ :: 'List $ :: 'List 'Dynamic
+              if (map? props)
+                decode-map-as (&map:to-list props)
+                  :: 'List $ :: 'List 'Dynamic
+                []
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] 'Dynamic
             :features $ #{} :js-ffi
             :return $ :: 'List $ :: 'List 'Dynamic
+          :tests $ [] $ %{} 'TestEntry (:name |checks-open-props-list-shape)
+            :code $ quote $ do
+              assert=
+                [] $ [] :title |hello
+                props-as-list $ {} $ :title |hello
+              assert= ([]) (props-as-list nil)
+              let
+                  caught? $ atom false
+                try
+                  props-as-list $ [] 42
+                  fn (_error) (reset! caught? true)
+                assert |non-pair-list-entry-rejected @caught?
+            :tags $ #{} :unit
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.render.diff
           :require

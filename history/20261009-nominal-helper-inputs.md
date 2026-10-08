@@ -1,3 +1,15 @@
+## 追加：effect 队列、props 和计时边界
+
+- 测试用 effect / task helper 在调用前检查 `fn?`，保留 effect 顺序、原 target 和仅执行首项的行为；非法回调明确报错。这些 helper 的 target 仍为开放测试数据。
+- `props-as-list` 对 List 和 Map 转换结果使用嵌套 List decoder，保留其他输入返回空列表的行为；不额外限制 pair 长度。
+- demo 压测使用已有 `shared/now-ms`，在 Date.now 返回错误类型时，于 dispatch 前拒绝。
+
+当前项目 definition code AST：assert-type **61→56**，unsafe-coerce **18→15**。完整 strict 仍失败：诊断 **12→7**，源码证明提示 **11→8**，类型审查项 **230→227**。剩余包括三个 demo 事件 Map 边界、core conj / pairs-map、render-with! 回调合同及重复 type slot。
+
+本轮验证：117/117 原生 attached tests，相关两个 Node 文件 17/17，335/335 框架定义，DOM host / Canvas 和既有 quality baseline 通过；没有提高质量预算。新增反例覆盖非法队列项、effect 回调、嵌套 props 列表和时钟返回值。生成 JS / JSON 报告不入库。
+
+本轮最新修改尚未重跑下游源码组合，前次组合 0f808d1 + #229 的结果保留历史含义。完整 strict、两个真实下游最终验收及 #195 路线决定仍待完成。
+
 ## 追加：开放列表、持久化任务和 Unit 返回
 
 - `create-list-element-open` 使用 `decode-map-as` 检查嵌套 List，返回类型如实为 Element。key、pair 长度、子节点类型及 nil 过滤仍由原有构造流程检查。

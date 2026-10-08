@@ -9,7 +9,16 @@ const { apply_dom_changes } = await import('../js-out/respo.render.patch.mjs');
 const { createRows, collectPatches } = await import('./keyed-moves-fixture.mjs');
 const { DomProps, DomPatch } = await import('../js-out/respo.schema.mjs');
 const { list__GT_, create_list_element_open, span } = await import('../js-out/respo.core.mjs');
-const { find_element_diffs } = await import('../js-out/respo.render.diff.mjs');
+const { find_element_diffs, props_as_list } = await import('../js-out/respo.render.diff.mjs');
+
+test('props conversion checks nested lists and retains map values and fallback behavior', () => {
+  const tags = c.init_tags(['title']);
+  const pairs = c.arrayToList([c.arrayToList([tags.title, 'hello'])]);
+  assert.deepEqual(c.to_js_data(props_as_list(pairs)), [['title', 'hello']]);
+  assert.deepEqual(c.to_js_data(props_as_list(c._$n__$M_(tags.title, 'hello'))), [['title', 'hello']]);
+  assert.deepEqual(c.to_js_data(props_as_list(null)), []);
+  assert.throws(() => props_as_list(c.arrayToList([42])));
+});
 
 test('open keyed children validate nested lists before constructing an Element', () => {
   const tags = c.init_tags(['div', 'live', 'omitted']);

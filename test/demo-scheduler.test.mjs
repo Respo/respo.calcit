@@ -7,7 +7,23 @@ import { watch_render_$x_ } from '../js-out/respo.app.scheduler.mjs';
 import { verifyDemoScheduler, verifyManualQueue, stopWatching, taskCount } from './demo-scheduler-fixture.mjs';
 import { normalize_task } from '../js-out/respo.app.task.mjs';
 import { Task } from '../js-out/respo.app.schema.mjs';
-import { span } from '../js-out/respo.core.mjs';
+import { span, run_effect_ops_$x_, run_first_task_$x_ } from '../js-out/respo.core.mjs';
+import { DomPatch } from '../js-out/respo.schema.mjs';
+
+test('effect helpers preserve order and target and reject non-callable queue entries', () => {
+  const variants = c.init_tags(['effect-mount', 'effect-unmount', 'effect-before-update', 'effect-update']);
+  const calls = [], target = {};
+  const effects = Object.entries(variants).map(([name, variant]) => c._PCT__$o__$o_(
+    DomPatch, variant, c.arrayToList([]), c.arrayToList([]), received => calls.push([name, received])));
+  run_effect_ops_$x_(c.arrayToList(effects), target);
+  assert.deepEqual(calls, Object.keys(variants).map(name => [name, target]));
+  let count = 0;
+  run_first_task_$x_(c.arrayToList([() => count++, () => assert.fail('only first task runs')]));
+  assert.equal(count, 1);
+  assert.throws(() => run_first_task_$x_(c.arrayToList([42])), /expected queued task callback/);
+  assert.throws(() => run_effect_ops_$x_(
+    c.parse_cirru_edn('[] (:: :effect-mount ([]) ([]) 42)'), target), /expected effect callback/);
+});
 
 test('task restoration preserves nominal identity and checks stored map fields', () => {
   const tags = c.init_tags(['id', 'text', 'done?']);
@@ -25,6 +41,18 @@ test('task restoration preserves nominal identity and checks stored map fields',
 
 test('real demo dispatches coalesce with the default microtask queue and survive watch replacement', () => verifyDemoScheduler());
 test('demo watch supports deterministic enqueue injection', verifyManualQueue);
+
+test('heavy task timing rejects a non-number clock result before dispatching', () => {
+  const originalNow = Date.now;
+  let dispatches = 0;
+  try {
+    Date.now = () => 'invalid-clock';
+    assert.throws(() => try_test_$x_(() => dispatches++, c.arrayToList([])));
+    assert.equal(dispatches, 0);
+  } finally {
+    Date.now = originalNow;
+  }
+});
 
 test('the heavy tasks burst measures after its scheduled render', async () => {
   const original = c.deref(_$s_store);
