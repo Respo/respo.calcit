@@ -81,3 +81,32 @@ defn interpose-borders (element border-style)
 ```
 
 This demo inserts borders among child elements. You can think of more.
+
+## 名义类型 helper 与开放输入
+
+`element-name` 和 `coerce-element` 接收 `respo.schema/Element`，
+`coerce-component` 接收 `respo.schema/Component`。两个 `coerce-*` helper
+只是返回原值，不承担运行时校验，也不会复制字段、children 或 ref。
+错误的具体类型和未经验证的 Dynamic 输入应在调用处被拒绝。
+
+`purify-element` 仍保留原有开放入口、nil 及未知 markup 的行为。需要把它的
+结果传给具体 Element 合同时，先用 `as-element` 做运行时名义类型校验；
+不要用另一个 `assert-type` 将开放返回值直接当作已验证的 Element。
+
+```cirru
+ns app.demo $ :require
+  respo.core :refer $ span
+  respo.util.detect :refer $ as-element element-name
+  respo.util.format :refer $ coerce-element purify-element
+
+let
+    element $ span $ {} $ :inner-text |ready
+    purified $ as-element $ purify-element element
+  assert |keeps-original-identity $ identical? element $ coerce-element element
+  assert= :span $ element-name purified
+```
+
+SSR 的 `make-string` 与 `realize-ssr!` 在净化后使用同一校验边界；合法
+Element/Component 的净化顺序、HTML 内容、事件与 ref 清理方式保持不变。
+应用从开放宿主数据获得 Component 时，可使用 `as-component` 校验后再调用
+`coerce-component`，而已经具有名义类型的值可直接调用 helper。

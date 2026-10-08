@@ -2417,7 +2417,7 @@
                 deliver-event $ build-deliver-event *global-element *dispatch-fn
               if (js-nullish? app-element) (raise "|Detected no element from SSR!")
               compare-to-dom!
-                respo.util.format/coerce-element $ purify-element element
+                respo.util.format/coerce-element $ respo.util.detect/as-element $ purify-element element
                 unsafe-coerce app-element 'js-ffi.browser/DomElementHost
               find-element-diffs collect! ([]) ([]) (mute-element element) element
               collect-mounting collect! ([]) ([]) element true
@@ -5671,7 +5671,7 @@
         'make-string $ %{} 'CodeEntry
           :doc "|Render a component tree to an HTML string for SSR.\n\nIt strips live event handlers and serializes a purified tree so the output stays stable across environments. This is the current HTML output API that replaces older `make-html` references."
           :code $ quote $ defn make-string (element)
-            element->string $ respo.util.format/coerce-element $ purify-element element
+            element->string $ respo.util.format/coerce-element $ respo.util.detect/as-element (purify-element element)
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'String)
             :args $ [] 'Dynamic
@@ -7323,11 +7323,11 @@
         'element-name $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn element-name (value)
             let
-                element $ assert-type value 'respo.schema/Element
+                element value
               :name element
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Tag)
-            :args $ [] 'Dynamic
+            :args $ [] 'respo.schema/Element
         'element-ref $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn element-ref (value)
             let
@@ -7511,17 +7511,15 @@
     'respo.util.format $ %{} 'FileEntry
       :defs $ {}
         'coerce-component $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn coerce-component (markup) (assert-type markup respo.schema/Component)
+          :code $ quote $ defn coerce-component (markup) markup
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] 'Dynamic
-            :features $ #{} :js-ffi
+            :args $ [] 'respo.schema/Component
         'coerce-element $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn coerce-element (markup) (assert-type markup respo.schema/Element)
+          :code $ quote $ defn coerce-element (markup) markup
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Element)
-            :args $ [] 'Dynamic
-            :features $ #{} :js-ffi
+            :args $ [] 'respo.schema/Element
         'create-dashed-letter-pattern $ %{} 'CodeEntry
           :doc "|Creates the JavaScript RegExp behind an explicit FFI function so dashed-letter-pattern remains a value."
           :code $ quote $ defn create-dashed-letter-pattern () (new js/RegExp |-[a-z] |g)
@@ -7777,7 +7775,7 @@
                     :event $ {}
                     :children $ [] $ respo.util.detect/make-child-pair :child child
                     :ref $ fn (_target) &unit
-                  purified $ coerce-element $ purify-element parent
+                  purified $ coerce-element $ respo.util.detect/as-element (purify-element parent)
                   purified-child $ respo.util.detect/as-element $ respo.util.detect/child-pair-value
                     &list:nth (element-children purified) 0
                 assert |parent-ref-is-removed $ js-nullish? $ element-ref purified

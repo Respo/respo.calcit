@@ -3,8 +3,8 @@ import test from 'node:test';
 import * as c from '../js-out/calcit.core.mjs';
 import { Component } from '../js-out/respo.schema.mjs';
 import { div, span } from '../js-out/respo.core.mjs';
-import { as_render_node, make_child_pair, child_pair_value } from '../js-out/respo.util.detect.mjs';
-import { purify_element } from '../js-out/respo.util.format.mjs';
+import { as_render_node, make_child_pair, child_pair_value, element_name } from '../js-out/respo.util.detect.mjs';
+import { purify_element, coerce_element, coerce_component } from '../js-out/respo.util.format.mjs';
 import { make_string } from '../js-out/respo.render.html.mjs';
 
 const tags = c.init_tags(['name', 'effects', 'listeners', 'tree', 'children', 'ref', 'event', 'key', 'node', 'wrapped']);
@@ -12,6 +12,18 @@ const component = tree => c._$n__PCT__$M_(Component,
   tags.name, tags.wrapped, tags.effects, c.arrayToList([]),
   tags.listeners, c.arrayToList([]), tags.tree, tree);
 const field = (value, key) => c.option_$o_unwrap(c.get(value, key));
+
+test('nominal helpers preserve the original element, component, ref and child identities', () => {
+  const leaf = span(c.parse_cirru_edn('{} (:inner-text |leaf)'));
+  const ref = () => {};
+  const live = c.assoc(leaf, tags.ref, ref);
+  const wrapped = component(c._PCT_some(as_render_node(live)));
+  assert.equal(coerce_element(live), live);
+  assert.equal(coerce_component(wrapped), wrapped);
+  assert.equal(field(coerce_element(live), tags.ref), ref);
+  assert.equal(field(coerce_element(live), tags.children), field(live, tags.children));
+  assert.equal(element_name(live).value, 'span');
+});
 
 test('purification unwraps nested components, clears refs/events and preserves child keys and absence', () => {
   const leaf = span(c.parse_cirru_edn('{} (:inner-text |leaf)'));
