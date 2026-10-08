@@ -78,7 +78,7 @@ defn -main ()
       render-element (comp-container @*store)
       , dispatch!
   render-app!
-  add-watch *store :changes render-app!
+  add-watch! *store :changes render-app!
 ```
 
 It can be divided into several steps:
@@ -100,7 +100,7 @@ let
       comp-container $ let
           s schema/store
         assoc reel-schema/reel :base s :store s
-    styles $ .join-str @*style-list-in-nodejs (str &newline &newline)
+    styles $ .join-string @*style-list-in-nodejs (str &newline &newline)
 
   ;nil
 ```

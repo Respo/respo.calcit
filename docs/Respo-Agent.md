@@ -220,13 +220,13 @@ defn render-app! ()
     , dispatch!
 
 ; Watch for store changes
-add-watch *store :changes $ fn ()
+add-watch! *store :changes $ fn ()
   render-app!
 
 ; Hot reload with cache clearing
 defn reload! ()
   remove-watch *store :changes
-  add-watch *store :changes $ fn ()
+  add-watch! *store :changes $ fn ()
     render-app!
   clear-cache!
   render-app!
@@ -511,14 +511,14 @@ calcit query def 'respo.main/main!'
 
 ```cirru.no-check
 ; Ensure watch is on *store
-add-watch *store :changes $ fn ()
+add-watch! *store :changes $ fn ()
   render-app!
 
 ; Ensure clear-cache! is called on reload
 defn reload! ()
   remove-watch *store :changes
   clear-cache!
-  add-watch *store :changes $ fn ()
+  add-watch! *store :changes $ fn ()
     render-app!
   render-app!
 ```
@@ -603,7 +603,7 @@ calcit query usages 'respo.core/clear-cache!'
 defn reload! ()
   remove-watch *store :changes
   clear-cache!  ; Critical!
-  add-watch *store :changes $ fn ()
+  add-watch! *store :changes $ fn ()
     render-app!
   render-app!
 ```

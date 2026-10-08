@@ -181,7 +181,7 @@ let
     schedule! $ respo.core/make-render-scheduler
       fn () $ render-app!
       %:: Option :none
-  add-watch *store :changes $ fn (_current _previous) (schedule!)
+  add-watch! *store :changes $ fn (_current _previous) (schedule!)
 ```
 
 `render!` 和 `render-with!` 仍同步执行。如果 dispatch 后需要立即读取更新后的 DOM，
@@ -220,10 +220,10 @@ Reset virtual DOM caching during hot code swapping, and rerender:
 let
     *store $ atom $ {} (:point 0)
     render-app! $ fn () &unit
-  add-watch *store :changes $ fn (_previous _next)
+  add-watch! *store :changes $ fn (_previous _next)
     render-app!
   remove-watch *store :changes
-  add-watch *store :changes $ fn (_previous _next)
+  add-watch! *store :changes $ fn (_previous _next)
     render-app!
   respo.core/clear-cache!
   render-app!
