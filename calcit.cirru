@@ -3616,10 +3616,22 @@
               when
                 not $ component? value
                 raise "|[Respo/memo-comp-by] component function must return respo.schema/Component"
-              , value
+              respo.util.detect/as-component value
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
             :args $ [] 'Fn $ :: 'List 'Dynamic
+          :tests $ [] $ %{} 'TestEntry (:name |keeps-component-identity-and-calls-once)
+            :code $ quote $ let
+                expected $ %{} respo.schema/Component (:name :probe)
+                  :effects $ []
+                  :listeners $ []
+                  :tree $ %none
+                calls $ atom 0
+                build $ fn (number text) (swap! calls inc) (assert= 42 number) (assert= |probe text) expected
+                actual $ call-component build $ [] 42 |probe
+              assert |same-component $ identical? expected actual
+              assert= 1 @calls
+            :tags $ #{} :unit
         'call-value $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-value (f args)
             when
@@ -3669,7 +3681,7 @@
               when
                 not $ component? value
                 raise "|[Respo/memo-comp-by] component function must return respo.schema/Component"
-              , value
+              respo.util.detect/as-component value
           :examples $ []
           :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Component)
             :args $ [] 'Dynamic 'Fn

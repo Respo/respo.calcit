@@ -107,6 +107,8 @@ list->
         [] task-id $ memo-comp-by task-id comp-task (>> states task-id) task
 ```
 
+`memo-comp-by` 要求回调返回 `respo.schema/Component`。开放的回调结果会经过组件校验，返回原组件，不包装或复制；返回其他值时保留既有报错。回调自身抛出的异常会继续传递。
+
 缓存身份由组件函数和 key 共同组成。只有完整参数列表相等时，才复用缓存的 `Component`。
 key 应使用稳定的业务 ID；列表会插入、删除或重排时，不应使用数组索引。传入 `nil` 会绕过缓存。
 
