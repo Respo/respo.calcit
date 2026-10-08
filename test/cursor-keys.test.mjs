@@ -4,9 +4,36 @@ import { spawnSync } from 'node:child_process';
 import * as c from '../js-out/calcit.core.mjs';
 import { CursorTestState, coerce_cursor_test_state, get_state_at, update_state_tree, update_state_tree_kv, update_state_tree_merge } from '../js-out/respo.cursor.mjs';
 import { EventConfig, ListenerMode } from '../js-out/respo.schema.mjs';
+import { _GT__GT_ as child_states } from '../js-out/respo.core.mjs';
 
 const tags = c.init_tags(['panel', 'data', 'draft', 'locked?']);
 const path = (...keys) => c.arrayToList(keys);
+
+test('>> preserves String and Number branches alongside Tag cursor metadata', () => {
+  const nested = c._$n__$M_(tags.data, 'nested');
+  const branch = c._$n__$M_(tags.data, 'draft', 7, nested);
+  const root = c._$n__$M_(c.turn_tag('cursor'), path(tags.panel),
+    'task-1', branch, 7, c._$n__$M_(tags.data, 'number'));
+  const selected = child_states(root, 'task-1');
+  const leaf = child_states(selected, 7);
+  assert.equal(c._$n_map_$o_get(selected, tags.data), 'draft');
+  assert.ok(c._$n__$e_(c._$n_map_$o_get(selected, c.turn_tag('cursor')), path(tags.panel, 'task-1')));
+  assert.equal(c._$n_map_$o_get(selected, 7), nested);
+  assert.equal(c.get(selected, '7').tag.value, 'none');
+  assert.equal(c._$n_map_$o_get(leaf, tags.data), 'nested');
+  assert.ok(c._$n__$e_(c._$n_map_$o_get(leaf, c.turn_tag('cursor')), path(tags.panel, 'task-1', 7)));
+  assert.equal(c._$n_map_$o_get(child_states(root, 7), tags.data), 'number');
+  assert.ok(c._$n__$e_(c._$n_map_$o_get(root, c.turn_tag('cursor')), path(tags.panel)));
+  assert.equal(c.get(branch, c.turn_tag('cursor')).tag.value, 'none');
+});
+
+test('>> retains nil seeds and rejects malformed map or cursor boundaries', () => {
+  const cursor = c.turn_tag('cursor');
+  assert.ok(c._$n__$e_(child_states(null, 'task-1'), c._$n__$M_(cursor, path('task-1'))));
+  assert.throws(() => child_states(1, 'task-1'), /expected states as a map/);
+  assert.throws(() => child_states(c._$n__$M_('task-1', 1), 'task-1'), /expected states as a map/);
+  assert.throws(() => child_states(c._$n__$M_(cursor, 1), 'task-1'), /expected states cursor as a list/);
+});
 
 test('mixed Tag/String cursor keys keep their types through writes, reads and partial updates', () => {
   const cursor = path(tags.panel, 'task-1');

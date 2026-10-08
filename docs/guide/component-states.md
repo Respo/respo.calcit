@@ -68,6 +68,32 @@ You also notice that its structure is simpler than a DOM tree, it only contains 
 
 `respo.core/>>` is the "picking branch" function. It also maintains a `:cursor` field.
 
+### 混合类型的 cursor key
+
+状态树保留原始 key：Tag、String 和已有的 Number key 可以共存；`|7`、
+`7` 与 `:7` 是不同的分支。`:data` 和 `:cursor` 使用 Tag，并不意味着整个
+状态 map 的 key 都是 Tag。`>>` 的返回类型因此是 `Map<Dynamic, Dynamic>`；
+开放的分支值需要在使用处验证，不能通过 `Map<Tag, Dynamic>` 声明排除已有数据。
+
+`>>` 不改变状态树层级或 key，也不写回传入的 map。nil 分支视为空 map，
+已有 `:cursor` 必须为 List；非 map 的状态或分支会报错。
+
+```cirru
+ns app.demo $ :require
+  respo.core :refer $ >>
+
+let
+    states $ {} $ :tasks $ {}
+      |task-1 $ {} $ :data |draft
+    task-states $ >> (>> states :tasks) |task-1
+  assert= (&map:get task-states :cursor) ([] :tasks |task-1)
+  assert= (&map:get task-states :data) |draft
+```
+
+迁移时保留 String/Number key，不要将它们转成 Tag。若应用将 `>>` 的结果
+继续传给 helper，helper 的状态 map 合同也应允许混合 key；组件自己的
+`:data` 可以在应用边界解码为具体 Struct。
+
 When you call `(>> states :todolist)`, you get new `states` variable for a child component:
 
 ```cirru.no-check

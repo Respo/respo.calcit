@@ -1250,7 +1250,34 @@
           :schema $ :: 'Fn $ {}
             :args $ [] 'Dynamic 'Dynamic
             :features $ #{} :js-ffi
-            :return $ :: 'Map 'Tag 'Dynamic
+            :return $ :: 'Map 'Dynamic 'Dynamic
+          :tests $ []
+            %{} 'TestEntry (:name |mixed-state-keys)
+              :code $ quote $ let
+                  root $ {}
+                    :cursor $ [] :panel
+                    |task-1 $ {} (:data |draft)
+                      7 $ {} $ :data |nested
+                    7 $ {} $ :data |number
+                  branch $ >> root |task-1
+                  nested $ >> branch 7
+                assert= (&map:get branch :data) |draft
+                assert= (&map:get branch :cursor) ([] :panel |task-1)
+                assert= (&map:get nested :data) |nested
+                assert= (&map:get nested :cursor) ([] :panel |task-1 7)
+                assert=
+                  &map:get (>> root 7) :data
+                  , |number
+                assert= (&map:get root :cursor) ([] :panel)
+                assert= (contains? branch 7) true
+                assert= (contains? branch |7) false
+            %{} 'TestEntry (:name |nil-state-seed)
+              :code $ quote $ do
+                assert= (>> nil |task-1)
+                  {} $ :cursor $ [] |task-1
+                assert=
+                  >> ({}) 7
+                  {} $ :cursor $ [] 7
         'a $ %{} 'CodeEntry
           :doc "|Creates HTML link element (anchor tag).\n\nParameters:\n  props - Attribute map, can include standard HTML attributes like href, target, class-name, etc.\n  & children - Variable arguments for child elements, typically link display text or other elements\n\nReturns:\n  Created link element component\n\nUsed to create hyperlinks, supports all standard HTML link attributes."
           :code $ quote $ defn a (props & children) (create-element :a props & children)
@@ -1271,22 +1298,11 @@
         'as-states-map $ %{} 'CodeEntry (:doc "|在状态树开放边界校验 states map，nil 视为空。")
           :code $ quote $ defn as-states-map (value)
             if (nil? value) ({})
-              if (map? value)
-                foldl value ({})
-                  defn %as-states-entry (acc pair)
-                    hint-fn $ {}
-                      :args $ [] (:: 'Map 'Tag 'Dynamic) (:: 'List 'Dynamic)
-                      :return $ :: 'Map 'Tag 'Dynamic
-                    &let
-                      state-key $ &list:nth pair 0
-                      if (tag? state-key)
-                        &map:assoc acc state-key $ &list:nth pair 1
-                        raise $ str "|[Respo] expected states keys as tags, got: " state-key
-                raise $ str "|[Respo] expected states as a map, got: " $ type-of value
+              if (map? value) value $ raise $ str "|[Respo] expected states as a map, got: " (type-of value)
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] 'Dynamic
-            :return $ :: 'Map 'Tag 'Dynamic
+            :return $ :: 'Map 'Dynamic 'Dynamic
         'blockquote $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn blockquote (props & children) (create-element :blockquote props & children)
           :examples $ []
