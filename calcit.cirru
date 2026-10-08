@@ -659,7 +659,7 @@
                 let
                     disabled-commands $ let
                         raw-disabled $ option:unwrap-or (get options :disabled-commands) (#{} |p |s)
-                      assert-type raw-disabled $ :: 'Set 'String
+                      decode-map-as raw-disabled $ :: 'Set 'String
                     handler $ fn (event)
                       hint-fn $ {}
                         :args $ [] 'js-ffi.browser/EventHost
