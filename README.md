@@ -153,7 +153,7 @@ App initialization:
 
 ; initialize store and update store
 let
-    *store $ atom $ {} (:point 0) (:states {})
+    *store $ ref $ {} (:point 0) (:states {})
     updater $ fn (store op)
       hint-fn $ {}
         :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic
@@ -218,7 +218,7 @@ Reset virtual DOM caching during hot code swapping, and rerender:
   respo.core :refer $ clear-cache!
 
 let
-    *store $ atom $ {} (:point 0)
+    *store $ ref $ {} (:point 0)
     render-app! $ fn () &unit
   add-watch! *store :changes $ fn (_previous _next)
     render-app!

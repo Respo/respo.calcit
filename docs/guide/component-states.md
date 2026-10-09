@@ -37,7 +37,7 @@ At first, states is a HashMap inside the store:
 ; ns app.demo
 
 let
-    *store $ atom $ {}
+    *store $ ref $ {}
       :states $ {}
   :states @*store
 ```

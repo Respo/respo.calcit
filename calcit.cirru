@@ -376,8 +376,8 @@
     'respo.app.core $ %{} 'FileEntry
       :defs $ {}
         '*store $ %{} 'CodeEntry
-          :doc "|Global state storage Atom for the Respo application.\n\nThis is an atom containing all application state data, initialized with the structure defined by schema/store.\nIn Respo applications, all component states are stored in this global store and updated through the dispatch mechanism."
-          :code $ quote $ defatom *store schema/store
+          :doc "|Global state storage Ref for the Respo application.\n\nThis is a Ref containing all application state data, initialized with the structure defined by schema/store.\nIn Respo applications, all component states are stored in this global store and updated through the dispatch mechanism."
+          :code $ quote $ defref *store schema/store
           :examples $ []
           :schema $ :: 'Ref 'respo.app.schema/Store
         'dispatch! $ %{} 'CodeEntry (:doc |)
@@ -421,7 +421,7 @@
     'respo.app.scheduler $ %{} 'FileEntry
       :defs $ {}
         '*render-watch-generation $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defatom *render-watch-generation 0
+          :code $ quote $ defref *render-watch-generation 0
           :examples $ []
           :schema $ :: 'Ref 'Number
         'watch-render! $ %{} 'CodeEntry
@@ -927,7 +927,7 @@
             %{} 'TestEntry
               :name |tolerates-none-subtree-and-keeps-component-listener
               :code $ quote $ let
-                  log $ atom $ []
+                  log $ ref $ []
                   listener $ %{} respo.schema/RespoListener (:name :watch)
                     :handler $ fn (event _dispatch!)
                       reset! log $ [] event
@@ -943,10 +943,10 @@
             %{} 'TestEntry
               :name |keeps-listener-order-dispatch-and-empty-children
               :code $ quote $ let
-                  calls $ atom $ []
-                  operations $ atom $ []
+                  calls $ ref $ []
+                  operations $ ref $ []
                   event $ :: :changed
-                  dispatch-ref $ atom $ fn (op)
+                  dispatch-ref $ ref $ fn (op)
                     reset! operations $ append @operations op
                     , &unit
                   wrapped-dispatch $ wrap-dispatch dispatch-ref
@@ -998,8 +998,8 @@
               :args $ [] 'Dynamic
           :tests $ [] $ %{} 'TestEntry (:name |handles-legacy-data-and-single-enum)
             :code $ quote $ let
-                received $ atom |
-                dispatch-ref $ atom $ fn (op)
+                received $ ref |
+                dispatch-ref $ ref $ fn (op)
                   reset! received $ str op
                   , &unit
                 wrapped $ wrap-dispatch dispatch-ref
@@ -1203,23 +1203,23 @@
       :defs $ {}
         '*changes-logger $ %{} 'CodeEntry
           :doc "|Atom to hold a logging function for observing changes during rerenders. Function signature: (old-tree new-tree changes)."
-          :code $ quote $ defatom *changes-logger (Option :none)
+          :code $ quote $ defref *changes-logger (Option :none)
           :examples $ [] $ quote
             reset! *changes-logger $ fn (old new changes) (println changes)
           :schema $ :: 'Ref $ :: 'calcit.core/Option
             :: 'Fn $ {} (:return 'Unit)
               :args $ [] 'respo.schema/Component 'respo.schema/Component $ :: 'List 'respo.schema/DomPatch
         '*dispatch-fn $ %{} 'CodeEntry
-          :doc "|internal atom storing the dispatch function. used to handle events and state updates throughout the application."
-          :code $ quote $ defatom *dispatch-fn
+          :doc "|internal Ref storing the dispatch function. used to handle events and state updates throughout the application."
+          :code $ quote $ defref *dispatch-fn
             fn (op) (raise |[Respo]-dispatch-before-render)
           :examples $ []
           :schema $ :: 'Ref $ :: 'Fn
             {} (:return 'Unit)
               :args $ [] 'Dynamic
         '*global-element $ %{} 'CodeEntry
-          :doc "|internal atom storing the current virtual DOM tree. used by render! to track and update the application state."
-          :code $ quote $ defatom *global-element (Option :none)
+          :doc "|internal Ref storing the current virtual DOM tree. used by render! to track and update the application state."
+          :code $ quote $ defref *global-element (Option :none)
           :examples $ []
           :schema $ :: 'Ref $ :: 'calcit.core/Option 'respo.schema/Component
         '<> $ %{} 'CodeEntry
@@ -1471,7 +1471,7 @@
           :tests $ []
             %{} 'TestEntry (:name |rejects-invalid-child-collections)
               :code $ quote $ let
-                  caught? $ atom false
+                  caught? $ ref false
                 try
                   create-list-element-open :div ({}) :invalid
                   fn (_error) (reset! caught? true)
@@ -1479,7 +1479,7 @@
               :tags $ #{} :unit
             %{} 'TestEntry (:name |ignores-new-nil-child)
               :code $ quote $ let
-                  patches $ atom $ []
+                  patches $ ref $ []
                   collect! $ fn (patch) (append-dynamic! patches patch)
                   empty-tree $ list-> ({}) ([])
                   nil-tree $ list-> ({})
@@ -1489,7 +1489,7 @@
               :tags $ #{} :unit
             %{} 'TestEntry (:name |replaces-and-removes-nil-children)
               :code $ quote $ let
-                  patches $ atom $ []
+                  patches $ ref $ []
                   collect! $ fn (patch) (append-dynamic! patches patch)
                   child $ span $ {}
                   live-tree $ list-> ({})
@@ -1514,8 +1514,8 @@
                   child $ span $ {}
                   tree $ list-> ({})
                     [] ([] :nil-before nil) ([] :live child) ([] :nil-after nil)
-                  caught-key? $ atom false
-                  caught-child? $ atom false
+                  caught-key? $ ref false
+                  caught-child? $ ref false
                 assert=
                   [] $ respo.util.detect/make-child-pair :live child
                   respo.util.detect/element-children tree
@@ -1572,7 +1572,7 @@
           :tests $ []
             %{} 'TestEntry (:name |title-removal-keeps-component-marker)
               :code $ quote $ let
-                  patches $ atom $ []
+                  patches $ ref $ []
                   collect! $ fn (patch) (append-dynamic! patches patch)
                   old-component $ decorate-defcomp
                     schema/Component :name :link :effects ([]) :listeners ([]) :tree $ Option :some $ respo.util.detect/as-render-node
@@ -1592,7 +1592,7 @@
             %{} 'TestEntry
               :name |property-addition-and-update-keep-component-marker
               :code $ quote $ let
-                  patches $ atom $ []
+                  patches $ ref $ []
                   collect! $ fn (patch) (append-dynamic! patches patch)
                   old-component $ decorate-defcomp
                     schema/Component :name :link :effects ([]) :listeners ([]) :tree $ Option :some $ respo.util.detect/as-render-node
@@ -1687,7 +1687,7 @@
             :required $ [] 'SyntaxSymbol 'SyntaxList 'SyntaxList
           :tests $ [] $ %{} 'TestEntry (:name |discards-body-result-after-running-effects)
             :code $ quote $ let
-                hits $ atom 0
+                hits $ ref 0
                 factory $ defeffect effect-result-probe (payload) (action target at?) (assert= :payload payload) (assert= :mount action) (assert= :target target) (assert= true at?) (swap! hits inc) |ignored-result
                 effect $ respo.util.detect/as-effect $ factory :payload
               assert= &unit $
@@ -1772,7 +1772,7 @@
                 :args $ [] 'Dynamic
           :tests $ [] $ %{} 'TestEntry (:name |dispatches-only-matching-lifecycle-phases)
             :code $ quote $ let
-                log $ atom $ assert-type ([])
+                log $ ref $ assert-type ([])
                   :: 'List $ :: 'List 'Dynamic
                 update-effect $ effect-on-update ([] :value)
                   fn (target)
@@ -1828,8 +1828,8 @@
           :tests $ []
             %{} 'TestEntry (:name |cleans-old-closure-before-new-setup)
               :code $ quote $ let
-                  log $ atom $ []
-                  ops $ atom $ []
+                  log $ ref $ []
+                  ops $ ref $ []
                   collect! $ fn (op) (append-dynamic! ops op)
                   element $ %{} schema/Element (:name :div)
                     :coord $ %none
@@ -1863,7 +1863,7 @@
               :tags $ #{} :unit
             %{} 'TestEntry (:name |keeps-unchanged-effects-idle)
               :code $ quote $ let
-                  ops $ atom $ []
+                  ops $ ref $ []
                   collect! $ fn (op) (append-dynamic! ops op)
                   element $ %{} schema/Element (:name :div)
                     :coord $ %none
@@ -1892,8 +1892,8 @@
               :tags $ #{} :unit
             %{} 'TestEntry (:name |handles-effect-list-addition-and-removal)
               :code $ quote $ let
-                  log $ atom $ []
-                  ops $ atom $ []
+                  log $ ref $ []
+                  ops $ ref $ []
                   collect! $ fn (op) (append-dynamic! ops op)
                   element $ %{} schema/Element (:name :div)
                     :coord $ %none
@@ -1926,8 +1926,8 @@
               :tags $ #{} :unit
             %{} 'TestEntry (:name |replaces-effect-kinds-with-unmount-and-mount)
               :code $ quote $ let
-                  log $ atom $ []
-                  ops $ atom $ []
+                  log $ ref $ []
+                  ops $ ref $ []
                   collect! $ fn (op) (append-dynamic! ops op)
                   element $ %{} schema/Element (:name :div)
                     :coord $ %none
@@ -1996,7 +1996,7 @@
             :rest $ :: 'Expr 'Dynamic
           :tests $ [] $ %{} 'TestEntry (:name |catches-render-errors)
             :code $ quote $ let
-                caught? $ atom false
+                caught? $ ref false
                 result $ error-boundary
                   fn (_error) (reset! caught? true) |fallback
                   raise |boom
@@ -2098,7 +2098,7 @@
                 assert |keys-preserve-input-order $ &= ([] :a :b) (map pairs respo.util.list/pair-key)
                 assert |all-items-are-rendered $ = 2 $ count pairs
               let
-                  caught? $ atom false
+                  caught? $ ref false
                 try
                   for-keyed ([] 1)
                     fn (_item)
@@ -2226,7 +2226,7 @@
                 queue! $ match enqueue-option
                   (:none) shared/queue-microtask!
                   (:some enqueue!) enqueue!
-                *queued? $ atom false
+                *queued? $ ref false
               fn ()
                 when (not @*queued?) (reset! *queued? true)
                   queue! $ fn () (reset! *queued? false) (render!)
@@ -2248,8 +2248,8 @@
               :args $ []
           :tests $ [] $ %{} 'TestEntry (:name |coalesces-custom-queue-requests)
             :code $ quote $ let
-                render-count $ atom 0
-                tasks $ atom $ []
+                render-count $ ref 0
+                tasks $ ref $ []
                 schedule! $ make-render-scheduler
                   fn () $ do (swap! render-count inc) &unit
                   some-enqueue $ fn (task) (append-dynamic! tasks task)
@@ -2310,7 +2310,7 @@
             :features $ #{} :js-ffi
         'new-patch-collector $ %{} 'CodeEntry (:doc "|创建收集 DomPatch 的类型化引用，替代未类型化的 buf-list。")
           :code $ quote $ defn new-patch-collector ()
-            atom $ []
+            ref $ []
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ []
@@ -2370,7 +2370,7 @@
               [] 0 false $ []
               fn (value)
                 let
-                    rejected? $ atom false
+                    rejected? $ ref false
                   try (normalize-dom-props value)
                     fn (error) (reset! rejected? true)
                   assert |invalid-props-rejected $ deref rejected?
@@ -2398,7 +2398,7 @@
               :tags $ #{} :unit
             %{} 'TestEntry (:name |rejects-invalid-ref)
               :code $ quote $ let
-                  caught? $ atom false
+                  caught? $ ref false
                 try (normalize-ref :invalid |expected-ref)
                   fn (error) (assert= |expected-ref error) (reset! caught? true)
                 assert |invalid-ref-rejected @caught?
@@ -2486,7 +2486,7 @@
             :features $ #{} :js-ffi
           :tests $ [] $ %{} 'TestEntry (:name |rejects-nil-mount-target)
             :code $ quote $ let
-                caught? $ atom false
+                caught? $ ref false
                 component $ respo.schema/Component :name :empty :effects ([]) :listeners ([]) :tree $ Option :none
               try
                 render! nil component $ fn (op) &unit
@@ -2589,8 +2589,8 @@
             :features $ #{} :js-ffi
           :tests $ [] $ %{} 'TestEntry (:name |checks-queued-task-callability)
             :code $ quote $ let
-                calls $ atom 0
-                caught? $ atom false
+                calls $ ref 0
+                caught? $ ref false
               run-first-task! $ [] $ fn () (swap! calls inc)
               assert= 1 @calls
               try
@@ -2769,15 +2769,15 @@
     'respo.css $ %{} 'FileEntry
       :defs $ {}
         '*style-caches $ %{} 'CodeEntry (:doc "|Atom for caching style information.")
-          :code $ quote $ defatom *style-caches ({})
+          :code $ quote $ defref *style-caches ({})
           :examples $ []
           :schema $ :: 'Ref $ :: 'Map 'String 'respo.css/StyleCacheEntry
         '*style-indices-in-nodejs $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defatom *style-indices-in-nodejs ({})
+          :code $ quote $ defref *style-indices-in-nodejs ({})
           :examples $ []
           :schema $ :: 'Ref $ :: 'Map 'String 'Number
         '*style-list-in-nodejs $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defatom *style-list-in-nodejs ([])
+          :code $ quote $ defref *style-list-in-nodejs ([])
           :examples $ []
           :schema $ :: 'Ref $ :: 'List 'String
         'StyleCacheEntry $ %{} 'CodeEntry (:doc |)
@@ -3014,7 +3014,7 @@
           :tests $ [] $ %{} 'TestEntry (:name |checks-nominal-identity)
             :code $ quote $ let
                 original $ %{} CursorTestState (:draft |a) (:locked? false) (:message |ready)
-                caught $ atom 0
+                caught $ ref 0
               assert |same-state $ identical? original $ coerce-cursor-test-state original
               &doseq
                 value $ [] nil 42 ({})
@@ -3610,19 +3610,19 @@
     'respo.memo $ %{} 'FileEntry
       :defs $ {}
         '*component-caches $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defatom *component-caches ({})
+          :code $ quote $ defref *component-caches ({})
           :examples $ []
           :schema $ :: 'Ref $ :: 'Map 'respo.memo/MemoCacheKey 'respo.memo/MemoEntry
         '*frame-component-caches $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defatom *frame-component-caches ({})
+          :code $ quote $ defref *frame-component-caches ({})
           :examples $ []
           :schema $ :: 'Ref $ :: 'Map 'respo.memo/MemoCacheKey 'respo.memo/MemoEntry
         '*memo-dependency-stack $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defatom *memo-dependency-stack ([])
+          :code $ quote $ defref *memo-dependency-stack ([])
           :examples $ []
           :schema $ :: 'Ref $ :: 'List (:: 'Set 'respo.memo/MemoCacheKey)
         '*memo-frame-active? $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defatom *memo-frame-active? false
+          :code $ quote $ defref *memo-frame-active? false
           :examples $ []
           :schema $ :: 'Ref 'Bool
         'MemoCacheKey $ %{} 'CodeEntry (:doc |)
@@ -3647,7 +3647,7 @@
           :tags $ #{} :internal
           :tests $ [] $ %{} 'TestEntry (:name |discards-only-failed-frame)
             :code $ quote $ let
-                calls $ atom 0
+                calls $ ref 0
                 derive $ fn (value) (swap! calls inc) value
               reset-component-caches!
               begin-memo-frame!
@@ -3698,7 +3698,7 @@
                   :effects $ []
                   :listeners $ []
                   :tree $ %none
-                calls $ atom 0
+                calls $ ref 0
                 build $ fn (number text) (swap! calls inc) (assert= 42 number) (assert= |probe text) expected
                 actual $ call-component build $ [] 42 |probe
               assert |same-component $ identical? expected actual
@@ -3759,7 +3759,7 @@
             :args $ [] 'Dynamic 'Fn
           :tests $ [] $ %{} 'TestEntry (:name |caches-only-valid-components)
             :code $ quote $ let
-                calls $ atom 0
+                calls $ ref 0
                 build $ fn (value) (swap! calls inc)
                   %{} respo.schema/Component
                     :name $ turn-tag $ str |counted- value
@@ -3833,7 +3833,7 @@
           :tests $ []
             %{} 'TestEntry (:name |caches-values-and-prunes-frames)
               :code $ quote $ let
-                  calls $ atom 0
+                  calls $ ref 0
                   derive $ fn (value) (swap! calls inc)
                     {} $ :value value
                 reset-component-caches!
@@ -3871,8 +3871,8 @@
               :tags $ #{} :unit
             %{} 'TestEntry (:name |nested-hits-retain-transitive-children)
               :code $ quote $ let
-                  inner-calls $ atom 0
-                  outer-calls $ atom 0
+                  inner-calls $ ref 0
+                  outer-calls $ ref 0
                   inner $ fn (value) (swap! inner-calls inc)
                     {} $ :value value
                   middle $ fn (value) (memo-value-by :inner inner value)
@@ -3899,7 +3899,7 @@
               :tags $ #{} :unit
             %{} 'TestEntry (:name |outside-frames-do-not-grow-cache)
               :code $ quote $ let
-                  calls $ atom 0
+                  calls $ ref 0
                   derive $ fn (value) (swap! calls inc)
                     {} $ :value value
                 reset-component-caches!
@@ -3960,7 +3960,7 @@
               :tags $ #{} :unit
             %{} 'TestEntry (:name |parent-hit-keeps-current-frame-child)
               :code $ quote $ let
-                  calls $ atom 0
+                  calls $ ref 0
                   child $ fn (value) (swap! calls inc) value
                   outer $ fn () $ memo-value-by :child child 1
                 reset-component-caches!
@@ -4075,7 +4075,7 @@
             :generics $ [] 'K
           :tests $ [] $ %{} 'TestEntry (:name |skips-nil-children-and-handlers)
             :code $ quote $ let
-                ops $ atom $ []
+                ops $ ref $ []
                 collect! $ fn (op) (respo.core/append-dynamic! ops op)
                 leaf $ %{} respo.schema/Element (:name :span)
                   :coord $ Option :none
@@ -4368,7 +4368,7 @@
                     :event $ {}
                     :children $ []
                     :ref nil
-                  effects $ atom $ []
+                  effects $ ref $ []
                   collect! $ fn (effect) (respo.core/append-dynamic! effects effect)
                   child-list $ [] $ respo.util.detect/make-child-pair :a child
                   same-child-list $ [] $ respo.util.detect/make-child-pair :a child
@@ -4377,7 +4377,7 @@
               :tags $ #{} :unit
             %{} 'TestEntry (:name |keeps-dom-coordinates-dense-through-none)
               :code $ quote $ let
-                  ops $ atom $ []
+                  ops $ ref $ []
                   leaf $ respo.core/span $ {}
                   old-children $ [] (respo.util.detect/make-child-pair :empty nil) (respo.util.detect/make-child-pair :live leaf)
                   new-children $ [] (respo.util.detect/make-child-pair :empty leaf) (respo.util.detect/make-child-pair :live nil)
@@ -4418,8 +4418,8 @@
           :tests $ []
             %{} 'TestEntry (:name |clears-old-ref-before-setting-new-ref)
               :code $ quote $ let
-                  log $ atom $ []
-                  ops $ atom $ []
+                  log $ ref $ []
+                  ops $ ref $ []
                   old-ref! $ fn (target)
                     hint-fn $ {}
                       :args $ [] $ :: 'JsNullish 'respo.dom/DomElement
@@ -4452,8 +4452,8 @@
               :tags $ #{} :unit
             %{} 'TestEntry (:name |handles-component-element-boundaries-once)
               :code $ quote $ let
-                  log $ atom $ []
-                  ops $ atom $ []
+                  log $ ref $ []
+                  ops $ ref $ []
                   collect! $ fn (op) (respo.core/append-dynamic! ops op)
                   plain $ %{} respo.schema/Element (:name :div)
                     :coord $ %none
@@ -4488,7 +4488,7 @@
               :tags $ #{} :unit
             %{} 'TestEntry (:name |handles-none-component-tree-transitions)
               :code $ quote $ let
-                  ops $ atom $ []
+                  ops $ ref $ []
                   collect! $ fn (op) (respo.core/append-dynamic! ops op)
                   inner $ %{} respo.schema/Element (:name :span)
                     :coord $ %none
@@ -4520,7 +4520,7 @@
               :tags $ #{} :unit
             %{} 'TestEntry (:name |identical-tree-produces-no-patches)
               :code $ quote $ let
-                  ops $ atom $ []
+                  ops $ ref $ []
                   collect! $ fn (op) (respo.core/append-dynamic! ops op)
                   tree $ %{} respo.schema/Element (:name :div)
                     :coord $ %none
@@ -4589,7 +4589,7 @@
               :: 'List $ :: 'List 'Dynamic
           :tests $ [] $ %{} 'TestEntry (:name |reports-property-changes)
             :code $ quote $ let
-                effects $ atom $ []
+                effects $ ref $ []
                 collect! $ fn (effect) (respo.core/append-dynamic! effects effect)
               find-props-diffs collect! ([]) ([])
                 [] $ [] :class-name |old
@@ -5085,7 +5085,7 @@
                 props-as-list $ {} $ :title |hello
               assert= ([]) (props-as-list nil)
               let
-                  caught? $ atom false
+                  caught? $ ref false
                 try
                   props-as-list $ [] 42
                   fn (_error) (reset! caught? true)
@@ -5263,8 +5263,8 @@
           :tests $ []
             %{} 'TestEntry (:name |runs-ref-mount-and-unmount-lifecycle)
               :code $ quote $ let
-                  log $ atom $ []
-                  ops $ atom $ []
+                  log $ ref $ []
+                  ops $ ref $ []
                   ref! $ fn (target)
                     hint-fn $ {}
                       :args $ [] $ :: 'JsNullish 'respo.dom/DomElement
@@ -5286,8 +5286,8 @@
               :tags $ #{} :unit
             %{} 'TestEntry (:name |keeps-own-effects-for-none-component-tree)
               :code $ quote $ let
-                  actions $ atom $ []
-                  ops $ atom $ []
+                  actions $ ref $ []
+                  ops $ ref $ []
                   effect $ %{} respo.schema/Effect (:name :watch)
                     :coord $ []
                     :args $ []
@@ -5305,7 +5305,7 @@
               :tags $ #{} :unit
             %{} 'TestEntry (:name |keeps-dom-indices-dense-through-empty-children)
               :code $ quote $ let
-                  ops $ atom $ []
+                  ops $ ref $ []
                   ref! $ fn (_target)
                     hint-fn $ {}
                       :args $ [] $ :: 'JsNullish 'respo.dom/DomElement
@@ -5335,8 +5335,8 @@
                   _ $ raise |expected-unmount
             %{} 'TestEntry (:name |keeps-root-at-place-flag-after-descending)
               :code $ quote $ let
-                  flags $ atom $ []
-                  ops $ atom $ []
+                  flags $ ref $ []
+                  ops $ ref $ []
                   effect $ respo.schema/Effect :name :watch :coord ([]) :args ([]) :method $ fn (_args params)
                     respo.core/append-dynamic! flags $ &list:nth params 2
                   component $ respo.schema/Component :name :root :effects ([] effect) :listeners ([]) :tree $ %some
@@ -5580,7 +5580,7 @@
     'respo.render.events $ %{} 'FileEntry
       :defs $ {}
         '*event-config $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defatom *event-config default-config
+          :code $ quote $ defref *event-config default-config
           :examples $ []
           :schema $ :: 'Ref 'respo.schema/EventConfig
           :tags $ #{} :internal
@@ -5957,7 +5957,7 @@
           :doc "|Internal DOM patch executor.\n\nIt walks collected diff operations, finds the target node by DOM coordinate, and applies prop, style, event, element, and effect changes in order."
           :code $ quote $ defn apply-dom-changes (changes mount-point listener-builder)
             let
-                target-cache $ atom $ assert-type ({})
+                target-cache $ ref $ assert-type ({})
                   :: 'Map (:: 'List 'Number) 'respo.dom/DomElement
                 find-target-at $ fn (n-coord)
                   hint-fn $ {}
@@ -5967,9 +5967,9 @@
                     js-nullish->option $ mount-point.:first-element-child
                     (:none) (%:: Option :none)
                     (:some root) (find-target-cached root n-coord target-cache)
-                child-snapshots $ atom $ assert-type ({})
+                child-snapshots $ ref $ assert-type ({})
                   :: 'Map (:: 'List 'Number) (:: 'List 'respo.dom/DomElement)
-                scroll-snapshot $ atom $ assert-type ({})
+                scroll-snapshot $ ref $ assert-type ({})
                   :: 'Map (:: 'List 'Number) (:: 'List 'respo.render.patch/MoveScrollState)
                 flush-scroll! $ fn ()
                   hint-fn $ {} (:return 'Unit)
@@ -6231,7 +6231,7 @@
           :tags $ #{} :internal
           :tests $ [] $ %{} 'TestEntry (:name |unit-empty-target-cache)
             :code $ quote $ let
-                cache $ atom $ assert-type ({})
+                cache $ ref $ assert-type ({})
                   :: 'Map (:: 'List 'Number) 'respo.dom/DomElement
               assert= &unit $ invalidate-target-children! cache $ [] 1 2
               assert= ({}) @cache
@@ -6472,7 +6472,7 @@
     'respo.resource $ %{} 'FileEntry
       :defs $ {}
         '*resource-id $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defatom *resource-id 0
+          :code $ quote $ defref *resource-id 0
           :examples $ []
           :schema $ :: 'Ref 'Number
         'ResourceAction $ %{} 'CodeEntry
@@ -6986,7 +6986,7 @@
           :doc "|DOM regression for component to element and element to component switches, including an identical nested defcomp child. Root and descendant clicks must resolve the current handlers; removed focus handlers must stay removed."
           :code $ quote $ defn verify-component-event-coords! (mount root child click!)
             let
-                dispatched $ atom $ []
+                dispatched $ ref $ []
                 dispatch! $ fn (op) (respo.core/append-dynamic! dispatched op)
                 child-tree $ comp-event-shell $ span
                   {} $ :on-click $ fn (_event d!) (d! :child)
@@ -7043,10 +7043,10 @@
           :doc "|SSR adoption regression: preserve root and descendant DOM nodes, attach click handlers immediately, update shared dispatch and handlers on later renders, and run the ref and mount effect exactly once."
           :code $ quote $ defn verify-realize-ssr-ref! (mount root child click!)
             let
-                refs $ atom $ []
-                mounts $ atom $ []
-                dispatched $ atom $ []
-                later-dispatched $ atom $ []
+                refs $ ref $ []
+                mounts $ ref $ []
+                dispatched $ ref $ []
+                later-dispatched $ ref $ []
                 dispatch! $ fn (op) (respo.core/append-dynamic! dispatched op)
                 later-dispatch! $ fn (op) (respo.core/append-dynamic! later-dispatched op)
                 ref! $ fn (target) (respo.core/append-dynamic! refs target)
@@ -7108,7 +7108,7 @@
     'respo.test.main $ %{} 'FileEntry
       :defs $ {}
         '*async-checks $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defatom *async-checks 0
+          :code $ quote $ defref *async-checks 0
           :examples $ []
           :schema $ :: 'Ref 'Number
         'effect-list-body-component $ %{} 'CodeEntry (:doc |)
@@ -7141,20 +7141,21 @@
                 fn (_target) nil
             assert |Node-without-Canvas-uses-zero-width $ = 0 $ text-width |demo 16 |sans-serif
             let
-                render-count $ atom 0
+                render-count $ ref 0
                 schedule! $ make-render-scheduler
-                  fn () $ swap! render-count inc
+                  fn () $ do (swap! render-count inc) &unit
                   Option :none
               schedule!
               schedule!
               shared/queue-microtask! $ fn () (swap! *async-checks inc)
                 assert |default-JS-scheduler-coalesces-microtasks $ = 1 @render-count
             let
-                calls $ atom 0
-                actions $ atom $ assert-type ([]) (:: 'List 'respo.resource/ResourceAction)
+                calls $ ref 0
+                actions $ ref $ assert-type ([]) (:: 'List 'respo.resource/ResourceAction)
                 request-id $ load-resource!
                   fn () (swap! calls inc) |ready
-                  fn (action) (swap! actions conj action)
+                  fn (action)
+                    do (swap! actions conj action) &unit
               assert |resource-fetcher-runs-once $ = 1 @calls
               assert |resource-load-starts-synchronously $ = (resource-started request-id)
                 assert-type
@@ -7166,10 +7167,11 @@
                     option:unwrap $ get @actions 1
                     , 'respo.resource/ResourceAction
             let
-                actions $ atom $ assert-type ([]) (:: 'List 'respo.resource/ResourceAction)
+                actions $ ref $ assert-type ([]) (:: 'List 'respo.resource/ResourceAction)
                 request-id $ load-resource!
                   fn () $ raise |offline
-                  fn (action) (swap! actions conj action)
+                  fn (action)
+                    do (swap! actions conj action) &unit
               assert |sync-fetch-failure-emits-two-actions $ = 2 $ count @actions
               match
                 option:unwrap $ last @actions
@@ -7179,7 +7181,7 @@
                     assert |sync-failure-keeps-error-message $ = |offline $ :message (shared/normalize-error error)
                 _ $ assert |expected-failed-resource-action false
             let
-                actions $ atom $ assert-type ([]) (:: 'List 'respo.resource/ResourceAction)
+                actions $ ref $ assert-type ([]) (:: 'List 'respo.resource/ResourceAction)
                 request-id $ load-resource!
                   fn () |ready
                   fn (action) (swap! actions conj action)
@@ -7317,7 +7319,7 @@
               :tags $ #{} :unit
             %{} 'TestEntry (:name |rejects-invalid-node)
               :code $ quote $ let
-                  caught? $ atom false
+                  caught? $ ref false
                 try
                   as-render-node $ {}
                   fn (error) (assert= |invalid-component-tree error) (reset! caught? true)
@@ -7501,7 +7503,7 @@
               :tags $ #{} :unit
             %{} 'TestEntry (:name |rejects-non-function)
               :code $ quote $ let
-                  caught? $ atom false
+                  caught? $ ref false
                 try (expect-function :invalid |expected-callback)
                   fn (error) (assert= |expected-callback error) (reset! caught? true)
                 assert |validation-still-raises @caught?
@@ -7898,7 +7900,7 @@
               :tags $ #{} :unit
             %{} 'TestEntry (:name |raises-explicitly-for-none-component-tree)
               :code $ quote $ let
-                  caught? $ atom false
+                  caught? $ ref false
                   component $ %{} respo.schema/Component (:name :empty)
                     :effects $ []
                     :listeners $ []
