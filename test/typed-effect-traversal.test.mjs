@@ -9,6 +9,7 @@ const { div, span } = await import('../js-out/respo.core.mjs');
 const { as_render_node, make_child_pair } = await import('../js-out/respo.util.detect.mjs');
 const { collect_mounting, collect_unmounting } = await import('../js-out/respo.render.effect.mjs');
 const { apply_dom_changes, run_effect } = await import('../js-out/respo.render.patch.mjs');
+const { with_fixture_children } = await import('../js-out/respo.test.dom.mjs');
 const t = c.init_tags(['name', 'effects', 'listeners', 'tree', 'coord', 'args', 'method', 'children', 'ref', 'outer', 'first', 'second']);
 const list = c.arrayToList;
 
@@ -56,7 +57,7 @@ function fixture(includeEmpty) {
     c.assoc(span(c.parse_cirru_edn('{}')), t.ref, ref(id)));
   const pairs = [make_child_pair('a', leaf(t.first, 'first')), make_child_pair('b', leaf(t.second, 'second'))];
   if (includeEmpty) pairs.splice(1, 0, make_child_pair('empty', null));
-  const parent = c.assoc(c.assoc(div(c.parse_cirru_edn('{}')), t.ref, ref('parent')), t.children, list(pairs));
+  const parent = with_fixture_children(c.assoc(div(c.parse_cirru_edn('{}')), t.ref, ref('parent')), list(pairs));
   const root = component(t.outer, parent);
   const mount = new ElementHost('main');
   const dom = new ElementHost(); dom.id = 'parent';

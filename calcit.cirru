@@ -2710,9 +2710,15 @@
           :schema $ :: 'Ref $ :: 'List 'String
         'StyleCacheEntry $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct StyleCacheEntry (:rules 'Dynamic)
-            :el $ :: 'JsNullish 'respo.dom/DomElement
+            :el $ :: 'JsNullish 'respo.css/StyleElement
           :examples $ []
           :schema $ :: 'StructDef
+        'StyleElement $ %{} 'CodeEntry (:doc "|样式缓存使用的宿主元素合同：仅包含 id 和 innerHTML。")
+          :code $ quote $ deftrait StyleElement (:id 'String) (:inner-html 'String)
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object)
+            :names $ {} $ :inner-html |innerHTML
+          :schema $ :: 'Trait
         'cache-node-style! $ %{} 'CodeEntry
           :doc "|Store one CSS block per style name in Node, preserving first registration order. Repeated blocks reuse their position; changed blocks replace it. Clearing the public CSS list resets the index cache on the next registration."
           :code $ quote $ defn cache-node-style! (style-name css-block)
@@ -2748,7 +2754,7 @@
                       , style-name $ let
                           style-el $ present-element $ :el cached-entry
                           css-block $ render-css-block style-name rules
-                        respo.dom/set-inner-html! style-el css-block
+                        set! style-el.:inner-html css-block
                         swap! *style-caches assoc style-name $ StyleCacheEntry :rules rules :el style-el
                         , style-name
                 (:none)
@@ -2756,8 +2762,8 @@
                       css-block $ render-css-block style-name rules
                     let
                         style-el $ present-element $ js/document.createElement |style
-                      respo.dom/set-inner-html! style-el css-block
-                      js-set style-el :id style-name
+                      set! style-el.:inner-html css-block
+                      set! style-el.:id style-name
                       js/document.head.appendChild style-el
                       swap! *style-caches assoc style-name $ StyleCacheEntry :rules rules :el style-el
                     , style-name
@@ -2830,9 +2836,9 @@
           :schema $ :: 'Bool
         'present-element $ %{} 'CodeEntry (:doc "|在 DOM 边界确认样式元素存在。")
           :code $ quote $ defn present-element (value)
-            if (js-present? value) (js-cast value 'respo.dom/DomElement) (raise |[Respo]-expected-a-DOM-element-for-style-cache)
+            if (js-present? value) (js-cast value 'respo.css/StyleElement) (raise |[Respo]-expected-a-DOM-element-for-style-cache)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.dom/DomElement)
+          :schema $ :: 'Fn $ {} (:return 'respo.css/StyleElement)
             :args $ [] $ :: 'JsNullish 'Dynamic
             :features $ #{} :js-ffi
         'render-css-block $ %{} 'CodeEntry
@@ -6752,6 +6758,17 @@
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
             :args $ [] 'respo.schema/Element
+        'fixture-entry! $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn fixture-entry! ()
+            with-fixture-events
+              with-fixture-children
+                respo.core/div $ {}
+                [] $ respo.util.detect/make-child-pair |child $ respo.core/span ({})
+              {} $ :click $ fn () &unit
+            , &unit
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ []
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! (root-host html-host)
             assert |typed-DOM-host-traverses-nested-child $ = &unit $ compare-to-dom!
@@ -6923,6 +6940,38 @@
               {} (:return 'Unit)
                 :args $ [] 'respo.dom/DomElement
             :features $ #{} :js-ffi
+        'with-fixture-children $ %{} 'CodeEntry
+          :doc "|测试专用：通过静态 Element/ChildPair 合同构造合法 fixture，不是开放输入的 decoder。"
+          :code $ quote $ defn with-fixture-children (element children) (element.assoc :children children)
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/Element)
+            :args $ [] 'respo.schema/Element $ :: 'List 'respo.schema/ChildPair
+          :tests $ [] $ %{} 'TestEntry (:name |preserves-order-and-input)
+            :code $ quote $ let
+                element $ respo.core/div $ {}
+                children $ []
+                  respo.util.detect/make-child-pair |first $ respo.core/span $ {}
+                  respo.util.detect/make-child-pair |empty nil
+                changed $ with-fixture-children element children
+              assert= children $ :children changed
+              assert= 0 $ count $ :children element
+              assert= :div $ :name changed
+            :tags $ #{} :unit
+        'with-fixture-events $ %{} 'CodeEntry (:doc "|测试专用：保留合法 Tag/nullable Fn 事件表，不是开放输入的 decoder。")
+          :code $ quote $ defn with-fixture-events (element events) (element.assoc :event events)
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/Element)
+            :args $ [] 'respo.schema/Element $ :: 'Map 'Tag (:: 'JsNullish 'Fn)
+          :tests $ [] $ %{} 'TestEntry (:name |preserves-callback-and-null)
+            :code $ quote $ let
+                element $ respo.core/span $ {}
+                callback $ fn () &unit
+                events $ {} (:click callback) (:focus nil)
+                changed $ with-fixture-events element events
+              assert= events $ :event changed
+              assert= 0 $ count $ :event element
+              assert= :span $ :name changed
+            :tags $ #{} :unit
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.test.dom
           :require
