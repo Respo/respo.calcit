@@ -37,7 +37,7 @@ jobs:
       - uses: calcit-lang/setup-calcit@v1.5.0
         with:
           tools: calcit,caps
-          version: 0.29.0-alpha.19
+          version: 0.29.0-alpha.24
           caps-version: 0.1.1
 
       - name: "load deps"
@@ -98,14 +98,7 @@ jobs:
         run: yarn test-cursor-keys
 
       - name: Test typed render traversal
-        run: |
-          node --test \
-            test/component-listener-traversal.test.mjs \
-            test/event-node-lookup.test.mjs \
-            test/purify-render-node.test.mjs \
-            test/typed-dom-creation.test.mjs \
-            test/typed-effect-traversal.test.mjs \
-            test/typed-event-refresh.test.mjs
+        run: yarn test-render-traversal
 
       - name: Test patch lookup and duplicate keys
         run: yarn test-patch-lookup
@@ -182,7 +175,7 @@ jobs:
       - uses: calcit-lang/setup-calcit@v1.5.0
         with:
           tools: calcit,caps
-          version: 0.29.0-alpha.19
+          version: 0.29.0-alpha.24
           caps-version: 0.1.1
 
       - name: Install pinned probe dependencies
@@ -204,4 +197,4 @@ jobs:
           export CALCIT_BIN="$RUNNER_TEMP/calcit-probe-mutation"
           export CHECK_CALCIT_BIN="$(command -v calcit)"
           node scripts/probe-dispatch-boundary.mjs > "$RUNNER_TEMP/dispatch-alpha7-probe.json"
-          node -e 'const assert=require("node:assert/strict"); const r=require(process.argv[1]); assert.equal(r.mutationCompiler,"0.29.0-alpha.19"); assert.equal(r.checker,"0.29.0-alpha.7"); console.log(`Dispatch migration probe: ${r.results.length} scenarios; mutation ${r.mutationCompiler}; checker ${r.checker}`)' "$RUNNER_TEMP/dispatch-alpha7-probe.json"
+          node -e 'const assert=require("node:assert/strict"); const r=require(process.argv[1]); assert.equal(r.mutationCompiler,"0.29.0-alpha.24"); assert.equal(r.checker,"0.29.0-alpha.7"); console.log(`Dispatch migration probe: ${r.results.length} scenarios; mutation ${r.mutationCompiler}; checker ${r.checker}`)' "$RUNNER_TEMP/dispatch-alpha7-probe.json"

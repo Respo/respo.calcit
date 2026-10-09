@@ -22,6 +22,11 @@ entry_for:
 
 ## Styles
 
+浏览器中的样式缓存使用 `respo.css/StyleElement` 宿主合同，只要求 `id` 和
+`innerHTML`。首次注册创建一个 `style` 元素；同名规则更新复用该元素，未变化的
+规则不重复写入。它不要求表单专属能力或事件监听器扩展字段。Node 输出继续按
+样式名去重并保留注册顺序。
+
 ## defstyle
 
 Use `defstyle` for static reusable styles, and combine it with `:class-name` on elements.

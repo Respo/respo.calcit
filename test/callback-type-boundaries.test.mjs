@@ -15,6 +15,25 @@ function evaluate(source) {
   return { status: result.status, output: result.stdout + result.stderr };
 }
 
+test('typed render fixtures preserve ChildPair and nullable callback contracts', () => {
+  const result = evaluate(`respo.test.dom/fixture-entry!`);
+  assert.equal(result.status, 0, result.output);
+});
+
+for (const [name, source] of [
+  ['children reject Number members', 'respo.test.dom/with-fixture-children (respo.core/div $ {}) ([] 42)'],
+  ['children reject another nominal value', 'respo.test.dom/with-fixture-children (respo.core/div $ {}) ([] $ respo.core/span $ {})'],
+  ['events reject String keys', 'respo.test.dom/with-fixture-events (respo.core/div $ {}) ({} (|click nil))'],
+  ['events reject Number callbacks', 'respo.test.dom/with-fixture-events (respo.core/div $ {}) ({} (:click 42))'],
+]) {
+  test(`typed render fixtures ${name}`, () => {
+    const result = evaluate(source);
+    assert.notEqual(result.status, 0, 'invalid fixture input must fail preprocessing');
+    assert.match(result.output, /W_FN_ARG_TYPE_MISMATCH|E_DYNAMIC_NOMINAL_ARGUMENT/);
+    assert.doesNotMatch(result.output, /took [\d.]+ms:/, 'invalid fixture input must not run');
+  });
+}
+
 for (const helper of ['pair-first', 'pair-value']) {
   const selectedCallback = call => `let
     callback $ fn (value)

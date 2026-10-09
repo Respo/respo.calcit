@@ -5,7 +5,23 @@ import { DomProps } from '../js-out/respo.schema.mjs';
 import { div } from '../js-out/respo.core.mjs';
 import { make_string } from '../js-out/respo.render.html.mjs';
 import { text__GT_html } from '../js-out/respo.util.format.mjs';
-import { create_style_$x_, render_css_block, warn_style_literals, _$s_style_list_in_nodejs, _$s_style_indices_in_nodejs, nodejs_$q_ } from '../js-out/respo.css.mjs';
+import { create_style_$x_, render_css_block, warn_style_literals, _$s_style_list_in_nodejs, _$s_style_indices_in_nodejs, nodejs_$q_, present_element } from '../js-out/respo.css.mjs';
+
+test('stylesheet cast requires only id and innerHTML and preserves host identity', () => {
+  const element = { id: 'style-fixture', innerHTML: '' };
+  assert.equal(present_element(element), element);
+  assert.equal('__respo_calcit_event_listeners' in element, false);
+  assert.equal('checked' in element, false);
+  assert.equal('select' in element, false);
+});
+
+test('stylesheet cast still rejects absent hosts and missing required members', () => {
+  for (const element of [null, undefined]) {
+    assert.throws(() => present_element(element), /expected-a-DOM-element-for-style-cache/);
+  }
+  assert.throws(() => present_element({ innerHTML: '' }), /missing field "id"/);
+  assert.throws(() => present_element({ id: 'style-fixture' }), /missing field "innerHTML"/);
+});
 
 test('Style source validation reports extra tokens inside nested List forms', () => {
   const tags = c.init_tags(['color']);

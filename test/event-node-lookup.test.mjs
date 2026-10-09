@@ -5,6 +5,7 @@ import { Component } from '../js-out/respo.schema.mjs';
 import { div, span } from '../js-out/respo.core.mjs';
 import { as_render_node, make_child_pair } from '../js-out/respo.util.detect.mjs';
 import { find_child_by_key, get_markup_at, find_event_target } from '../js-out/respo.controller.resolve.mjs';
+import { with_fixture_children, with_fixture_events } from '../js-out/respo.test.dom.mjs';
 
 const t = c.init_tags(['name', 'effects', 'listeners', 'tree', 'children', 'event', 'click', 'root', 'wrapped']);
 const list = c.arrayToList;
@@ -12,8 +13,8 @@ const props = c.parse_cirru_edn('{}');
 const unwrap = c.option_$o_unwrap;
 const component = (name, tree) => c._$n__PCT__$M_(Component,
   t.name, name, t.effects, list([]), t.listeners, list([]), t.tree, tree);
-const withChildren = (element, pairs) => c.assoc(element, t.children, list(pairs));
-const withClick = element => c.assoc(element, t.event, c.parse_cirru_edn('{} (:click nil)'));
+const withChildren = (element, pairs) => with_fixture_children(element, list(pairs));
+const withClick = element => with_fixture_events(element, c.parse_cirru_edn('{} (:click nil)'));
 
 test('lookup keeps component coordinate segments and separates String and Number keys', () => {
   const leaf = withClick(span(props));

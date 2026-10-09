@@ -24,6 +24,7 @@ const { div, span } = await import('../js-out/respo.core.mjs');
 const { as_render_node, make_child_pair } = await import('../js-out/respo.util.detect.mjs');
 const { make_element } = await import('../js-out/respo.render.dom.mjs');
 const { add_style, replace_style, replace_prop } = await import('../js-out/respo.render.patch.mjs');
+const { with_fixture_children, with_fixture_events } = await import('../js-out/respo.test.dom.mjs');
 const t = c.init_tags(['name', 'effects', 'listeners', 'tree', 'children', 'root', 'child']);
 const event = c.init_tags(['event', 'click', 'input']);
 const component = (name, element) => c._$n__PCT__$M_(Component,
@@ -80,14 +81,14 @@ test('style updates retain the style object, camel names, units and clearing', (
 
 test('DOM creation keeps child order, component event coordinates, properties and styles', () => {
   creation.length = 0;
-  const leaf = c.assoc(span(c.parse_cirru_edn('{} (:title |leaf) (:inner-text |ready)')),
-    event.event, c._$n__$M_(event.click, () => {}, event.input, null));
+  const leaf = with_fixture_events(span(c.parse_cirru_edn('{} (:title |leaf) (:inner-text |ready)')),
+    c._$n__$M_(event.click, () => {}, event.input, null));
   const child = component(t.child, leaf);
-  const rootElement = c.assoc(div(c.parse_cirru_edn('{} (:title |parent) (:data-name |root) (:style ({} (:padding 4)))')),
-    t.children, c.arrayToList([
+  const rootElement = with_fixture_children(div(c.parse_cirru_edn('{} (:title |parent) (:data-name |root) (:style ({} (:padding 4)))')),
+    c.arrayToList([
       make_child_pair('empty', null), make_child_pair('row', child),
     ]));
-  const root = component(t.root, c.assoc(rootElement, event.event,
+  const root = component(t.root, with_fixture_events(rootElement,
     c._$n__$M_(event.click, () => {})));
   const deliveries = [];
   const dom = make_element(root, name => (_event, coord) => {

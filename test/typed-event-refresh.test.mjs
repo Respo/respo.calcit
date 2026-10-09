@@ -8,6 +8,7 @@ const { div, span } = await import('../js-out/respo.core.mjs');
 const { as_render_node, make_child_pair } = await import('../js-out/respo.util.detect.mjs');
 const { collect_event_refreshing, collect_event_refreshing_node, find_element_diffs } = await import('../js-out/respo.render.diff.mjs');
 const { apply_dom_changes } = await import('../js-out/respo.render.patch.mjs');
+const { with_fixture_children, with_fixture_events } = await import('../js-out/respo.test.dom.mjs');
 const t = c.init_tags(['name', 'tree', 'effects', 'listeners', 'event', 'children', 'outer', 'inner', 'kid', 'click', 'focus']);
 const list = c.arrayToList;
 const component = (name, tree) => c._$n__PCT__$M_(Component,
@@ -16,8 +17,8 @@ const component = (name, tree) => c._$n__PCT__$M_(Component,
 
 function fixture() {
   const events = c._$n__$M_(t.click, () => {}, t.focus, null);
-  const leaf = c.assoc(span(c.parse_cirru_edn('{}')), t.event, events);
-  const tree = c.assoc(c.assoc(div(c.parse_cirru_edn('{}')), t.event, events), t.children, list([
+  const leaf = with_fixture_events(span(c.parse_cirru_edn('{}')), events);
+  const tree = with_fixture_children(with_fixture_events(div(c.parse_cirru_edn('{}')), events), list([
     make_child_pair('empty', null),
     make_child_pair(t.kid, component(t.inner, leaf)),
     make_child_pair(7, leaf),

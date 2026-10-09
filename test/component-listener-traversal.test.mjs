@@ -5,6 +5,7 @@ import { Component, RespoListener } from '../js-out/respo.schema.mjs';
 import { div } from '../js-out/respo.core.mjs';
 import { as_render_node, make_child_pair } from '../js-out/respo.util.detect.mjs';
 import { traverse_and_call, wrap_dispatch } from '../js-out/respo.controller.client.mjs';
+import { with_fixture_children } from '../js-out/respo.test.dom.mjs';
 
 const t = c.init_tags(['name', 'handler', 'effects', 'listeners', 'tree', 'children', 'watch', 'changed', 'root', 'nested', 'first', 'second', 'states', 'persist', 'direct']);
 const list = c.arrayToList;
@@ -28,7 +29,7 @@ function fixture(includeEmpty, fail = false) {
   const second = component(t.second, c._PCT_none(), [listener('second')]);
   const pairs = [make_child_pair('first', first), make_child_pair('second', second)];
   if (includeEmpty) pairs.splice(1, 0, make_child_pair('empty', null));
-  const element = c.assoc(div(c.parse_cirru_edn('{}')), t.children, list(pairs));
+  const element = with_fixture_children(div(c.parse_cirru_edn('{}')), list(pairs));
   const nested = component(t.nested, c._PCT_some(as_render_node(element)), [listener('nested')]);
   const root = component(t.root, c._PCT_some(as_render_node(nested)), [
     listener('root-1', d => d(list(['cursor']), 'value')),
