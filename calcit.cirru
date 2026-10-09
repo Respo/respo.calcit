@@ -7143,7 +7143,7 @@
             let
                 render-count $ atom 0
                 schedule! $ make-render-scheduler
-                  fn () $ swap! render-count inc
+                  fn () $ do (swap! render-count inc) &unit
                   Option :none
               schedule!
               schedule!
@@ -7154,7 +7154,8 @@
                 actions $ atom $ assert-type ([]) (:: 'List 'respo.resource/ResourceAction)
                 request-id $ load-resource!
                   fn () (swap! calls inc) |ready
-                  fn (action) (swap! actions conj action)
+                  fn (action)
+                    do (swap! actions conj action) &unit
               assert |resource-fetcher-runs-once $ = 1 @calls
               assert |resource-load-starts-synchronously $ = (resource-started request-id)
                 assert-type
@@ -7169,7 +7170,8 @@
                 actions $ atom $ assert-type ([]) (:: 'List 'respo.resource/ResourceAction)
                 request-id $ load-resource!
                   fn () $ raise |offline
-                  fn (action) (swap! actions conj action)
+                  fn (action)
+                    do (swap! actions conj action) &unit
               assert |sync-fetch-failure-emits-two-actions $ = 2 $ count @actions
               match
                 option:unwrap $ last @actions
