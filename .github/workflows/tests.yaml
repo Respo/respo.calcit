@@ -88,6 +88,9 @@ jobs:
       - name: Test demo render scheduling
         run: yarn test-demo-scheduler
 
+      - name: Test saved-task normalization and nominal identity
+        run: yarn test-persisted-tasks
+
       - name: Test memo frame lifecycle
         run: yarn test-memo
 

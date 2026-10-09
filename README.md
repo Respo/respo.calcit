@@ -8,11 +8,11 @@ Respo 的开发版本以 `deps.cirru` 固定 Calcit 与 js-ffi 依赖，通过�
 
 升级时同时固定 `deps.cirru :calcit-version` 和 `package.json` 的 `@calcit/procs` 为同一精确版本，并执行 `yarn install --immutable`。只更新 CLI 而沿用旧 JS runtime，可能在运行时缺失新的 trait 实现；编译成功不能代替 DOM/SSR 测试。核心 API 改写先用 `calcit fix --preset core-api-0.28-v1 --format edn` 预览，只有可证明安全的建议自动应用，剩余开放类型和 macro 建议保留人工审阅。
 
-当前编译器和 JS runtime 固定为已发布的 Calcit / `@calcit/procs` `0.29.0-alpha.6`，js-ffi 固定为已发布 Git tag `0.2.1-alpha.13`，不使用提交 hash。Respo `0.16.114-alpha.7` 将现有 typed callback、RenderNode、DOM patch 和集合合同接入这一工具链，仍是预发布源码模块。模块通过普通 Calcit 引用复用 JS FFI，不需要片段专用 npm 包。版本以 `deps.cirru :version` 为准，旧 Snapshot 的镜像字段不作为发布依据。此前 alpha 工具链的历史验收见[发布依赖验收](docs/guide/calcit-0.28-alpha3-validation.md)，不代表当前组合的完整验收。
+当前编译器和 JS runtime 固定为已发布的 Calcit / `@calcit/procs` `0.29.0-alpha.24`，js-ffi 固定为已发布 Git tag `0.2.1-alpha.16`，不使用提交 hash。Respo 仍是预发布源码模块，通过普通 Calcit 引用复用 JS FFI，不需要片段专用 npm 包。版本以 `deps.cirru :version` 为准，旧 Snapshot 的镜像字段不作为发布依据。此前 alpha 工具链的历史验收见[发布依赖验收](docs/guide/calcit-0.28-alpha3-validation.md)，不代表当前组合的完整验收。
 
 演示页前端构建使用 `https://cos-sh.tiye.me/Respo/respo.calcit/` 作为资源 base。仅 main push 在测试、构建通过后上传 `dist/`，使用 `cos-upload-action@v1.2.0` 的 `public-base-url` 内置逐文件校验，不维护额外验证脚本。PR 只构建，不读取部署 secrets。原 rsync 页面路径 `/web-assets/repo/${github.repository}` 保持不变；生产运行串行且上传前检查 main SHA，跳过已过期提交，这并非原子发布。
 
-当前组合保留原 definition `:tests` 与断言，通过原生 108 项测试、默认 browser 入口检查，以及 23 个框架命名空间的 325 个定义检查。SSR、DOM patch/lifecycle、正反类型检查、Markdown 示例和生产构建均已验证；真实 Chrome 验证任务添加、编辑、勾选、移除、键盘事件和刷新后交互。源码使用 canonical core 名称，字面量分支使用 `match`，不增加质量基线预算。`with-attrs` 接收已序列化的 SVG 扩展属性；DOM anchor 末尾移动使用 null，保留宿主边界的运行时验证。
+当前组合保留原 definition `:tests` 与断言；任务恢复修复增加四项 Calcit 测试，原生共 125 项，全定义检查共 401 项，框架检查覆盖 23 个命名空间的 336 个定义。SSR、DOM patch/lifecycle、正反类型检查、Markdown 示例和生产构建继续保留。EDN 解析所得 Task 名称与字段布局不是名义类型证明：恢复时复用受检 decoder 校验字段，恢复当前 Task 身份；已验证的当前 Task 保留对象身份。`yarn test-persisted-tasks` 验证生成 JS 的序列化往返和错误字段拒绝，真实 Chrome 复验同一份已保存任务刷新后恢复且控制台无错误。源码使用 canonical core 名称，不增加质量基线预算。`with-attrs` 接收已序列化的 SVG 扩展属性；DOM anchor 末尾移动使用 null，保留宿主边界的运行时验证。
 
 Memo 帧生命周期、依赖记录、DOM 缓存失效和 demo 派发的 Unit 合同显式返回 `&unit`。`reset!` / `swap!` 本身返回写入值；`!` 表示有副作用，不代表返回 Unit。附带测试覆盖帧状态和空缓存的两条路径，原有 JS memo 与 DOM patch 测试继续检查缓存保留、失效顺序和宿主效果，同时断言这些接口的 Unit 返回。
 
