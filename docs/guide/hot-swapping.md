@@ -33,10 +33,10 @@ defn reload! ()
 
 If you don't, in the next rendering phase old element tree would be used if no argument changes found, which means Respo would still use render functions defined previously.
 
-In Respo, you are asked to define `*store` explicitly. They the global states of data. As an Atom, the value inside is immutable, but the reference is mutable. During hot swapping, variables defined with `defatom` will be retained. As a result, component states are persistent even code is swapped:
+In Respo, you are asked to define `*store` explicitly. They the global states of data. As a Ref, the value inside is immutable, but the reference is mutable. During hot swapping, variables defined with `defref` will be retained. As a result, component states are persistent even code is swapped:
 
 ```cirru.no-check
-defatom *store $ atom
+defref *store
   or
     let
         raw $ or

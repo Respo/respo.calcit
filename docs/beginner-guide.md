@@ -189,7 +189,7 @@ compiler can check its `:states` field:
 ```cirru.no-check
 defstruct Store (:states 'Map)
 
-defatom *store $ %{} Store (:states $ {})
+defref *store $ %{} Store (:states $ {})
 
 defn updater (store op op-id)
   match op
@@ -207,7 +207,7 @@ In order to render, you need to define `store` and `states`.
 Use Atoms here since they are the data sources that change over time:
 
 ```cirru.no-check
-defatom *store $ {}
+defref *store $ {}
   :states $ {}
 
 defn id! () (.!valueOf (new js/Date))
@@ -259,7 +259,7 @@ Import `make-render-scheduler` from `respo.core`. The callback reads `@*store`
 when it runs, so several dispatches in one tick produce one render of the newest state:
 
 ```cirru.no-check
-defatom *render-generation 0
+defref *render-generation 0
 
 defn watch-render! ()
   swap! *render-generation inc

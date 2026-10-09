@@ -117,8 +117,8 @@ captures callbacks to test batching without a browser:
 
 ```cirru
 let
-    *renders $ atom 0
-    *tasks $ atom $ []
+    *renders $ ref 0
+    *tasks $ ref $ []
     request! $ respo.core/make-render-scheduler
       fn () (swap! *renders inc)
         , &unit

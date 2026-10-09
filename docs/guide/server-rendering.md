@@ -19,10 +19,10 @@ For more details please read <https://github.com/Respo/ssr-stages>
 
 ### Rendering assumptions
 
-Before talking about **S**erver **S**ide **R**endering(SSR), you should know about how Respo mounts and rerenders. There's a Atom called `*global-element` which represents the virtual DOM of currently rendered HTML content on the page:
+Before talking about **S**erver **S**ide **R**endering(SSR), you should know about how Respo mounts and rerenders. There's a Ref called `*global-element` which represents the virtual DOM of currently rendered HTML content on the page:
 
 ```cirru.no-check
-defatom *global-element $ Option :none
+defref *global-element $ Option :none
 ```
 
 And every time you call `render!`, it checks if old virtual DOM exists. If exists, it will do patching with `rerender-app!` rather than mounting:
@@ -68,7 +68,7 @@ Without `respo.core/realize-ssr!`, `respo.core/render!` will remove existing DOM
 How to prepare that virtual DOM? You have to render that by yourself. Since Respo components are like functions, it's not hard. Read code below:
 
 ```cirru.no-check
-defatom *store $ {}
+defref *store $ {}
 
 def mount-target (js/document.querySelector "|.app")
 

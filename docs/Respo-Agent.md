@@ -192,7 +192,7 @@ let
 
 ```cirru.no-check
 ; Define store atom at app.core level
-defatom *store $ {}
+defref *store $ {}
   :states $ {}
   :data $ {}
 
