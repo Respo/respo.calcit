@@ -80,7 +80,9 @@ export async function benchmarkDemoScheduler(render, rounds = 11) {
         render();
         let renders = 0;
         const counted = () => { renders++; render(); };
-        if (mode === 'sync') c.add_watch(_$s_store, tags.rerender, counted);
+        // Calcit 0.29 exports `add-watch!` as `add_watch_$x_`; keep the old export
+        // as a fallback while CI still runs against 0.29.0-alpha.19.
+        if (mode === 'sync') (c.add_watch_$x_ ?? c.add_watch)(_$s_store, tags.rerender, counted);
         else watch_render_$x_(counted);
         const start = performance.now();
         for (let i = 0; i < 20; i++) addTask(`sample-${i}`);
