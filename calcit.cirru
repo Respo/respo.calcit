@@ -531,7 +531,17 @@
           :code $ quote $ defn normalize-task (data)
             cond
                 struct? data
-                if (&struct:matches? data Task) (Option :some data) (Option :none)
+                if (&struct:matches? data Task)
+                  match
+                    try-decode-map-as (data.to-map) 'respo.app.schema/Task
+                    (:ok checked)
+                      Option :some $ if
+                        identical?
+                          .unwrap $ struct-definition data
+                          , Task
+                        , data checked
+                    (:err _) (Option :none)
+                  Option :none
               (map? data)
                 match (try-decode-map-as data 'respo.app.schema/Task)
                   (:ok task) (Option :some task)
@@ -571,6 +581,9 @@
               :code $ quote $ assert |other-nominal-struct-is-rejected
                 option:none? $ normalize-task $ respo.core/span ({})
               :tags $ #{} :unit
+            %{} 'TestEntry (:name |parsed-record-requires-field-validation)
+              :code $ quote $ assert= (Option :none)
+                normalize-task $ parse-cirru-edn "|%{} 'Task (:done? |wrong) (:id |saved) (:text |bad)"
         'normalize-tasks $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn normalize-tasks (items)
             loop
@@ -586,6 +599,43 @@
           :schema $ :: 'Fn $ {}
             :args $ [] $ :: 'List 'Dynamic
             :return $ :: 'List 'respo.app.schema/Task
+        'restore-tasks $ %{} 'CodeEntry
+          :doc "|把已完成受检 normalization 的 Task 列表写入 Store；不接收原始开放输入。"
+          :code $ quote $ defn restore-tasks (store tasks) (store.assoc :tasks tasks)
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'respo.app.schema/Store)
+            :args $ [] 'respo.app.schema/Store $ :: 'List 'respo.app.schema/Task
+          :tests $ []
+            %{} 'TestEntry (:name |restored-tasks-update-preserves-store)
+              :code $ quote $ let
+                  original respo.app.schema/store
+                  restored $ restore-tasks original $ normalize-tasks
+                    [] $ {} (:id |saved) (:text |restored) (:done? false)
+                match
+                  get (:tasks restored) 0
+                  (:some task)
+                    assert= |restored $ :text task
+                  (:none) (raise |expected-restored-task)
+                assert= 0 $ count $ :tasks original
+                assert= (:cursor original) (:cursor restored)
+            %{} 'TestEntry (:name |invalid-saved-items-keep-original-normalization)
+              :code $ quote $ let
+                  restored $ restore-tasks respo.app.schema/store $ normalize-tasks ([] 42)
+                assert= 0 $ count $ :tasks restored
+            %{} 'TestEntry (:name |serialized-tasks-recover-nominal-identity)
+              :code $ quote $ let
+                  task $ Task :id |persisted :text |reload :done? false
+                  raw $ parse-cirru-edn $ format-cirru-edn ([] task)
+                  items $ decode-map-as raw $ :: 'List 'Dynamic
+                  restored $ restore-tasks respo.app.schema/store $ normalize-tasks items
+                match
+                  get (:tasks restored) 0
+                  (:some recovered)
+                    do
+                      assert= |persisted $ :id recovered
+                      assert= |reload $ :text recovered
+                      assert= false $ :done? recovered
+                  (:none) (raise |expected-serialized-task)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.app.task
           :require $ respo.app.schema :refer $ Task
@@ -3468,7 +3518,7 @@
                   let
                       tasks $ decode-map-as decoded $ :: 'List 'Dynamic
                       restored $ respo.app.task/normalize-tasks tasks
-                    reset! *store $ assoc @*store :tasks restored
+                    reset! *store $ respo.app.task/restore-tasks @*store restored
             render-app! mount-target
             browser/add-event-listener! |keydown $ fn (raw-event)
               let
