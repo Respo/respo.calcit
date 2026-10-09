@@ -545,7 +545,7 @@
             %{} 'TestEntry (:name |restores-valid-task-data)
               :code $ quote $ do
                 let
-                    task $ %{} Task (:id |task-1) (:text |saved) (:done? false)
+                    task $ Task :id |task-1 :text |saved :done? false
                     normalized $ option:unwrap $ normalize-task task
                   assert |struct-id-is-kept $ = |task-1 $ &struct:nth normalized 1 :id
                   assert |struct-text-is-kept $ = |saved $ &struct:nth normalized 2 :text
@@ -928,13 +928,9 @@
               :name |tolerates-none-subtree-and-keeps-component-listener
               :code $ quote $ let
                   log $ ref $ []
-                  listener $ %{} respo.schema/RespoListener (:name :watch)
-                    :handler $ fn (event _dispatch!)
-                      reset! log $ [] event
-                  component $ %{} respo.schema/Component (:name :empty)
-                    :effects $ []
-                    :listeners $ [] listener
-                    :tree $ %none
+                  listener $ respo.schema/RespoListener :name :watch :handler $ fn (event _dispatch!)
+                    reset! log $ [] event
+                  component $ respo.schema/Component :name :empty :effects ([]) :listeners ([] listener) :tree $ %none
                 traverse-and-call component (:: :changed)
                   fn (_op) &unit
                 assert |listener-was-called $ &= 1 $ count @log
@@ -1137,10 +1133,7 @@
             :return $ :: 'calcit.core/Option 'respo.schema/Element
           :tests $ [] $ %{} 'TestEntry (:name |returns-none-through-empty-component-tree)
             :code $ quote $ let
-                component $ %{} respo.schema/Component (:name :empty)
-                  :effects $ []
-                  :listeners $ []
-                  :tree $ %none
+                component $ respo.schema/Component :name :empty :effects ([]) :listeners ([]) :tree $ %none
               assert |coordinate-descent-stops-at-none-tree $ option:none? $ get-markup-at component ([] :child)
               assert |event-target-stops-at-none-tree $ option:none? $ find-event-target component ([]) :click
             :tags $ #{} :unit
@@ -1665,19 +1658,18 @@
             let
                 args-var $ gensym |args
                 params-var $ gensym |params
-              quasiquote $ defn ~effect-name ~args $ %{} schema/Effect
-                :name $ ~ $ turn-tag effect-name
-                :coord $ []
-                :args $ [] ~@args
-                :method $ fn (~args-var ~params-var)
-                  hint-fn $ {}
-                    :args $ [] (:: 'List 'Dynamic) (:: 'List 'Dynamic)
-                    :return 'Unit
-                  let[] ~args ~args-var $ let[] ~params ~params-var $ ~
-                    if (empty? body)
-                      quasiquote $ do $ println (str-spaced |WARNING: ~effect-name "|lack code for handling effects!")
-                      quasiquote $ do ~@body
-                  , &unit
+              quasiquote $ defn ~effect-name ~args $ schema/Effect :name
+                ~ $ turn-tag effect-name
+                , :coord ([]) :args ([] ~@args) :method
+                  fn (~args-var ~params-var)
+                    hint-fn $ {}
+                      :args $ [] (:: 'List 'Dynamic) (:: 'List 'Dynamic)
+                      :return 'Unit
+                    let[] ~args ~args-var $ let[] ~params ~params-var $ ~
+                      if (empty? body)
+                        quasiquote $ do $ println (str-spaced |WARNING: ~effect-name "|lack code for handling effects!")
+                        quasiquote $ do ~@body
+                    , &unit
           :examples $ [] $ quote
             defeffect log-message (message) (action el at-place?)
               if (= action :mount) (js/console.log message)
@@ -1831,13 +1823,7 @@
                   log $ ref $ []
                   ops $ ref $ []
                   collect! $ fn (op) (append-dynamic! ops op)
-                  element $ %{} schema/Element (:name :div)
-                    :coord $ %none
-                    :attrs $ []
-                    :style $ []
-                    :event $ {}
-                    :children $ []
-                    :ref nil
+                  element $ schema/Element :name :div :coord (%none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref nil
                   old-effect $ effect-watch ([] 1)
                     fn (target)
                       append-dynamic! log $ [] :setup 1 target
@@ -1848,14 +1834,8 @@
                       append-dynamic! log $ [] :setup 2 target
                     some-effect-callback $ fn (target)
                       append-dynamic! log $ [] :cleanup 2 target
-                  old-tree $ %{} schema/Component (:name :watch)
-                    :effects $ [] old-effect
-                    :listeners $ []
-                    :tree $ %some $ respo.util.detect/as-render-node element
-                  new-tree $ %{} schema/Component (:name :watch)
-                    :effects $ [] new-effect
-                    :listeners $ []
-                    :tree $ %some $ respo.util.detect/as-render-node element
+                  old-tree $ schema/Component :name :watch :effects ([] old-effect) :listeners ([]) :tree $ %some (respo.util.detect/as-render-node element)
+                  new-tree $ schema/Component :name :watch :effects ([] new-effect) :listeners ([]) :tree $ %some (respo.util.detect/as-render-node element)
                 respo.render.effect/collect-updating collect! :before-update ([]) ([]) old-tree new-tree
                 respo.render.effect/collect-updating collect! :update ([]) ([]) old-tree new-tree
                 run-effect-ops! @ops :target
@@ -1865,27 +1845,15 @@
               :code $ quote $ let
                   ops $ ref $ []
                   collect! $ fn (op) (append-dynamic! ops op)
-                  element $ %{} schema/Element (:name :div)
-                    :coord $ %none
-                    :attrs $ []
-                    :style $ []
-                    :event $ {}
-                    :children $ []
-                    :ref nil
+                  element $ schema/Element :name :div :coord (%none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref nil
                   old-effect $ effect-watch ([] 1)
                     fn (_target) &unit
                     %none
                   new-effect $ effect-watch ([] 1)
                     fn (_target) &unit
                     %none
-                  old-tree $ %{} schema/Component (:name :watch)
-                    :effects $ [] old-effect
-                    :listeners $ []
-                    :tree $ %some $ respo.util.detect/as-render-node element
-                  new-tree $ %{} schema/Component (:name :watch)
-                    :effects $ [] new-effect
-                    :listeners $ []
-                    :tree $ %some $ respo.util.detect/as-render-node element
+                  old-tree $ schema/Component :name :watch :effects ([] old-effect) :listeners ([]) :tree $ %some (respo.util.detect/as-render-node element)
+                  new-tree $ schema/Component :name :watch :effects ([] new-effect) :listeners ([]) :tree $ %some (respo.util.detect/as-render-node element)
                 respo.render.effect/collect-updating collect! :before-update ([]) ([]) old-tree new-tree
                 respo.render.effect/collect-updating collect! :update ([]) ([]) old-tree new-tree
                 assert |unchanged-effects-produce-no-operations $ empty? @ops
@@ -1895,26 +1863,14 @@
                   log $ ref $ []
                   ops $ ref $ []
                   collect! $ fn (op) (append-dynamic! ops op)
-                  element $ %{} schema/Element (:name :div)
-                    :coord $ %none
-                    :attrs $ []
-                    :style $ []
-                    :event $ {}
-                    :children $ []
-                    :ref nil
+                  element $ schema/Element :name :div :coord (%none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref nil
                   watch $ effect-watch ([])
                     fn (target)
                       append-dynamic! log $ [] :setup target
                     some-effect-callback $ fn (target)
                       append-dynamic! log $ [] :cleanup target
-                  without-effect $ %{} schema/Component (:name :optional)
-                    :effects $ []
-                    :listeners $ []
-                    :tree $ %some $ respo.util.detect/as-render-node element
-                  with-effect $ %{} schema/Component (:name :optional)
-                    :effects $ [] watch
-                    :listeners $ []
-                    :tree $ %some $ respo.util.detect/as-render-node element
+                  without-effect $ schema/Component :name :optional :effects ([]) :listeners ([]) :tree $ %some (respo.util.detect/as-render-node element)
+                  with-effect $ schema/Component :name :optional :effects ([] watch) :listeners ([]) :tree $ %some (respo.util.detect/as-render-node element)
                 respo.render.effect/collect-updating collect! :before-update ([]) ([]) without-effect with-effect
                 respo.render.effect/collect-updating collect! :update ([]) ([]) without-effect with-effect
                 run-effect-ops! @ops :target
@@ -1929,27 +1885,15 @@
                   log $ ref $ []
                   ops $ ref $ []
                   collect! $ fn (op) (append-dynamic! ops op)
-                  element $ %{} schema/Element (:name :div)
-                    :coord $ %none
-                    :attrs $ []
-                    :style $ []
-                    :event $ {}
-                    :children $ []
-                    :ref nil
+                  element $ schema/Element :name :div :coord (%none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref nil
                   old-effect $ effect-watch ([])
                     fn (_target) &unit
                     some-effect-callback $ fn (target)
                       append-dynamic! log $ [] :cleanup target
                   new-effect $ effect-on-mount $ fn (target)
                     append-dynamic! log $ [] :mount target
-                  old-tree $ %{} schema/Component (:name :replace)
-                    :effects $ [] old-effect
-                    :listeners $ []
-                    :tree $ %some $ respo.util.detect/as-render-node element
-                  new-tree $ %{} schema/Component (:name :replace)
-                    :effects $ [] new-effect
-                    :listeners $ []
-                    :tree $ %some $ respo.util.detect/as-render-node element
+                  old-tree $ schema/Component :name :replace :effects ([] old-effect) :listeners ([]) :tree $ %some (respo.util.detect/as-render-node element)
+                  new-tree $ schema/Component :name :replace :effects ([] new-effect) :listeners ([]) :tree $ %some (respo.util.detect/as-render-node element)
                 respo.render.effect/collect-updating collect! :before-update ([]) ([]) old-tree new-tree
                 respo.render.effect/collect-updating collect! :update ([]) ([]) old-tree new-tree
                 run-effect-ops! @ops :target
@@ -2088,13 +2032,7 @@
                       hint-fn $ {}
                         :args $ [] 'Tag 'Number
                         :return 'respo.schema/Element
-                      %{} schema/Element (:name :div)
-                        :coord $ %none
-                        :attrs $ []
-                        :style $ []
-                        :event $ {}
-                        :children $ []
-                        :ref nil
+                      schema/Element :name :div :coord (%none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref nil
                 assert |keys-preserve-input-order $ &= ([] :a :b) (map pairs respo.util.list/pair-key)
                 assert |all-items-are-rendered $ = 2 $ count pairs
               let
@@ -2110,13 +2048,7 @@
                       hint-fn $ {}
                         :args $ [] 'Number 'Number
                         :return 'respo.schema/Element
-                      %{} schema/Element (:name :div)
-                        :coord $ %none
-                        :attrs $ []
-                        :style $ []
-                        :event $ {}
-                        :children $ []
-                        :ref nil
+                      schema/Element :name :div :coord (%none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref nil
                   fn (_error) (reset! caught? true)
                 assert |nil-key-reports-index @caught?
             :tags $ #{} :unit
@@ -2267,11 +2199,7 @@
           :examples $ [] $ quote
             memo-comp-by :demo
               fn (label)
-                %{} schema/Component
-                  :effects $ []
-                  :name :memo-demo
-                  :listeners $ []
-                  :tree $ <> label
+                schema/Component :effects ([]) :name :memo-demo :listeners ([]) :tree $ <> label
               , |demo
           :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Component)
             :args $ [] 'Dynamic 'Fn
@@ -3260,7 +3188,7 @@
             :return $ :: 'Map 'Tag 'Dynamic
           :tests $ [] $ %{} 'TestEntry (:name |merges-struct-state-repeatedly)
             :code $ quote $ let
-                state0 $ %{} CursorTestState (:draft |a) (:locked? false) (:message |ready)
+                state0 $ CursorTestState :draft |a :locked? false :message |ready
                 store1 $ update-states-merge ({}) ([]) state0 $ {} (:draft |b)
                 store2 $ update-states-merge store1 ([]) state0 $ {} (:draft |c)
                 state2 $ coerce-cursor-test-state $ get-state-at store2 ([] :states :data)
@@ -3694,10 +3622,7 @@
             :args $ [] 'Fn $ :: 'List 'Dynamic
           :tests $ [] $ %{} 'TestEntry (:name |keeps-component-identity-and-calls-once)
             :code $ quote $ let
-                expected $ %{} respo.schema/Component (:name :probe)
-                  :effects $ []
-                  :listeners $ []
-                  :tree $ %none
+                expected $ respo.schema/Component :name :probe :effects ([]) :listeners ([]) :tree $ %none
                 calls $ ref 0
                 build $ fn (number text) (swap! calls inc) (assert= 42 number) (assert= |probe text) expected
                 actual $ call-component build $ [] 42 |probe
@@ -3730,7 +3655,7 @@
                     fn (error) (reset! *memo-dependency-stack previous-stack) (raise error)
                   children $ assert-type (&list:last @*memo-dependency-stack) (:: Set MemoCacheKey)
                 reset! *memo-dependency-stack previous-stack
-                %{} MemoEntry (:args args) (:value value) (:children children)
+                MemoEntry :args args :value value :children children
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.memo/MemoEntry)
             :args $ [] 'Fn $ :: 'List 'A
@@ -3761,11 +3686,9 @@
             :code $ quote $ let
                 calls $ ref 0
                 build $ fn (value) (swap! calls inc)
-                  %{} respo.schema/Component
-                    :name $ turn-tag $ str |counted- value
-                    :effects $ []
-                    :listeners $ []
-                    :tree $ %none
+                  respo.schema/Component :name
+                    turn-tag $ str |counted- value
+                    , :effects ([]) :listeners ([]) :tree $ %none
               reset-component-caches!
               begin-memo-frame!
               let
@@ -3799,7 +3722,7 @@
               or (nil? key) (not @*memo-frame-active?)
               call-value f args
               let
-                  cache-key $ %{} MemoCacheKey (:callback f) (:key key)
+                  cache-key $ MemoCacheKey :callback f :key key
                 record-memo-child! cache-key
                 let
                     frame-entry-option $ let
@@ -4077,30 +4000,18 @@
             :code $ quote $ let
                 ops $ ref $ []
                 collect! $ fn (op) (respo.core/append-dynamic! ops op)
-                leaf $ %{} respo.schema/Element (:name :span)
-                  :coord $ Option :none
-                  :attrs $ []
-                  :style $ []
-                  :ref nil
-                  :children $ []
-                  :event $ {}
-                    :click $ fn (_event _d!)
-                      hint-fn $ {}
-                        :args $ [] (:: 'Map 'Tag 'Dynamic)
-                          :: 'Fn $ {}
-                            :args $ [] 'Dynamic
-                            :return 'Unit
-                        :return 'Unit
-                      , &unit
-                    :focus nil
+                leaf $ respo.schema/Element :name :span :coord (Option :none) :attrs ([]) :style ([]) :ref nil :children ([]) :event $ {}
+                  :click $ fn (_event _d!)
+                    hint-fn $ {}
+                      :args $ [] (:: 'Map 'Tag 'Dynamic)
+                        :: 'Fn $ {}
+                          :args $ [] 'Dynamic
+                          :return 'Unit
+                      :return 'Unit
+                    , &unit
+                  :focus nil
                 wrapped $ respo.schema/Component :name :inner :effects ([]) :listeners ([]) :tree $ Option :some (respo.util.detect/as-render-node leaf)
-                root $ %{} respo.schema/Element (:name :div)
-                  :coord $ Option :none
-                  :attrs $ []
-                  :style $ []
-                  :ref nil
-                  :event $ {}
-                  :children $ [] (respo.util.detect/make-child-pair :empty nil) (respo.util.detect/make-child-pair :live wrapped)
+                root $ respo.schema/Element :name :div :coord (Option :none) :attrs ([]) :style ([]) :ref nil :event ({}) :children $ [] (respo.util.detect/make-child-pair :empty nil) (respo.util.detect/make-child-pair :live wrapped)
               collect-event-refreshing collect! ([] :app) ([]) root
               assert=
                 [] $ DomPatch :set-event ([] :app :live :inner) ([] 0) :click
@@ -4361,13 +4272,7 @@
           :tests $ []
             %{} 'TestEntry (:name |accepts-list-map-representation-transitions)
               :code $ quote $ let
-                  child $ %{} respo.schema/Element (:name :div)
-                    :coord $ %none
-                    :attrs $ []
-                    :style $ []
-                    :event $ {}
-                    :children $ []
-                    :ref nil
+                  child $ respo.schema/Element :name :div :coord (%none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref nil
                   effects $ ref $ []
                   collect! $ fn (effect) (respo.core/append-dynamic! effects effect)
                   child-list $ [] $ respo.util.detect/make-child-pair :a child
@@ -4430,20 +4335,8 @@
                       :args $ [] $ :: 'JsNullish 'respo.dom/DomElement
                       :return 'Unit
                     respo.core/append-dynamic! log $ [] :new target
-                  old-element $ %{} respo.schema/Element (:name :div)
-                    :coord $ %none
-                    :attrs $ []
-                    :style $ []
-                    :event $ {}
-                    :children $ []
-                    :ref old-ref!
-                  new-element $ %{} respo.schema/Element (:name :div)
-                    :coord $ %none
-                    :attrs $ []
-                    :style $ []
-                    :event $ {}
-                    :children $ []
-                    :ref new-ref!
+                  old-element $ respo.schema/Element :name :div :coord (%none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref old-ref!
+                  new-element $ respo.schema/Element :name :div :coord (%none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref new-ref!
                   collect! $ fn (op) (respo.core/append-dynamic! ops op)
                 find-element-diffs collect! ([]) ([]) old-element new-element
                 respo.core/run-effect-ops! @ops :dom-node
@@ -4455,28 +4348,16 @@
                   log $ ref $ []
                   ops $ ref $ []
                   collect! $ fn (op) (respo.core/append-dynamic! ops op)
-                  plain $ %{} respo.schema/Element (:name :div)
-                    :coord $ %none
-                    :attrs $ []
-                    :style $ []
-                    :event $ {}
-                    :children $ []
-                    :ref nil
+                  plain $ respo.schema/Element :name :div :coord (%none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref nil
                   inner $ assoc plain :ref $ fn (target)
                     respo.core/append-dynamic! log $ [] :ref target
-                  watch $ %{} respo.schema/Effect (:name :effect-watch)
-                    :coord $ []
-                    :args $ []
-                    :method $ fn (_args params)
-                      let[] (action target _at-place?) params $ if (&= action :mount)
-                        respo.core/append-dynamic! log $ [] :setup target
-                        if (&= action :unmount)
-                          respo.core/append-dynamic! log $ [] :cleanup target
-                          , &unit
-                  wrapped $ %{} respo.schema/Component (:name :boundary)
-                    :effects $ [] watch
-                    :listeners $ []
-                    :tree $ %some $ respo.util.detect/as-render-node inner
+                  watch $ respo.schema/Effect :name :effect-watch :coord ([]) :args ([]) :method $ fn (_args params)
+                    let[] (action target _at-place?) params $ if (&= action :mount)
+                      respo.core/append-dynamic! log $ [] :setup target
+                      if (&= action :unmount)
+                        respo.core/append-dynamic! log $ [] :cleanup target
+                        , &unit
+                  wrapped $ respo.schema/Component :name :boundary :effects ([] watch) :listeners ([]) :tree $ %some (respo.util.detect/as-render-node inner)
                 find-element-diffs collect! ([]) ([]) plain wrapped
                 respo.core/run-effect-ops! @ops :target
                 assert |entering-wrapper-runs-two-actions $ &= 2 $ count @log
@@ -4490,26 +4371,11 @@
               :code $ quote $ let
                   ops $ ref $ []
                   collect! $ fn (op) (respo.core/append-dynamic! ops op)
-                  inner $ %{} respo.schema/Element (:name :span)
-                    :coord $ %none
-                    :attrs $ []
-                    :style $ []
-                    :event $ {}
-                    :children $ []
-                    :ref nil
+                  inner $ respo.schema/Element :name :span :coord (%none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref nil
                   plain $ assoc inner :name :div
-                  empty-old $ %{} respo.schema/Component (:name :same)
-                    :effects $ []
-                    :listeners $ []
-                    :tree $ %none
-                  empty-new $ %{} respo.schema/Component (:name :same)
-                    :effects $ []
-                    :listeners $ []
-                    :tree $ %none
-                  rendered $ %{} respo.schema/Component (:name :same)
-                    :effects $ []
-                    :listeners $ []
-                    :tree $ %some $ respo.util.detect/as-render-node inner
+                  empty-old $ respo.schema/Component :name :same :effects ([]) :listeners ([]) :tree $ %none
+                  empty-new $ respo.schema/Component :name :same :effects ([]) :listeners ([]) :tree $ %none
+                  rendered $ respo.schema/Component :name :same :effects ([]) :listeners ([]) :tree $ %some (respo.util.detect/as-render-node inner)
                 find-element-diffs collect! ([]) ([]) empty-old empty-new
                 assert |none-to-none-does-not-touch-dom $ empty? @ops
                 find-element-diffs collect! ([]) ([]) empty-old rendered
@@ -4522,13 +4388,9 @@
               :code $ quote $ let
                   ops $ ref $ []
                   collect! $ fn (op) (respo.core/append-dynamic! ops op)
-                  tree $ %{} respo.schema/Element (:name :div)
-                    :coord $ %none
-                    :attrs $ [] $ [] :inner-text |same
-                    :style $ []
-                    :event $ {}
-                    :children $ []
-                    :ref nil
+                  tree $ respo.schema/Element :name :div :coord (%none) :attrs
+                    [] $ [] :inner-text |same
+                    , :style ([]) :event ({}) :children ([]) :ref nil
                 find-element-diffs collect! ([]) ([]) tree tree
                 assert |identical-tree-emits-no-dom-mutation $ empty? @ops
               :tags $ #{} :unit
@@ -5270,13 +5132,7 @@
                       :args $ [] $ :: 'JsNullish 'respo.dom/DomElement
                       :return 'Unit
                     respo.core/append-dynamic! log target
-                  element $ %{} respo.schema/Element (:name :div)
-                    :coord $ %none
-                    :attrs $ []
-                    :style $ []
-                    :event $ {}
-                    :children $ []
-                    :ref ref!
+                  element $ respo.schema/Element :name :div :coord (%none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref ref!
                   collect! $ fn (op) (respo.core/append-dynamic! ops op)
                 collect-mounting collect! ([]) ([]) element false
                 collect-unmounting collect! ([]) ([]) element false
@@ -5288,15 +5144,9 @@
               :code $ quote $ let
                   actions $ ref $ []
                   ops $ ref $ []
-                  effect $ %{} respo.schema/Effect (:name :watch)
-                    :coord $ []
-                    :args $ []
-                    :method $ fn (_args params)
-                      respo.core/append-dynamic! actions $ &list:nth params 0
-                  component $ %{} respo.schema/Component (:name :empty)
-                    :effects $ [] effect
-                    :listeners $ []
-                    :tree $ %none
+                  effect $ respo.schema/Effect :name :watch :coord ([]) :args ([]) :method $ fn (_args params)
+                    respo.core/append-dynamic! actions $ &list:nth params 0
+                  component $ respo.schema/Component :name :empty :effects ([] effect) :listeners ([]) :tree $ %none
                   collect! $ fn (op) (respo.core/append-dynamic! ops op)
                 collect-mounting collect! ([]) ([]) component true
                 collect-unmounting collect! ([]) ([]) component true
@@ -5586,8 +5436,7 @@
           :tags $ #{} :internal
         'default-config $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def default-config
-            %{} EventConfig (:stop-propagation? true)
-              :listener-mode $ ListenerMode :property
+            EventConfig :stop-propagation? true :listener-mode $ ListenerMode :property
           :examples $ []
           :schema $ :: 'respo.schema/EventConfig
         'install-listener! $ %{} 'CodeEntry
@@ -5721,20 +5570,12 @@
               :tags $ #{} :unit
             %{} 'TestEntry (:name |serializes-nested-html-document)
               :code $ quote $ let
-                  child $ %{} respo.schema/Element (:name :span)
-                    :coord $ %none
-                    :attrs $ [] $ [] :inner-text |Demo
-                    :style $ []
-                    :event $ {}
-                    :children $ []
-                    :ref nil
-                  parent $ %{} respo.schema/Element (:name :div)
-                    :coord $ %none
-                    :attrs $ []
-                    :style $ []
-                    :event $ {}
-                    :children $ [] $ respo.util.detect/make-child-pair :child child
-                    :ref nil
+                  child $ respo.schema/Element :name :span :coord (%none) :attrs
+                    [] $ [] :inner-text |Demo
+                    , :style ([]) :event ({}) :children ([]) :ref nil
+                  parent $ respo.schema/Element :name :div :coord (%none) :attrs ([]) :style ([]) :event ({}) :children
+                    [] $ respo.util.detect/make-child-pair :child child
+                    , :ref nil
                 assert |nested-document-is-serialized-in-child-order $ = |<div><span>Demo</span></div> $ element->string parent
               :tags $ #{} :unit
         'element-content $ %{} 'CodeEntry (:doc |)
@@ -5796,25 +5637,17 @@
             %{} 'TestEntry
               :name |serializes-component-root-after-muting-option-tree
               :code $ quote $ let
-                  element $ %{} respo.schema/Element (:name :div)
-                    :coord $ %none
-                    :attrs $ []
-                    :style $ []
-                    :event $ {} $ :click
-                      fn (_event _dispatch!)
-                        hint-fn $ {}
-                          :args $ [] (:: 'Map 'Tag 'Dynamic)
-                            :: 'Fn $ {}
-                              :args $ [] 'Dynamic
-                              :return 'Unit
-                          :return 'Unit
-                        , &unit
-                    :children $ []
-                    :ref nil
-                  component $ %{} respo.schema/Component (:name :root)
-                    :effects $ []
-                    :listeners $ []
-                    :tree $ %some $ respo.util.detect/as-render-node element
+                  element $ respo.schema/Element :name :div :coord (%none) :attrs ([]) :style ([]) :event
+                    {} $ :click $ fn (_event _dispatch!)
+                      hint-fn $ {}
+                        :args $ [] (:: 'Map 'Tag 'Dynamic)
+                          :: 'Fn $ {}
+                            :args $ [] 'Dynamic
+                            :return 'Unit
+                        :return 'Unit
+                      , &unit
+                    , :children ([]) :ref nil
+                  component $ respo.schema/Component :name :root :effects ([]) :listeners ([]) :tree $ %some (respo.util.detect/as-render-node element)
                 assert |component-root-is-serialized $ &= |<div></div> $ make-string component
               :tags $ #{} :unit
             %{} 'TestEntry (:name |skips-empty-child-pairs)
@@ -6748,13 +6581,7 @@
               :code $ quote $ let
                   coord $ [] :root
                   n-coord $ [] 0
-                  element $ %{} Element (:name :div)
-                    :coord $ %none
-                    :attrs $ []
-                    :style $ []
-                    :event $ {}
-                    :children $ []
-                    :ref nil
+                  element $ Element :name :div :coord (%none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref nil
                   run! $ fn (_target) &unit
                   patches $ [] (DomPatch :replace-prop coord n-coord :title |next) (DomPatch :add-prop coord n-coord :title |new) (DomPatch :rm-prop coord n-coord :title) (DomPatch :add-style coord n-coord :color |red) (DomPatch :replace-style coord n-coord :color |blue) (DomPatch :rm-style coord n-coord :color) (DomPatch :set-event coord n-coord :click) (DomPatch :rm-event coord n-coord :click) (DomPatch :add-element coord n-coord element) (DomPatch :rm-element coord n-coord) (DomPatch :replace-element coord n-coord element) (DomPatch :append-element coord n-coord element)
                     DomPatch :move-element n-coord 0 $ %:: Option :none
@@ -7878,20 +7705,10 @@
           :tests $ []
             %{} 'TestEntry (:name |removes-live-refs-recursively)
               :code $ quote $ let
-                  child $ %{} respo.schema/Element (:name :span)
-                    :coord $ %none
-                    :attrs $ []
-                    :style $ []
-                    :event $ {}
-                    :children $ []
-                    :ref $ fn (_target) &unit
-                  parent $ %{} respo.schema/Element (:name :div)
-                    :coord $ %none
-                    :attrs $ []
-                    :style $ []
-                    :event $ {}
-                    :children $ [] $ respo.util.detect/make-child-pair :child child
-                    :ref $ fn (_target) &unit
+                  child $ respo.schema/Element :name :span :coord (%none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref $ fn (_target) &unit
+                  parent $ respo.schema/Element :name :div :coord (%none) :attrs ([]) :style ([]) :event ({}) :children
+                    [] $ respo.util.detect/make-child-pair :child child
+                    , :ref $ fn (_target) &unit
                   purified $ coerce-element $ respo.util.detect/as-element (purify-element parent)
                   purified-child $ respo.util.detect/as-element $ respo.util.detect/child-pair-value
                     &list:nth (element-children purified) 0
@@ -7901,10 +7718,7 @@
             %{} 'TestEntry (:name |raises-explicitly-for-none-component-tree)
               :code $ quote $ let
                   caught? $ ref false
-                  component $ %{} respo.schema/Component (:name :empty)
-                    :effects $ []
-                    :listeners $ []
-                    :tree $ %none
+                  component $ respo.schema/Component :name :empty :effects ([]) :listeners ([]) :tree $ %none
                 try (purify-element component)
                   fn (_error) (reset! caught? true)
                 assert |reports-empty-tree @caught?
