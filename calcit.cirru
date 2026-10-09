@@ -7377,7 +7377,7 @@
               map :name $ vals $ respo.util.detect/element-children vdom
             ; js/console.log element
             let
-                virtual-name $ turn-string $ :name vdom
+                virtual-name $ to-string $ :name vdom
                 real-name $ element :local-name
               when (not= virtual-name real-name)
                 js/console.warn "|SSR checking: tag names do not match:" (to-lispy-string vdom) element
