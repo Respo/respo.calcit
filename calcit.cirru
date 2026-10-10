@@ -2997,16 +2997,13 @@
             :generics $ [] 'StateInput
           :tests $ [] $ %{} 'TestEntry (:name |checks-nominal-identity)
             :code $ quote $ let
-                original $ %{} CursorTestState (:draft |a) (:locked? false) (:message |ready)
+                original $ CursorTestState :draft |a :locked? false :message |ready
                 caught $ ref 0
               assert |same-state $ identical? original $ coerce-cursor-test-state original
               &doseq
                 value $ [] nil 42 ({})
                   {} (:draft |a) (:locked? false) (:message |ready)
-                  %{} respo.schema/Component (:name :other)
-                    :effects $ []
-                    :listeners $ []
-                    :tree $ %none
+                  respo.schema/Component :name :other :effects ([]) :listeners ([]) :tree $ %none
                 try (coerce-cursor-test-state value)
                   fn (error) (assert= |[Respo/test]-expected-CursorTestState error) (swap! caught inc)
               assert= 5 @caught
@@ -4273,7 +4270,7 @@
                               when-not (contains? kept source)
                                 collect! $ DomPatch :move-element n-coord (+ index-offset source)
                                   option:map anchor $ fn (position) (+ index-offset position)
-                              recur rest-sources $ %:: Option :some source
+                              recur rest-sources $ Option :some source
                         &doseq (key added-keys)
                           let
                               new-position $ assert-type (&map:get new-index key) 'Number
@@ -4314,7 +4311,7 @@
                             when-not (contains? kept source)
                               collect! $ DomPatch :move-element n-coord (+ index source)
                                 option:map anchor $ fn (position) (+ index position)
-                            recur rest-sources $ %:: Option :some source
+                            recur rest-sources $ Option :some source
             , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
@@ -5608,21 +5605,13 @@
             %{} 'TestEntry (:name |serializes-elements-and-escapes-values)
               :code $ quote $ do
                 assert |plain-element $ = "|<div class=\"test\"></div>" $ element->string
-                  %{} respo.schema/Element (:name :div)
-                    :coord $ %none
-                    :attrs $ [] $ [] :class-name |test
-                    :style $ []
-                    :event $ {}
-                    :children $ []
-                    :ref nil
+                  respo.schema/Element :name :div :coord (%none) :attrs
+                    [] $ [] :class-name |test
+                    , :style ([]) :event ({}) :children ([]) :ref nil
                 assert |textarea-content-is-escaped $ = "|<textarea value=\"a&#13;&#10;&quot;b&quot;\">a&#13;&#10;&quot;b&quot;</textarea>" $ element->string
-                  %{} respo.schema/Element (:name :textarea)
-                    :coord $ %none
-                    :attrs $ [] $ [] :value "|a\n\"b\""
-                    :style $ []
-                    :event $ {}
-                    :children $ []
-                    :ref nil
+                  respo.schema/Element :name :textarea :coord (%none) :attrs
+                    [] $ [] :value "|a\n\"b\""
+                    , :style ([]) :event ({}) :children ([]) :ref nil
               :tags $ #{} :unit
             %{} 'TestEntry (:name |serializes-nested-html-document)
               :code $ quote $ let
