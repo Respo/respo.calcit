@@ -1,15 +1,14 @@
 import * as c from '../js-out/calcit.core.mjs';
 import { _$s_store, dispatch_$x_ } from '../js-out/respo.app.core.mjs';
 import { Op } from '../js-out/respo.app.schema.mjs';
-import { watch_render_$x_ } from '../js-out/respo.app.scheduler.mjs';
+import { watch_render_$x_, stop_render_watch_$x_ } from '../js-out/respo.app.scheduler.mjs';
 
 const tags = c.init_tags(['add', 'clear', 'tasks', 'rerender', 'some']);
 export const taskCount = () => c.count(c.deref(_$s_store).get(tags.tasks));
 export const addTask = text => dispatch_$x_(c._PCT__$o__$o_(Op, tags.add, text));
 export const clearTasks = () => dispatch_$x_(c._PCT__$o__$o_(Op, tags.clear));
 export function stopWatching() {
-  watch_render_$x_(() => {});
-  c.remove_watch(_$s_store, tags.rerender);
+  stop_render_watch_$x_();
 }
 const equal = (actual, expected, label) => {
   if (actual !== expected) throw new Error(`${label}: ${actual} != ${expected}`);
@@ -80,9 +79,8 @@ export async function benchmarkDemoScheduler(render, rounds = 11) {
         render();
         let renders = 0;
         const counted = () => { renders++; render(); };
-        // Calcit 0.29 exports `add-watch!` as `add_watch_$x_`; keep the old export
-        // as a fallback while CI still runs against 0.29.0-alpha.19.
-        if (mode === 'sync') (c.add_watch_$x_ ?? c.add_watch)(_$s_store, tags.rerender, counted);
+        // Both policies use the same owned registration and cleanup lifecycle.
+        if (mode === 'sync') watch_render_$x_(counted, c._PCT__$o__$o_(c.Option, tags.some, task => { task(); }));
         else watch_render_$x_(counted);
         const start = performance.now();
         for (let i = 0; i < 20; i++) addTask(`sample-${i}`);

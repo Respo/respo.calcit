@@ -420,13 +420,28 @@
             respo.app.updater :refer $ updater
     'respo.app.scheduler $ %{} 'FileEntry
       :defs $ {}
+        '*render-watch-active? $ %{} 'CodeEntry
+          :doc "|Whether the demo scheduler owns the rerender registration."
+          :code $ quote $ defref *render-watch-active? false
+          :examples $ []
+          :schema $ :: 'Ref 'Bool
+          :tags $ #{} :internal
         '*render-watch-generation $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defref *render-watch-generation 0
           :examples $ []
           :schema $ :: 'Ref 'Number
+        'stop-render-watch! $ %{} 'CodeEntry
+          :doc "|Invalidate queued render callbacks and remove the demo-owned watcher when active. Safe before installation and after repeated stops."
+          :code $ quote $ defn stop-render-watch! () (swap! *render-watch-generation inc)
+            when @*render-watch-active? (remove-watch! *store :rerender) (reset! *render-watch-active? false)
+            , &unit
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ []
+          :tags $ #{} :internal
         'watch-render! $ %{} 'CodeEntry
           :doc "|Install the demo store watch with one scheduler per registration. Read application state when the render callback runs; replacing the watch invalidates pending callbacks from the previous registration. Pass Option:none for queueMicrotask or Option:some enqueue! for deterministic tests."
-          :code $ quote $ defn watch-render! (render! enqueue-option) (swap! *render-watch-generation inc)
+          :code $ quote $ defn watch-render! (render! enqueue-option) (stop-render-watch!)
             let
                 generation @*render-watch-generation
                 schedule! $ make-render-scheduler
@@ -435,6 +450,7 @@
                     , &unit
                   , enqueue-option
               calcit.core/add-watch! *store :rerender $ fn (_current _previous) (schedule!)
+            reset! *render-watch-active? true
             , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
@@ -3558,7 +3574,7 @@
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
             if (nil? build-errors)
-              do (calcit.core/remove-watch! *store :rerender) (clear-cache!) (render-app! mount-target)
+              do (stop-render-watch!) (clear-cache!) (render-app! mount-target)
                 watch-render!
                   fn () $ render-app! mount-target
                   Option :none
@@ -3590,7 +3606,7 @@
             respo.app.task :refer $ normalize-task
             js-ffi.browser :as browser
             respo.ffi.browser :refer $ narrow-element
-            respo.app.scheduler :refer $ watch-render!
+            respo.app.scheduler :refer $ watch-render! stop-render-watch!
     'respo.memo $ %{} 'FileEntry
       :defs $ {}
         '*component-caches $ %{} 'CodeEntry (:doc |)
