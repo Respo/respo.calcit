@@ -420,13 +420,28 @@
             respo.app.updater :refer $ updater
     'respo.app.scheduler $ %{} 'FileEntry
       :defs $ {}
+        '*render-watch-active? $ %{} 'CodeEntry
+          :doc "|Whether the demo scheduler owns the rerender registration."
+          :code $ quote $ defref *render-watch-active? false
+          :examples $ []
+          :schema $ :: 'Ref 'Bool
+          :tags $ #{} :internal
         '*render-watch-generation $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defref *render-watch-generation 0
           :examples $ []
           :schema $ :: 'Ref 'Number
+        'stop-render-watch! $ %{} 'CodeEntry
+          :doc "|Invalidate queued render callbacks and remove the demo-owned watcher when active. Safe before installation and after repeated stops."
+          :code $ quote $ defn stop-render-watch! () (swap! *render-watch-generation inc)
+            when @*render-watch-active? (remove-watch! *store :rerender) (reset! *render-watch-active? false)
+            , &unit
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ []
+          :tags $ #{} :internal
         'watch-render! $ %{} 'CodeEntry
           :doc "|Install the demo store watch with one scheduler per registration. Read application state when the render callback runs; replacing the watch invalidates pending callbacks from the previous registration. Pass Option:none for queueMicrotask or Option:some enqueue! for deterministic tests."
-          :code $ quote $ defn watch-render! (render! enqueue-option) (swap! *render-watch-generation inc)
+          :code $ quote $ defn watch-render! (render! enqueue-option) (stop-render-watch!)
             let
                 generation @*render-watch-generation
                 schedule! $ make-render-scheduler
@@ -435,6 +450,7 @@
                     , &unit
                   , enqueue-option
               calcit.core/add-watch! *store :rerender $ fn (_current _previous) (schedule!)
+            reset! *render-watch-active? true
             , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
@@ -1082,7 +1098,8 @@
                 :args $ [] (:: 'List 'Dynamic) 'Tag $ :: 'Map 'Tag 'Dynamic
               let
                   target-element-option $ find-event-target
-                    option:unwrap $ deref *global-element
+                      deref *global-element
+                      , .unwrap
                     , coord event-name
                   target-listener-option $ match target-element-option
                     (:none)
@@ -1233,10 +1250,15 @@
                   respo.core/div $ {}
                   , :children $ [] (respo.util.detect/make-child-pair |7 wrapped) (respo.util.detect/make-child-pair 7 numeric)
                 root $ respo.schema/Component :name :root :effects ([]) :listeners ([]) :tree $ %some (respo.util.detect/as-render-node parent)
-              assert= wrapped $ option:unwrap $ get-markup-at root ([] :root |7)
-              assert= numeric $ option:unwrap $ get-markup-at root ([] :root 7)
+              assert= wrapped $
+                get-markup-at root $ [] :root |7
+                , .unwrap
+              assert= numeric $
+                get-markup-at root $ [] :root 7
+                , .unwrap
               assert= (respo.util.detect/as-render-node leaf)
-                option:unwrap $ get-render-node-at (respo.util.detect/as-render-node root) ([] :root |7 :wrapped)
+                (get-render-node-at (respo.util.detect/as-render-node root) ([] :root |7 :wrapped))
+                  , .unwrap
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.controller.resolve
           :require
@@ -1626,8 +1648,12 @@
                       div $ {} $ :href |/page
                     , |comp-link
                 respo.render.diff/find-props-diffs collect! ([]) ([])
-                  respo.util.detect/element-attrs $ option:unwrap $ respo.util.detect/component-tree old-component
-                  respo.util.detect/element-attrs $ option:unwrap $ respo.util.detect/component-tree new-component
+                  respo.util.detect/element-attrs $
+                    respo.util.detect/component-tree old-component
+                    , .unwrap
+                  respo.util.detect/element-attrs $
+                    respo.util.detect/component-tree new-component
+                    , .unwrap
                 assert=
                   [] $ schema/DomPatch :rm-prop ([]) ([]) :title
                   , @patches
@@ -1646,8 +1672,12 @@
                       div $ {} (:class-name |styled) (:href |/new) (:id |link)
                     , |comp-link
                 respo.render.diff/find-props-diffs collect! ([]) ([])
-                  respo.util.detect/element-attrs $ option:unwrap $ respo.util.detect/component-tree old-component
-                  respo.util.detect/element-attrs $ option:unwrap $ respo.util.detect/component-tree new-component
+                  respo.util.detect/element-attrs $
+                    respo.util.detect/component-tree old-component
+                    , .unwrap
+                  respo.util.detect/element-attrs $
+                    respo.util.detect/component-tree new-component
+                    , .unwrap
                 assert=
                   []
                     schema/DomPatch :add-prop ([]) ([]) :class-name |styled
@@ -1666,10 +1696,14 @@
                     , |comp-link
                 assert=
                   [] ([] :class-name |styled) ([] :data-comp |final) ([] :href |/page)
-                  respo.util.detect/element-attrs $ option:unwrap $ respo.util.detect/component-tree decorated
+                  respo.util.detect/element-attrs $
+                    respo.util.detect/component-tree decorated
+                    , .unwrap
                 assert=
                   [] ([] :class-name |styled) ([] :data-comp |comp-link)
-                  respo.util.detect/element-attrs $ option:unwrap $ respo.util.detect/component-tree class-only
+                  respo.util.detect/element-attrs $
+                    respo.util.detect/component-tree class-only
+                    , .unwrap
               :tags $ #{} :unit
         'defcomp $ %{} 'CodeEntry
           :doc "|Macro for defining a Respo component.\n\n`defcomp` expands to a function that returns a `respo.schema/Component`, decorates the component name, and extracts component effects declared from the render result. Use it for reusable view functions that accept props or state cursors and return virtual DOM."
@@ -3555,7 +3589,7 @@
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
             if (nil? build-errors)
-              do (calcit.core/remove-watch! *store :rerender) (clear-cache!) (render-app! mount-target)
+              do (stop-render-watch!) (clear-cache!) (render-app! mount-target)
                 watch-render!
                   fn () $ render-app! mount-target
                   Option :none
@@ -3587,7 +3621,7 @@
             respo.app.task :refer $ normalize-task
             js-ffi.browser :as browser
             respo.ffi.browser :refer $ narrow-element
-            respo.app.scheduler :refer $ watch-render!
+            respo.app.scheduler :refer $ watch-render! stop-render-watch!
     'respo.memo $ %{} 'FileEntry
       :defs $ {}
         '*component-caches $ %{} 'CodeEntry (:doc |)
@@ -4098,7 +4132,7 @@
                       when (option:some? child)
                         collect-event-refreshing-node collect! (append coord k) (append n-coord idx) (option:unwrap child)
                       recur (&list:rest children)
-                        if (option:some? child) (inc idx) idx
+                        if (child .some?) (inc idx) idx
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
@@ -4126,12 +4160,12 @@
                   hint-fn $ {}
                     :args $ [] 'respo.schema/ChildPair
                     :return 'Bool
-                  option:some? $ :node pair
+                  (:node pair) .some?
                 new-children $ filter new-pairs-input $ fn (pair)
                   hint-fn $ {}
                     :args $ [] 'respo.schema/ChildPair
                     :return 'Bool
-                  option:some? $ :node pair
+                  (:node pair) .some?
               if
                 =
                   map old-children $ fn (pair)
@@ -5036,7 +5070,8 @@
             match node
               (:component component)
                 make-render-node-element
-                  option:unwrap $ :tree component
+                    :tree component
+                    , .unwrap
                   , listener-builder
                     append coord $ :name component
                     , svg-context
@@ -5055,14 +5090,16 @@
                         hint-fn $ {}
                           :args $ [] 'respo.schema/ChildPair
                           :return 'Bool
-                        option:some? $ :node pair
+                        (:node pair) .some?
                       fn (pair)
                         hint-fn $ {}
                           :args $ [] 'respo.schema/ChildPair
                           :return 'respo.dom/DomElement
                         let
                             k $ :key pair
-                            child $ option:unwrap $ :node pair
+                            child $
+                              :node pair
+                              , .unwrap
                           when (nil? k) (js/console.warn |nil-key-is-bad-for-Respo)
                           make-render-node-element child listener-builder (append coord k) child-svg?
                   each attrs $ fn (entry)
@@ -5286,7 +5323,7 @@
                       when (option:some? child)
                         collect-mounting-node collect! (append coord k) (append n-coord idx) (option:unwrap child) false
                       recur (&list:rest children)
-                        if (option:some? child) (inc idx) idx
+                        if (child .some?) (inc idx) idx
             , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
@@ -5392,7 +5429,7 @@
                       when (option:some? child)
                         collect-unmounting-node collect! (append coord k) (append n-coord idx) (option:unwrap child) false
                       recur (&list:rest children)
-                        if (option:some? child) (inc idx) idx
+                        if (child .some?) (inc idx) idx
                   match
                     js-nullish->option $ :ref tree
                     (:none) &unit
@@ -5419,8 +5456,9 @@
                 old-effects $ component-effects old-tree
                 new-effects $ component-effects new-tree
                 next-coord $ append coord $ component-name new-tree
-                effect-count $ option:unwrap $ max
-                  [] (count old-effects) (count new-effects)
+                effect-count $
+                  max $ [] (count old-effects) (count new-effects)
+                  , .unwrap
               &doseq
                 idx $ range effect-count
                 let
@@ -6766,7 +6804,9 @@
         'dev? $ %{} 'CodeEntry
           :doc "|Boolean flag indicating if the application is running in development mode."
           :code $ quote $ def dev?
-            &= |dev $ option:unwrap-or (get-env |mode) |release
+            &= |dev $
+              get-env |mode
+              , .unwrap-or |release
           :examples $ []
           :schema $ :: 'Bool
         'effect $ %{} 'CodeEntry (:doc |)
@@ -7242,7 +7282,9 @@
               :tags $ #{} :unit
         'child-pair-value $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn child-pair-value (pair)
-            render-node-value $ option:unwrap $ :node pair
+            render-node-value $
+              :node pair
+              , .unwrap
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Struct)
             :args $ [] 'respo.schema/ChildPair
