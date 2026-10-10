@@ -1216,9 +1216,9 @@
             :return $ :: 'calcit.core/Option 'Struct
         'get-render-node-at $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn get-render-node-at (node coord)
-            list-match coord
-              () $ Option :some node
-              (coord-head cs)
+            match (destruct-list coord)
+              (:none) (Option :some node)
+              (:some coord-head cs)
                 match node
                   (:component component)
                     match (:tree component)
@@ -2712,7 +2712,9 @@
               :code $ quote $ let
                   handler $ fn (event dispatch!) &unit
                   element $ textarea $ {} (:on-paste handler)
-                assert= handler $ option:unwrap $ get (:event element) :paste
+                assert= handler $
+                  get (:event element) :paste
+                  , .unwrap
                 assert= ([]) (:attrs element)
               :tags $ #{} :unit
             %{} 'TestEntry (:name |accepts-props-from-a-variable-map)
@@ -4185,9 +4187,9 @@
                   hint-fn $ {}
                     :args $ [] (:: 'List 'respo.schema/ChildPair) (:: 'List 'respo.schema/ChildPair) 'Number
                     :return 'Unit
-                  list-match old-pairs
-                    () &unit
-                    (old-pair rest-old)
+                  match (destruct-list old-pairs)
+                    (:none) &unit
+                    (:some old-pair rest-old)
                       let
                           new-pair $ &list:nth new-pairs 0
                           key $ :key old-pair
@@ -4298,13 +4300,14 @@
                               Option :none
                           hint-fn $ {} (:return 'Unit)
                             :args $ [] (:: 'List 'Number) (:: 'calcit.core/Option 'Number)
-                          list-match remaining
-                            () &unit
-                            (source rest-sources)
-                              when-not (contains? kept source)
-                                collect! $ DomPatch :move-element n-coord (+ index-offset source)
-                                  option:map anchor $ fn (position) (+ index-offset position)
-                              recur rest-sources $ Option :some source
+                          match (destruct-list remaining)
+                            (:none) &unit
+                            (:some source rest-sources)
+                              do
+                                when-not (contains? kept source)
+                                  collect! $ DomPatch :move-element n-coord (+ index-offset source)
+                                    option:map anchor $ fn (position) (+ index-offset position)
+                                recur rest-sources $ Option :some source
                         &doseq (key added-keys)
                           let
                               new-position $ assert-type (&map:get new-index key) 'Number
@@ -4339,13 +4342,14 @@
                           anchor $ assert-type (Option :none) (:: 'Option 'Number)
                         hint-fn $ {} (:return 'Unit)
                           :args $ [] (:: 'List 'Number) (:: 'calcit.core/Option 'Number)
-                        list-match remaining
-                          () &unit
-                          (source rest-sources)
-                            when-not (contains? kept source)
-                              collect! $ DomPatch :move-element n-coord (+ index source)
-                                option:map anchor $ fn (position) (+ index position)
-                            recur rest-sources $ Option :some source
+                        match (destruct-list remaining)
+                          (:none) &unit
+                          (:some source rest-sources)
+                            do
+                              when-not (contains? kept source)
+                                collect! $ DomPatch :move-element n-coord (+ index source)
+                                  option:map anchor $ fn (position) (+ index position)
+                              recur rest-sources $ Option :some source
             , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
@@ -4909,9 +4913,9 @@
               hint-fn $ {}
                 :args $ [] (:: 'List 'K) 'Number $ :: 'Map 'K 'Number
                 :return $ :: 'Map 'K 'Number
-              list-match remaining
-                () result
-                (key rest-keys)
+              match (destruct-list remaining)
+                (:none) result
+                (:some key rest-keys)
                   recur rest-keys (inc index) (&map:assoc result key index)
           :examples $ []
           :schema $ :: 'Fn $ {}
@@ -4948,7 +4952,8 @@
                     mid $ floor $ / (+ lo hi) 2
                   if
                     <
-                      option:unwrap $ nth tails mid
+                        nth tails mid
+                        , .unwrap
                       , value
                     recur (inc mid) hi
                     recur lo mid
@@ -4965,8 +4970,11 @@
                 :return $ :: 'Set 'Number
                 :args $ [] 'Number $ :: 'Set 'Number
               if (< position 0) kept $ recur
-                option:unwrap $ nth previous position
-                include kept $ option:unwrap $ nth values position
+                  nth previous position
+                  , .unwrap
+                include kept $
+                  nth values position
+                  , .unwrap
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] (:: 'List 'Number) (:: 'List 'Number) 'Number
@@ -4982,14 +4990,17 @@
               hint-fn $ {}
                 :return $ :: 'Set 'Number
                 :args $ [] (:: 'List 'Number) 'Number (:: 'List 'Number) (:: 'List 'Number) (:: 'List 'Number)
-              list-match remaining
-                () $ lis-reconstruct values previous $ if (empty? positions) -1
-                  option:unwrap $ last positions
-                (value rest-values)
+              match (destruct-list remaining)
+                (:none)
+                  lis-reconstruct values previous $ if (empty? positions) -1 $
+                    last positions
+                    , .unwrap
+                (:some value rest-values)
                   let
                       slot $ lis-lower-bound tails value
-                      predecessor $ if (= slot 0) -1 $ option:unwrap
+                      predecessor $ if (= slot 0) -1 $
                         nth positions $ dec slot
+                        , .unwrap
                       new-tails $ if
                         = slot $ count tails
                         append tails value
@@ -6064,9 +6075,9 @@
         'find-target $ %{} 'CodeEntry
           :doc "|Locates a DOM node by traversing children using a coordinate path."
           :code $ quote $ defn find-target (root coord)
-            list-match coord
-              () root
-              (index xss)
+            match (destruct-list coord)
+              (:none) root
+              (:some index xss)
                 let
                     children $ root.:children
                   match
@@ -6158,7 +6169,9 @@
           :doc "|Move a source node before its snapshot anchor, or to the end. Prefer state-preserving moveBefore for connected nodes; fall back to insertion with focus and subtree scroll restoration."
           :code $ quote $ defn move-element! (parent nodes source anchor)
             let
-                node $ option:unwrap $ nth nodes source
+                node $
+                  nth nodes source
+                  , .unwrap
                 focused $ if (.matches? node |:focus) (Option :some node)
                   js-nullish->option $ .query-selector node |:focus
               if
@@ -6170,11 +6183,15 @@
                   (:none)
                     do (.!moveBefore parent node js/null) &unit
                   (:some index)
-                    .move-before! parent node $ option:unwrap $ nth nodes index
+                    .move-before! parent node $
+                      nth nodes index
+                      , .unwrap
                 match anchor
                   (:none) (.append-child! parent node)
                   (:some index)
-                    .insert-before! parent node $ option:unwrap $ nth nodes index
+                    .insert-before! parent node $
+                      nth nodes index
+                      , .unwrap
               match focused
                 (:none) &unit
                 (:some active)
@@ -7129,7 +7146,8 @@
                     do (swap! actions conj action) &unit
               assert |sync-fetch-failure-emits-two-actions $ = 2 $ count @actions
               match
-                option:unwrap $ last @actions
+                  last @actions
+                  , .unwrap
                 (:failed failed-id error)
                   do
                     assert |failed-action-keeps-request-id $ = request-id failed-id
@@ -7146,7 +7164,8 @@
               shared/queue-microtask! $ fn () $ shared/queue-microtask!
                 fn () (swap! *async-checks inc)
                   match
-                    option:unwrap $ last @actions
+                      last @actions
+                      , .unwrap
                     (:failed failed-id error)
                       do
                         assert |emitter-failure-keeps-request-id $ = request-id failed-id
