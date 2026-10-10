@@ -4,7 +4,7 @@ import * as c from '../js-out/calcit.core.mjs';
 import { _$s_store, dispatch_$x_ } from '../js-out/respo.app.core.mjs';
 import { try_test_$x_, comp_todolist, on_keydown } from '../js-out/respo.app.comp.todolist.mjs';
 import { watch_render_$x_ } from '../js-out/respo.app.scheduler.mjs';
-import { verifyDemoScheduler, verifyManualQueue, stopWatching, taskCount } from './demo-scheduler-fixture.mjs';
+import { verifyDemoScheduler, verifyManualQueue, stopWatching, taskCount, addTask } from './demo-scheduler-fixture.mjs';
 import { normalize_task } from '../js-out/respo.app.task.mjs';
 import { Task, TodoState } from '../js-out/respo.app.schema.mjs';
 import { span, run_effect_ops_$x_, run_first_task_$x_ } from '../js-out/respo.core.mjs';
@@ -42,6 +42,31 @@ test('task restoration preserves nominal identity and checks stored map fields',
 
 test('real demo dispatches coalesce with the default microtask queue and survive watch replacement', () => verifyDemoScheduler());
 test('demo watch supports deterministic enqueue injection', verifyManualQueue);
+
+test('stopping the demo watch cancels queued renders and permits a fresh registration', () => {
+  const original = c.deref(_$s_store);
+  const tasks = [];
+  let renders = 0;
+  const enqueue = c._PCT__$o__$o_(c.Option, c.init_tags(['some']).some, task => { tasks.push(task); });
+  stopWatching();
+  try {
+    watch_render_$x_(() => { renders++; }, enqueue);
+    addTask('queued before stop');
+    assert.equal(tasks.length, 1);
+    stopWatching();
+    stopWatching();
+    tasks.shift()();
+    assert.equal(renders, 0);
+    watch_render_$x_(() => { renders++; }, enqueue);
+    addTask('queued after restart');
+    assert.equal(tasks.length, 1);
+    tasks.shift()();
+    assert.equal(renders, 1);
+  } finally {
+    stopWatching();
+    c.reset_$x_(_$s_store, original);
+  }
+});
 
 test('heavy task timing rejects a non-number clock result before dispatching', () => {
   const originalNow = Date.now;
