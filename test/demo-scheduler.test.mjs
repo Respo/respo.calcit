@@ -55,11 +55,11 @@ test('stopping the demo watch cancels queued renders and permits a fresh registr
     assert.equal(tasks.length, 1);
     stopWatching();
     stopWatching();
-    tasks.shift()();
-    assert.equal(renders, 0);
     watch_render_$x_(() => { renders++; }, enqueue);
     addTask('queued after restart');
-    assert.equal(tasks.length, 1);
+    assert.equal(tasks.length, 2);
+    tasks.shift()();
+    assert.equal(renders, 0, 'the old callback stays invalid after a new watch is active');
     tasks.shift()();
     assert.equal(renders, 1);
   } finally {
