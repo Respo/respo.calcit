@@ -6497,10 +6497,24 @@
           :doc "|Creates an immutable idle ResourceState with optional initial data."
           :code $ quote $ defn resource-idle (initial-data-option)
             ResourceState :status :idle :request-id (Option :none) :data (option:unwrap-or initial-data-option nil) :error nil
-          :examples $ [] $ quote
-            resource-idle $ {} $ :items ([])
+          :examples $ []
+            quote $ resource-idle $ Option :none
+            quote $ resource-idle $ Option :some
+              {} $ :items $ []
           :schema $ :: 'Fn $ {} (:return 'respo.resource/ResourceState)
             :args $ [] $ :: 'calcit.core/Option 'Dynamic
+          :tests $ [] $ %{} 'TestEntry (:name |preserves-option-initial-data)
+            :code $ quote $ let
+                payload $ {} $ :items ([])
+                supplied $ resource-idle $ Option :some payload
+                absent $ resource-idle $ Option :none
+                nil-payload $ resource-idle $ Option :some nil
+              assert= :idle $ :status supplied
+              assert |idle-has-no-request $ .none? $ :request-id supplied
+              assert |payload-identity $ identical? payload $ :data supplied
+              assert |absent-data-is-nil $ nil? $ :data absent
+              assert |some-nil-keeps-nil $ nil? $ :data nil-payload
+            :tags $ #{} :regression :unit
         'resource-loading? $ %{} 'CodeEntry
           :doc "|Returns true for :pending and :refreshing ResourceState values."
           :code $ quote $ defn resource-loading? (state)

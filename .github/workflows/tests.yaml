@@ -54,7 +54,10 @@ jobs:
           calcit calcit.cirru analyze quality --baseline config/calcit-quality.cirru --format json
 
       - name: "test"
-        run: calcit calcit.cirru test --require-match --summary-only --format json
+        run: |
+          calcit calcit.cirru test --require-match --summary-only --format json
+          calcit calcit.cirru analyze check-examples --ns respo.resource --def resource-idle
+          calcit calcit.cirru analyze check-examples --ns respo.resource --def resource-idle --js
 
       - name: Check framework definitions and dynamic methods
         run: yarn check-framework-types
