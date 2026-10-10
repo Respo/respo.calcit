@@ -8,7 +8,7 @@ Respo 的开发版本以 `deps.cirru` 固定 Calcit 与 js-ffi 依赖，通过�
 
 升级时同时固定 `deps.cirru :calcit-version` 和 `package.json` 的 `@calcit/procs` 为同一精确版本，并执行 `yarn install --immutable`。只更新 CLI 而沿用旧 JS runtime，可能在运行时缺失新的 trait 实现；编译成功不能代替 DOM/SSR 测试。核心 API 改写先用 `calcit fix --preset core-api-0.28-v1 --format edn` 预览，只有可证明安全的建议自动应用，剩余开放类型和 macro 建议保留人工审阅。
 
-当前编译器和 JS runtime 固定为已发布的 Calcit / `@calcit/procs` `0.29.0-alpha.27`，js-ffi 固定为已发布 Git tag `0.2.1-alpha.17`，不使用提交 hash。Respo 仍是预发布源码模块，通过普通 Calcit 引用复用 JS FFI，不需要片段专用 npm 包。版本以 `deps.cirru :version` 为准，旧 Snapshot 的镜像字段不作为发布依据。此前 alpha 工具链的历史验收见[发布依赖验收](docs/guide/calcit-0.28-alpha3-validation.md)，不代表当前组合的完整验收。
+当前编译器和 JS runtime 固定为已发布的 Calcit / `@calcit/procs` `0.29.0-alpha.29`，js-ffi 固定为已发布 Git tag `0.2.1-alpha.17`，不使用提交 hash。Respo 仍是预发布源码模块，通过普通 Calcit 引用复用 JS FFI，不需要片段专用 npm 包。版本以 `deps.cirru :version` 为准，旧 Snapshot 的镜像字段不作为发布依据。此前 alpha 工具链的历史验收见[发布依赖验收](docs/guide/calcit-0.28-alpha3-validation.md)，不代表当前组合的完整验收。
 
 演示页前端构建使用 `https://cos-sh.tiye.me/Respo/respo.calcit/` 作为资源 base。仅 main push 在测试、构建通过后上传 `dist/`，使用 `cos-upload-action@v1.2.0` 的 `public-base-url` 内置逐文件校验，不维护额外验证脚本。PR 只构建，不读取部署 secrets。原 rsync 页面路径 `/web-assets/repo/${github.repository}` 保持不变；生产运行串行且上传前检查 main SHA，跳过已过期提交，这并非原子发布。
 
