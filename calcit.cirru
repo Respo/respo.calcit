@@ -4131,8 +4131,8 @@
                         pair $ &list:nth children 0
                         k $ :key pair
                         child $ :node pair
-                      when (option:some? child)
-                        collect-event-refreshing-node collect! (append coord k) (append n-coord idx) (option:unwrap child)
+                      when (child .some?)
+                        collect-event-refreshing-node collect! (append coord k) (append n-coord idx) (child .unwrap)
                       recur (&list:rest children)
                         if (child .some?) (inc idx) idx
           :examples $ []
@@ -5331,8 +5331,8 @@
                         pair $ &list:nth children 0
                         k $ :key pair
                         child $ :node pair
-                      when (option:some? child)
-                        collect-mounting-node collect! (append coord k) (append n-coord idx) (option:unwrap child) false
+                      when (child .some?)
+                        collect-mounting-node collect! (append coord k) (append n-coord idx) (child .unwrap) false
                       recur (&list:rest children)
                         if (child .some?) (inc idx) idx
             , &unit
@@ -5437,8 +5437,8 @@
                         pair $ &list:nth children 0
                         k $ :key pair
                         child $ :node pair
-                      when (option:some? child)
-                        collect-unmounting-node collect! (append coord k) (append n-coord idx) (option:unwrap child) false
+                      when (child .some?)
+                        collect-unmounting-node collect! (append coord k) (append n-coord idx) (child .unwrap) false
                       recur (&list:rest children)
                         if (child .some?) (inc idx) idx
                   match
