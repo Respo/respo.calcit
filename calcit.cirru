@@ -2216,7 +2216,7 @@
           :examples $ [] $ quote
             make-render-scheduler
               fn () &unit
-              %:: Option :some $ fn (task) (task)
+              Option :some $ fn (task) (task)
           :schema $ :: 'Fn $ {}
             :args $ []
               :: 'Fn $ {} (:return 'Unit)
@@ -3532,7 +3532,7 @@
                 send-to-component! event-tuple
             watch-render!
               fn () $ render-app! mount-target
-              %:: Option :none
+              Option :none
             println |Loaded.
             browser/set-before-unload! $ fn (_event) (save-store!)
           :examples $ []
@@ -3561,7 +3561,7 @@
               do (calcit.core/remove-watch! *store :rerender) (clear-cache!) (render-app! mount-target)
                 watch-render!
                   fn () $ render-app! mount-target
-                  %:: Option :none
+                  Option :none
                 hud! |ok~ |Ok
                 js/console.log "|code updated."
               hud! |error build-errors
@@ -4263,8 +4263,8 @@
                         loop
                             remaining $ reverse source-order
                             anchor $ if (> suffix 0)
-                              %:: Option :some $ count retained-keys
-                              %:: Option :none
+                              Option :some $ count retained-keys
+                              Option :none
                           hint-fn $ {} (:return 'Unit)
                             :args $ [] (:: 'List 'Number) (:: 'calcit.core/Option 'Number)
                           list-match remaining
@@ -4305,7 +4305,7 @@
                             :node new-pair
                       loop
                           remaining $ reverse sources
-                          anchor $ assert-type (%:: Option :none) (:: 'Option 'Number)
+                          anchor $ assert-type (Option :none) (:: 'Option 'Number)
                         hint-fn $ {} (:return 'Unit)
                           :args $ [] (:: 'List 'Number) (:: 'calcit.core/Option 'Number)
                         list-match remaining
@@ -4696,19 +4696,19 @@
           :tags $ #{} :internal
           :tests $ [] $ %{} 'TestEntry (:name |preserves-warning-order-and-deep-equality)
             :code $ quote $ do
-              assert= (%:: Option :none)
+              assert= (Option :none)
                 first-duplicate-key $ []
-              assert= (%:: Option :none)
+              assert= (Option :none)
                 first-duplicate-key $ [] :a
-              assert= (%:: Option :none)
+              assert= (Option :none)
                 first-duplicate-key $ [] :a :b :c
-              assert= (%:: Option :some :a)
+              assert= (Option :some :a)
                 first-duplicate-key $ [] :a :b :b :a
               assert=
-                %:: Option :some $ [] 1 2
+                Option :some $ [] 1 2
                 first-duplicate-key $ [] ([] 1 2) ([] 3) ([] 1 2)
               assert=
-                %:: Option :some $ {} $ :id 1
+                Option :some $ {} $ :id 1
                 first-duplicate-key $ []
                   {} $ :id 1
                   {} $ :id 2
@@ -4722,15 +4722,15 @@
                 size $ count child-keys
               loop
                   cursor 0
-                  duplicate-position $ assert-type (%:: Option :none) (:: 'Option 'Number)
+                  duplicate-position $ assert-type (Option :none) (:: 'Option 'Number)
                 let
                     index $ assert-type cursor Number
                     first-position $ assert-type duplicate-position $ :: 'Option 'Number
                   if (= index size)
                     match first-position
-                      (:none) (%:: Option :none)
+                      (:none) (Option :none)
                       (:some position)
-                        %:: Option :some $ &list:nth child-keys position
+                        Option :some $ &list:nth child-keys position
                     let
                         key $ &list:nth child-keys index
                         key-hash $ &hash key
@@ -4739,15 +4739,15 @@
                           if (js-nullish? value) (Option :none)
                             Option :some $ decode-map-as (to-calcit-data value) (:: 'List 'Number)
                         matched $ match previous
-                          (:none) (%:: Option :none)
+                          (:none) (Option :none)
                           (:some positions) (index-of-equal-key child-keys positions key)
                         next-position $ match matched
                           (:none) first-position
                           (:some position)
                             match first-position
-                              (:none) (%:: Option :some position)
+                              (:none) (Option :some position)
                               (:some first-index)
-                                %:: Option :some $ &min first-index position
+                                Option :some $ &min first-index position
                       match matched
                         (:some _) &unit
                         (:none) (append-key-bucket! buckets key-hash index)
@@ -4773,7 +4773,7 @@
                       key $ &list:nth remaining 0
                     recur (&list:rest remaining) (include seen key)
                       if (contains? seen key) (include duplicates key) duplicates
-              if (empty? repeated) (%:: Option :none)
+              if (empty? repeated) (Option :none)
                 loop
                     remaining child-keys
                   hint-fn $ {}
@@ -4781,7 +4781,7 @@
                     :return $ :: 'Option 'K
                   let
                       key $ &list:nth remaining 0
-                    if (contains? repeated key) (%:: Option :some key)
+                    if (contains? repeated key) (Option :some key)
                       recur $ &list:rest remaining
           :examples $ []
           :schema $ :: 'Fn $ {}
@@ -4809,12 +4809,12 @@
               hint-fn $ {}
                 :args $ [] $ :: 'List 'Number
                 :return $ :: 'Option 'Number
-              if (empty? remaining) (%:: Option :none)
+              if (empty? remaining) (Option :none)
                 let
                     index $ &list:nth remaining 0
                   if
                     &= key $ &list:nth child-keys index
-                    %:: Option :some index
+                    Option :some index
                     recur $ &list:rest remaining
           :examples $ []
           :schema $ :: 'Fn $ {}
@@ -4892,16 +4892,16 @@
             if
               or (empty? new-keys)
                 not= (count old-keys) (count new-keys)
-              %:: Option :none
+              Option :none
               match
                 find-index old-keys $ fn (key)
                   = key $ &list:nth new-keys 0
-                (:none) (%:: Option :none)
+                (:none) (Option :none)
                 (:some offset)
                   if
                     = new-keys $ concat (slice old-keys offset) (take old-keys offset)
-                    %:: Option :some offset
-                    %:: Option :none
+                    Option :some offset
+                    Option :none
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] (:: 'List 'K) (:: 'List 'K)
@@ -5854,7 +5854,7 @@
                     :args $ [] $ :: 'List 'Number
                   match
                     js-nullish->option $ mount-point.:first-element-child
-                    (:none) (%:: Option :none)
+                    (:none) (Option :none)
                     (:some root) (find-target-cached root n-coord target-cache)
                 child-snapshots $ ref $ assert-type ({})
                   :: 'Map (:: 'List 'Number) (:: 'List 'respo.dom/DomElement)
@@ -6055,21 +6055,21 @@
           :doc "|Locate a DOM target with prefix reuse inside one patch application. Cache only successful lookups. Structural patches retain unchanged ancestors; content properties discard descendants, and lifecycle callbacks clear all targets."
           :code $ quote $ defn find-target-cached (root coord cache)
             match (get @cache coord)
-              (:some node) (%:: Option :some node)
+              (:some node) (Option :some node)
               (:none)
                 if (empty? coord)
-                  do (swap! cache assoc coord root) (%:: Option :some root)
+                  do (swap! cache assoc coord root) (Option :some root)
                   let
                       parent-coord $ slice coord 0 $ dec (count coord)
                       index $ &list:nth coord $ dec (count coord)
                     match (find-target-cached root parent-coord cache)
-                      (:none) (%:: Option :none)
+                      (:none) (Option :none)
                       (:some parent)
                         match
                           js-nullish->option $ .item (parent.:children) index
-                          (:none) (%:: Option :none)
+                          (:none) (Option :none)
                           (:some child)
-                            do (swap! cache assoc coord child) (%:: Option :some child)
+                            do (swap! cache assoc coord child) (Option :some child)
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] 'respo.dom/DomElement (:: 'List 'Number)
@@ -6132,7 +6132,7 @@
           :code $ quote $ defn move-element! (parent nodes source anchor)
             let
                 node $ option:unwrap $ nth nodes source
-                focused $ if (.matches? node |:focus) (%:: Option :some node)
+                focused $ if (.matches? node |:focus) (Option :some node)
                   js-nullish->option $ .query-selector node |:focus
               if
                 and
@@ -6640,7 +6640,7 @@
                   element $ Element :name :div :coord (%none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref nil
                   run! $ fn (_target) &unit
                   patches $ [] (DomPatch :replace-prop coord n-coord :title |next) (DomPatch :add-prop coord n-coord :title |new) (DomPatch :rm-prop coord n-coord :title) (DomPatch :add-style coord n-coord :color |red) (DomPatch :replace-style coord n-coord :color |blue) (DomPatch :rm-style coord n-coord :color) (DomPatch :set-event coord n-coord :click) (DomPatch :rm-event coord n-coord :click) (DomPatch :add-element coord n-coord element) (DomPatch :rm-element coord n-coord) (DomPatch :replace-element coord n-coord element) (DomPatch :append-element coord n-coord element)
-                    DomPatch :move-element n-coord 0 $ %:: Option :none
+                    DomPatch :move-element n-coord 0 $ Option :none
                     DomPatch :effect-mount coord n-coord run!
                     DomPatch :effect-unmount coord n-coord run!
                     DomPatch :effect-update coord n-coord run!
@@ -6652,7 +6652,7 @@
               :tags $ #{} :unit
             %{} 'TestEntry (:name |move-roundtrip)
               :code $ quote $ let
-                  op $ DomPatch :move-element ([] 2) 3 $ %:: Option :some 1
+                  op $ DomPatch :move-element ([] 2) 3 $ Option :some 1
                 assert= op $ parse-cirru-edn $ format-cirru-edn op
               :tags $ #{} :unit
         'DomProps $ %{} 'CodeEntry (:doc |)
@@ -8119,12 +8119,12 @@
                   if
                     starts-with? (to-string k) |on-
                     if (fn? v)
-                      %:: MapEntryDecision :keep
+                      MapEntryDecision :keep
                         to-tag $ &str:slice (to-string k) 3
                         , v
-                      if (nil? v) (%:: MapEntryDecision :drop)
+                      if (nil? v) (MapEntryDecision :drop)
                         raise $ str "|[Respo] expected event listener to be a function: " k
-                    %:: MapEntryDecision :drop
+                    MapEntryDecision :drop
               &merge base-events property-events
           :examples $ []
           :schema $ :: 'Fn $ {}
@@ -8149,8 +8149,8 @@
                   :args $ [] 'Dynamic 'Dynamic
                   :return $ :: 'MapEntryDecision 'Tag 'Fn
                 if (tag? k)
-                  if (fn? v) (%:: MapEntryDecision :keep k v)
-                    if (nil? v) (%:: MapEntryDecision :drop)
+                  if (fn? v) (MapEntryDecision :keep k v)
+                    if (nil? v) (MapEntryDecision :drop)
                       raise $ str "|[Respo] expected event listener to be a function: " k
                   raise $ str "|[Respo] expected event names in :on to be tags: " k
               if (nil? raw-on) ({})
