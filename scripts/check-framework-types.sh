@@ -6,7 +6,7 @@ calcit_bin=${CALCIT_BIN:-calcit}
 "$calcit_bin" calcit.cirru --warn-dyn-method --check-only
 
 # 检查未必被 demo 调用的框架定义；空的 respo.schema.listener 不作为覆盖项。
-"$calcit_bin" calcit.cirru --warn-dyn-method analyze check-public \
+"$calcit_bin" calcit.cirru --warn-dyn-method --check-only \
   --ns respo.comp.global-keydown \
   --ns respo.comp.inspect \
   --ns respo.comp.space \
