@@ -57,10 +57,17 @@ for (const entering of [true, false]) {
 
 test('typed refresh agrees with the legacy entry and empty components emit no patches', () => {
   const { tree } = fixture();
-  const raw = [], typed = [], empty = [];
-  collect_event_refreshing(op => { raw.push(op); }, list([]), list([]), tree);
-  collect_event_refreshing_node(op => { typed.push(op); }, list([]), list([]), as_render_node(tree));
-  assert.deepEqual(typed, raw);
+  for (const prefix of [[], [t.outer, 'task', 3]]) {
+    const raw = [], typed = [];
+    collect_event_refreshing(op => { raw.push(op); }, list([...prefix]), list([]), tree);
+    collect_event_refreshing_node(op => { typed.push(op); }, list([...prefix]), list([]), as_render_node(tree));
+    // Persistent lists may have different storage layouts for equal paths.
+    assert.ok(c._$n__$e_(list(typed), list(raw)));
+    assert.deepEqual(typed.map(op => c.listToArray(c._$n_enum_$o_nth(op, 1))),
+      [prefix, [...prefix, t.kid, t.inner], [...prefix, 7]]);
+    assert.deepEqual(typed.map(op => c.listToArray(c._$n_enum_$o_nth(op, 2))), [[], [0], [1]]);
+  }
+  const empty = [];
   collect_event_refreshing(op => { empty.push(op); }, list([]), list([]), component(t.outer, null));
   collect_event_refreshing(op => { empty.push(op); }, list([]), list([]), c.parse_cirru_edn('{}'));
   assert.deepEqual(empty, []);
