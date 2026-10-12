@@ -4153,10 +4153,37 @@
             :args $ []
               :: 'Fn $ {} (:return 'Unit)
                 :args $ [] 'respo.schema/DomPatch
-              :: 'List 'K
+              :: 'List 'Dynamic
               :: 'List 'Number
               , 'respo.schema/RenderNode
-            :generics $ [] 'K
+          :tests $ [] $ %{} 'TestEntry (:name |mixed-render-path)
+            :code $ quote $ let
+                ops $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
+                collect! $ fn (op)
+                  hint-fn $ {}
+                    :args $ [] 'respo.schema/DomPatch
+                    :return 'Unit
+                  reset! ops $ append @ops op
+                  , &unit
+                leaf $ respo.schema/Element :name :span :coord (Option :none) :attrs ([]) :style ([]) :ref nil :children ([]) :event $ {}
+                  :click $ fn (_event _d!)
+                    hint-fn $ {}
+                      :args $ [] (:: 'Map 'Tag 'Dynamic)
+                        :: 'Fn $ {}
+                          :args $ [] 'Dynamic
+                          :return 'Unit
+                      :return 'Unit
+                    , &unit
+                  :focus nil
+                wrapped $ respo.schema/Component :name :inner :effects ([]) :listeners ([]) :tree $ Option :some (respo.util.detect/as-render-node leaf)
+                root $ respo.schema/Element :name :div :coord (Option :none) :attrs ([]) :style ([]) :ref nil :event ({}) :children $ [] (respo.util.detect/make-child-pair :empty nil) (respo.util.detect/make-child-pair |task wrapped) (respo.util.detect/make-child-pair 7 leaf)
+              assert= &unit $ collect-event-refreshing-node collect! ([] :app 3) ([]) (respo.util.detect/as-render-node root)
+              assert=
+                []
+                  DomPatch :set-event ([] :app 3 |task :inner) ([] 0) :click
+                  DomPatch :set-event ([] :app 3 7) ([] 1) :click
+                , @ops
+            :tags $ #{} :unit
         'detect-keys-dup $ %{} 'CodeEntry
           :doc "|Checks for duplicate keys in a list of children. Useful for development mode warnings."
           :code $ quote $ defn detect-keys-dup (child-keys)

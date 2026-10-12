@@ -20,6 +20,8 @@ Memo 帧生命周期、依赖记录、DOM 缓存失效和 demo 派发的 Unit �
 
 完整库的 Node target 和应用级 type-slot 贯通仍需分别验收；默认入口、框架定义检查和 demo 正例不能证明所有应用的 typed dispatch 已完成。
 
+内部事件刷新沿用 `DomPatch` 的渲染坐标合同 `List<Dynamic>`：路径会组合组件名 Tag 与子节点 key（例如 String、Number），不会把它们统一转换成字符串；实际 DOM 子节点坐标仍为 `List<Number>`。这条内部路径不改变应用 StateKey 泛型或状态树结构，开放 key 边界的进一步收窄仍需另行验收。
+
 `yarn check-framework-types` 使用当前固定工具链检查默认入口的动态方法，并逐一
 检查 23 个非空框架命名空间中的全部定义；CI 执行相同命令，避免遗漏 demo 没有
 调用的 helper。空的 `respo.schema.listener` 不计作覆盖；检查不执行 JavaScript
