@@ -1044,6 +1044,15 @@
       :typeNotFull 1
       :unresolved 3
       :unsafeCoerce 0
+    |respo.render.diff/collect-event-refreshing-node $ {} (:codeDynamic 0)
+      :codeNil 0
+      :declaredOptional 0
+      :deprecatedCalls 0
+      :schemaDynamic 1
+      :typeNone 0
+      :typeNotFull 1
+      :unresolved 1
+      :unsafeCoerce 0
     |respo.render.diff/detect-keys-dup $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -2002,10 +2011,10 @@
     :codeNil 33
     :declaredOptional 0
     :deprecatedCalls 0
-    :schemaDynamic 190
+    :schemaDynamic 191
     :typeNone 3
-    :typeNotFull 186
-    :unresolved 218
+    :typeNotFull 187
+    :unresolved 219
     :unsafeCoerce 35
   :scope $ {} (:includeDependencies false)
     :namespace nil
