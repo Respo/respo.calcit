@@ -3534,8 +3534,21 @@
           :schema $ :: 'Fn $ {} (:return 'respo.dom/DomElement)
             :args $ [] 'js-ffi.browser/DomElementHost
             :features $ #{} :js-ffi
+        'query-selector $ %{} 'CodeEntry
+          :doc "|查询浏览器 document，返回 Option<respo.dom/DomElement>，供 render! 等 Respo API 使用。命中时保留宿主对象身份，未命中返回 None，无效选择器及缺少 document 的宿主错误继续抛出。复用既有 narrow-element 跨库信任边界；不验证所有 DomElement 字段，不创建或修改元素。"
+          :code $ quote $ defn query-selector (selector)
+            match (browser/query-selector selector)
+              (:none) (Option :none)
+              (:some element)
+                Option :some $ narrow-element element
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] 'String
+            :features $ #{} :js-ffi
+            :return $ :: 'Option 'respo.dom/DomElement
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.ffi.browser
+          :require $ js-ffi.browser :as browser
     'respo.main $ %{} 'FileEntry
       :defs $ {}
         'main! $ %{} 'CodeEntry (:doc |)
@@ -3580,9 +3593,9 @@
         'query-mount-target $ %{} 'CodeEntry
           :doc "|Queries the default mount element behind an explicit JavaScript FFI function so mount-target remains an optional value."
           :code $ quote $ defn query-mount-target ()
-            match (browser/query-selector |.app)
+            match (query-selector |.app)
               (:none) nil
-              (:some host-element) (narrow-element host-element)
+              (:some element) element
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ []
@@ -3622,7 +3635,7 @@
             respo.app.schema :refer $ Op Task
             respo.app.task :refer $ normalize-task
             js-ffi.browser :as browser
-            respo.ffi.browser :refer $ narrow-element
+            respo.ffi.browser :refer $ query-selector
             respo.app.scheduler :refer $ watch-render! stop-render-watch!
     'respo.memo $ %{} 'FileEntry
       :defs $ {}
@@ -6893,6 +6906,7 @@
             assert= |spellcheck $ dashed->camel |spell-check
             println |typed-DOM-host-contract-ok
             svg-host-smoke!
+            assert= true $ option:none? $ dom-ffi/query-selector |#respo-query-missing
             , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
@@ -7091,6 +7105,7 @@
             respo.util.format :refer $ dashed->camel
             respo.render.dom :refer $ make-element
             respo.render.patch :refer $ append-element
+            respo.ffi.browser :as dom-ffi
     'respo.test.main $ %{} 'FileEntry
       :defs $ {}
         '*async-checks $ %{} 'CodeEntry (:doc |)

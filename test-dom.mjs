@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs"
+import assert from "node:assert/strict"
 
 const childrenHost = (children) => ({
   length: children.length,
@@ -57,11 +58,19 @@ class FakeSvgElement extends FakeElement {
 globalThis.Element = FakeElement
 
 let canvasGetContextCalls = 0
+const queryElements = new Map()
+const querySelectors = []
+const invalidSelectorError = new SyntaxError("Invalid selector")
 const canvasContext = {
   font: "",
   measureText: (content) => ({ width: content.length * 8 }),
 }
 globalThis.document = {
+  querySelector(selector) {
+    querySelectors.push(selector)
+    if (selector === "[") throw invalidSelectorError
+    return queryElements.get(selector) ?? null
+  },
   createElement(tagName) {
     if (tagName === "div") return new FakeSvgElement(tagName, "http://www.w3.org/1999/xhtml")
     if (tagName !== "canvas") throw new Error(`unexpected element creation: ${tagName}`)
@@ -85,6 +94,21 @@ const { set_inner_html_$x_ } = await import("./js-out/respo.dom.mjs")
 const { input_event_checked_$q_, input_event_value } = await import("./js-out/respo.util.format.mjs")
 const { shared_canvas_context, text_width } = await import("./js-out/respo.util.dom.mjs")
 const { document_available_$q_ } = await import("./js-out/js-ffi.browser.mjs")
+const { query_selector } = await import("./js-out/respo.ffi.browser.mjs")
+const { option_$o_unwrap, option_$o_none_$q_ } = await import("./js-out/calcit.core.mjs")
+
+// Query results cross the existing renderer boundary without cloning or adding properties.
+const queriedDiv = new FakeElement("div")
+const queriedSvg = new FakeSvgElement("svg", "http://www.w3.org/2000/svg")
+queryElements.set("#query-div", queriedDiv)
+queryElements.set("#query-svg", queriedSvg)
+const divKeys = Reflect.ownKeys(queriedDiv)
+assert.equal(option_$o_unwrap(query_selector("#query-div")), queriedDiv)
+assert.equal(option_$o_unwrap(query_selector("#query-svg")), queriedSvg)
+assert.equal(option_$o_none_$q_(query_selector("#respo-query-missing")), true)
+assert.throws(() => query_selector("["), error => error === invalidSelectorError)
+assert.deepEqual(Reflect.ownKeys(queriedDiv), divKeys)
+assert.deepEqual(querySelectors, ["#query-div", "#query-svg", "#respo-query-missing", "["])
 
 const jsFfiModule = readFileSync(new URL("./js-out/js-ffi.browser.mjs", import.meta.url), "utf8")
 if (!jsFfiModule.includes("JS FFI: js-ffi.browser/document-available?")) {
@@ -101,6 +125,7 @@ const availableDocument = globalThis.document
 try {
   Reflect.deleteProperty(globalThis, "document")
   if (document_available_$q_()) throw new Error("js-ffi document guard failed without a browser host")
+  assert.throws(() => query_selector("#query-div"), ReferenceError)
 } finally {
   globalThis.document = availableDocument
 }

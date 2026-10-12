@@ -66,6 +66,7 @@ calcit query def respo.render.html/make-string
 | `respo.comp.space`   | `comp-space` `=<` |
 | `respo.comp.inspect` | `comp-inspect`    |
 | `respo.render.html`  | `make-string`     |
+| `respo.ffi.browser`  | `query-selector`：查询并返回 `Option<respo.dom/DomElement>` |
 
 ### Lower level APIs
 

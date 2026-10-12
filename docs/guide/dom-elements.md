@@ -6,12 +6,45 @@ category: "ecosystem"
 aliases:
   - "dom elements"
   - "html elements"
+  - "query-selector"
+  - "挂载节点查询"
 entry_for:
   - "element syntax"
   - "create dom"
 ---
 
 ## DOM elements
+
+### 查询真实 DOM 挂载节点
+
+应用使用 `respo.ffi.browser/query-selector` 查询浏览器 `document`，返回
+`Option<respo.dom/DomElement>`。命中时保留元素身份，无结果返回 `Option :none`。
+调用方通过 `match` 决定是否挂载，或在必须存在的挂载点显式 unwrap。
+
+```cirru.no-run
+ns app.main $ :require
+  respo.ffi.browser :refer $ query-selector
+  respo.core :refer $ render! defcomp div
+
+let
+    comp-app $ defcomp comp-app () $ div ({})
+  match (query-selector |.app)
+    (:some element)
+      render! element (comp-app) $ fn (op) &unit
+    (:none) (raise |Missing-app-mount)
+```
+
+原先使用 `js-ffi.browser/query-selector` 的 Respo 应用可将查询 import 改为
+`respo.ffi.browser`，保留原有 Option 处理；不要在应用侧强转两个库不同的 DOM trait。
+此函数复用 Respo 既有 `narrow-element` 宿主信任边界，不克隆元素、不添加属性，也不逐字段
+验证完整 `DomElement`。它只完成查询，不创建节点或执行渲染。
+
+可通过 `calcit query def respo.ffi.browser/query-selector` 查询签名与说明。
+
+#### 限制
+
+- 该入口需要浏览器 document，无效选择器及缺少 document 的宿主错误继续抛出。
+- SVG 查询保留 SVG 元素身份；具体渲染能力仍按 Respo renderer 的合同验证。
 
 **📚 Documentation Index**
 
