@@ -3755,7 +3755,7 @@
               let
                   value $ try (call-value f args)
                     fn (error) (reset! *memo-dependency-stack previous-stack) (raise error)
-                  children $ assert-type (&list:last @*memo-dependency-stack) (:: Set MemoCacheKey)
+                  children $ .unwrap $ .last @*memo-dependency-stack
                 reset! *memo-dependency-stack previous-stack
                 MemoEntry :args args :value value :children children
           :examples $ []
@@ -4009,7 +4009,7 @@
               not $ empty? @*memo-dependency-stack
               let
                   index $ dec $ count @*memo-dependency-stack
-                  children $ assert-type (&list:nth @*memo-dependency-stack index) (:: Set MemoCacheKey)
+                  children $ .unwrap $ .get @*memo-dependency-stack index
                 reset! *memo-dependency-stack $ assoc @*memo-dependency-stack index $ include children cache-key
             , &unit
           :examples $ []
