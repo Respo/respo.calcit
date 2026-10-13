@@ -6,13 +6,13 @@ Respo 的开发版本以 `deps.cirru` 固定 Calcit 与 js-ffi 依赖，通过�
 
 资源 ID helper 已省去可由编译器证明的重复 schema，普通 `.add` 和既有测试保持不变；见[推断验收记录](docs/guide/resource-helper-validation.md)。
 
-升级时同时固定 `deps.cirru :calcit-version` 和 `package.json` 的 `@calcit/procs` 为同一精确版本，并执行 `yarn install --immutable`。只更新 CLI 而沿用旧 JS runtime，可能在运行时缺失新的 trait 实现；编译成功不能代替 DOM/SSR 测试。核心 API 改写先用 `calcit fix --preset core-api-0.28-v1 --format edn` 预览，只有可证明安全的建议自动应用，剩余开放类型和 macro 建议保留人工审阅。
+升级时同时固定 `deps.cirru :calcit-version` 和 `package.json` 的 `@calcit/procs` 为同一精确版本，并执行 `yarn install --immutable`。只更新 CLI 而沿用旧 JS runtime，可能在运行时缺失新的 trait 实现；编译成功不能代替 DOM/SSR 测试。核心 API 迁移先用当前 CLI 的 `--check-only` 诊断和 `analyze weak-types` 只读视图定位，再根据真实类型契约和调用点，通过 `query`、`tree`、`edit` 按需改写。不要长期依赖旧版本的固定迁移 preset；开放输入和 macro 能力仍需审阅，并运行原有测试。
 
-当前编译器和 JS runtime 固定为已发布的 Calcit / `@calcit/procs` `0.29.0`，js-ffi 固定为已发布的稳定 Git tag `0.2.1`，不使用提交 hash。Respo `0.16.115` 增加 `respo.ffi.browser/query-selector`，返回可直接交给 Respo renderer 的 `Option<respo.dom/DomElement>`；应用无需自行强转跨库 DOM 类型。通过普通 Calcit 引用复用 JS FFI，不需要片段专用 npm 包。版本以 `deps.cirru :version` 为准，旧 Snapshot 的镜像字段不作为发布依据。此前 alpha 工具链的历史验收见[发布依赖验收](docs/guide/calcit-0.28-alpha3-validation.md)，不代表当前组合的完整验收。
+当前编译器和 JS runtime 固定为已发布的 Calcit / `@calcit/procs` `0.29.3`，js-ffi 固定为已发布的稳定 Git tag `0.2.2`，不使用提交 hash。这使正式依赖图可以与 Quatrefoil 0.1.6、Touch Control 0.0.29 和 Pointed Prompt 0.0.17 对齐。Respo `0.16.115` 增加 `respo.ffi.browser/query-selector`，返回可直接交给 Respo renderer 的 `Option<respo.dom/DomElement>`；应用无需自行强转跨库 DOM 类型。通过普通 Calcit 引用复用 JS FFI，不需要片段专用 npm 包。版本以 `deps.cirru :version` 为准，旧 Snapshot 的镜像字段不作为发布依据。此前 alpha 工具链的历史验收见[发布依赖验收](docs/guide/calcit-0.28-alpha3-validation.md)，不代表当前组合的完整验收。
 
 演示页前端构建使用 `https://cos-sh.tiye.me/Respo/respo.calcit/` 作为资源 base。仅 main push 在测试、构建通过后上传 `dist/`，使用 `cos-upload-action@v1.2.0` 的 `public-base-url` 内置逐文件校验，不维护额外验证脚本。PR 只构建，不读取部署 secrets。原 rsync 页面路径 `/web-assets/repo/${github.repository}` 保持不变；生产运行串行且上传前检查 main SHA，跳过已过期提交，这并非原子发布。
 
-当前稳定版组合保留原 definition `:tests` 与断言；原生共 126 项，全定义检查共 403 项，框架检查覆盖 23 个命名空间的 336 个定义。SSR、DOM patch/lifecycle、正反类型检查、Markdown 示例和生产构建继续保留。EDN 解析所得 Task 名称与字段布局不是名义类型证明：恢复时复用受检 decoder 校验字段，恢复当前 Task 身份；已验证的当前 Task 保留对象身份。`yarn test-persisted-tasks` 验证生成 JS 的序列化往返和错误字段拒绝；真实浏览器验证新增、切换状态后刷新，同一份任务的 ID、内容和完成状态恢复且控制台无错误。源码使用 canonical core 名称，不增加质量基线预算。`with-attrs` 接收已序列化的 SVG 扩展属性；DOM anchor 末尾移动使用 null，保留宿主边界的运行时验证。
+当前组合保留原 definition `:tests` 与断言；原生共 127 项，全定义检查共 404 项，框架检查覆盖 23 个命名空间的 337 个定义。测试中的空列表 Ref 显式声明元素类型，避免初始化为 `List<Never>` 后再写入其他值；开放 listener/dispatch 测试仍保留真实的 Dynamic 边界。SSR、DOM patch/lifecycle、正反类型检查、Markdown 示例和生产构建继续保留。EDN 解析所得 Task 名称与字段布局不是名义类型证明：恢复时复用受检 decoder 校验字段，恢复当前 Task 身份；已验证的当前 Task 保留对象身份。`yarn test-persisted-tasks` 验证生成 JS 的序列化往返和错误字段拒绝；此前稳定版真实浏览器验证新增、切换状态后刷新，同一份任务的 ID、内容和完成状态恢复且控制台无错误，不代替新组合的浏览器验收。源码使用 canonical core 名称，不增加质量基线预算。`with-attrs` 接收已序列化的 SVG 扩展属性；DOM anchor 末尾移动使用 null，保留宿主边界的运行时验证。
 
 Memo 帧生命周期、依赖记录、DOM 缓存失效和 demo 派发的 Unit 合同显式返回 `&unit`。`reset!` / `swap!` 本身返回写入值；`!` 表示有副作用，不代表返回 Unit。附带测试覆盖帧状态和空缓存的两条路径，原有 JS memo 与 DOM patch 测试继续检查缓存保留、失效顺序和宿主效果，同时断言这些接口的 Unit 返回。
 
