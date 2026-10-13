@@ -119,11 +119,15 @@ captures callbacks to test batching without a browser:
 ```cirru
 let
     *renders $ ref 0
-    *tasks $ ref $ []
+    *tasks $ ref $ assert-type ([])
+      :: 'List $ :: 'Fn $ {} (:args ([])) (:return 'Unit)
     request! $ respo.core/make-render-scheduler
       fn () (swap! *renders inc)
         , &unit
-      %:: Option :some $ fn (task) (swap! *tasks conj task)
+      Option :some $ fn (task)
+        hint-fn $ {} (:return 'Unit)
+          :args $ [] $ :: 'Fn $ {} (:args ([])) (:return 'Unit)
+        swap! *tasks append task
         , &unit
   request!
   request!

@@ -21,7 +21,7 @@ calcit docs agents --full
 
 类型标注建议（schema-first）:
 
-- 优先使用 `calcit edit schema <ns/def> --code 'quote $ :: :fn $ {} ...'` 维护函数签名；`quote` 是 CLI 传入一个 AST 节点时必需的代码数据边界，不会存入 schema payload。
+- 优先使用 `calcit edit schema <ns/def>` 维护函数签名，类型头使用 quoted symbol（`:: 'Fn`），不再使用旧 `:: :fn`；`quote` 是 CLI 传入一个 AST 节点时必需的代码数据边界，不会存入 schema payload。
 - 仅在确有必要时使用 `hint-fn`，并优先采用 schema map 形式；避免旧 clause 写法。
 - 修改签名后，优先用 `calcit js` 验证，确保不会因类型告警阻断编译。
 
@@ -31,7 +31,7 @@ Typed dispatch / type slot:
 - 修改 `d! $ :: ...`、事件 handler schema 或 entry 配置前，优先复用模块指南：`calcit docs search 'typed dispatch' --module respo.calcit`，再运行 `calcit docs read type-slots.md --full --module respo.calcit`。
 - 命名 entry 不继承默认 `:configs.type-slots`；用 `calcit config type-slots [--entry name]` 确认实际绑定，并以同一个 `--entry` 运行 `--check-only` / `js`。
 
-然后 GPT 调用 `calcit` 命令增量编辑源码, 在 `calcit edit inc` 运行时触发重新编译.
+AI 先查询实际 subtree，再用 `calcit edit transaction` 的 dry-run 和 revision 前置条件提交修改；已有 `calcit js -w` 会观察源码更新并重新编译。
 
 文档示例校验建议:
 

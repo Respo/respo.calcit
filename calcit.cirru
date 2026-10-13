@@ -993,7 +993,7 @@
             %{} 'TestEntry
               :name |tolerates-none-subtree-and-keeps-component-listener
               :code $ quote $ let
-                  log $ ref $ []
+                  log $ ref $ assert-type ([]) (:: 'List 'Dynamic)
                   listener $ respo.schema/RespoListener :name :watch :handler $ fn (event _dispatch!)
                     reset! log $ [] event
                   component $ respo.schema/Component :name :empty :effects ([]) :listeners ([] listener) :tree $ %none
@@ -1005,8 +1005,8 @@
             %{} 'TestEntry
               :name |keeps-listener-order-dispatch-and-empty-children
               :code $ quote $ let
-                  calls $ ref $ []
-                  operations $ ref $ []
+                  calls $ ref $ assert-type ([]) (:: 'List 'Tag)
+                  operations $ ref $ assert-type ([]) (:: 'List 'Dynamic)
                   event $ :: :changed
                   dispatch-ref $ ref $ fn (op)
                     reset! operations $ append @operations op
@@ -4413,7 +4413,7 @@
               :tags $ #{} :unit
             %{} 'TestEntry (:name |keeps-dom-coordinates-dense-through-none)
               :code $ quote $ let
-                  ops $ ref $ []
+                  ops $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
                   leaf $ respo.core/span $ {}
                   old-children $ [] (respo.util.detect/make-child-pair :empty nil) (respo.util.detect/make-child-pair :live leaf)
                   new-children $ [] (respo.util.detect/make-child-pair :empty leaf) (respo.util.detect/make-child-pair :live nil)

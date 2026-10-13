@@ -89,7 +89,7 @@ globalThis.document = {
 
 const { main_$x_, svg_host_smoke_$x_, verify_dom_regressions_$x_ } = await import("./js-out/respo.test.dom.mjs")
 const { add_event, add_prop, insert_before_target_$x_, remove_target_$x_, replace_prop, rm_prop } = await import("./js-out/respo.render.patch.mjs")
-const { CalcitSliceList, init_tags } = await import("@calcit/procs")
+const { CalcitSliceList, init_tags, parse_cirru_edn, turn_tag } = await import("@calcit/procs")
 const { set_inner_html_$x_ } = await import("./js-out/respo.dom.mjs")
 const { input_event_checked_$q_, input_event_value } = await import("./js-out/respo.util.format.mjs")
 const { shared_canvas_context, text_width } = await import("./js-out/respo.util.dom.mjs")
@@ -114,7 +114,9 @@ const jsFfiModule = readFileSync(new URL("./js-out/js-ffi.browser.mjs", import.m
 if (!jsFfiModule.includes("JS FFI: js-ffi.browser/document-available?")) {
   throw new Error("js-ffi file expression was not embedded in its Calcit module")
 }
-if (!jsFfiModule.includes("calcit://js-ffi@0.2.1/js-ffi.browser/document-available%3F/file/js-ffi-assets/document-available.js")) {
+const jsFfiVersion = parse_cirru_edn(readFileSync(new URL("./deps.cirru", import.meta.url), "utf8"))
+  .get(turn_tag("dependencies")).get("calcit-lang/js-ffi")
+if (!jsFfiModule.includes(`calcit://js-ffi@${jsFfiVersion}/js-ffi.browser/document-available%3F/file/js-ffi-assets/document-available.js`)) {
   throw new Error("js-ffi source provenance lost the installed module version or file path")
 }
 if (/^import\s+.*js-ffi-assets\//m.test(jsFfiModule)) {

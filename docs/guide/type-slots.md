@@ -68,11 +68,13 @@ render!、保存的 dispatch、事件与 listener 保持同一个应用 Op，并
 在 Respo 源码仓库中运行：
 
 ```bash
-CALCIT_BIN=/path/to/calcit-0.29.0-alpha.6 node scripts/probe-dispatch-boundary.mjs
+node scripts/probe-dispatch-boundary.mjs
 ```
 
 可用 `CHECK_CALCIT_BIN` 指定候选编译器做检查；源码编辑由与
 `deps.cirru :calcit-version` 精确匹配的已发布 CLI 完成，脚本解析该声明并拒绝不匹配的 mutator。
+CI 只运行当前固定正式版本的探针，不再为旧 alpha.7 重复安装和执行同一套场景；历史对照记录保留。
+这不表示 #195 的应用级类型贯通已经完成。
 脚本复制 Snapshot 与固定版本的 deps 到临时目录，使用 CLI dry-run、
 `--expect-revision` 事务修改 demo 入口和 handler schema；根项目源码不变。
 覆盖 map/struct props、错误 Number、合法 Op、旧 list/tag、显式回调标注

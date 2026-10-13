@@ -53,7 +53,7 @@ const defs = [
 ];
 const main = `quote $ defn main! ()
   let
-      seen $ atom $ []
+      seen $ ref $ assert-type ([]) (:: 'List 'Enum)
       dispatch! $ fn (op)
         hint-fn $ {} (:return 'Unit) (:args $ [] 'respo.probe.generic/A)
         reset! seen $ append @seen op
@@ -158,7 +158,8 @@ export function probeGenericHolders({ edit, invoke, results }) {
   :args $ [] (${fn}) 'State
   :return $ :: 'respo.probe.generic/AppController 'Op 'State`],
     ['save-state!', `defn save-state! (app state)
-  reset! (:store app) $ Store :state state`,
+  reset! (:store app) $ Store :state state
+  , &unit`,
       `:: 'Fn $ {} (:generics ([] 'Op 'State)) (:return 'Unit)
   :args $ [] (:: 'respo.probe.generic/AppController 'Op 'State) 'State`],
     ['notify', `defn notify (app props)
@@ -175,7 +176,7 @@ export function probeGenericHolders({ edit, invoke, results }) {
   }
   const appMain = `quote $ defn main! ()
   let
-      seen $ atom $ []
+      seen $ ref $ assert-type ([]) (:: 'List 'Enum)
       dispatch! $ fn (op)
         hint-fn $ {} (:return 'Unit) (:args $ [] 'respo.probe.generic/A)
         assert= (str respo.probe.generic/A) $ str $ &enum:definition op
