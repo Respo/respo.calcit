@@ -23,6 +23,7 @@ const { Component } = await import('../js-out/respo.schema.mjs');
 const { div, span } = await import('../js-out/respo.core.mjs');
 const { as_render_node, make_child_pair } = await import('../js-out/respo.util.detect.mjs');
 const { make_element } = await import('../js-out/respo.render.dom.mjs');
+const { compare_to_dom_$x_ } = await import('../js-out/respo.util.dom.mjs');
 const { add_style, replace_style, replace_prop } = await import('../js-out/respo.render.patch.mjs');
 const { with_fixture_children, with_fixture_events } = await import('../js-out/respo.test.dom.mjs');
 const t = c.init_tags(['name', 'effects', 'listeners', 'tree', 'children', 'root', 'child']);
@@ -30,6 +31,29 @@ const event = c.init_tags(['event', 'click', 'input']);
 const component = (name, element) => c._$n__PCT__$M_(Component,
   t.name, name, t.effects, c.arrayToList([]), t.listeners, c.arrayToList([]),
   t.tree, c._PCT_some(as_render_node(element)));
+
+test('SSR mismatch diagnostics preserve element and component child names', () => {
+  const leaf = span(c.parse_cirru_edn('{}'));
+  const root = with_fixture_children(div(c.parse_cirru_edn('{}')), c.arrayToList([
+    make_child_pair('element', leaf), make_child_pair('component', component(t.child, leaf)),
+  ]));
+  const host = new Host('div');
+  host.childElementCount = 0;
+  const errors = [];
+  const logs = [];
+  const originalError = console.error;
+  const originalLog = console.log;
+  try {
+    console.error = (...args) => errors.push(args);
+    console.log = (...args) => logs.push(args);
+    compare_to_dom_$x_(root, host);
+  } finally {
+    console.error = originalError;
+    console.log = originalLog;
+  }
+  assert.deepEqual(errors, [['SSR checking: children sizes do not match!']]);
+  assert.deepEqual(logs, [['virtual:', '([] :span :child)'], ['real:', host.children]]);
+});
 
 test('dataset updates preserve object identity, read order and unchanged-value writes', () => {
   const operations = [];

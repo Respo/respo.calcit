@@ -7599,7 +7599,13 @@
                     not= (respo.util.format/scalar-attribute-text maybe-html) (element :inner-html)
                     js/console.warn "|SSR checking: noticed dom containing innerHTML:" element
                   do (js/console.error "|SSR checking: children sizes do not match!")
-                    js/console.log |virtual: $ -> (respo.util.detect/element-children vdom) (map respo.util.detect/child-pair-value) (map :name) to-lispy-string
+                    js/console.log |virtual: $ -> (respo.util.detect/element-children vdom)
+                      map $ fn (pair)
+                        match
+                          .unwrap $ :node pair
+                          (:element child) (:name child)
+                          (:component child) (:name child)
+                      , to-lispy-string
                     js/console.log |real: $ element :children
               let
                   real-children $ element :children
