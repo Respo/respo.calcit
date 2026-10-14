@@ -8,7 +8,9 @@ Respo 的开发版本以 `deps.cirru` 固定 Calcit 与 js-ffi 依赖，通过�
 
 升级时同时固定 `deps.cirru :calcit-version` 和 `package.json` 的 `@calcit/procs` 为同一精确版本，并执行 `yarn install --immutable`。只更新 CLI 而沿用旧 JS runtime，可能在运行时缺失新的 trait 实现；编译成功不能代替 DOM/SSR 测试。核心 API 迁移先用当前 CLI 的 `--check-only` 诊断和 `analyze weak-types` 只读视图定位，再根据真实类型契约和调用点，通过 `query`、`tree`、`edit` 按需改写。不要长期依赖旧版本的固定迁移 preset；开放输入和 macro 能力仍需审阅，并运行原有测试。
 
-当前编译器和 JS runtime 固定为已发布的 Calcit / `@calcit/procs` `0.29.3`，js-ffi 固定为已发布的稳定 Git tag `0.2.2`，不使用提交 hash。这使正式依赖图可以与 Quatrefoil 0.1.6、Touch Control 0.0.29 和 Pointed Prompt 0.0.17 对齐。Respo `0.16.115` 增加 `respo.ffi.browser/query-selector`，返回可直接交给 Respo renderer 的 `Option<respo.dom/DomElement>`；应用无需自行强转跨库 DOM 类型。通过普通 Calcit 引用复用 JS FFI，不需要片段专用 npm 包。版本以 `deps.cirru :version` 为准，旧 Snapshot 的镜像字段不作为发布依据。此前 alpha 工具链的历史验收见[发布依赖验收](docs/guide/calcit-0.28-alpha3-validation.md)，不代表当前组合的完整验收。
+使用者影响：候选 Respo `0.16.120` 同步已发布的 JS-FFI `0.2.3`，CLI 与 JS runtime 仍固定正式 `0.29.3`，不改变渲染、事件、状态或 DOM API。升级应用时需一起选择请求同一 Respo / JS-FFI 版本的 Router、UI 等正式模块；不能只改根依赖并放宽 Caps。旧正式 tag 保持原依赖，不改写历史版本。候选需通过原门禁并正式发版后才可消费。
+
+js-ffi 使用正式 Git tag，不使用提交 hash。Respo `0.16.115` 增加 `respo.ffi.browser/query-selector`，返回可直接交给 Respo renderer 的 `Option<respo.dom/DomElement>`；应用无需自行强转跨库 DOM 类型。通过普通 Calcit 引用复用 JS FFI，不需要片段专用 npm 包。版本以 `deps.cirru :version` 为准，旧 Snapshot 的镜像字段不作为发布依据。此前 alpha 工具链的历史验收见[发布依赖验收](docs/guide/calcit-0.28-alpha3-validation.md)，不代表当前组合的完整验收。
 
 演示页前端构建使用 `https://cos-sh.tiye.me/Respo/respo.calcit/` 作为资源 base。仅 main push 在测试、构建通过后上传 `dist/`，使用 `cos-upload-action@v1.2.0` 的 `public-base-url` 内置逐文件校验，不维护额外验证脚本。PR 只构建，不读取部署 secrets。原 rsync 页面路径 `/web-assets/repo/${github.repository}` 保持不变；生产运行串行且上传前检查 main SHA，跳过已过期提交，这并非原子发布。
 
