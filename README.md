@@ -14,9 +14,11 @@ js-ffi 使用正式 Git tag，不使用提交 hash。Respo `0.16.115` 增加 `re
 
 演示页前端构建使用 `https://cos-sh.tiye.me/Respo/respo.calcit/` 作为资源 base。仅 main push 在测试、构建通过后上传 `dist/`，使用 `cos-upload-action@v1.2.0` 的 `public-base-url` 内置逐文件校验，不维护额外验证脚本。PR 只构建，不读取部署 secrets。原 rsync 页面路径 `/web-assets/repo/${github.repository}` 保持不变；生产运行串行且上传前检查 main SHA，跳过已过期提交，这并非原子发布。
 
-当前组合保留原 127 项 definition `:tests` 及其断言，并新增 12 项缺失值、状态分支与名义类型边界测试；共 139 项在 native 和生成 JS 上回放。全定义检查共 404 项，框架检查覆盖 23 个命名空间的 337 个定义。测试中的空列表 Ref 显式声明元素类型，避免初始化为 `List<Never>` 后再写入其他值；开放 listener/dispatch 测试仍保留真实的 Dynamic 边界。SSR、DOM patch/lifecycle、正反类型检查、Markdown 示例和生产构建继续保留。EDN 解析所得 Task 名称与字段布局不是名义类型证明：恢复时复用受检 decoder 校验字段，恢复当前 Task 身份；已验证的当前 Task 保留对象身份。`yarn test-persisted-tasks` 验证生成 JS 的序列化往返和错误字段拒绝；真实浏览器继续验证新增、编辑、切换状态及刷新后，同一份任务的 ID、内容和完成状态恢复且控制台无错误。`with-attrs` 接收已序列化的 SVG 扩展属性；DOM anchor 末尾移动使用 null，保留宿主边界的运行时验证。
+当前组合保留原 definition `:tests` 及其断言，并增加缺失值、状态分支、名义类型和属性 key 合同回归；共 143 项在 native 和生成 JS 上完整回放，无排除。全定义检查共 404 项，框架检查覆盖 23 个命名空间的 337 个定义。测试中的空列表 Ref 显式声明元素类型，避免初始化为 `List<Never>` 后再写入其他值；开放 listener/dispatch 测试仍保留真实的 Dynamic 边界。SSR、DOM patch/lifecycle、正反类型检查、Markdown 示例和生产构建继续保留。EDN 解析所得 Task 名称与字段布局不是名义类型证明：恢复时复用受检 decoder 校验字段，恢复当前 Task 身份；已验证的当前 Task 保留对象身份。`yarn test-persisted-tasks` 验证生成 JS 的序列化往返和错误字段拒绝；真实浏览器继续验证新增、编辑、切换状态及刷新后，同一份任务的 ID、内容和完成状态恢复且控制台无错误。`with-attrs` 接收已序列化的 SVG 扩展属性；DOM anchor 末尾移动使用 null，保留宿主边界的运行时验证。
 
 缺失值查询使用公共 `get`、`first`、`last`、`struct-definition` 和 `enum-definition` 的 Option 合同，不依赖底层原语曾经返回 nil 的行为。已证明非空的列表或已存在的内部索引用 `.unwrap`；可能缺失的属性与类型查询使用 `match`。宿主 ref、旧 states 和开放事件数据仍在既有边界保留 nil，并由原来的校验、默认值或错误分支处理；这不扩大参数类型，也不把 nil payload 与缺失混为一谈。源码使用 canonical core 名称。已弃用的 quality 计数基线、`check-quality` 命令及对应 CI 步骤已移除；类型正确性由严格检查、definition 测试和 DOM/SSR 等实际语义验收保证，不再以 nil/Dynamic 数量判断回退。新的 Calcit 版本仍须与同版本 `@calcit/procs` 配对验收后才升级 pin。
+
+SSR 的属性 Map 保留自身 key 类型：内容读取通过现有路径 API 查询 `:value`、`:innerHTML`、`:inner-text`，不会把额外的 String 或 Number 键转换成 Tag。属性序列化仍沿用原有排序、事件属性过滤和转义规则；nil、false、0 与空字符串的内容优先级不变。非 Map 输入在读取内容前明确报错。演示程序的 microtask callback 显式返回 Unit，忽略宿主 timer handle，但不会吞掉调度错误。
 
 Memo 帧生命周期、依赖记录、DOM 缓存失效和 demo 派发的 Unit 合同显式返回 `&unit`。`reset!` / `swap!` 本身返回写入值；`!` 表示有副作用，不代表返回 Unit。附带测试覆盖帧状态和空缓存的两条路径，原有 JS memo 与 DOM patch 测试继续检查缓存保留、失效顺序和宿主效果，同时断言这些接口的 Unit 返回。
 

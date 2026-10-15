@@ -335,14 +335,16 @@
                 dispatch! $ Op :add "|only 10 items"
                 if (> x 0)
                   recur $ dec x
-              shared/queue-microtask! $ fn () $ let
-                  cost $ - (shared/now-ms) started
-                if
-                  < (count acc) 40
-                  js/setTimeout
-                    fn () $ try-test! dispatch! $ conj acc cost
-                    , 0
-                  println |result: $ sort acc number-order
+              shared/queue-microtask! $ fn ()
+                let
+                    cost $ - (shared/now-ms) started
+                  if
+                    < (count acc) 40
+                    js/setTimeout
+                      fn () $ try-test! dispatch! $ conj acc cost
+                      , 0
+                    println |result: $ sort acc number-order
+                , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
@@ -5870,46 +5872,73 @@
                 assert |nested-document-is-serialized-in-child-order $ = |<div><span>Demo</span></div> $ element->string parent
               :tags $ #{} :unit
         'element-content $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn element-content (tag-name attrs children)
+          :code $ quote $ defn element-content (tag-name attrs children) (decode-map-as attrs 'Map)
             if (= tag-name :textarea)
-              match (calcit.core/get attrs :value)
+              match
+                calcit.core/get-in attrs $ [] :value
                 (:some value)
                   if (calcit.core/non-nil? value)
                     escape-html $ respo.util.format/scalar-attribute-text value
                     calcit.core/join-string children |
                 (:none) (calcit.core/join-string children |)
-              match (calcit.core/get attrs :innerHTML)
+              match
+                calcit.core/get-in attrs $ [] :innerHTML
                 (:some html)
                   if (calcit.core/non-nil? html) (respo.util.format/scalar-attribute-text html)
-                    match (calcit.core/get attrs :inner-text)
+                    match
+                      calcit.core/get-in attrs $ [] :inner-text
                       (:some text)
                         if (calcit.core/non-nil? text) (text->html text) (calcit.core/join-string children |)
                       (:none) (calcit.core/join-string children |)
                 (:none)
-                  match (calcit.core/get attrs :inner-text)
+                  match
+                    calcit.core/get-in attrs $ [] :inner-text
                     (:some text)
                       if (calcit.core/non-nil? text) (text->html text) (calcit.core/join-string children |)
                     (:none) (calcit.core/join-string children |)
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'String)
-            :args $ [] 'Tag (:: 'Map 'Tag 'Dynamic) (:: 'List 'String)
-          :tests $ [] $ %{} 'TestEntry (:name |absence-migration-html-values)
-            :code $ quote $ do
-              assert= |ab $ element-content :textarea (&{}) ([] |a |b)
-              assert= |ab $ element-content :textarea (&{} :value nil) ([] |a |b)
-              assert= |false $ element-content :textarea (&{} :value false) ([] |ignored)
-              assert= |0 $ element-content :textarea (&{} :value 0) ([] |ignored)
-              assert= | $ element-content :textarea (&{} :value |) ([] |ignored)
-              assert= |&lt; $ element-content :textarea (&{} :value |<) ([] |ignored)
-              assert= |ab $ element-content :div (&{}) ([] |a |b)
-              assert= |safe $ element-content :div (&{} :innerHTML nil :inner-text |safe) ([] |ignored)
-              assert= |ab $ element-content :div (&{} :innerHTML nil :inner-text nil) ([] |a |b)
-              assert= |false $ element-content :div (&{} :innerHTML false :inner-text |ignored) ([] |ignored)
-              assert= |0 $ element-content :div (&{} :inner-text 0) ([] |ignored)
-              assert= | $ element-content :div (&{} :innerHTML | :inner-text |ignored) ([] |ignored)
-              assert= |&lt; $ element-content :div (&{} :inner-text |<) ([] |ignored)
-              assert= |< $ element-content :div (&{} :innerHTML |<) ([] |ignored)
-            :tags $ #{} :regression :unit
+            :args $ [] 'Tag (:: 'Map 'AttrKey 'Dynamic) (:: 'List 'String)
+            :generics $ [] 'AttrKey
+          :tests $ []
+            %{} 'TestEntry (:name |absence-migration-html-values)
+              :code $ quote $ do
+                assert= |ab $ element-content :textarea (&{}) ([] |a |b)
+                assert= |ab $ element-content :textarea (&{} :value nil) ([] |a |b)
+                assert= |false $ element-content :textarea (&{} :value false) ([] |ignored)
+                assert= |0 $ element-content :textarea (&{} :value 0) ([] |ignored)
+                assert= | $ element-content :textarea (&{} :value |) ([] |ignored)
+                assert= |&lt; $ element-content :textarea (&{} :value |<) ([] |ignored)
+                assert= |ab $ element-content :div (&{}) ([] |a |b)
+                assert= |safe $ element-content :div (&{} :innerHTML nil :inner-text |safe) ([] |ignored)
+                assert= |ab $ element-content :div (&{} :innerHTML nil :inner-text nil) ([] |a |b)
+                assert= |false $ element-content :div (&{} :innerHTML false :inner-text |ignored) ([] |ignored)
+                assert= |0 $ element-content :div (&{} :inner-text 0) ([] |ignored)
+                assert= | $ element-content :div (&{} :innerHTML | :inner-text |ignored) ([] |ignored)
+                assert= |&lt; $ element-content :div (&{} :inner-text |<) ([] |ignored)
+                assert= |< $ element-content :div (&{} :innerHTML |<) ([] |ignored)
+              :tags $ #{} :regression :unit
+            %{} 'TestEntry (:name |attribute-key-types-preserve-content)
+              :code $ quote $ do
+                assert= |AB $ element-content :div
+                  {} $ 1 |one
+                  [] |A |B
+                assert= |AB $ element-content :div
+                  {} $ |innerHTML |ignored
+                  [] |A |B
+                assert= |false $ element-content :div
+                  {} (1 |one) (:innerHTML false)
+                  [] |A |B
+                assert= |0 $ element-content :textarea
+                  {} (|extra |x) (:value 0)
+                  [] |A |B
+                assert= |safe $ element-content :div
+                  {} (1 |one) (:innerHTML nil) (:inner-text |safe)
+                  [] |A |B
+                assert= | $ element-content :div
+                  {} (|extra 1) (:innerHTML |)
+                  [] |A |B
+              :tags $ #{} :regression :unit
         'entry->html $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn entry->html (entry)
             let
@@ -5991,7 +6020,14 @@
               calcit.core/join-string (map sorted entry->html) "| "
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'String)
-            :args $ [] $ :: 'Map 'Tag 'Dynamic
+            :args $ [] $ :: 'Map 'AttrKey 'Dynamic
+            :generics $ [] 'AttrKey
+          :tests $ [] $ %{} 'TestEntry (:name |preserves-original-key-formatting)
+            :code $ quote $ do
+              assert= "|1=\"one\"" $ props->html $ {} (1 |one)
+              assert= "|data-label=\"hello\"" $ props->html $ {} (|data-label |hello)
+              assert= "|title=\"safe\"" $ props->html $ {} (|on-click |ignored) (:title |safe)
+            :tags $ #{} :regression :unit
         'self-closing $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def self-closing
             #{} |area |base |br |col |embed |hr |img |input |link |meta |param |source |track |wbr
@@ -7186,7 +7222,7 @@
           :doc "|DOM regression for component to element and element to component switches, including an identical nested defcomp child. Root and descendant clicks must resolve the current handlers; removed focus handlers must stay removed."
           :code $ quote $ defn verify-component-event-coords! (mount root child click!)
             let
-                dispatched $ ref $ []
+                dispatched $ ref $ decode-map-as ([]) 'List
                 dispatch! $ fn (op) (respo.core/append-dynamic! dispatched op)
                 child-tree $ comp-event-shell $ span
                   {} $ :on-click $ fn (_event d!) (d! :child)
@@ -7243,10 +7279,10 @@
           :doc "|SSR adoption regression: preserve root and descendant DOM nodes, attach click handlers immediately, update shared dispatch and handlers on later renders, and run the ref and mount effect exactly once."
           :code $ quote $ defn verify-realize-ssr-ref! (mount root child click!)
             let
-                refs $ ref $ []
-                mounts $ ref $ []
-                dispatched $ ref $ []
-                later-dispatched $ ref $ []
+                refs $ ref $ decode-map-as ([]) 'List
+                mounts $ ref $ decode-map-as ([]) 'List
+                dispatched $ ref $ decode-map-as ([]) 'List
+                later-dispatched $ ref $ decode-map-as ([]) 'List
                 dispatch! $ fn (op) (respo.core/append-dynamic! dispatched op)
                 later-dispatch! $ fn (op) (respo.core/append-dynamic! later-dispatched op)
                 ref! $ fn (target) (respo.core/append-dynamic! refs target)

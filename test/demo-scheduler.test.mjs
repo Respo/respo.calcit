@@ -80,6 +80,32 @@ test('heavy task timing rejects a non-number clock result before dispatching', (
   }
 });
 
+test('heavy task microtask discards the timer handle and preserves timer failures', () => {
+  const originalQueue = globalThis.queueMicrotask;
+  const originalTimer = globalThis.setTimeout;
+  const queued = [], timers = [];
+  const handle = { kind: 'timer-handle' };
+  let dispatches = 0;
+  try {
+    globalThis.queueMicrotask = callback => { queued.push(callback); };
+    globalThis.setTimeout = (callback, delay) => { timers.push([callback, delay]); return handle; };
+    assert.equal(try_test_$x_(() => { dispatches++; }, c.arrayToList([])), undefined);
+    assert.equal(dispatches, 55);
+    assert.equal(queued.length, 1);
+    assert.equal(timers.length, 0);
+    assert.equal(queued[0](), undefined, 'the Unit callback does not return a host timer handle');
+    assert.equal(timers.length, 1);
+    assert.equal(timers[0][1], 0);
+    assert.equal(typeof timers[0][0], 'function');
+    const failure = new Error('timer rejected');
+    globalThis.setTimeout = () => { throw failure; };
+    assert.throws(queued[0], error => error === failure);
+  } finally {
+    globalThis.queueMicrotask = originalQueue;
+    globalThis.setTimeout = originalTimer;
+  }
+});
+
 test('the heavy tasks burst measures after its scheduled render', async () => {
   const original = c.deref(_$s_store);
   const originalLog = console.log;
