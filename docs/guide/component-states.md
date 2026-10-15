@@ -86,8 +86,8 @@ let
     states $ {} $ :tasks $ {}
       |task-1 $ {} $ :data |draft
     task-states $ >> (>> states :tasks) |task-1
-  assert= (&map:get task-states :cursor) ([] :tasks |task-1)
-  assert= (&map:get task-states :data) |draft
+  assert= (.unwrap $ get task-states :cursor) ([] :tasks |task-1)
+  assert= (.unwrap $ get task-states :data) |draft
 ```
 
 迁移时保留 String/Number key，不要将它们转成 Tag。若应用将 `>>` 的结果
