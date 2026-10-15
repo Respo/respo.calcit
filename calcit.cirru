@@ -6334,8 +6334,6 @@
             if (svg-target? target)
               set-svg-prop! target op $ Option :none
               match op
-                :class-name $ target .remove-attribute! |class
-                :href $ target .remove-attribute! |href
                 :inner-text $ set! target.:inner-text |
                 :innerHTML $ set! target.:inner-html |
                 :checked $ set! target.:checked false
@@ -6345,9 +6343,9 @@
                     prop-str $ calcit.core/to-string op
                   if (.!startsWith prop-str |data-)
                     js-delete (target.:dataset) (.!slice prop-str 5)
-                    let
-                        k $ dashed->camel prop-str
-                      aset target k nil
+                    do
+                      aset target (dashed->camel prop-str) nil
+                      target .remove-attribute! $ respo.util.format/prop->attr prop-str
             , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
