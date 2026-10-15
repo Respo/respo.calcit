@@ -76,7 +76,7 @@ const viaFactory = code => code.replace(
   'root $ respo.probe.generic/make-tree handler',
 ).replace('respo.probe.generic/deliver controller $ respo.probe.generic/Node :element root', 'respo.probe.generic/deliver controller root')
   .replace('      leaf $ respo.probe.generic/Element :event (&{} :click handler) :children ([])\n      wrapped $ respo.probe.generic/Component :tree $ %some $ respo.probe.generic/Node :element leaf\n', '');
-const mismatchedController = main.replace("(:args $ [] 'respo.probe.generic/A)", "(:args $ [] 'respo.probe.generic/B)").replace('reset! seen', 'assert= (str respo.probe.generic/B) (str (&enum:definition op))\n        reset! seen');
+const mismatchedController = main.replace("(:args $ [] 'respo.probe.generic/A)", "(:args $ [] 'respo.probe.generic/B)").replace('reset! seen', 'assert= (str respo.probe.generic/B) (str (.unwrap (enum-definition op)))\n        reset! seen');
 const viaDirectController = code => code.replace('respo.probe.generic/make-controller dispatch!', 'respo.probe.generic/Controller :dispatch $ atom dispatch!');
 const cases = [
   ['holder-forward-op', main],
@@ -179,7 +179,7 @@ export function probeGenericHolders({ edit, invoke, results }) {
       seen $ ref $ assert-type ([]) (:: 'List 'Enum)
       dispatch! $ fn (op)
         hint-fn $ {} (:return 'Unit) (:args $ [] 'respo.probe.generic/A)
-        assert= (str respo.probe.generic/A) $ str $ &enum:definition op
+        assert= (str respo.probe.generic/A) $ str $ .unwrap $ enum-definition op
         reset! seen $ append @seen op
         , &unit
       app $ respo.probe.generic/make-app-controller dispatch! 0

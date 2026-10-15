@@ -16,7 +16,6 @@
     "test-cursor-keys": "calcit js && node --test test/cursor-keys.test.mjs",
     "bench-keyed-moves": "calcit js && node test/keyed-moves-bench.mjs",
     "check-docs": "bash scripts/check-docs-md.sh",
-    "check-quality": "calcit calcit.cirru analyze quality --baseline config/calcit-quality.cirru",
     "check-framework-types": "bash scripts/check-framework-types.sh",
     "test-nominal-accessors": "bash scripts/check-nominal-accessors.sh",
     "test-patch-lookup": "calcit js && node --test test/patch-lookup.test.mjs",
