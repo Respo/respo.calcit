@@ -46,12 +46,11 @@ jobs:
           yarn install --immutable
           caps verify --toolchain
 
-      - name: Validate Calcit snapshot and type baseline
+      - name: Validate Calcit snapshot and strict types
         run: |
           calcit calcit.cirru edit format
           git diff --exit-code -- calcit.cirru
           calcit calcit.cirru --check-only
-          calcit calcit.cirru analyze quality --baseline config/calcit-quality.cirru --format json
 
       - name: "test"
         run: |

@@ -32,8 +32,9 @@ Number 查询给出 `.add` 的 `proven` 契约：一个 Number 参数，返回 N
 DomPatch 正反类型用例、typed DOM/SSR host、nullish props、JS 编译及 Vite 构建通过。
 
 0.23.0 的首次公开包验收暴露了质量分析误报：[Calcit #1392](https://github.com/calcit-lang/calcit/issues/1392)。
-0.23.1 让既有分析复用编译器证明，因此原 `config/calcit-quality.cirru` 无需放宽，
-删除 schema 后全部指标 delta 仍为 0。没有为了通过 CI 恢复冗余声明或增加 Dynamic。
+当时 0.23.1 让既有分析复用编译器证明，删除 schema 后旧计数基线的全部指标 delta 仍为 0。
+没有为了通过 CI 恢复冗余声明或增加 Dynamic。该计数基线现已弃用并移除，当前验收以
+严格检查、definition 测试及实际 DOM/SSR 行为为准；这里保留的是历史版本的验证记录。
 
 公开版本编译整个示例应用，在受控浏览器执行输入和 Add 操作，
 页面从 `Tasks: List/0` 变为 `Tasks: List/1`，内容为输入值；直接调用生成的 helper 得到
