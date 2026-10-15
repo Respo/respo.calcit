@@ -257,7 +257,9 @@
                       js/window.setTimeout
                         fn () $ dispatch! $ Op :states cursor (assoc state :message "|Press Ctrl+M to change message")
                         , 2000
-          :examples $ [] $ quote (on-keydown cursor state)
+          :examples $ [] $ quote
+            on-keydown ([] :todolist)
+              %{} respo.app.schema/TodoState (:draft |task) (:locked? false) (:message |)
           :schema $ :: 'Fn $ {} (:return 'respo.schema/RespoListener)
             :args $ [] (:: 'List 'Dynamic) 'respo.app.schema/TodoState
             :features $ #{} :js-ffi
@@ -868,7 +870,7 @@
               :style $ if (calcit.core/non-nil? w) (&{} :width w) (&{} :height h)
           :examples $ []
             quote $ comp-space 10 nil
-            quote $ comp-space nil 16px
+            quote $ comp-space nil 16
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
             :args $ [] 'Dynamic 'Dynamic
         'style-space $ %{} 'CodeEntry (:doc |)
@@ -1270,7 +1272,7 @@
           :doc "|Atom to hold a logging function for observing changes during rerenders. Function signature: (old-tree new-tree changes)."
           :code $ quote $ defref *changes-logger (Option :none)
           :examples $ [] $ quote
-            reset! *changes-logger $ fn (old new changes) (println changes)
+            reset! *changes-logger $ Option :some $ fn (_old-tree _new-tree changes) (println changes)
           :schema $ :: 'Ref $ :: 'calcit.core/Option
             :: 'Fn $ {} (:return 'Unit)
               :args $ [] 'respo.schema/Component 'respo.schema/Component $ :: 'List 'respo.schema/DomPatch
@@ -1311,7 +1313,8 @@
                   &map:assoc
                     as-states-map $ &map:get base k
                     , :cursor $ append parent-cursor k
-          :examples $ [] $ quote (>> states :task-a)
+          :examples $ [] $ quote
+            >> ({}) :task-a
           :schema $ :: 'Fn $ {}
             :args $ [] 'Dynamic 'Dynamic
             :features $ #{} :js-ffi
@@ -1728,7 +1731,9 @@
                 {} $ :href href
                 <> text
             quote $ defcomp comp-with-effect (value)
-              [] (effect-log value)
+              []
+                effect-on-update ([] value)
+                  fn (_target) &unit
                 div ({}) (<> value)
           :schema $ :: 'Macro $ {} (:rest 'Syntax)
             :capabilities $ #{}
@@ -1792,7 +1797,8 @@
             quote $ div $ {}
               :style $ {} $ :color |red
             quote $ div $ {}
-              :on $ {} $ :click on-click
+              :on $ {} $ :click
+                fn (_event _dispatch!) &unit
             quote $ div ({})
               div ({}) (<> |child1)
               div ({}) (<> |child2)
@@ -1841,7 +1847,7 @@
                   , &unit
           :examples $ [] $ quote
             effect-on-update ([] 1)
-              fn (_target) nil
+              fn (_target) &unit
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Effect)
             :args $ [] (:: 'List 'Dynamic)
               :: 'Fn $ {} (:return 'Unit)
@@ -1893,8 +1899,8 @@
                 _ &unit
           :examples $ [] $ quote
             effect-watch ([] 1)
-              fn (_target) nil
-              fn (_target) nil
+              fn (_target) &unit
+              Option :some $ fn (_target) &unit
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Effect)
             :args $ [] (:: 'List 'Dynamic)
               :: 'Fn $ {} (:return 'Unit)
@@ -2086,14 +2092,10 @@
                     raise $ str "|[Respo/for-keyed] key-fn returned nil at index " idx
                   [] key $ confirm-child $ render-child item idx
           :examples $ [] $ quote
-            for-keyed
-              []
-                {} (:id :a) (:label |A)
-                {} (:id :b) (:label |B)
-              fn (item) (:id item)
+            for-keyed ([] |a |b)
+              fn (item) item
               fn (item _idx)
-                div ({})
-                  <> $ :label item
+                div ({}) (<> item)
           :schema $ :: 'Fn $ {}
             :args $ [] (:: 'List 'T)
               :: 'Fn $ {} (:return 'K)
@@ -2282,8 +2284,7 @@
           :code $ quote $ defn memo-comp-by (key f & args) (memo/memo-comp-by key f & args)
           :examples $ [] $ quote
             memo-comp-by :demo
-              fn (label)
-                schema/Component :effects ([]) :name :memo-demo :listeners ([]) :tree $ <> label
+              defcomp comp-label (label) (<> label)
               , |demo
           :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Component)
             :args $ [] 'Dynamic 'Fn
@@ -2295,7 +2296,7 @@
           :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'Dynamic)
             :args $ [] 'Dynamic 'Fn
         'mount-app! $ %{} 'CodeEntry
-          :doc "|Mounts the Respo application to the DOM. Initializes the global element and event listeners."
+          :doc "|Mounts the Respo application to the DOM. Initializes the global element and event listeners. Browser-only (needs a DOM mount target), so usage is shown here rather than as an executable example: `mount-app! mount-target (comp-app) *dispatch-fn`"
           :code $ quote $ defn mount-app! (target element *dispatch-fn)
             ; assert "|1st argument should be an element" $ or (nil? target) (instance? element-type target)
             ; assert "|2nd argument should be a component" $ component? element
@@ -2313,8 +2314,7 @@
               reset! *global-element $ Option :some element
               patch-instance! (deref *changes) (unsafe-coerce target 'respo.dom/DomElement) deliver-event
             , &unit
-          :examples $ [] $ quote
-            mount-app! mount-target (comp-app) *dispatch-fn
+          :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'respo.dom/DomElement 'respo.schema/Component $ :: 'Ref
               :: 'Fn $ {} (:return 'Unit)
@@ -2506,7 +2506,7 @@
               assert |nil-mount-target-rejected @caught?
             :tags $ #{} :unit
         'render-with! $ %{} 'CodeEntry
-          :doc "|在受管理的 memo 帧中构建 Component 树，清理不再活跃的组件 key，然后渲染。传入零参数树构建函数，使 memo 调用位于帧内。向外传播的渲染错误会中止当前帧并重新抛出，保留上次成功提交的缓存。"
+          :doc "|在受管理的 memo 帧中构建 Component 树，清理不再活跃的组件 key，然后渲染。传入零参数树构建函数，使 memo 调用位于帧内。向外传播的渲染错误会中止当前帧并重新抛出，保留上次成功提交的缓存。仅限浏览器（需要 DOM 挂载点），用法：`render-with! mount-target (fn () (comp-container @*store)) dispatch!`"
           :code $ quote $ defn render-with! (target render-tree dispatch!) (memo/begin-memo-frame!)
             try
               let
@@ -2515,10 +2515,7 @@
                 render! target element dispatch!
               fn (error) (memo/abort-memo-frame!) (raise error)
             , &unit
-          :examples $ [] $ quote
-            render-with! mount-target
-              fn () $ comp-container @*store
-              , dispatch!
+          :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] (:: 'JsNullish 'respo.dom/DomElement)
               :: 'Fn $ {} (:return 'respo.schema/Component)
@@ -2526,7 +2523,7 @@
               , 'Fn
             :features $ #{} :js-ffi
         'rerender-app! $ %{} 'CodeEntry
-          :doc "|Diffs the new element against the global element and patches the DOM. Used internally by render!."
+          :doc "|Diffs the new element against the global element and patches the DOM. Used internally by render!. Browser-only (needs a DOM mount target); usage: `rerender-app! mount-target (comp-demo) *dispatch-fn`"
           :code $ quote $ defn rerender-app! (target element *dispatch-fn)
             match @*global-element
               (:none) (mount-app! target element *dispatch-fn)
@@ -2548,8 +2545,7 @@
                     reset! *global-element $ Option :some element
                     patch-instance! changes-list (unsafe-coerce target 'respo.dom/DomElement) deliver-event
             , &unit
-          :examples $ [] $ quote
-            rerender-app! mount-target (comp-demo) *dispatch-fn
+          :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'respo.dom/DomElement 'respo.schema/Component $ :: 'Ref
               :: 'Fn $ {} (:return 'Unit)
@@ -7405,9 +7401,10 @@
               = (&struct:definition x) schema/Component
               , false
           :examples $ []
-            quote $ component? $ defcomp comp-demo ()
-              div $ {}
-            quote $ component? $ div ({})
+            quote $ component? $ let
+                comp-demo $ respo.core/defcomp comp-demo () $ respo.core/div ({})
+              comp-demo
+            quote $ component? $ respo.core/div ({})
             quote $ component? nil
           :schema $ :: 'Fn $ {} (:return 'Bool)
             :args $ [] 'Dynamic
@@ -7503,8 +7500,8 @@
               = (&struct:definition x) schema/Element
               , false
           :examples $ []
-            quote $ element? $ div ({})
-            quote $ element? $ span
+            quote $ element? $ respo.core/div ({})
+            quote $ element? $ respo.core/span
               {} $ :inner-text |text
             quote $ element? nil
           :schema $ :: 'Fn $ {} (:return 'Bool)
@@ -7682,7 +7679,7 @@
             :args $ []
             :features $ #{} :js-ffi
         'dashed->camel $ %{} 'CodeEntry
-          :doc "|convert dashed-case CSS property names to camelCase. e.g. \"background-color\" -> \"backgroundColor\"."
+          :doc "|convert dashed-case CSS property names to camelCase. e.g. \"background-color\" -> \"backgroundColor\". JavaScript only (uses `.!replace`); check its examples with `--js`."
           :code $ quote $ defn dashed->camel (x)
             if (= x |spell-check) |spellcheck $ &let
               result $ .!replace x dashed-letter-pattern uppercase-dashed-match
@@ -8283,9 +8280,7 @@
           :code $ quote $ defn val-of-first (x)
             respo.util.list/pair-value $ respo.util.list/first-pair x
           :examples $ [] $ quote
-            val-of-first $
-              [] :a 1
-              [] :b 2
+            val-of-first $ [] ([] :a 1) ([] :b 2)
           :schema $ :: 'Fn $ {} (:return 'Dynamic)
             :args $ [] $ :: 'List (:: 'List 'Dynamic)
       :ns $ %{} 'NsEntry (:doc |)
