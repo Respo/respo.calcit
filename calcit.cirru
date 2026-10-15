@@ -3114,7 +3114,8 @@
                   fn (error) (assert= |[Respo/test]-expected-CursorTestState error) (swap! caught inc)
               assert= 5 @caught
             :tags $ #{} :unit
-        'get-state-at $ %{} 'CodeEntry (:doc |)
+        'get-state-at $ %{} 'CodeEntry
+          :doc "|按 path 读取状态树。路径上任一中间分支缺失（或为 nil）时返回 nil，与读取不存在的 key 一致。Reads the state tree along path; returns nil when any intermediate branch is missing."
           :code $ quote $ defn get-state-at (states path)
             loop
                 current states
@@ -3123,18 +3124,25 @@
                 :args $ [] 'Dynamic $ :: 'List 'KeyInput
                 :return 'Dynamic
                 :generics $ [] 'KeyInput
-              if (empty? xs) current $ let
-                  key $ &list:nth xs 0
-                  next-option $ get current key
-                  next-value $ match next-option
-                    (:none) nil
-                    (:some value) value
-                recur next-value $ &list:rest xs
+              if
+                or (empty? xs) (nil? current)
+                , current $ match
+                  get current $ &list:nth xs 0
+                  (:none) nil
+                  (:some value)
+                    recur value $ &list:rest xs
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Dynamic)
             :args $ [] 'Dynamic $ :: 'List 'KeyInput
             :features $ #{} :js-ffi
             :generics $ [] 'KeyInput
+          :tests $ [] $ %{} 'TestEntry (:name |missing-intermediate-returns-nil)
+            :code $ quote $ do
+              assert= nil $ get-state-at ({}) ([] :child :data)
+              assert= nil $ get-state-at
+                {} $ :panel $ {}
+                [] :panel |task-1 :data
+            :tags $ #{} :regression :unit
         'update-state-tree $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn update-state-tree (states cursor new-state)
             if (nil? states)
@@ -3385,6 +3393,16 @@
                 assert |draft-is-updated $ &= |c $ :draft state2
                 assert |other-field-is-preserved $ &= |ready $ :message state2
               :tags $ #{} :unit
+            %{} 'TestEntry (:name |merges-into-missing-branch)
+              :code $ quote $ let
+                  store $ update-states-merge ({}) ([] :child) ({})
+                    {} $ :value 1
+                assert=
+                  {} $ :states $ {}
+                    :child $ {} $ :data
+                      {} $ :value 1
+                  , store
+              :tags $ #{} :regression :unit
             %{} 'TestEntry (:name |absence-migration-state-branches)
               :code $ quote $ let
                   seed $ &{} :ready? false :count 0
@@ -3404,27 +3422,17 @@
                     &{} :other 7 :states $ &{} :child $ &{} :data nil
                     [] :child
                     , seed changes
-                assert= "|get expected a map or indexed collection, got:" $ try
-                  do
-                    update-states-merge (&{} :other 7) ([] :child) seed changes
-                    , |unexpected-success
-                  fn (message)
-                    hint-fn $ {}
-                      :args $ [] 'String
-                      :return 'String
-                    , message
-                assert= "|get expected a map or indexed collection, got:" $ try
-                  do
-                    update-states-merge
-                      &{} :other 7 :states $ &{} :child nil
-                      [] :child
-                      , seed changes
-                    , |unexpected-success
-                  fn (message)
-                    hint-fn $ {}
-                      :args $ [] 'String
-                      :return 'String
-                    , message
+                assert=
+                  &{} :other 7 :states $ &{} :child $ &{} :data
+                    &{} :ready? false :count 0 :message | :nullable nil
+                  update-states-merge (&{} :other 7) ([] :child) seed changes
+                assert=
+                  &{} :other 7 :states $ &{} :child $ &{} :data
+                    &{} :ready? false :count 0 :message | :nullable nil
+                  update-states-merge
+                    &{} :other 7 :states $ &{} :child nil
+                    [] :child
+                    , seed changes
                 let
                     existing $ &{} :other 7 :states $ &{} :child
                       &{} :data $ &{} :preserved false
