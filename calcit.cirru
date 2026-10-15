@@ -53,9 +53,13 @@
             let
                 states $ decode-map-as states $ :: 'Map 'Dynamic 'Dynamic
                 cursor $ decode-map-as
-                  either (&map:get states :cursor) ([])
+                  either
+                    .unwrap-or (calcit.core/get states :cursor) nil
+                    []
                   :: 'List 'Dynamic
-                state $ either (&map:get states :data) |
+                state $ either
+                  .unwrap-or (calcit.core/get states :data) nil
+                  , |
                 task-id $ :id task
                 task-text $ :text task
                 done? $ :done? task
@@ -74,14 +78,16 @@
                       let
                           event $ decode-map-as e $ :: 'Map 'Tag 'Dynamic
                         let
-                            text $ str $ decode-map-as (&map:get event :value) 'String
+                            text $ str $ decode-map-as
+                              .unwrap-or (calcit.core/get event :value) nil
+                              , 'String
                           d! $ Op :update task-id text
                   =< 8 0
                   input $ {} (:value state) (:class-name widget/style-input)
                     :on-input $ fn (e d!)
                       let
                           event $ decode-map-as e $ :: 'Map 'Tag 'Dynamic
-                        d! $ Op :states cursor $ &map:get event :value
+                        d! $ Op :states cursor $ .unwrap-or (calcit.core/get event :value) nil
                   =< 8 0
                   div
                     {} (:class-name widget/style-button)
@@ -136,10 +142,14 @@
             let
                 states $ decode-map-as states $ :: 'Map 'Dynamic 'Dynamic
                 cursor $ decode-map-as
-                  either (&map:get states :cursor) ([])
+                  either
+                    .unwrap-or (calcit.core/get states :cursor) nil
+                    []
                   :: 'List 'Dynamic
                 state $ let
-                    stored-state $ either (&map:get states :data) (respo.app.schema/TodoState :draft | :locked? false :message "|Press Ctrl+M to change message")
+                    stored-state $ either
+                      .unwrap-or (calcit.core/get states :data) nil
+                      respo.app.schema/TodoState :draft | :locked? false :message "|Press Ctrl+M to change message"
                   if (struct? stored-state)
                     if (&struct:matches? stored-state respo.app.schema/TodoState) stored-state $ raise "|[Respo/demo] expected TodoState"
                     raise "|[Respo/demo] expected TodoState"
@@ -159,7 +169,9 @@
                         let
                             event $ decode-map-as e $ :: 'Map 'Tag 'Dynamic
                           d! $ Op :states-merge cursor state $ {}
-                            :draft $ decode-map-as (&map:get event :value) 'String
+                            :draft $ decode-map-as
+                              .unwrap-or (calcit.core/get event :value) nil
+                              , 'String
                       :on-focus on-focus
                     =< 8 0
                     span
@@ -250,8 +262,8 @@
                     info $ decode-map-as info $ :: 'Map 'Tag 'Dynamic
                   when
                     and
-                      &= |m $ &map:get info :key
-                      identical? true $ &map:get info :ctrl
+                      &= |m $ .unwrap-or (calcit.core/get info :key) nil
+                      identical? true $ .unwrap-or (calcit.core/get info :ctrl) nil
                     do
                       dispatch! $ Op :states cursor $ assoc state :message "|Message changed by Ctrl+M!"
                       js/window.setTimeout
@@ -607,7 +619,7 @@
                 xs items
               if (empty? xs) acc $ let
                   next-acc $ match
-                    normalize-task $ &list:first xs
+                    normalize-task $ .unwrap $ calcit.core/first xs
                     (:none) acc
                     (:some task) (append acc task)
                 recur next-acc $ &list:rest xs
@@ -691,7 +703,9 @@
                 let
                     tasks $ :tasks store
                   if (empty? tasks) store $ let
-                      first-task $ assert-type (&list:first tasks) 'respo.app.schema/Task
+                      first-task $ assert-type
+                        .unwrap $ calcit.core/first tasks
+                        , 'respo.app.schema/Task
                     assoc store :tasks $ &list:assoc tasks 0 $ assoc first-task :text rd
               (:toggle task-id)
                 assoc store :tasks $ map (:tasks store)
@@ -1291,7 +1305,7 @@
           :doc "|Create a text node with `span`.\n\nThe first argument is the content string. The optional second argument can be a style map or a class-name string."
           :code $ quote $ defn <> (content & styles)
             let
-                style $ if (empty? styles) nil $ &list:first styles
+                style $ if (empty? styles) nil $ .unwrap (calcit.core/first styles)
               if (string? style)
                 span $ {} (:inner-text content) (:class-name style)
                 span $ {} (:inner-text content) (:style style)
@@ -1304,12 +1318,12 @@
             &let
               base $ as-states-map states
               &let
-                raw-cursor $ &map:get base :cursor
+                raw-cursor $ .unwrap-or (calcit.core/get base :cursor) nil
                 &let
                   parent-cursor $ if (nil? raw-cursor) ([])
                     if (list? raw-cursor) raw-cursor $ raise $ str "|[Respo] expected states cursor as a list, got: " (type-of raw-cursor)
                   &map:assoc
-                    as-states-map $ &map:get base k
+                    as-states-map $ .unwrap-or (calcit.core/get base k) nil
                     , :cursor $ append parent-cursor k
           :examples $ [] $ quote (>> states :task-a)
           :schema $ :: 'Fn $ {}
@@ -1326,14 +1340,24 @@
                     7 $ {} $ :data |number
                   branch $ >> root |task-1
                   nested $ >> branch 7
-                assert= (&map:get branch :data) |draft
-                assert= (&map:get branch :cursor) ([] :panel |task-1)
-                assert= (&map:get nested :data) |nested
-                assert= (&map:get nested :cursor) ([] :panel |task-1 7)
                 assert=
-                  &map:get (>> root 7) :data
+                  .unwrap $ calcit.core/get branch :data
+                  , |draft
+                assert=
+                  .unwrap $ calcit.core/get branch :cursor
+                  [] :panel |task-1
+                assert=
+                  .unwrap $ calcit.core/get nested :data
+                  , |nested
+                assert=
+                  .unwrap $ calcit.core/get nested :cursor
+                  [] :panel |task-1 7
+                assert=
+                  .unwrap $ calcit.core/get (>> root 7) :data
                   , |number
-                assert= (&map:get root :cursor) ([] :panel)
+                assert=
+                  .unwrap $ calcit.core/get root :cursor
+                  [] :panel
                 assert= (contains? branch 7) true
                 assert= (contains? branch |7) false
             %{} 'TestEntry (:name |nil-state-seed)
@@ -1449,7 +1473,7 @@
           :code $ quote $ defn confirm-child-pair (pair)
             assert "|expected pair" $ and (list? pair)
               &= 2 $ count pair
-            assert "|[Respo] keyed child requires a non-nil key" $ calcit.core/non-nil? $ &list:first pair
+            assert "|[Respo] keyed child requires a non-nil key" $ calcit.core/non-nil? $ .unwrap (calcit.core/first pair)
             &let
               x $ &list:nth pair 1
               assert "|Invalid data in elements tree: " $ or (nil? x) (element? x) (component? x)
@@ -1463,11 +1487,11 @@
           :code $ quote $ defn create-element (tag-name props & children)
             let
                 props-map $ normalize-dom-props props
-                ref-value $ &map:get props-map :ref
+                ref-value $ .unwrap-or (calcit.core/get props-map :ref) nil
                 ref! $ normalize-ref ref-value "|[Respo/create-element] expected :ref to be a function or nil"
                 attrs $ pick-attrs props-map
                 styles $ ->
-                  props-style-map $ &map:get props-map :style
+                  props-style-map $ .unwrap-or (calcit.core/get props-map :style) nil
                   &map:to-list
                   sort $ fn (x y)
                     &compare (&list:nth x 0) (&list:nth y 0)
@@ -1480,7 +1504,7 @@
                     :args $ [] (:: 'List 'respo.schema/ChildPair) (:: 'List 'Dynamic) 'Number
                     :return $ :: 'List 'respo.schema/ChildPair
                   if (empty? xs) acc $ let
-                      item $ &list:first xs
+                      item $ .unwrap $ calcit.core/first xs
                     confirm-child item
                     recur
                       if (calcit.core/non-nil? item)
@@ -1506,15 +1530,17 @@
               raise "|[Respo/create-list-element] expected keyed child pairs as a list or map"
             let
                 props-map $ normalize-dom-props props
-                ref-value $ &map:get props-map :ref
+                ref-value $ .unwrap-or (calcit.core/get props-map :ref) nil
                 ref! $ normalize-ref ref-value "|[Respo/create-list-element] expected :ref to be a function or nil"
                 attrs $ pick-attrs props-map
                 styles $ sort
                   assert-type
-                    &map:to-list $ props-style-map $ &map:get props-map :style
+                    &map:to-list $ props-style-map $ .unwrap-or (calcit.core/get props-map :style) nil
                     :: List $ :: List Dynamic
                   fn (x y)
-                    &compare (&list:first x) (&list:first y)
+                    &compare
+                      .unwrap $ calcit.core/first x
+                      .unwrap $ calcit.core/first y
                 event $ pick-event props-map
               schema/Element :name tag-name :coord (Option :none) :attrs attrs :style styles :event event :children
                 map
@@ -2050,7 +2076,7 @@
                         (:some node-tree)
                           schema/Component :effects effects :name component-name :listeners listeners :tree $ Option :some node-tree
                       let
-                          item $ &list:first xs
+                          item $ .unwrap $ calcit.core/first xs
                           next-node $ if
                             and (struct? item)
                               or (component? item) (element? item)
@@ -2632,8 +2658,10 @@
                 not $ and (>= branch-count 1) (<= branch-count 2)
                 raise |[Respo/show]-expected-a-child-and-an-optional-fallback
               let
-                  child $ &list:first branches
-                  fallback $ if (= branch-count 2) (&list:last branches) nil
+                  child $ .unwrap $ calcit.core/first branches
+                  fallback $ if (= branch-count 2)
+                    .unwrap $ calcit.core/last branches
+                    , nil
                 quasiquote $ if ~condition ~child ~fallback
           :examples $ [] $ quote
             show true
@@ -2864,8 +2892,11 @@
             warn-style-literals rules
             , &unit &unit
               let
-                  style-ns $ &map:get (&extract-code-into-edn style-name) :ns
-                  ns-str $ if (string? style-ns) style-ns $ raise "|defstyle expected a namespaced symbol"
+                  style-ns $ calcit.core/get (&extract-code-into-edn style-name) :ns
+                  ns-str $ match style-ns
+                    (:some style-ns)
+                      if (string? style-ns) style-ns $ raise "|defstyle expected a namespaced symbol"
+                    (:none) (raise "|defstyle expected a namespaced symbol")
                   style-name-str $ str
                     -> (calcit.core/to-string style-name) (&str:replace |! |_EX_) (&str:replace |? |_QU_)
                     , |__ $ -> ns-str (&str:replace |. |_)
@@ -2944,11 +2975,15 @@
                       str "|render-css-block expected a style map, got: " $ type-of raw-styles
                     class-rule $ str |. style-name
                     rule-name $ &str:replace (&str:replace k |$0 class-rule) |& class-rule
-                    contained $ &map:get styles-map :contained
+                    contained $ calcit.core/get styles-map :contained
                     css-line $ style->string $ &map:to-list styles-map
-                    block $ if (calcit.core/non-nil? contained)
-                      str contained (char-from-code 32) |{ &newline rule-name (char-from-code 32) |{ &newline css-line &newline |} &newline |}
-                      str rule-name (char-from-code 32) |{ &newline css-line &newline |}
+                    block $ match contained
+                      (:some contained)
+                        if (calcit.core/non-nil? contained)
+                          str contained (char-from-code 32) |{ &newline rule-name (char-from-code 32) |{ &newline css-line &newline |} &newline |}
+                          str rule-name (char-from-code 32) |{ &newline css-line &newline |}
+                      (:none)
+                        str rule-name (char-from-code 32) |{ &newline css-line &newline |}
                     next-acc $ if (empty? acc) block $ str acc &newline &newline block
                   recur next-acc $ &list:rest xs
           :examples $ []
@@ -3073,7 +3108,10 @@
                 if (empty? cursor) (&map:assoc states :data new-state)
                   let
                       key $ &list:nth cursor 0
-                    &map:assoc states key $ update-state-tree (&map:get states key) (&list:rest cursor) new-state
+                    &map:assoc states key $ update-state-tree
+                      .unwrap-or (calcit.core/get states key) nil
+                      &list:rest cursor
+                      , new-state
                 assoc-in states
                   concat cursor $ [] :data
                   , new-state
@@ -3267,7 +3305,7 @@
         'update-states-merge $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn update-states-merge (store cursor state0 changes)
             let
-                maybe-states $ &map:get store :states
+                maybe-states $ .unwrap-or (calcit.core/get store :states) nil
                 states $ if (nil? maybe-states) ({}) maybe-states
               assoc store :states $ update-state-tree-merge states cursor state0 changes
           :examples $ []
@@ -3829,16 +3867,12 @@
                 let
                     frame-entry-option $ let
                         cache @*frame-component-caches
-                      if (&map:contains? cache cache-key)
-                        Option :some $ &map:get cache cache-key
-                        Option :none
+                      calcit.core/get cache cache-key
                     entry-option $ match frame-entry-option
                       (:none)
                         let
                             cache @*component-caches
-                          if (&map:contains? cache cache-key)
-                            Option :some $ &map:get cache cache-key
-                            Option :none
+                          calcit.core/get cache cache-key
                       (:some entry) (Option :some entry)
                     hit? $ match entry-option
                       (:none) false
@@ -4060,7 +4094,7 @@
                 not $ &map:contains? @*frame-component-caches child-key
                 when (&map:contains? @*component-caches child-key)
                   let
-                      child $ &map:get @*component-caches child-key
+                      child $ .unwrap $ calcit.core/get @*component-caches child-key
                     swap! *frame-component-caches &map:assoc child-key child
                     retain-memo-children! child
           :examples $ []
@@ -4305,15 +4339,21 @@
                             not $ contains? old-index key
                           source-index $ keyed-index $ concat (concat retained-keys suffix-keys) added-keys
                           source-order $ map new-keys $ fn (key)
-                            assert-type (&map:get source-index key) 'Number
+                            assert-type
+                              .unwrap $ calcit.core/get source-index key
+                              , 'Number
                           kept $ lis-values $ if (> suffix 0)
                             filter source-order $ fn (value)
                               < value $ count retained-keys
                             , source-order
                         &doseq (key retained-keys)
                           let
-                              old-position $ assert-type (&map:get old-index key) 'Number
-                              new-position $ assert-type (&map:get new-index key) 'Number
+                              old-position $ assert-type
+                                .unwrap $ calcit.core/get old-index key
+                                , 'Number
+                              new-position $ assert-type
+                                .unwrap $ calcit.core/get new-index key
+                                , 'Number
                             find-render-node-diffs collect! (append coord key)
                               append n-coord $ + index-offset old-position
                               :node $ &list:nth middle-old-children old-position
@@ -4322,14 +4362,18 @@
                           key $ reverse old-keys
                           when-not (contains? new-index key)
                             let
-                                old-position $ assert-type (&map:get old-index key) 'Number
+                                old-position $ assert-type
+                                  .unwrap $ calcit.core/get old-index key
+                                  , 'Number
                                 child $ option:unwrap $ :node (&list:nth middle-old-children old-position)
                                 child-n-coord $ append n-coord $ + index-offset old-position
                               respo.render.effect/collect-unmounting-node collect! (append coord key) child-n-coord child true
                               collect! $ DomPatch :rm-element (append coord key) child-n-coord
                         &doseq (key added-keys)
                           let
-                              new-position $ assert-type (&map:get new-index key) 'Number
+                              new-position $ assert-type
+                                .unwrap $ calcit.core/get new-index key
+                                , 'Number
                               child $ option:unwrap $ :node (&list:nth middle-new-children new-position)
                               child-coord $ append coord key
                             collect! $ DomPatch :append-element child-coord n-coord $ respo.util.detect/render-node-value child
@@ -4350,7 +4394,9 @@
                                 recur rest-sources $ Option :some source
                         &doseq (key added-keys)
                           let
-                              new-position $ assert-type (&map:get new-index key) 'Number
+                              new-position $ assert-type
+                                .unwrap $ calcit.core/get new-index key
+                                , 'Number
                               child $ option:unwrap $ :node (&list:nth middle-new-children new-position)
                               child-coord $ append coord key
                             respo.render.effect/collect-mounting-node collect! child-coord
@@ -5715,20 +5761,44 @@
         'element-content $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn element-content (tag-name attrs children)
             if (= tag-name :textarea)
-              let
-                  value $ &map:get attrs :value
-                if (calcit.core/non-nil? value)
-                  escape-html $ respo.util.format/scalar-attribute-text value
-                  calcit.core/join-string children |
-              let
-                  html $ &map:get attrs :innerHTML
-                if (calcit.core/non-nil? html) (respo.util.format/scalar-attribute-text html)
-                  let
-                      text $ &map:get attrs :inner-text
-                    if (calcit.core/non-nil? text) (text->html text) (calcit.core/join-string children |)
+              match (calcit.core/get attrs :value)
+                (:some value)
+                  if (calcit.core/non-nil? value)
+                    escape-html $ respo.util.format/scalar-attribute-text value
+                    calcit.core/join-string children |
+                (:none) (calcit.core/join-string children |)
+              match (calcit.core/get attrs :innerHTML)
+                (:some html)
+                  if (calcit.core/non-nil? html) (respo.util.format/scalar-attribute-text html)
+                    match (calcit.core/get attrs :inner-text)
+                      (:some text)
+                        if (calcit.core/non-nil? text) (text->html text) (calcit.core/join-string children |)
+                      (:none) (calcit.core/join-string children |)
+                (:none)
+                  match (calcit.core/get attrs :inner-text)
+                    (:some text)
+                      if (calcit.core/non-nil? text) (text->html text) (calcit.core/join-string children |)
+                    (:none) (calcit.core/join-string children |)
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'String)
             :args $ [] 'Tag (:: 'Map 'Tag 'Dynamic) (:: 'List 'String)
+          :tests $ [] $ %{} 'TestEntry (:name |absence-migration-html-values)
+            :code $ quote $ do
+              assert= |ab $ element-content :textarea (&{}) ([] |a |b)
+              assert= |ab $ element-content :textarea (&{} :value nil) ([] |a |b)
+              assert= |false $ element-content :textarea (&{} :value false) ([] |ignored)
+              assert= |0 $ element-content :textarea (&{} :value 0) ([] |ignored)
+              assert= | $ element-content :textarea (&{} :value |) ([] |ignored)
+              assert= |&lt; $ element-content :textarea (&{} :value |<) ([] |ignored)
+              assert= |ab $ element-content :div (&{}) ([] |a |b)
+              assert= |safe $ element-content :div (&{} :innerHTML nil :inner-text |safe) ([] |ignored)
+              assert= |ab $ element-content :div (&{} :innerHTML nil :inner-text nil) ([] |a |b)
+              assert= |false $ element-content :div (&{} :innerHTML false :inner-text |ignored) ([] |ignored)
+              assert= |0 $ element-content :div (&{} :inner-text 0) ([] |ignored)
+              assert= | $ element-content :div (&{} :innerHTML | :inner-text |ignored) ([] |ignored)
+              assert= |&lt; $ element-content :div (&{} :inner-text |<) ([] |ignored)
+              assert= |< $ element-content :div (&{} :innerHTML |<) ([] |ignored)
+            :tags $ #{} :regression :unit
         'entry->html $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn entry->html (entry)
             let
@@ -6518,11 +6588,24 @@
         'resource-action? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn resource-action? (x)
             and (enum? x)
-              = (&enum:definition x) ResourceAction
+              match (calcit.core/enum-definition x)
+                (:some calcit-absence-definition) (= calcit-absence-definition ResourceAction)
+                (:none) false
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Bool)
             :args $ [] 'Dynamic
           :tags $ #{} :internal
+          :tests $ [] $ %{} 'TestEntry (:name |absence-migration-nominal-identity)
+            :code $ quote $ do
+              assert= true $ respo.resource/resource-action? $ ResourceAction :ready 1 nil
+              assert= false $ respo.resource/resource-action? $ Option :some nil
+              assert= false $ respo.resource/resource-action? nil
+              assert= false $ respo.resource/resource-action? false
+              assert= false $ respo.resource/resource-action? 0
+              assert= false $ respo.resource/resource-action? |
+              assert= false $ respo.resource/resource-action? $ &{}
+              assert= false $ respo.resource/resource-action? $ :: :ready 1 nil
+            :tags $ #{} :regression :unit
         'resource-failed $ %{} 'CodeEntry
           :doc "|Creates a :failed ResourceAction carrying the failure value."
           :code $ quote $ defn resource-failed (request-id error)
@@ -6670,11 +6753,24 @@
         'resource-state? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn resource-state? (x)
             and (struct? x)
-              = (&struct:definition x) ResourceState
+              match (calcit.core/struct-definition x)
+                (:some calcit-absence-definition) (= calcit-absence-definition ResourceState)
+                (:none) false
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Bool)
             :args $ [] 'Dynamic
           :tags $ #{} :internal
+          :tests $ [] $ %{} 'TestEntry (:name |absence-migration-nominal-identity)
+            :code $ quote $ do
+              assert= true $ respo.resource/resource-state? $ resource-idle (Option :none)
+              assert= false $ respo.resource/resource-state? $ respo.schema/Component :name :probe :effects ([]) :listeners ([])
+              assert= false $ respo.resource/resource-state? nil
+              assert= false $ respo.resource/resource-state? false
+              assert= false $ respo.resource/resource-state? 0
+              assert= false $ respo.resource/resource-state? |
+              assert= false $ respo.resource/resource-state? $ &{}
+              assert= false $ respo.resource/resource-state? $ :: :ready 1 nil
+            :tags $ #{} :regression :unit
       :ns $ %{} 'NsEntry
         :doc "|Immutable async resource helpers. Network completion emits ResourceAction values; applications keep ResourceState in their own store and apply resource-reducer from the updater."
         :code $ quote $ ns respo.resource
@@ -7236,7 +7332,9 @@
             :args $ []
         'nil-body-component $ %{} 'CodeEntry (:doc |)
           :code $ quote $ respo.core/defcomp nil-body-component ()
-            &map:get ({}) :missing
+            .unwrap-or
+              calcit.core/get ({}) :missing
+              , nil
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
             :args $ []
@@ -7274,12 +7372,20 @@
                   and a-empty? b-empty?
                   , true
                 (or a-empty? b-empty?) false
-                (&= (&list:first xs) (&list:first ys))
+                (&= (.unwrap (calcit.core/first xs)) (.unwrap (calcit.core/first ys)))
                   recur (&list:rest xs) (&list:rest ys)
                 true false
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Bool)
             :args $ [] (:: 'List 'Dynamic) (:: 'List 'Dynamic)
+          :tests $ [] $ %{} 'TestEntry (:name |absence-migration-values)
+            :code $ quote $ do
+              assert= true $ respo.util.detect/=seq ([]) ([])
+              assert= true $ respo.util.detect/=seq ([] nil false 0 |) ([] nil false 0 |)
+              assert= false $ respo.util.detect/=seq ([] nil) ([] false)
+              assert= false $ respo.util.detect/=seq ([]) ([] nil)
+              assert= false $ respo.util.detect/=seq ([] nil) ([] nil 1)
+            :tags $ #{} :regression :unit
         'as-component $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn as-component (value)
             if (struct? value)
@@ -7402,7 +7508,9 @@
           :doc "|check if value is a Respo component. returns true for component records, false otherwise."
           :code $ quote $ defn component? (x)
             if (struct? x)
-              = (&struct:definition x) schema/Component
+              match (calcit.core/struct-definition x)
+                (:some calcit-absence-definition) (= calcit-absence-definition schema/Component)
+                (:none) false
               , false
           :examples $ []
             quote $ component? $ defcomp comp-demo ()
@@ -7411,6 +7519,17 @@
             quote $ component? nil
           :schema $ :: 'Fn $ {} (:return 'Bool)
             :args $ [] 'Dynamic
+          :tests $ [] $ %{} 'TestEntry (:name |absence-migration-nominal-identity)
+            :code $ quote $ do
+              assert= true $ respo.util.detect/component? $ respo.schema/Component :name :probe :effects ([]) :listeners ([])
+              assert= false $ respo.util.detect/component? $ respo.schema/Element :name :div :attrs ([]) :style ([]) :event (&{}) :children ([]) :ref nil
+              assert= false $ respo.util.detect/component? nil
+              assert= false $ respo.util.detect/component? false
+              assert= false $ respo.util.detect/component? 0
+              assert= false $ respo.util.detect/component? |
+              assert= false $ respo.util.detect/component? $ &{}
+              assert= false $ respo.util.detect/component? $ :: :ready 1 nil
+            :tags $ #{} :regression :unit
         'effect-args $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn effect-args (value)
             let
@@ -7440,10 +7559,28 @@
           :doc "|Checks if the given value is a Respo Effect record."
           :code $ quote $ defn effect? (x)
             and (struct? x)
-              = (&struct:definition x) schema/Effect
+              match (calcit.core/struct-definition x)
+                (:some calcit-absence-definition) (= calcit-absence-definition schema/Effect)
+                (:none) false
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Bool)
             :args $ [] 'Dynamic
+          :tests $ [] $ %{} 'TestEntry (:name |absence-migration-nominal-identity)
+            :code $ quote $ do
+              assert= true $ respo.util.detect/effect? $ respo.schema/Effect :name :probe :coord ([]) :args ([]) :method
+                fn (coord args)
+                  hint-fn $ {}
+                    :args $ [] (:: 'List 'Dynamic) (:: 'List 'Dynamic)
+                    :return 'Unit
+                  , &unit
+              assert= false $ respo.util.detect/effect? $ respo.schema/Component :name :probe :effects ([]) :listeners ([])
+              assert= false $ respo.util.detect/effect? nil
+              assert= false $ respo.util.detect/effect? false
+              assert= false $ respo.util.detect/effect? 0
+              assert= false $ respo.util.detect/effect? |
+              assert= false $ respo.util.detect/effect? $ &{}
+              assert= false $ respo.util.detect/effect? $ :: :ready 1 nil
+            :tags $ #{} :regression :unit
         'element-attrs $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn element-attrs (value)
             let
@@ -7500,7 +7637,9 @@
           :doc "|check if value is a Respo element. returns true for element records, false otherwise."
           :code $ quote $ defn element? (x)
             if (struct? x)
-              = (&struct:definition x) schema/Element
+              match (calcit.core/struct-definition x)
+                (:some calcit-absence-definition) (= calcit-absence-definition schema/Element)
+                (:none) false
               , false
           :examples $ []
             quote $ element? $ div ({})
@@ -7509,6 +7648,17 @@
             quote $ element? nil
           :schema $ :: 'Fn $ {} (:return 'Bool)
             :args $ [] 'Dynamic
+          :tests $ [] $ %{} 'TestEntry (:name |absence-migration-nominal-identity)
+            :code $ quote $ do
+              assert= true $ respo.util.detect/element? $ respo.schema/Element :name :div :attrs ([]) :style ([]) :event (&{}) :children ([]) :ref nil
+              assert= false $ respo.util.detect/element? $ respo.schema/Component :name :probe :effects ([]) :listeners ([])
+              assert= false $ respo.util.detect/element? nil
+              assert= false $ respo.util.detect/element? false
+              assert= false $ respo.util.detect/element? 0
+              assert= false $ respo.util.detect/element? |
+              assert= false $ respo.util.detect/element? $ &{}
+              assert= false $ respo.util.detect/element? $ :: :ready 1 nil
+            :tags $ #{} :regression :unit
         'expect-function $ %{} 'CodeEntry
           :doc "|验证值可调用后原样返回，保留调用方已有的具体函数签名；运行时仍对非法输入抛出指定消息。开放 Dynamic 输入仍需在业务边界建立具体合同。"
           :code $ quote $ defn expect-function (value message)
@@ -7591,9 +7741,11 @@
                 count $ respo.util.detect/element-children vdom
                 element :child-element-count
               let
-                  maybe-html $ &map:get
-                    pairs-map $ :attrs vdom
-                    , :innerHTML
+                  maybe-html $ .unwrap-or
+                    calcit.core/get
+                      pairs-map $ :attrs vdom
+                      , :innerHTML
+                    , nil
                 if (calcit.core/non-nil? maybe-html)
                   when
                     not= (respo.util.format/scalar-attribute-text maybe-html) (element :inner-html)
@@ -8122,13 +8274,28 @@
             :return $ :: 'List $ :: 'List 'Dynamic
         'first-pair $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn first-pair (entries)
-            &let
-              pair $ &list:first entries
-              if (nil? pair) (raise "|first-pair expected a non-empty list of pairs") pair
+            match (calcit.core/first entries)
+              (:some pair)
+                if (nil? pair) (raise "|first-pair expected a non-empty list of pairs") pair
+              (:none) (raise "|first-pair expected a non-empty list of pairs")
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] $ :: 'List (:: 'List 'Dynamic)
             :return $ :: 'List 'Dynamic
+          :tests $ [] $ %{} 'TestEntry (:name |absence-migration-values)
+            :code $ quote $ do
+              assert= ([] :a 1)
+                respo.util.list/first-pair $ [] $ [] :a 1
+              assert= "|first-pair expected a non-empty list of pairs" $ try
+                do
+                  respo.util.list/first-pair $ []
+                  , |unexpected-success
+                fn (message)
+                  hint-fn $ {}
+                    :args $ [] 'String
+                    :return 'String
+                  , message
+            :tags $ #{} :regression :unit
         'index-of-dynamic $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn index-of-dynamic (xs needle)
             loop
@@ -8136,13 +8303,30 @@
                 idx 0
               if (empty? rest-xs) (Option :none)
                 if
-                  &= (&list:first rest-xs) needle
+                  &=
+                    .unwrap $ calcit.core/first rest-xs
+                    , needle
                   Option :some idx
                   recur (&list:rest rest-xs) (inc idx)
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] (:: 'List 'Dynamic) 'Dynamic
             :return $ :: 'calcit.core/Option 'Number
+          :tests $ [] $ %{} 'TestEntry (:name |absence-migration-values)
+            :code $ quote $ do
+              assert= (Option :none)
+                respo.util.list/index-of-dynamic ([]) nil
+              assert= (Option :some 0)
+                respo.util.list/index-of-dynamic ([] nil false 0 |) nil
+              assert= (Option :some 1)
+                respo.util.list/index-of-dynamic ([] nil false 0 |) false
+              assert= (Option :some 2)
+                respo.util.list/index-of-dynamic ([] nil false 0 |) 0
+              assert= (Option :some 3)
+                respo.util.list/index-of-dynamic ([] nil false 0 |) |
+              assert= (Option :none)
+                respo.util.list/index-of-dynamic ([] nil false 0 |) :absent
+            :tags $ #{} :regression :unit
         'map-with-idx $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn map-with-idx (xs f)
             assert (fn? f) "|expects function"
@@ -8222,8 +8406,9 @@
           :doc "|Extracts event listeners from a properties map. Handles both :on map and on-* keys."
           :code $ quote $ defn pick-event (props)
             let
-                raw-on $ &map:get props :on
-                base-events $ pick-on-events raw-on
+                base-events $ match (calcit.core/get props :on)
+                  (:some raw-on) (pick-on-events raw-on)
+                  (:none) ({})
                 property-events $ filter-map-kv props $ fn (k v)
                   hint-fn $ {}
                     :args $ [] 'Tag 'Dynamic
@@ -8250,8 +8435,8 @@
                 events $ pick-event $ {} (:value |ignored) (:on-click click!) (:on-change nil)
                   :on $ {} $ :input input!
               assert |two-events-are-extracted $ = 2 $ count events
-              assert |click-event-is-kept $ identical? click! $ &map:get events :click
-              assert |input-event-is-merged $ identical? input! $ &map:get events :input
+              assert |click-event-is-kept $ identical? click! $ .unwrap (calcit.core/get events :click)
+              assert |input-event-is-merged $ identical? input! $ .unwrap (calcit.core/get events :input)
             :tags $ #{} :unit
         'pick-on-events $ %{} 'CodeEntry (:doc "|校验 :on 事件 map，并把监听函数适配为 EventHandler。")
           :code $ quote $ defn pick-on-events (raw-on)
