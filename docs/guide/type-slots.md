@@ -53,7 +53,11 @@ d! $ :: :states cursor new-state
 | 用途 | 元组 | 应用 Op 需要的变体 |
 | --- | --- | --- |
 | 组件局部状态 | `:: :states cursor state` | `:states (:: 'List 'Dynamic) 'Dynamic` |
-| 库自己的操作 | 库文档里给出的元组，例如 `:: :router/route route` | 同名变体，payload 类型一致 |
+| reel 的 `comp-reel` 控制面板 | `:: :reel/toggle`、`:: :reel/recall idx` 等 | `:reel/toggle` `:reel/recall 'Number` `:reel/run` `:reel/step` `:reel/merge` `:reel/reset` `:reel/remove 'Number` |
+| respo-router 的路由 handler | `:: :router/route route-map` | `:router/route 'Dynamic` |
+
+alerts、respo-ui 的组件只发 `:states`。router 的 `listen!` 和 reel 的
+`listen-devtools!` 调用的是应用自己传入的 dispatch 函数，不经过 `d!`。
 
 ## 从旧写法迁移
 
