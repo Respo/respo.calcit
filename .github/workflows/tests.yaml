@@ -57,6 +57,13 @@ jobs:
           calcit calcit.cirru test --require-match --summary-only --format json
           calcit calcit.cirru analyze check-examples --ns respo.resource --def resource-idle
           calcit calcit.cirru analyze check-examples --ns respo.resource --def resource-idle --js
+          for ns in respo.core respo.util.detect respo.util.list respo.app.comp.todolist; do
+            calcit calcit.cirru analyze check-examples --ns "$ns"
+          done
+          # respo.css, respo.comp.space and respo.util.format examples rely on JS-only host APIs
+          for ns in respo.core respo.util.detect respo.util.list respo.app.comp.todolist respo.css respo.comp.space respo.util.format; do
+            calcit calcit.cirru analyze check-examples --ns "$ns" --js
+          done
 
       - name: Check framework definitions and dynamic methods
         run: yarn check-framework-types
