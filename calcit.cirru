@@ -1315,16 +1315,17 @@
         '>> $ %{} 'CodeEntry
           :doc "|Create a nested state cursor for a child branch.\n\nThe returned map reuses branch data and extends `:cursor` with the new key, so child components can manage local state without losing the parent path."
           :code $ quote $ defn >> (states k)
-            &let
-              base $ as-states-map states
-              &let
-                raw-cursor $ .unwrap-or (calcit.core/get base :cursor) nil
-                &let
-                  parent-cursor $ if (nil? raw-cursor) ([])
-                    if (list? raw-cursor) raw-cursor $ raise $ str "|[Respo] expected states cursor as a list, got: " (type-of raw-cursor)
-                  &map:assoc
-                    as-states-map $ .unwrap-or (calcit.core/get base k) nil
-                    , :cursor $ append parent-cursor k
+            let
+                base $ as-states-map states
+                parent-cursor $ match (calcit.core/get base :cursor)
+                  (:some raw-cursor)
+                    if (nil? raw-cursor) ([])
+                      if (list? raw-cursor) raw-cursor $ raise $ str "|[Respo] expected states cursor as a list, got: " (type-of raw-cursor)
+                  (:none) ([])
+                branch $ match (calcit.core/get base k)
+                  (:some branch-value) (as-states-map branch-value)
+                  (:none) ({})
+              &map:assoc branch :cursor $ append parent-cursor k
           :examples $ [] $ quote (>> states :task-a)
           :schema $ :: 'Fn $ {}
             :args $ [] 'Dynamic 'Dynamic
@@ -1367,6 +1368,44 @@
                 assert=
                   >> ({}) 7
                   {} $ :cursor $ [] 7
+            %{} 'TestEntry (:name |absence-migration-state-branches)
+              :code $ quote $ do
+                assert=
+                  &{} :cursor $ [] :child
+                  >> (&{} :cursor nil :child nil) :child
+                assert=
+                  &{} :data false :cursor $ [] :child
+                  >>
+                    &{} :child $ &{} :data false
+                    , :child
+                assert=
+                  &{} :data 0 :cursor $ [] 7 |leaf
+                  >>
+                    &{} :cursor ([] 7) |leaf $ &{} :data 0
+                    , |leaf
+                assert=
+                  str "|[Respo] expected states cursor as a list, got: " $ type-of false
+                  try
+                    do
+                      >> (&{} :cursor false) :child
+                      , |unexpected-success
+                    fn (message)
+                      hint-fn $ {}
+                        :args $ [] 'String
+                        :return 'String
+                      , message
+                assert=
+                  str "|[Respo] expected states as a map, got: " $ type-of false
+                  try
+                    do
+                      >> (&{} :child false) :child
+                      , |unexpected-success
+                    fn (message)
+                      hint-fn $ {}
+                        :args $ [] 'String
+                        :return 'String
+                      , message
+              :tags $ #{} :regression :unit
         'a $ %{} 'CodeEntry
           :doc "|Creates HTML link element (anchor tag).\n\nParameters:\n  props - Attribute map, can include standard HTML attributes like href, target, class-name, etc.\n  & children - Variable arguments for child elements, typically link display text or other elements\n\nReturns:\n  Created link element component\n\nUsed to create hyperlinks, supports all standard HTML link attributes."
           :code $ quote $ defn a (props & children) (create-element :a props & children)
@@ -3109,7 +3148,9 @@
                   let
                       key $ &list:nth cursor 0
                     &map:assoc states key $ update-state-tree
-                      .unwrap-or (calcit.core/get states key) nil
+                      match (calcit.core/get states key)
+                        (:some branch-value) branch-value
+                        (:none) ({})
                       &list:rest cursor
                       , new-state
                 assoc-in states
@@ -3142,6 +3183,28 @@
                   {} $ 1 $ {} (:data :ready)
                   , states
                 assert= :ready $ get-state-at states $ [] 1 :data
+              :tags $ #{} :regression :unit
+            %{} 'TestEntry (:name |absence-migration-state-branches)
+              :code $ quote $ do
+                assert= (&{} :data nil)
+                  update-state-tree nil ([]) nil
+                assert=
+                  &{} :child $ &{} :data false
+                  update-state-tree (&{}) ([] :child) false
+                assert=
+                  &{} :child $ &{} :data false
+                  update-state-tree (&{} :child nil) ([] :child) false
+                assert=
+                  &{} :child $ &{} 7 $ &{} |leaf (&{} :data |)
+                  update-state-tree (&{} :child nil) ([] :child 7 |leaf) |
+                let
+                    original $ &{} :child $ &{} :data false :kept 0
+                  assert=
+                    &{} :child $ &{} :data nil :kept 0
+                    update-state-tree original ([] :child) nil
+                  assert=
+                    &{} :child $ &{} :data false :kept 0
+                    , original
               :tags $ #{} :regression :unit
         'update-state-tree-kv $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn update-state-tree-kv (states cursor k v)
@@ -3305,24 +3368,74 @@
         'update-states-merge $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn update-states-merge (store cursor state0 changes)
             let
-                maybe-states $ .unwrap-or (calcit.core/get store :states) nil
-                states $ if (nil? maybe-states) ({}) maybe-states
+                states $ match (calcit.core/get store :states)
+                  (:some maybe-states)
+                    if (nil? maybe-states) ({}) maybe-states
+                  (:none) ({})
               assoc store :states $ update-state-tree-merge states cursor state0 changes
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] (:: 'Map 'Tag 'Dynamic) (:: 'List 'Dynamic) 'Dynamic 'Dynamic
             :features $ #{} :js-ffi
             :return $ :: 'Map 'Tag 'Dynamic
-          :tests $ [] $ %{} 'TestEntry (:name |merges-struct-state-repeatedly)
-            :code $ quote $ let
-                state0 $ CursorTestState :draft |a :locked? false :message |ready
-                store1 $ update-states-merge ({}) ([]) state0 $ {} (:draft |b)
-                store2 $ update-states-merge store1 ([]) state0 $ {} (:draft |c)
-                state2 $ coerce-cursor-test-state $ get-state-at store2 ([] :states :data)
-              assert |state-remains-a-struct $ struct? state2
-              assert |draft-is-updated $ &= |c $ :draft state2
-              assert |other-field-is-preserved $ &= |ready $ :message state2
-            :tags $ #{} :unit
+          :tests $ []
+            %{} 'TestEntry (:name |merges-struct-state-repeatedly)
+              :code $ quote $ let
+                  state0 $ CursorTestState :draft |a :locked? false :message |ready
+                  store1 $ update-states-merge ({}) ([]) state0 $ {} (:draft |b)
+                  store2 $ update-states-merge store1 ([]) state0 $ {} (:draft |c)
+                  state2 $ coerce-cursor-test-state $ get-state-at store2 ([] :states :data)
+                assert |state-remains-a-struct $ struct? state2
+                assert |draft-is-updated $ &= |c $ :draft state2
+                assert |other-field-is-preserved $ &= |ready $ :message state2
+              :tags $ #{} :unit
+            %{} 'TestEntry (:name |absence-migration-state-branches)
+              :code $ quote $ let
+                  seed $ &{} :ready? false :count 0
+                  changes $ &{} :message | :nullable nil
+                  result $ &{} :other 7 :states $ &{} :data
+                    &{} :ready? false :count 0 :message | :nullable nil
+                assert= result $ update-states-merge (&{} :other 7) ([]) seed changes
+                assert= result $ update-states-merge (&{} :other 7 :states nil) ([]) seed changes
+                assert= result $ update-states-merge
+                  &{} :other 7 :states $ &{}
+                  []
+                  , seed changes
+                assert=
+                  &{} :other 7 :states $ &{} :child $ &{} :data
+                    &{} :ready? false :count 0 :message | :nullable nil
+                  update-states-merge
+                    &{} :other 7 :states $ &{} :child $ &{} :data nil
+                    [] :child
+                    , seed changes
+                assert= "|get expected a map or indexed collection, got:" $ try
+                  do
+                    update-states-merge (&{} :other 7) ([] :child) seed changes
+                    , |unexpected-success
+                  fn (message)
+                    hint-fn $ {}
+                      :args $ [] 'String
+                      :return 'String
+                    , message
+                assert= "|get expected a map or indexed collection, got:" $ try
+                  do
+                    update-states-merge
+                      &{} :other 7 :states $ &{} :child nil
+                      [] :child
+                      , seed changes
+                    , |unexpected-success
+                  fn (message)
+                    hint-fn $ {}
+                      :args $ [] 'String
+                      :return 'String
+                    , message
+                let
+                    existing $ &{} :other 7 :states $ &{} :child
+                      &{} :data $ &{} :preserved false
+                  assert=
+                    &{} :other 7 :states $ &{} :child $ &{} :data (&{} :preserved false :message | :nullable nil)
+                    update-states-merge existing ([] :child) seed changes
+              :tags $ #{} :regression :unit
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.cursor
     'respo.dom $ %{} 'FileEntry
