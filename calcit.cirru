@@ -1489,6 +1489,25 @@
           :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
             :args $ [] 'PropsInput
             :generics $ [] 'PropsInput
+        'collect-patches $ %{} 'CodeEntry
+          :doc "|Runs f with a collect! callback and returns the DomPatch list it collected, in order."
+          :code $ quote $ defn collect-patches (f)
+            let
+                *changes $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
+              f $ fn (op)
+                hint-fn $ {} (:return 'Unit)
+                  :args $ [] 'respo.schema/DomPatch
+                reset! *changes $ append (deref *changes) op
+                , &unit
+              deref *changes
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] $ :: 'Fn
+              {} (:return 'Dynamic)
+                :args $ [] $ :: 'Fn
+                  {} (:return 'Unit)
+                    :args $ [] 'respo.schema/DomPatch
+            :return $ :: 'List 'respo.schema/DomPatch
         'configure-events! $ %{} 'CodeEntry
           :doc "|Configure event installation before the first render! or realize-ssr!. EventConfig contains stop-propagation? (default true) and ListenerMode :property (default) or :add-event-listener. Configuration is immutable after mounting and is preserved during hot reload."
           :code $ quote $ defn configure-events! (config)
@@ -2362,21 +2381,14 @@
         'mount-app! $ %{} 'CodeEntry
           :doc "|Mounts the Respo application to the DOM. Initializes the global element and event listeners."
           :code $ quote $ defn mount-app! (target element *dispatch-fn)
-            ; assert "|1st argument should be an element" $ or (nil? target) (instance? element-type target)
-            ; assert "|2nd argument should be a component" $ component? element
             let
                 deliver-event $ build-deliver-event *global-element *dispatch-fn
-                *changes $ new-patch-collector
-                collect! $ fn (op)
-                  hint-fn $ {} (:return 'Unit)
-                    :args $ [] 'respo.schema/DomPatch
-                  reset! *changes $ append (deref *changes) op
-                  , &unit
-              ; println "|mount app"
-              activate-instance! element (unsafe-coerce target 'respo.dom/DomElement) deliver-event
-              collect-mounting collect! ([]) ([]) element true
-              reset! *global-element $ Option :some element
-              patch-instance! (deref *changes) (unsafe-coerce target 'respo.dom/DomElement) deliver-event
+              activate-instance! element target deliver-event
+              let
+                  changes $ collect-patches $ fn (collect!)
+                    collect-mounting collect! ([]) ([]) element true
+                reset! *global-element $ Option :some element
+                patch-instance! changes target deliver-event
             , &unit
           :examples $ [] $ quote
             mount-app! mount-target (comp-app) *dispatch-fn
@@ -2385,13 +2397,6 @@
               :: 'Fn $ {} (:return 'Unit)
                 :args $ [] 'Dynamic
             :features $ #{} :js-ffi
-        'new-patch-collector $ %{} 'CodeEntry (:doc "|创建收集 DomPatch 的类型化引用，替代未类型化的 buf-list。")
-          :code $ quote $ defn new-patch-collector ()
-            ref $ []
-          :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ []
-            :return $ :: 'Ref $ :: 'List 'respo.schema/DomPatch
         'none-render-node $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn none-render-node () (Option :none)
           :examples $ []
@@ -2523,22 +2528,18 @@
             assert (component? element) "|2nd argument should be a component"
             let
                 app-element $ .-firstElementChild target
-                *changes $ new-patch-collector
-                collect! $ fn (patch)
-                  hint-fn $ {} (:return 'Unit)
-                    :args $ [] 'respo.schema/DomPatch
-                  reset! *changes $ append (deref *changes) patch
-                  , &unit
                 deliver-event $ build-deliver-event *global-element *dispatch-fn
               if (js-nullish? app-element) (raise "|Detected no element from SSR!")
               compare-to-dom!
                 respo.util.format/coerce-element $ respo.util.detect/as-element $ purify-element element
                 unsafe-coerce app-element 'js-ffi.browser/DomElementHost
-              find-element-diffs collect! ([]) ([]) (mute-element element) element
-              collect-mounting collect! ([]) ([]) element true
-              reset! *dispatch-fn dispatch!
-              reset! *global-element $ Option :some element
-              patch-instance! (deref *changes) (unsafe-coerce target 'respo.dom/DomElement) deliver-event
+              let
+                  changes $ collect-patches $ fn (collect!)
+                    find-element-diffs collect! ([]) ([]) (mute-element element) element
+                    collect-mounting collect! ([]) ([]) element true
+                reset! *dispatch-fn dispatch!
+                reset! *global-element $ Option :some element
+                patch-instance! changes (unsafe-coerce target 'respo.dom/DomElement) deliver-event
             , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
@@ -2598,20 +2599,13 @@
               (:some old-element)
                 if (identical? old-element element) &unit $ let
                     deliver-event $ build-deliver-event *global-element *dispatch-fn
-                    *changes $ new-patch-collector
-                    collect! $ fn (op)
-                      hint-fn $ {} (:return 'Unit)
-                        :args $ [] 'respo.schema/DomPatch
-                      reset! *changes $ append (deref *changes) op
-                      , &unit
-                  find-element-diffs collect! ([]) ([]) old-element element
-                  let
-                      changes-list $ deref *changes
-                    match @*changes-logger
-                      (:none) &unit
-                      (:some logger) (logger old-element element changes-list)
-                    reset! *global-element $ Option :some element
-                    patch-instance! changes-list (unsafe-coerce target 'respo.dom/DomElement) deliver-event
+                    changes-list $ collect-patches $ fn (collect!)
+                      find-element-diffs collect! ([]) ([]) old-element element
+                  match @*changes-logger
+                    (:none) &unit
+                    (:some logger) (logger old-element element changes-list)
+                  reset! *global-element $ Option :some element
+                  patch-instance! changes-list target deliver-event
             , &unit
           :examples $ [] $ quote
             rerender-app! mount-target (comp-demo) *dispatch-fn
