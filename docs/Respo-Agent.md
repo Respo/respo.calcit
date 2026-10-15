@@ -60,7 +60,7 @@ The Respo project is a virtual DOM library written in Calcit-js, containing:
 - `respo.render.effect` - Component lifecycle effects
 - `respo.render.patch` - Apply DOM patches
 - `respo.controller.client` - Client-side state management (activate-instance!, patch-instance!, send-to-component!)
-- `respo.controller.resolve` - Event handling and resolution (build-deliver-event, wrap-dispatch)
+- `respo.controller.resolve` - Event handling and resolution (build-deliver-event)
 
 **Utilities**:
 
@@ -121,7 +121,7 @@ calcit analyze call-graph --root 'respo.app.core/render-app!' --ns-prefix respo.
 
 # 模式搜索
 calcit query search-expr '>> states'
-calcit query search-expr 'd! cursor'
+calcit query search-expr ':: :states'
 calcit query search-expr 'fn (e d!)'
 ```
 
@@ -476,8 +476,8 @@ calcit config type-slots
 
 The path must be a full `namespace/definition`. Named entries are independent and do not inherit the default binding. No `bind-type` call or `with-type-slot` wrapper belongs in `main!`.
 
-当前 #195 尚未贯通签名：配置 slot 本身不会让 Dynamic handler 的 d! 获得应用 Op。
-下面是迁移目标的示意写法，当前不能据此宣称错误 variant 已被检查：
+`d!` 只接受一个当前 entry 的 Op 值。用 Op 构造器或者普通元组，局部状态写成
+`d! $ :: :states cursor state`，旧的 `d! cursor state` 和 `d! :tag` 已经移除：
 
 ```cirru.no-check
 button $ {}
@@ -485,9 +485,8 @@ button $ {}
     d! $ :: :toggle (:id task)
 ```
 
-需要检查当前回调时，先明确标注应用的具体 Op，并执行正反例验证。
-类型槽原型、props 回调推断与旧 list/tag 兼容性仍需处理；实际状态与可重复探针
-统一见 [dispatch 类型槽指南](./guide/type-slots.md)。
+普通 `{}` props 里的内联回调目前不做检查；带 schema 或 `hint-fn` 标注的回调会检查。
+迁移表和库组件的约定见 [dispatch 类型槽指南](./guide/type-slots.md)。
 
 ---
 

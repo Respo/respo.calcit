@@ -1070,7 +1070,7 @@
         'send-to-component! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn send-to-component! (event-tuple)
             let
-                dispatch! $ wrap-dispatch *dispatch-fn
+                dispatch! $ deref *dispatch-fn
                 tree @*global-element
               match tree
                 (:none) &unit
@@ -1079,7 +1079,7 @@
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'Enum
         'traverse-and-call $ %{} 'CodeEntry
-          :doc "|Traverses the rendered tree and invokes component listeners. The dispatch callback intentionally stays at the generic Fn boundary because wrap-dispatch supports multiple operation forms and an optional payload."
+          :doc "|Traverses the rendered tree and invokes component listeners. Listeners receive the app dispatch function unchanged."
           :code $ quote $ defn traverse-and-call (element event-tuple dispatch!)
             when
               or (component? element) (element? element)
@@ -1138,10 +1138,9 @@
                   calls $ ref $ assert-type ([]) (:: 'List 'Tag)
                   operations $ ref $ assert-type ([]) (:: 'List 'Dynamic)
                   event $ :: :changed
-                  dispatch-ref $ ref $ fn (op)
+                  dispatch! $ fn (op)
                     reset! operations $ append @operations op
                     , &unit
-                  wrapped-dispatch $ wrap-dispatch dispatch-ref
                   make-component $ fn (name tree)
                     hint-fn $ {}
                       :args $ [] 'Tag $ :: 'Option 'respo.schema/RenderNode
@@ -1158,99 +1157,11 @@
                     , :children $ [] (respo.util.detect/make-child-pair :first first-component) (respo.util.detect/make-child-pair :empty nil) (respo.util.detect/make-child-pair :second second-component)
                   nested $ make-component :nested $ %some (respo.util.detect/as-render-node element)
                   root $ make-component :root $ %some (respo.util.detect/as-render-node nested)
-                traverse-and-call root event wrapped-dispatch
+                traverse-and-call root event dispatch!
                 assert= ([] :root :nested :first :second) @calls
                 assert=
                   [] (:: :heard :root) (:: :heard :nested) (:: :heard :first) (:: :heard :second)
                   , @operations
-        'wrap-dispatch $ %{} 'CodeEntry
-          :doc "|Wraps a raw dispatch function to automatically handle different operation types (list, tag, or direct)."
-          :code $ quote $ defn wrap-dispatch (*dispatch-fn)
-            fn (op & data)
-              hint-fn $ {}
-                :args $ [] 'Dynamic
-                :rest 'Dynamic
-                :return 'Unit
-              let
-                  dispatch! $ deref *dispatch-fn
-                  payload $ if (empty? data) nil $ &list:nth data 0
-                if (list? op)
-                  dispatch! $ :: :states op payload
-                  if (tag? op)
-                    if (nil? payload)
-                      dispatch! $ :: op
-                      dispatch! $ :: op payload
-                    dispatch! op
-          :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] $ :: 'Ref
-              :: 'Fn $ {} (:return 'Unit)
-                :args $ [] 'Dynamic
-            :return $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'Unit)
-              :args $ [] 'Dynamic
-          :tests $ []
-            %{} 'TestEntry (:name |handles-legacy-data-and-single-enum)
-              :code $ quote $ let
-                  received $ ref |
-                  dispatch-ref $ ref $ fn (op)
-                    reset! received $ str op
-                    , &unit
-                  wrapped $ wrap-dispatch dispatch-ref
-                wrapped ([] :field) :value
-                assert |legacy-two-argument-state-dispatch $ =
-                  str $ :: :states ([] :field) :value
-                  , @received
-                wrapped :effect/persist nil
-                assert |legacy-nil-tag-dispatch $ =
-                  str $ :: :effect/persist
-                  , @received
-                wrapped $ :: :direct
-                assert |single-enum-dispatch $ =
-                  str $ :: :direct
-                  , @received
-              :tags $ #{} :unit
-            %{} 'TestEntry (:name |preserves-legacy-payloads-identity-and-failures)
-              :code $ quote $ let
-                  cursor $ [] :field |name 7
-                  log $ ref $ decode-map-as ([]) 'List
-                  dispatch! $ fn (op)
-                    hint-fn $ {}
-                      :args $ [] 'Dynamic
-                      :return 'Unit
-                    reset! log $ append @log op
-                    , &unit
-                  wrapped $ wrap-dispatch $ ref dispatch!
-                  direct $ respo.app.schema/Op :clear
-                wrapped cursor nil
-                wrapped :value false
-                wrapped :value 0
-                wrapped :clear nil
-                wrapped direct :ignored
-                assert= 5 $ count @log
-                assert= (:: :states cursor nil)
-                  .unwrap $ get @log 0
-                assert |cursor-identity $ identical? cursor $ &enum:nth
-                  .unwrap $ get @log 0
-                  , 1
-                assert= (:: :value false)
-                  .unwrap $ get @log 1
-                assert= (:: :value 0)
-                  .unwrap $ get @log 2
-                assert= (:: :clear)
-                  .unwrap $ get @log 3
-                assert |direct-identity $ identical? direct $ .unwrap (get @log 4)
-                let
-                    failing $ wrap-dispatch $ ref
-                      fn (_op)
-                        hint-fn $ {}
-                          :args $ [] 'Dynamic
-                          :return 'Unit
-                        raise |dispatch-failed
-                    caught $ try
-                      do (failing :clear) |not-raised
-                      fn (error) error
-                  assert= |dispatch-failed caught
-              :tags $ #{} :unit
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.controller.client
           :require
@@ -1283,19 +1194,18 @@
                         (:none) (Option :none)
                         (:some handler)
                           if (js-present? handler) (Option :some handler) (Option :none)
-                  dispatch-wrap $ wrap-dispatch *dispatch-fn
                 match target-listener-option
                   (:none) &unit
                   (:some target-listener)
                     &let
-                      _handled $ target-listener simple-event dispatch-wrap
+                      _handled $ target-listener simple-event $ deref *dispatch-fn
                       , &unit
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ []
               :: 'Ref $ :: 'calcit.core/Option 'respo.schema/Component
               :: 'Ref $ :: 'Fn $ {} (:return 'Unit)
-                :args $ [] 'Dynamic
+                :args $ [] '*dispatch-op
             :features $ #{} :js-ffi
             :return $ :: 'Fn $ {} (:return 'Unit)
               :args $ [] (:: 'List 'Dynamic) 'Tag $ :: 'Map 'Tag 'Dynamic
@@ -1441,9 +1351,7 @@
                   , .unwrap
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.controller.resolve
-          :require
-            respo.util.detect :refer $ component? element? listener? component-tree element-children element-event
-            respo.controller.client :refer $ wrap-dispatch
+          :require $ respo.util.detect :refer $ component? element? listener? component-tree element-children element-event
     'respo.core $ %{} 'FileEntry
       :defs $ {}
         '*changes-logger $ %{} 'CodeEntry
@@ -1461,7 +1369,7 @@
           :examples $ []
           :schema $ :: 'Ref $ :: 'Fn
             {} (:return 'Unit)
-              :args $ [] 'Dynamic
+              :args $ [] '*dispatch-op
         '*global-element $ %{} 'CodeEntry
           :doc "|internal Ref storing the current virtual DOM tree. used by render! to track and update the application state."
           :code $ quote $ defref *global-element (Option :none)
@@ -2559,7 +2467,7 @@
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'respo.dom/DomElement 'respo.schema/Component $ :: 'Ref
               :: 'Fn $ {} (:return 'Unit)
-                :args $ [] 'Dynamic
+                :args $ [] '*dispatch-op
             :features $ #{} :js-ffi
         'none-render-node $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn none-render-node () (Option :none)
@@ -2713,7 +2621,7 @@
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'respo.dom/DomElement 'respo.schema/Component $ :: 'Fn
               {} (:return 'Unit)
-                :args $ [] 'Dynamic
+                :args $ [] '*dispatch-op
             :features $ #{} :js-ffi
         'render! $ %{} 'CodeEntry
           :doc "|Synchronize a component tree to a mount target.\n\nThe first call mounts the app. Later calls diff against `*global-element` and patch the existing DOM. `dispatch!` is stored internally and used by generated event listeners to deliver action tuples.\n\nThe stored example wraps the call in a function so `check-examples` validates the public call shape without executing browser DOM effects."
@@ -2728,7 +2636,7 @@
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] (:: 'JsNullish 'respo.dom/DomElement) 'respo.schema/Component $ :: 'Fn
               {} (:return 'Unit)
-                :args $ [] 'Dynamic
+                :args $ [] '*dispatch-op
             :features $ #{} :js-ffi
           :tests $ [] $ %{} 'TestEntry (:name |rejects-nil-mount-target)
             :code $ quote $ let
@@ -2755,7 +2663,7 @@
               :: 'Fn $ {} (:return 'respo.schema/Component)
                 :args $ []
               :: 'Fn $ {} (:return 'Unit)
-                :args $ [] 'Dynamic
+                :args $ [] '*dispatch-op
             :features $ #{} :js-ffi
         'rerender-app! $ %{} 'CodeEntry
           :doc "|Diffs the new element against the global element and patches the DOM. Used internally by render!. Browser-only (needs a DOM mount target); usage: `rerender-app! mount-target (comp-demo) *dispatch-fn`"
@@ -2777,7 +2685,7 @@
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'respo.dom/DomElement 'respo.schema/Component $ :: 'Ref
               :: 'Fn $ {} (:return 'Unit)
-                :args $ [] 'Dynamic
+                :args $ [] '*dispatch-op
             :features $ #{} :js-ffi
         'resolve-element-constructor $ %{} 'CodeEntry
           :doc "|Resolves the browser Element constructor behind an explicit JavaScript FFI function so element-type remains a value rather than a zero-argument function."
@@ -7238,14 +7146,14 @@
           :examples $ []
           :schema $ :: 'StructDef
         'EventHandler $ %{} 'CodeEntry
-          :doc "|Event callback signature. Respo delivers an immutable map produced by event->edn together with the application dispatch function. The exported value is a no-op callback, matching the declared callable type rather than a Unit placeholder."
+          :doc "|Event callback signature. Respo delivers an immutable map produced by event->edn together with the application dispatch function, which accepts exactly one value of the entry's :dispatch-op type. The exported value is a no-op callback, matching the declared callable type rather than a Unit placeholder."
           :code $ quote $ def EventHandler
             fn (_event _dispatch!) &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] (:: 'Map 'Tag 'Dynamic)
-              :: 'Fn $ {} (:rest 'Dynamic) (:return 'Unit)
-                :args $ [] 'Dynamic
+              :: 'Fn $ {} (:return 'Unit)
+                :args $ [] '*dispatch-op
         'ListenerMode $ %{} 'CodeEntry
           :doc "|Event installation policy. :property preserves the existing on* property behavior; :add-event-listener preserves external property handlers and registers independent Respo callbacks."
           :code $ quote $ defenum ListenerMode (:property) (:add-event-listener)
@@ -7397,17 +7305,21 @@
                     :return 'Unit
                   respo.core/append-dynamic! dispatched op
                 child-tree $ comp-event-shell $ span
-                  {} $ :on-click $ fn (_event d!) (d! :child)
+                  {} $ :on-click $ fn (_event d!)
+                    d! $ :: :child
                 wrapped $ comp-event-shell $ div
                   {}
-                    :on-click $ fn (_event d!) (d! :wrapped-root)
+                    :on-click $ fn (_event d!)
+                      d! $ :: :wrapped-root
                     :on-focus $ fn (_event _d!) &unit
                   , child-tree
                 plain $ div
-                  {} $ :on-click $ fn (_event d!) (d! :plain-root)
+                  {} $ :on-click $ fn (_event d!)
+                    d! $ :: :plain-root
                   , child-tree
                 rewrapped $ comp-event-shell $ div
-                  {} $ :on-click $ fn (_event d!) (d! :rewrapped-root)
+                  {} $ :on-click $ fn (_event d!)
+                    d! $ :: :rewrapped-root
                   , child-tree
                 make-app $ fn (tree)
                   hint-fn $ {}
@@ -7476,7 +7388,8 @@
                     :args $ [] 'Tag
                     :return 'respo.schema/Component
                   let
-                      handler $ fn (_event d!) (d! op)
+                      handler $ fn (_event d!)
+                        d! $ :: op
                       child-element $ span $ {} (:on-click handler)
                       element $ div
                         {} (:on-click handler) (:ref ref!)
