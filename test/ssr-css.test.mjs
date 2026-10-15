@@ -3,7 +3,7 @@ import test from 'node:test';
 import * as c from '../js-out/calcit.core.mjs';
 import { DomProps } from '../js-out/respo.schema.mjs';
 import { div } from '../js-out/respo.core.mjs';
-import { make_string } from '../js-out/respo.render.html.mjs';
+import { element_content, make_string } from '../js-out/respo.render.html.mjs';
 import { text__GT_html } from '../js-out/respo.util.format.mjs';
 import { create_style_$x_, render_css_block, warn_style_literals, _$s_style_list_in_nodejs, _$s_style_indices_in_nodejs, nodejs_$q_, present_element } from '../js-out/respo.css.mjs';
 
@@ -48,6 +48,12 @@ test('SSR preserves literal ampersands in text and attributes', () => {
     ['title', 'inner-text'].includes(field.value) ? value : undefined]));
   assert.equal(make_string(div(props)),
     '<div title="&amp; &amp;amp; &lt; &gt; &quot;">&amp; &amp;amp; &lt; &gt; "</div>');
+});
+
+test('SSR content still rejects non-Map attribute inputs from JavaScript', () => {
+  for (const attrs of [null, undefined, false, 7, 'text', c.arrayToList([]), {}]) {
+    assert.throws(() => element_content(c.newTag('div'), attrs, c.arrayToList(['child'])), /map/i);
+  }
 });
 
 test('HTML text keeps scalar formatting and rejects arbitrary hosts', () => {
