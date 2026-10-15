@@ -228,12 +228,11 @@
             :args $ [] 'Dynamic $ :: 'List 'respo.app.schema/Task
         'effect-focus $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defeffect effect-focus (pattern) (action parent at-place?)
-            when (= action :mount)
-              match
-                js-nullish->option $ js/document.querySelector pattern
+            when
+              and (= action :mount) (string? pattern)
+              match (query-selector pattern)
                 (:none) &unit
-                (:some target)
-                  .select! $ unsafe-coerce target 'respo.dom/DomElement
+                (:some target) (.select! target)
             , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Effect)
@@ -364,6 +363,7 @@
             respo.app.style.widget :as widget
             respo.css :refer $ defstyle
             respo.app.schema :refer $ Op
+            respo.ffi.browser :refer $ query-selector
             js-ffi.shared :as shared
     'respo.app.comp.wrap $ %{} 'FileEntry
       :defs $ {} $ 'comp-wrap
@@ -778,32 +778,33 @@
                           Option :none
                         .!dispatchEvent el $ new js/KeyboardEvent (.-type event) event
                         , &unit
-                  let
-                      prev-listener $ aget el dirty-field
-                      listener $ unsafe-coerce prev-listener $ :: 'Fn
-                        {}
-                          :args $ [] 'js-ffi.browser/EventHost
-                          :return 'Unit
-                    if (js-present? prev-listener)
-                      browser/remove-event-listener! (str event-name) listener
+                  remove-stored-listener! el $ str event-name
                   aset el dirty-field handler
                   browser/add-event-listener! (str event-name) handler
               (= action :unmount)
-                let
-                    handler $ aget el dirty-field
-                    listener $ unsafe-coerce handler $ :: 'Fn
-                      {}
-                        :args $ [] 'js-ffi.browser/EventHost
-                        :return 'Unit
-                  if (js-present? handler)
-                    browser/remove-event-listener! (str event-name) listener
-                  js-delete el dirty-field
+                remove-stored-listener! el $ str event-name
               true nil
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Effect)
             :args $ []
               :: 'Map 'Tag $ :: 'Set 'String
               , 'String
+            :features $ #{} :js-ffi
+        'remove-stored-listener! $ %{} 'CodeEntry
+          :doc "|Remove the window listener previously stored on the effect element, if any. The stored handler is read back from a JS property, so this is the one place it is trusted as a handler."
+          :code $ quote $ defn remove-stored-listener! (el event-name)
+            let
+                stored $ aget el dirty-field
+              if (js-present? stored)
+                browser/remove-event-listener! event-name $ unsafe-coerce stored $ :: 'Fn
+                  {}
+                    :args $ [] 'js-ffi.browser/EventHost
+                    :return 'Unit
+              js-delete el dirty-field
+              , &unit
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ [] 'Dynamic 'String
             :features $ #{} :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.comp.global-keydown
@@ -2527,23 +2528,24 @@
             assert (instance? element-type target) "|1st argument should be an element"
             assert (component? element) "|2nd argument should be a component"
             let
-                app-element $ .-firstElementChild target
+                app-element $ match (js-nullish->option target.:first-element-child)
+                  (:none) (raise "|Detected no element from SSR!")
+                  (:some child) child
                 deliver-event $ build-deliver-event *global-element *dispatch-fn
-              if (js-nullish? app-element) (raise "|Detected no element from SSR!")
               compare-to-dom!
                 respo.util.format/coerce-element $ respo.util.detect/as-element $ purify-element element
-                unsafe-coerce app-element 'js-ffi.browser/DomElementHost
+                host-element app-element
               let
                   changes $ collect-patches $ fn (collect!)
                     find-element-diffs collect! ([]) ([]) (mute-element element) element
                     collect-mounting collect! ([]) ([]) element true
                 reset! *dispatch-fn dispatch!
                 reset! *global-element $ Option :some element
-                patch-instance! changes (unsafe-coerce target 'respo.dom/DomElement) deliver-event
+                patch-instance! changes target deliver-event
             , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'Dynamic 'respo.schema/Component $ :: 'Fn
+            :args $ [] 'respo.dom/DomElement 'respo.schema/Component $ :: 'Fn
               {} (:return 'Unit)
                 :args $ [] 'Dynamic
             :features $ #{} :js-ffi
@@ -2829,6 +2831,7 @@
             respo.render.diff :refer $ find-element-diffs
             respo.render.effect :refer $ collect-mounting
             respo.util.format :refer $ purify-element mute-element
+            respo.ffi.browser :refer $ host-element
             respo.controller.client :refer $ activate-instance! patch-instance!
             respo.util.list :refer $ pick-attrs pick-event val-exists?
             respo.schema :as schema
@@ -6581,8 +6584,7 @@
                   js-nullish->option $ .item children index
                   (:none) nodes
                   (:some node)
-                    recur (inc index)
-                      append nodes $ unsafe-coerce node 'respo.dom/DomElement
+                    recur (inc index) (append nodes node)
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] 'respo.dom/DomElement
