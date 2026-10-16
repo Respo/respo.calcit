@@ -385,7 +385,7 @@ my-styles $ {}
 div
   {}
     :on-click $ fn (e dispatch!)
-      dispatch! [:button-clicked]
+      dispatch! $ :: :button-clicked
 
 ; Input with value tracking
 input
@@ -394,14 +394,14 @@ input
     :on-input $ fn (e dispatch!)
       let
         value (e.target.value)
-      dispatch! [:input-changed value]
+      dispatch! $ :: :input-changed value
 
 ; Keyboard events
 div
   {}
     :on-keydown $ fn (e dispatch!)
       when (= (e.key) "|Enter")
-        dispatch! [:submit-form]
+        dispatch! $ :: :submit-form
 ```
 
 **Component-Level Event Listeners:**
@@ -547,8 +547,8 @@ match op
     assoc store :data new-value
   _ store  ; Default case needed!
 
-; Ensure dispatch! is called with correct tuple
-dispatch! [:action-name actual-value]
+; Ensure dispatch! is called with one Op tuple whose variant the entry's Op declares
+dispatch! $ :: :action-name actual-value
 ```
 
 ### Issue: Component effects not triggering
