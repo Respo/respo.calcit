@@ -417,7 +417,7 @@
                 dispatch! $ schema/decode-op raw
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'Dynamic
+            :args $ [] 'respo.dom/DomElement
         'new-fn $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn new-fn () (println |hello) &unit
           :examples $ []

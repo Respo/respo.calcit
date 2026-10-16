@@ -36,6 +36,23 @@ test('render-with! retains the existing open Unit dispatch contract', () => {
   assert.equal(result.status, 0, result.output);
 });
 
+test('demo SSR accepts the declared DomElement target without executing DOM work', () => {
+  const result = evaluate(`let
+    adopt! $ fn (target)
+      hint-fn $ {} (:args ([] 'respo.dom/DomElement)) (:return 'Unit)
+      respo.app.core/handle-ssr! target
+  , &unit`);
+  assert.equal(result.status, 0, result.output);
+});
+
+test('demo SSR rejects a Number target before execution', () => {
+  const result = evaluate('respo.app.core/handle-ssr! 42');
+  assert.notEqual(result.status, 0);
+  assert.match(result.output, /W_FN_ARG_TYPE_MISMATCH|E_DYNAMIC_NOMINAL_ARGUMENT|E_CALL_ARGUMENT_MISMATCH/);
+  assert.match(result.output, /handle-ssr!/);
+  assert.doesNotMatch(result.output, /took [\d.]+ms:/, 'invalid SSR targets must not execute');
+});
+
 test('render-with! rejects a non-Unit dispatch result', () => {
   const checked = evaluate(renderBoundary('Dynamic', 'Number', '42'));
   assert.notEqual(checked.status, 0, 'an incompatible dispatch callback must not compile');
