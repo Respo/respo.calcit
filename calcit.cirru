@@ -409,12 +409,7 @@
             :features $ #{} :js-ffi
         'handle-ssr! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn handle-ssr! (mount-target)
-            realize-ssr! mount-target (comp-container @*store)
-              fn (raw)
-                hint-fn $ {}
-                  :args $ [] 'Dynamic
-                  :return 'Unit
-                dispatch! $ schema/decode-op raw
+            realize-ssr! mount-target (comp-container @*store) dispatch!
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'respo.dom/DomElement
@@ -427,11 +422,7 @@
           :code $ quote $ defn render-app! (mount-target)
             render-with! mount-target
               fn () $ comp-container @*store
-              fn (raw)
-                hint-fn $ {}
-                  :args $ [] 'Dynamic
-                  :return 'Unit
-                dispatch! $ schema/decode-op raw
+              , dispatch!
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] $ :: 'JsNullish 'respo.dom/DomElement
@@ -523,108 +514,6 @@
           :code $ quote $ defstruct TodoState (:draft 'String) (:locked? 'Bool) (:message 'String)
           :examples $ []
           :schema $ :: 'StructDef
-        'decode-op $ %{} 'CodeEntry
-          :doc "|校验 demo 的开放操作入口；保留旧匿名变体和混合 cursor，不改变框架协议。名义输入也验证字段，错误操作在状态写入前拒绝。"
-          :code $ quote $ defn decode-op (raw)
-            if (enum? raw)
-              let
-                  _ $ match (enum-definition raw)
-                    (:some definition)
-                      when
-                        not $ &= definition Op
-                        raise |Expected-demo-Op-definition
-                    (:none) &unit
-                match raw
-                  (:states cursor state)
-                    if (list? cursor) (Op :states cursor state) (raise |Expected-state-cursor-list)
-                  (:states-kv cursor key value)
-                    if (list? cursor) (Op :states-kv cursor key value) (raise |Expected-state-cursor-list)
-                  (:states-merge cursor state options)
-                    if (list? cursor)
-                      Op :states-merge cursor
-                        decode-map-as
-                          if (struct? state)
-                            if (&struct:matches? state TodoState) (.to-map state) (raise |Expected-TodoState)
-                            , state
-                          , 'respo.app.schema/TodoState
-                        , options
-                      raise |Expected-state-cursor-list
-                  (:add text)
-                    Op :add $ decode-map-as text 'String
-                  (:remove id)
-                    Op :remove $ decode-map-as id 'String
-                  (:clear) (Op :clear)
-                  (:update id text)
-                    Op :update (decode-map-as id 'String) (decode-map-as text 'String)
-                  (:hit-first text)
-                    Op :hit-first $ decode-map-as text 'String
-                  (:toggle id)
-                    Op :toggle $ decode-map-as id 'String
-                  _ $ raise |Unknown-demo-operation
-              raise |Expected-demo-operation-enum
-          :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.app.schema/Op)
-            :args $ [] 'Dynamic
-          :tests $ []
-            %{} 'TestEntry (:name |accepts-existing-operation-forms)
-              :code $ quote $ let
-                  cursor $ [] :field |name 7
-                  state $ {} $ :value nil
-                  todo $ TodoState :draft |demo :locked? false :message |
-                assert= (Op :add |new)
-                  decode-op $ :: :add |new
-                assert= (Op :remove |id)
-                  decode-op $ :: :remove |id
-                assert= (Op :clear)
-                  decode-op $ :: :clear
-                assert= (Op :update |id |new)
-                  decode-op $ :: :update |id |new
-                assert= (Op :hit-first |new)
-                  decode-op $ :: :hit-first |new
-                assert= (Op :toggle |id)
-                  decode-op $ :: :toggle |id
-                assert= (Op :states cursor state)
-                  decode-op $ :: :states cursor state
-                assert= (Op :states-kv cursor 5 false)
-                  decode-op $ :: :states-kv cursor 5 false
-                assert= (Op :states-merge cursor todo nil)
-                  decode-op $ :: :states-merge cursor todo nil
-                assert |legacy-cursor-identity $ identical? cursor $ &enum:nth
-                  decode-op $ :: :states cursor nil
-                  , 1
-                assert |legacy-state-identity $ identical? state $ &enum:nth
-                  decode-op $ :: :states cursor state
-                  , 2
-                assert= (Op :add |nominal)
-                  decode-op $ Op :add |nominal
-                assert= (Op :states cursor nil)
-                  decode-op $ Op :states cursor nil
-              :tags $ #{} :unit
-            %{} 'TestEntry (:name |rejects-invalid-operation-payloads)
-              :code $ quote $ let
-                  rejected? $ fn (raw)
-                    hint-fn $ {}
-                      :args $ [] 'Dynamic
-                      :return 'Bool
-                    try
-                      let
-                          checked $ decode-op raw
-                        , false
-                      fn (_error) true
-                assert |reject-number $ rejected? 42
-                assert |reject-bare-tag $ rejected? :clear
-                assert |reject-unknown-variant $ rejected? $ :: :unknown
-                assert |reject-missing-payload $ rejected? $ :: :add
-                assert |reject-extra-payload $ rejected? $ :: :clear 42
-                assert |reject-wrong-string $ rejected? $ :: :add 42
-                assert |reject-wrong-update-id $ rejected? $ :: :update 42 |text
-                assert |reject-wrong-update-text $ rejected? $ :: :update |id false
-                assert |reject-wrong-cursor $ rejected? $ :: :states 42 nil
-                assert |reject-wrong-state-merge $ rejected? $ :: :states-merge ([])
-                  {} $ :draft 42
-                  , nil
-                assert |reject-other-nominal $ rejected? $ Option :some |text
-              :tags $ #{} :unit
         'store $ %{} 'CodeEntry
           :doc "|Default immutable Store record value used by the example application."
           :code $ quote $ def store
@@ -7301,7 +7190,7 @@
                 dispatched $ ref $ decode-map-as ([]) 'List
                 dispatch! $ fn (op)
                   hint-fn $ {}
-                    :args $ [] 'Dynamic
+                    :args $ [] *dispatch-op
                     :return 'Unit
                   respo.core/append-dynamic! dispatched op
                 child-tree $ comp-event-shell $ span
@@ -7369,12 +7258,12 @@
                 later-dispatched $ ref $ decode-map-as ([]) 'List
                 dispatch! $ fn (op)
                   hint-fn $ {}
-                    :args $ [] 'Dynamic
+                    :args $ [] *dispatch-op
                     :return 'Unit
                   respo.core/append-dynamic! dispatched op
                 later-dispatch! $ fn (op)
                   hint-fn $ {}
-                    :args $ [] 'Dynamic
+                    :args $ [] *dispatch-op
                     :return 'Unit
                   respo.core/append-dynamic! later-dispatched op
                 ref! $ fn (target)

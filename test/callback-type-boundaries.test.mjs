@@ -61,7 +61,7 @@ test('render-with! rejects a non-Unit dispatch result', () => {
   assert.doesNotMatch(checked.output, /took [\d.]+ms:/, 'the invalid callback must not run');
 });
 
-test('callable proof rejects narrowed dispatch without an entry decoder', () => {
+function proveRenderDispatch(type) {
   const scratch = mkdtempSync(join(root, '.calcit', 'render-dispatch-proof-'));
   const invoke = args => {
     const result = spawnSync(bin, args, { cwd: scratch, encoding: 'utf8', timeout: 60_000 });
@@ -74,7 +74,7 @@ test('callable proof rejects narrowed dispatch without an entry decoder', () => 
     copyFileSync(join(root, 'deps.cirru'), join(scratch, 'deps.cirru'));
     mkdirSync(join(scratch, '.calcit'));
     symlinkSync(join(root, '.calcit', 'modules'), join(scratch, '.calcit', 'modules'));
-    const source = `quote $ defn main! ()\n  ${renderBoundary('respo.app.schema/Op', 'Unit', '&unit').replaceAll('\n', '\n  ')}`;
+    const source = `quote $ defn main! ()\n  ${renderBoundary(type, 'Unit', '&unit').replaceAll('\n', '\n  ')}`;
     const args = ['edit', 'transaction', '--code', JSON.stringify([
       ['edit', 'def', 'respo.main/main!', '--overwrite', '--input-format', 'cirru', '--code', source],
     ]), '--format', 'json'];
@@ -83,13 +83,21 @@ test('callable proof rejects narrowed dispatch without an entry decoder', () => 
     const applied = invoke([...args, '--expect-revision', JSON.parse(preview.stdout).scoped_revision]);
     assert.equal(applied.status, 0, applied.stdout + applied.stderr);
     const checked = invoke(['fix', '--rule', 'callable-contract-proof-v1', '--ns', 'respo.main', '--def', 'main!', '--format', 'json']);
-    const output = checked.stdout + checked.stderr;
-    assert.notEqual(checked.status, 0, 'the concrete callable proof must reject a narrowed input');
-    assert.match(output, /E_CALL_ARGUMENT_UNPROVEN/);
-    assert.match(output, /render-with!/);
+    return { status: checked.status, output: checked.stdout + checked.stderr };
   } finally {
     rmSync(scratch, { recursive: true, force: true });
   }
+}
+
+test('callable proof accepts dispatch narrowed to the entry Op', () => {
+  const checked = proveRenderDispatch('respo.app.schema/Op');
+  assert.equal(checked.status, 0, checked.output);
+});
+
+test('callable proof rejects dispatch narrowed to another type', () => {
+  const checked = proveRenderDispatch('String');
+  assert.notEqual(checked.status, 0, 'a dispatch callback for another type must not prove');
+  assert.match(checked.output, /render-with!/);
 });
 
 for (const [name, source] of [

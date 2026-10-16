@@ -1,5 +1,7 @@
 # 0.30.1 既有派发边界验收
 
+> 历史记录：这是 0.16.121 / 0.16.122 保留旧派发协议时的验收。0.17.0 起 `d!` 按 entry 的 `:dispatch-op` 类型槽检查，`wrap-dispatch` 与 demo 的 `decode-op` 已删除，见 [类型槽指南](../docs/guide/type-slots.md)。
+
 关联 #266、#195 与 calcit-lang/calcit#2080。本轮按用户确认的兼容路线推进，不采用 #267 删除旧调用的方案。
 
 ## 使用者影响

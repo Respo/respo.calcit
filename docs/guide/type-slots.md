@@ -91,9 +91,7 @@ alerts 的组件只发 `:states`，respo-ui 的组件转发调用方传入的 op
 
 ## 编译器版本
 
-生成 JS 时需要包含 calcit-lang/calcit#2108 修复的 Calcit：旧版本在 codegen
-线程里丢失 entry 的类型槽绑定，`--check-only` 通过但 `calcit js` 报
-`E_UNBOUND_TYPE_SLOT`。
+需要 Calcit `0.30.1-alpha.4` 或更新版本。更早的版本在 codegen 线程里丢失 entry 的类型槽绑定（calcit-lang/calcit#2108，由 #2109 修复），`--check-only` 通过但 `calcit js` 报 `E_UNBOUND_TYPE_SLOT`。
 
 迁移调查的过程记录保留在 `history/20261004-dispatch-boundary-probe.md` 等文件中。
 
