@@ -27,7 +27,7 @@
       :kind :fn
       :params $ [] 'mount-target
       :doc |SSR_复用与普通挂载相同的操作校验。
-      :schema $ :: 'Fn $ {} (:args ([] 'Dynamic)) (:return 'Unit)
+      :schema $ :: 'Fn $ {} (:args ([] 'respo.dom/DomElement)) (:return 'Unit)
     'respo.core/render-with! $ {}
       :mode :ensure
       :kind :fn
