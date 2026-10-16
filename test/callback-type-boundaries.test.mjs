@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { copyFileSync, mkdirSync, mkdtempSync, rmSync, symlinkSync } from 'node:fs';
+import { join } from 'node:path';
 import test from 'node:test';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
@@ -18,6 +20,59 @@ function evaluate(source) {
 test('typed render fixtures preserve ChildPair and nullable callback contracts', () => {
   const result = evaluate(`respo.test.dom/fixture-entry!`);
   assert.equal(result.status, 0, result.output);
+});
+
+const renderBoundary = (type, result, body) => `let
+    render! $ fn ()
+      respo.core/render-with! nil
+        fn () $ respo.schema/Component :name :fixture :effects ([]) :listeners ([]) :tree (Option :none)
+        fn (op)
+          hint-fn $ {} (:args ([] '${type})) (:return '${result})
+          , ${body}
+  , &unit`;
+
+test('render-with! retains the existing open Unit dispatch contract', () => {
+  const result = evaluate(renderBoundary('Dynamic', 'Unit', '&unit'));
+  assert.equal(result.status, 0, result.output);
+});
+
+test('render-with! rejects a non-Unit dispatch result', () => {
+  const checked = evaluate(renderBoundary('Dynamic', 'Number', '42'));
+  assert.notEqual(checked.status, 0, 'an incompatible dispatch callback must not compile');
+  assert.match(checked.output, /W_FN_ARG_TYPE_MISMATCH|E_CALL_ARGUMENT_MISMATCH/);
+  assert.match(checked.output, /render-with!/);
+  assert.doesNotMatch(checked.output, /took [\d.]+ms:/, 'the invalid callback must not run');
+});
+
+test('callable proof rejects narrowed dispatch without an entry decoder', () => {
+  const scratch = mkdtempSync(join(root, '.calcit', 'render-dispatch-proof-'));
+  const invoke = args => {
+    const result = spawnSync(bin, args, { cwd: scratch, encoding: 'utf8', timeout: 60_000 });
+    assert.ifError(result.error);
+    assert.equal(result.signal, null, 'Calcit must exit normally');
+    return result;
+  };
+  try {
+    copyFileSync(join(root, 'calcit.cirru'), join(scratch, 'calcit.cirru'));
+    copyFileSync(join(root, 'deps.cirru'), join(scratch, 'deps.cirru'));
+    mkdirSync(join(scratch, '.calcit'));
+    symlinkSync(join(root, '.calcit', 'modules'), join(scratch, '.calcit', 'modules'));
+    const source = `quote $ defn main! ()\n  ${renderBoundary('respo.app.schema/Op', 'Unit', '&unit').replaceAll('\n', '\n  ')}`;
+    const args = ['edit', 'transaction', '--code', JSON.stringify([
+      ['edit', 'def', 'respo.main/main!', '--overwrite', '--input-format', 'cirru', '--code', source],
+    ]), '--format', 'json'];
+    const preview = invoke([...args, '--dry-run']);
+    assert.equal(preview.status, 0, preview.stdout + preview.stderr);
+    const applied = invoke([...args, '--expect-revision', JSON.parse(preview.stdout).scoped_revision]);
+    assert.equal(applied.status, 0, applied.stdout + applied.stderr);
+    const checked = invoke(['fix', '--rule', 'callable-contract-proof-v1', '--ns', 'respo.main', '--def', 'main!', '--format', 'json']);
+    const output = checked.stdout + checked.stderr;
+    assert.notEqual(checked.status, 0, 'the concrete callable proof must reject a narrowed input');
+    assert.match(output, /E_CALL_ARGUMENT_UNPROVEN/);
+    assert.match(output, /render-with!/);
+  } finally {
+    rmSync(scratch, { recursive: true, force: true });
+  }
 });
 
 for (const [name, source] of [
