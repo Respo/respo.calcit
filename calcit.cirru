@@ -8714,22 +8714,34 @@
                     not $ starts-with? (to-string k) |on-
                 &map:to-list
                 sort $ fn (x y)
+                  hint-fn $ {}
+                    :args $ [] (:: 'List 'Dynamic) (:: 'List 'Dynamic)
+                    :return 'Number
                   &compare (&list:nth x 0) (&list:nth y 0)
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] $ :: 'Map 'Tag 'Dynamic
             :return $ :: 'List $ :: 'List 'Dynamic
-          :tests $ [] $ %{} 'TestEntry (:name |filters-internal-and-empty-properties)
-            :code $ quote $ let
-                attrs $ pick-attrs $ {} (:value |string) (:title |ok) (:data-id |x)
+          :tests $ []
+            %{} 'TestEntry (:name |filters-internal-and-empty-properties)
+              :code $ quote $ let
+                  attrs $ pick-attrs $ {} (:value |string) (:title |ok) (:data-id |x)
+                    :on-click $ fn () &unit
+                    :data-empty nil
+                    :style $ {} $ :color |red
+                    :ref $ fn (_target) &unit
+                assert |attributes-are-filtered $ &=
+                  [] ([] :data-id |x) ([] :title |ok) ([] :value |string)
+                  , attrs
+              :tags $ #{} :unit
+            %{} 'TestEntry (:name |preserves-falsy-attributes-and-order)
+              :code $ quote $ assert=
+                [] ([] :data-empty |) ([] :data-false false) ([] :data-zero 0) ([] :title |ok)
+                pick-attrs $ {} (:title |ok) (:data-zero 0) (:data-false false) (:data-empty |) (:data-nil nil)
                   :on-click $ fn () &unit
-                  :data-empty nil
                   :style $ {} $ :color |red
                   :ref $ fn (_target) &unit
-              assert |attributes-are-filtered $ &=
-                [] ([] :data-id |x) ([] :title |ok) ([] :value |string)
-                , attrs
-            :tags $ #{} :unit
+              :tags $ #{} :attribute-sort :unit
         'pick-event $ %{} 'CodeEntry
           :doc "|Extracts event listeners from a properties map. Handles both :on map and on-* keys."
           :code $ quote $ defn pick-event (props)
