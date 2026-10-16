@@ -16,14 +16,14 @@ test('>> preserves String and Number branches alongside Tag cursor metadata', ()
     'task-1', branch, 7, c._$n__$M_(tags.data, 'number'));
   const selected = child_states(root, 'task-1');
   const leaf = child_states(selected, 7);
-  assert.equal(c._$n_map_$o_get(selected, tags.data), 'draft');
-  assert.ok(c._$n__$e_(c._$n_map_$o_get(selected, c.turn_tag('cursor')), path(tags.panel, 'task-1')));
-  assert.equal(c._$n_map_$o_get(selected, 7), nested);
+  assert.equal(c.option_$o_unwrap(c._$n_map_$o_get(selected, tags.data)), 'draft');
+  assert.ok(c._$n__$e_(c.option_$o_unwrap(c._$n_map_$o_get(selected, c.turn_tag('cursor'))), path(tags.panel, 'task-1')));
+  assert.equal(c.option_$o_unwrap(c._$n_map_$o_get(selected, 7)), nested);
   assert.equal(c.get(selected, '7').tag.value, 'none');
-  assert.equal(c._$n_map_$o_get(leaf, tags.data), 'nested');
-  assert.ok(c._$n__$e_(c._$n_map_$o_get(leaf, c.turn_tag('cursor')), path(tags.panel, 'task-1', 7)));
-  assert.equal(c._$n_map_$o_get(child_states(root, 7), tags.data), 'number');
-  assert.ok(c._$n__$e_(c._$n_map_$o_get(root, c.turn_tag('cursor')), path(tags.panel)));
+  assert.equal(c.option_$o_unwrap(c._$n_map_$o_get(leaf, tags.data)), 'nested');
+  assert.ok(c._$n__$e_(c.option_$o_unwrap(c._$n_map_$o_get(leaf, c.turn_tag('cursor'))), path(tags.panel, 'task-1', 7)));
+  assert.equal(c.option_$o_unwrap(c._$n_map_$o_get(child_states(root, 7), tags.data)), 'number');
+  assert.ok(c._$n__$e_(c.option_$o_unwrap(c._$n_map_$o_get(root, c.turn_tag('cursor'))), path(tags.panel)));
   assert.equal(c.get(branch, c.turn_tag('cursor')).tag.value, 'none');
 });
 
@@ -65,7 +65,7 @@ test('partial Struct updates preserve their generated nominal definition and ori
   const updated = update_state_tree_merge(c._$n__$M_(), path(), original,
     c._$n__$M_(fields['stop-propagation?'], false));
   const state = get_state_at(updated, path(tags.data));
-  assert.equal(c._$n_struct_$o_definition(state), c._$n_struct_$o_definition(original));
+  assert.equal(c.option_$o_unwrap(c._$n_struct_$o_definition(state)), c.option_$o_unwrap(c._$n_struct_$o_definition(original)));
   assert.equal(c.option_$o_unwrap_or(c.get(state, fields['stop-propagation?']), null), false);
   assert.equal(c.option_$o_unwrap_or(c.get(original, fields['stop-propagation?']), null), true);
 });
@@ -88,7 +88,7 @@ test('partial Struct field update preserves nominal identity after the shape gua
   const states = update_state_tree(c._$n__$M_(), path(tags.panel, 'task-1'), original);
   const changed = update_state_tree_kv(states, path(tags.panel, 'task-1'), fields['stop-propagation?'], false);
   const value = get_state_at(changed, path(tags.panel, 'task-1', tags.data));
-  assert.equal(c._$n_struct_$o_definition(value), c._$n_struct_$o_definition(original));
+  assert.equal(c.option_$o_unwrap(c._$n_struct_$o_definition(value)), c.option_$o_unwrap(c._$n_struct_$o_definition(original)));
   assert.equal(c.option_$o_unwrap_or(c.get(value, fields['stop-propagation?']), null), false);
   assert.throws(() => update_state_tree_kv(states, path(tags.panel, 'task-1'), 7, false));
   assert.equal(c.option_$o_unwrap_or(c.get(original, fields['stop-propagation?']), null), true);

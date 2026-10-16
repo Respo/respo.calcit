@@ -32,7 +32,7 @@ test('task restoration preserves nominal identity and checks stored map fields',
   assert.equal(c.option_$o_unwrap(normalize_task(task)), task);
   const restored = c.option_$o_unwrap(normalize_task(c._$n__$M_(
     tags.id, 'task-2', tags.text, 'mapped', tags['done?'], true)));
-  assert.equal(c._$n_struct_$o_definition(restored), Task);
+  assert.equal(c.option_$o_unwrap(c._$n_struct_$o_definition(restored)), Task);
   for (const invalid of [null, 42, span(c._$n__$M_()), c._$n__$M_(tags.id, 'missing'),
     c._$n__$M_(tags.id, 'task', tags.text, 'text', tags['done?'], 'wrong'),
     c._$n__$M_(tags.id, 42, tags.text, 'text', tags['done?'], false)]) {
