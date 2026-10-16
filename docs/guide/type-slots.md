@@ -1,6 +1,6 @@
 ---
-title: "Dispatch 类型槽：配置与当前迁移状态"
-summary: "按 entry 配置应用 Op，了解尚未贯通的回调签名与 #195 的验证方式"
+title: "Dispatch 类型槽：d! 只接受应用 Op"
+summary: "按 entry 绑定应用 Op；d! 只收一个 Op；库组件发元组；什么位置会被检查"
 scope: "module"
 kind: "guide"
 category: "ecosystem"
@@ -12,102 +12,88 @@ aliases:
 entry_for:
   - "calcit config set-type-slot"
   - "*dispatch-op"
-  - "d! enum shorthand"
+  - "d! migration"
 ---
 
-# Dispatch 类型槽：配置与当前迁移状态
+# Dispatch 类型槽：d! 只接受应用 Op
 
-Respo 定义了 `respo.schema/*dispatch-op`，demo 的入口也配置了应用 Op。
-**当前事件 handler、保存的 dispatch 函数及 wrap-dispatch 签名仍使用 Dynamic，
-配置类型槽本身不能保证事件回调中的错误 Op 会被发现。** #195 正在迁移，
-不应把配置成功或正常 demo 编译成功视为 typed dispatch 的验收。
+Respo 定义了类型槽 `respo.schema/*dispatch-op`。`render!`、`render-with!`、
+`realize-ssr!`、保存的 dispatch 函数和 `EventHandler` 的 `d!` 都引用它，
+所以 `d!` 只接受一个参数，类型是当前 entry 绑定的应用 Op。Respo 在运行时
+不再改写 op，原样交给应用的 dispatch。
 
-## 每个 entry 单独配置
-
-应用先定义 Op，再配置完整的 namespace/definition 路径：
+## 每个 entry 绑定一次
 
 ```bash
 calcit config set-type-slot :dispatch-op app.schema/Op
 calcit config type-slots
 ```
 
-命名 entry 不继承默认入口的配置；检查和生成 JS 应选择同一个 entry：
+命名 entry 不继承默认入口的绑定，需要各自配置：
 
 ```bash
 calcit config set-type-slot --entry test :dispatch-op app.test-schema/TestOp
-calcit config type-slots --entry test
-calcit --entry test --check-only
-calcit --entry test js
 ```
 
-需要开放边界时，可以明确配置 `:dynamic`。不要将它作为修复错误 Op 的办法。
-入口绑定放在 config，不在 main! 中调用旧 bind-type，也不依赖
-with-type-slot wrapper。不同 Calcit 版本的未绑定 slot 行为存在差异，
-因此应检查所选 entry 的实际配置。
+只有确实开放的边界才配置 `:dynamic`，它会关闭整个 entry 的 dispatch 检查。
 
-## 目前可检查的具体回调标注
+## 发送 op
 
-下面展示直接标注应用 Op 的方式；需替换为项目实际类型路径：
+应用里用 Op 构造器或者普通元组都可以，元组按 Op 的变体检查：
 
 ```cirru.no-check
-button $ {}
-  :on-click $ fn (event d!)
-    hint-fn $ {} (:return 'Unit)
-      :args $ [] (:: 'Map 'Tag 'Dynamic)
-        :: 'Fn $ {} (:return 'Unit)
-          :args $ [] 'app.schema/Op
-    d! $ app.schema/Op :clear
+d! $ app.schema/Op :clear
+d! $ :: :toggle task-id
+d! $ :: :states cursor new-state
 ```
 
-这只能证明该回调的调用约束，不能代替框架内的类型贯通。#195 还需要让
-render!、保存的 dispatch、事件与 listener 保持同一个应用 Op，并验证
-旧 cursor list、tag 调用的兼容性。不能通过放宽成 Dynamic 伪造验收。
+库组件拿不到应用的 Op 构造器，统一发普通元组。约定如下，应用的 Op
+缺少对应变体时会在编译期报错：
 
-## 可重复的迁移探针
+| 用途 | 元组 | 应用 Op 需要的变体 |
+| --- | --- | --- |
+| 组件局部状态 | `:: :states cursor state` | `:states (:: 'List 'Dynamic) 'Dynamic` |
+| reel 的 `comp-reel` 控制面板 | `:: :reel/toggle`、`:: :reel/recall idx` 等 | `:reel/toggle` `:reel/recall 'Number` `:reel/run` `:reel/step` `:reel/merge` `:reel/reset` `:reel/remove 'Number` |
+| respo-router 的路由 handler | `:: :router/route route-map` | `:router/route 'Dynamic` |
 
-在 Respo 源码仓库中运行：
+alerts 的组件只发 `:states`，respo-ui 的组件转发调用方传入的 op。router 的 `listen!` 和 reel 的
+`listen-devtools!` 调用的是应用自己传入的 dispatch 函数，不经过 `d!`。
 
-```bash
-node scripts/probe-dispatch-boundary.mjs
+## 从旧写法迁移
+
+| 旧写法 | 新写法 |
+| --- | --- |
+| `d! cursor state` | `d! $ :: :states cursor state` |
+| `d! :clear` | `d! $ :: :clear` |
+| `d! :add text` | `d! $ :: :add text` |
+| `respo.controller.client/wrap-dispatch` | 已删除，直接使用应用的 dispatch 函数 |
+
+## 哪些位置会被检查
+
+检查器需要知道回调的期望类型，才会给 `d!` 套上 Op 类型：
+
+- 有 schema 的 handler 定义、`hint-fn` 标注过的回调、`DomProps` 等 struct 字段里的回调：会检查，写错的值、未知变体和旧的 cursor 简写都会报错。
+- 普通 `{}` props map 里内联的回调：Calcit 目前不给 map 字面量的值提供期望类型，所以不检查。需要检查时，把回调提成带 schema 的定义，或者用 `hint-fn` 标注。
+
+内联 `hint-fn` 中写裸符号 `*dispatch-op`，持久化 schema 中写 `'*dispatch-op`：
+
+```cirru.no-check
+:on-click $ fn (e d!)
+  hint-fn $ {} (:return 'Unit)
+    :args $ [] (:: 'Map 'Tag 'Dynamic)
+      :: 'Fn $ {} (:return 'Unit)
+        :args $ [] *dispatch-op
+  d! $ :: :toggle task-id
 ```
 
-可用 `CHECK_CALCIT_BIN` 指定候选编译器做检查；源码编辑由与
-`deps.cirru :calcit-version` 精确匹配的已发布 CLI 完成，脚本解析该声明并拒绝不匹配的 mutator。
-CI 只运行当前固定正式版本的探针，不再为旧 alpha.7 重复安装和执行同一套场景；历史对照记录保留。
-这不表示 #195 的应用级类型贯通已经完成。
-脚本复制 Snapshot 与固定版本的 deps 到临时目录，使用 CLI dry-run、
-`--expect-revision` 事务修改 demo 入口和 handler schema；根项目源码不变。
-覆盖 map/struct props、错误 Number、合法 Op、旧 list/tag、显式回调标注
-及泛型回调的 Op 转发/捕获。持有链探针另测递归节点、保存 dispatch 的 Ref、
-泛型树 factory、保存整棵树后的 render 派发与两种应用 Op 混接，
-并保留直接 Controller 构造的诊断。Props/Store 原型独立携带 Op 与状态类型，
-检查 Number/String 状态的正确转发、错误状态写入及异类事件回调。
-同一 Props/Store 原型还提供 type-slot 版本：复用树 Ref 持有链，保留独立
-State 泛型，通过 entry 绑定固定 Op，以相同的五项输入比较泛型与槽路线。
-组合调用还检查从前项 AppController 推断 Op，再传入带内联事件回调的 Props；
-合法输入会实际执行，错误 Number 的诊断与正式版本的接受结果分别保存。
-factory 正例是否被接受取决于 checker 的实际泛型推断能力；输出会保留失败，
-不将旧 checker 的其他拒绝诊断视为名义 Op 关系已经贯通。
-新增可变参数场景会为 d! 声明独立的 data rest 合同，比较合法 Op、额外 data、
-旧 cursor/tag、错误 Number 和未知 variant；它区分参数个数错误与第一参数的类型错误。
-正式 0.28 对这些 slot 调用的接受结果不能证明安全，需同时查看 Number 与未知 variant
-反例。普通 raw props Map 的回调上下文仍未贯通。
-输出包含每个场景的子进程端到端检查耗时（含启动与模块加载），是调查结果，
-不是发布门禁的成功标记；临时副本结束后删除。
+`test/typed-dispatch.test.mjs` 在 demo 的 entry 上验证正例与反例，可以用
+`yarn test-typed-dispatch` 运行。
 
-已发布 alpha.6 的实际检查与正例失败见
-[发布版复查](../../history/20261005-dispatch-published-alpha6.md)。
-此前正式 0.28 与本地候选的实验见
-[迁移调查记录](../../history/20261004-dispatch-boundary-probe.md)。
-内联 `hint-fn` 的 bare slot 与持久化 schema 的 quoted symbol 分别检查，
-holder 的 `defstruct` 字段类型表达式也使用 bare `*dispatch-op`；持久化 schema
-仍使用 `'*dispatch-op`，不能对两个输入位置套用同一种替换。
-可变参数正例必须先通过，才检查合法 Op 与额外 data；该正例失败会使探针退出失败，
-不会跳过反例检查后记作通过。legacy 失败需定位首参数。
-holder 的输入位置修正与本地候选完整对照见
-[slot holder 复查](../../history/20261006-slot-holder-inputs.md)。
-探针还用单个 callback 字段对照具体 Op、同 slot 和 Number 三种标注，
-区分 slot 关系失败与树、Ref 或状态泛型造成的其他失败。
+## 编译器版本
+
+需要 Calcit `0.30.1-alpha.4` 或更新版本。更早的版本在 codegen 线程里丢失 entry 的类型槽绑定（calcit-lang/calcit#2108，由 #2109 修复），`--check-only` 通过但 `calcit js` 报 `E_UNBOUND_TYPE_SLOT`。
+
+迁移调查的过程记录保留在 `history/20261004-dispatch-boundary-probe.md` 等文件中。
 
 安装为模块后，可以通过 CLI 重读本指南：
 

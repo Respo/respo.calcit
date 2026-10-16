@@ -148,11 +148,10 @@ defcomp comp-demo (states
       :value (:text state)
       :on-input $ fn (e dispatch!)
         ; will update component state(saved in global store)
-        dispatch! cursor (assoc state :text (:value e)))
+        dispatch! $ :: :states cursor (assoc state :text (:value e)))
 ```
 
-`(dispatch! cursor new-state)` updates state of current component.
-Internally it's transformed into `(dispatch! :states [cursor new-state])` which can be handled in `updater` function.
+`(dispatch! (:: :states cursor new-state))` updates state of current component. The `:states` variant must be declared in the entry's `Op`, and the `updater` function handles it.
 
 Component states are not saved inside components, but as a tree in the store. Suppose store is:
 
@@ -316,17 +315,17 @@ input $ {}
   :value (:text task)
   :style style-input
   :on-input $ fn (e dispatch!)
-    dispatch! cursor (:value e)
+    dispatch! $ :: :states cursor (:value e)
 ```
 
-To handle a global action, call `dispatch!` with an action type and a parameter:
+To handle a global action, call `dispatch!` with one Op tuple carrying the action type and its parameter:
 
 ```cirru.no-check
 div
   {}
     :style style-button
     :on-click $ fn (e dispatch!)
-      dispatch! :remove (:id (:task props))
+      dispatch! $ :: :remove (:id (:task props))
   <> "|Remove"
 ```
 

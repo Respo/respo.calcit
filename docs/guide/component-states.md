@@ -165,16 +165,16 @@ let
         respo.core/div
           {}
             :on-click $ fn (e dispatch!)
-              dispatch! cursor (assoc state :draft "|New state")
+              dispatch! $ :: :states cursor (assoc state :draft "|New state")
   , comp-task
 ```
 
-So `(dispatch! cursor state)` sends the new state.
+So `(dispatch! (:: :states cursor state))` sends the new state.
 
 The last step is to update global states. A nominal application `Store` should
 keep its Struct field access typed and pass only the intentionally deep state
 tree to `respo.cursor/update-state-tree`:
-Internally `(dispatch! cursor op-data)` will be transformed to `(dispatch! :states ([] cursor op-data))`.
+The entry's `Op` declares `:states (:: 'List 'Dynamic) 'Dynamic` for this.
 Define a Store-specific typed helper, then call it from the `:states` branch of
 your `(store op op-id)` updater after matching `(:states cursor new-state)`:
 
@@ -215,7 +215,7 @@ And it is passed to `(comp-todolist (>> states :todolist) data)`,
 and then passed to `(comp-task (>> states (:id task)) task)`.
 
 In `comp-todolist`, `(:data states)` provides component state, `(:cursor states)` provides its cursor.
-Call `(dispatch! cursor {:input "|New draft"})` and global store will become:
+Call `(dispatch! (:: :states cursor {:input "|New draft"}))` and global store will become:
 
 ```cirru
 {}
@@ -226,7 +226,7 @@ Call `(dispatch! cursor {:input "|New draft"})` and global store will become:
 
 ```
 
-In `comp-task` of "task-1", you also get `state` and `cursor`, so call `(dispatch! cursor {:draft "New text"})` you will get:
+In `comp-task` of "task-1", you also get `state` and `cursor`, so call `(dispatch! (:: :states cursor {:draft "New text"}))` you will get:
 
 ```cirru.no-check
 {}

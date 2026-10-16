@@ -6,6 +6,7 @@
     "test-persisted-tasks": "calcit js && node --test test/persisted-tasks.test.mjs",
     "test-render-traversal": "calcit --init-fn respo.test.dom/fixture-entry! --reload-fn respo.test.dom/fixture-entry! js && node --test test/component-listener-traversal.test.mjs test/event-node-lookup.test.mjs test/purify-render-node.test.mjs test/typed-dom-creation.test.mjs test/typed-effect-traversal.test.mjs test/typed-event-refresh.test.mjs",
     "test-callback-types": "node --test test/callback-type-boundaries.test.mjs",
+    "test-typed-dispatch": "node --test test/typed-dispatch.test.mjs",
     "test-event-config": "calcit js && node --test test/event-config.test.mjs",
     "test-demo-scheduler": "calcit js && node --test test/demo-scheduler.test.mjs",
     "test": "calcit calcit.cirru test --require-match --summary-only --format json",

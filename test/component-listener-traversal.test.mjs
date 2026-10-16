@@ -4,7 +4,7 @@ import * as c from '../js-out/calcit.core.mjs';
 import { Component, RespoListener } from '../js-out/respo.schema.mjs';
 import { div } from '../js-out/respo.core.mjs';
 import { as_render_node, make_child_pair } from '../js-out/respo.util.detect.mjs';
-import { traverse_and_call, wrap_dispatch } from '../js-out/respo.controller.client.mjs';
+import { traverse_and_call } from '../js-out/respo.controller.client.mjs';
 import { with_fixture_children } from '../js-out/respo.test.dom.mjs';
 
 const t = c.init_tags(['name', 'handler', 'effects', 'listeners', 'tree', 'children', 'watch', 'changed', 'root', 'nested', 'first', 'second', 'states', 'persist', 'direct']);
@@ -14,7 +14,7 @@ function fixture(includeEmpty, fail = false) {
   const calls = [];
   const operations = [];
   const event = c._$o__$o_(t.changed);
-  const dispatch = wrap_dispatch(c.atom(op => { operations.push(op); }));
+  const dispatch = op => { operations.push(op); };
   const listener = (label, action) => c._$n__PCT__$M_(RespoListener,
     t.name, t.watch, t.handler, (received, d) => {
       assert.equal(received, event);
@@ -32,14 +32,14 @@ function fixture(includeEmpty, fail = false) {
   const element = with_fixture_children(div(c.parse_cirru_edn('{}')), list(pairs));
   const nested = component(t.nested, c._PCT_some(as_render_node(element)), [listener('nested')]);
   const root = component(t.root, c._PCT_some(as_render_node(nested)), [
-    listener('root-1', d => d(list(['cursor']), 'value')),
-    listener('root-2', d => { if (fail) throw new Error('listener-failed'); d(t.persist, null); }),
+    listener('root-1', d => d(c._$o__$o_(t.states, list(['cursor']), 'value'))),
+    listener('root-2', d => { if (fail) throw new Error('listener-failed'); d(c._$o__$o_(t.persist)); }),
   ]);
   return { root, event, dispatch, calls, operations, direct };
 }
 
 for (const includeEmpty of [false, true]) {
-  test(`listener traversal preserves depth-first order and legacy dispatch (empty child: ${includeEmpty})`, () => {
+  test(`listener traversal preserves depth-first order and passes dispatch through (empty child: ${includeEmpty})`, () => {
     const f = fixture(includeEmpty);
     assert.equal(traverse_and_call(f.root, f.event, f.dispatch), undefined);
     assert.deepEqual(f.calls, ['root-1', 'root-2', 'nested', 'first', 'second']);

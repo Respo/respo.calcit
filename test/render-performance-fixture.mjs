@@ -70,7 +70,7 @@ export async function createPerformanceFixture(baseURL = new URL('../', import.m
   const broadcast = indexed => {
     callbacks = 0; dispatches = 0;
     const handlers = indexed ? collectHandlers(tree) : null;
-    const dispatch = indexed ? client.wrap_dispatch(core._$s_dispatch_fn) : null;
+    const dispatch = indexed ? c.deref(core._$s_dispatch_fn) : null;
     for (let i = 0; i < 100; i++) {
       if (indexed) for (const handler of handlers) handler(event, dispatch);
       else client.send_to_component_$x_(event);
