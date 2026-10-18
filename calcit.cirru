@@ -53,13 +53,9 @@
             let
                 states $ decode-map-as states $ :: 'Map 'Dynamic 'Dynamic
                 cursor $ decode-map-as
-                  either
-                    .unwrap-or (calcit.core/get states :cursor) nil
-                    []
+                  .unwrap-or (calcit.core/get states :cursor) ([])
                   :: 'List 'Dynamic
-                state $ either
-                  .unwrap-or (calcit.core/get states :data) nil
-                  , |
+                state $ .unwrap-or (calcit.core/get states :data) |
                 task-id $ :id task
                 task-text $ :text task
                 done? $ :done? task
@@ -79,7 +75,7 @@
                           event $ decode-map-as e $ :: 'Map 'Tag 'Dynamic
                         let
                             text $ str $ decode-map-as
-                              .unwrap-or (calcit.core/get event :value) nil
+                              .unwrap $ calcit.core/get event :value
                               , 'String
                           d! $ Op :update task-id text
                   =< 8 0
@@ -87,7 +83,7 @@
                     :on-input $ fn (e d!)
                       let
                           event $ decode-map-as e $ :: 'Map 'Tag 'Dynamic
-                        d! $ Op :states cursor $ .unwrap-or (calcit.core/get event :value) nil
+                        d! $ Op :states cursor $ .unwrap (calcit.core/get event :value)
                   =< 8 0
                   div
                     {} (:class-name widget/style-button)
@@ -142,14 +138,10 @@
             let
                 states $ decode-map-as states $ :: 'Map 'Dynamic 'Dynamic
                 cursor $ decode-map-as
-                  either
-                    .unwrap-or (calcit.core/get states :cursor) nil
-                    []
+                  .unwrap-or (calcit.core/get states :cursor) ([])
                   :: 'List 'Dynamic
                 state $ let
-                    stored-state $ either
-                      .unwrap-or (calcit.core/get states :data) nil
-                      respo.app.schema/TodoState :draft | :locked? false :message "|Press Ctrl+M to change message"
+                    stored-state $ .unwrap-or (calcit.core/get states :data) (respo.app.schema/TodoState :draft | :locked? false :message "|Press Ctrl+M to change message")
                   if (struct? stored-state)
                     if (&struct:matches? stored-state respo.app.schema/TodoState) stored-state $ raise "|[Respo/demo] expected TodoState"
                     raise "|[Respo/demo] expected TodoState"
@@ -170,7 +162,7 @@
                             event $ decode-map-as e $ :: 'Map 'Tag 'Dynamic
                           d! $ Op :states-merge cursor state $ {}
                             :draft $ decode-map-as
-                              .unwrap-or (calcit.core/get event :value) nil
+                              .unwrap $ calcit.core/get event :value
                               , 'String
                       :on-focus on-focus
                     =< 8 0
@@ -261,8 +253,8 @@
                     info $ decode-map-as info $ :: 'Map 'Tag 'Dynamic
                   when
                     and
-                      &= |m $ .unwrap-or (calcit.core/get info :key) nil
-                      identical? true $ .unwrap-or (calcit.core/get info :ctrl) nil
+                      &= |m $ .unwrap-or (calcit.core/get info :key) |
+                      identical? true $ .unwrap-or (calcit.core/get info :ctrl) false
                     do
                       dispatch! $ Op :states cursor $ assoc state :message "|Message changed by Ctrl+M!"
                       js/window.setTimeout
@@ -1509,11 +1501,10 @@
           :code $ quote $ defn create-element (tag-name props & children)
             let
                 props-map $ normalize-dom-props props
-                ref-value $ .unwrap-or (calcit.core/get props-map :ref) nil
-                ref! $ normalize-ref ref-value "|[Respo/create-element] expected :ref to be a function or nil"
+                ref! $ normalize-ref (calcit.core/get props-map :ref) "|[Respo/create-element] expected :ref to be a function or nil"
                 attrs $ pick-attrs props-map
                 styles $ ->
-                  props-style-map $ .unwrap-or (calcit.core/get props-map :style) nil
+                  props-style-map $ calcit.core/get props-map :style
                   &map:to-list
                   sort $ fn (x y)
                     &compare (&list:nth x 0) (&list:nth y 0)
@@ -1552,12 +1543,11 @@
               raise "|[Respo/create-list-element] expected keyed child pairs as a list or map"
             let
                 props-map $ normalize-dom-props props
-                ref-value $ .unwrap-or (calcit.core/get props-map :ref) nil
-                ref! $ normalize-ref ref-value "|[Respo/create-list-element] expected :ref to be a function or nil"
+                ref! $ normalize-ref (calcit.core/get props-map :ref) "|[Respo/create-list-element] expected :ref to be a function or nil"
                 attrs $ pick-attrs props-map
                 styles $ sort
                   assert-type
-                    &map:to-list $ props-style-map $ .unwrap-or (calcit.core/get props-map :style) nil
+                    &map:to-list $ props-style-map $ calcit.core/get props-map :style
                     :: List $ :: List Dynamic
                   fn (x y)
                     &compare
@@ -2423,11 +2413,14 @@
             :tags $ #{} :regression :unit
         'normalize-ref $ %{} 'CodeEntry
           :doc "|在 props 的开放数据边界验证 ref，返回明确的 nullable DOM 回调；nil 保留，非法函数沿用调用方消息。"
-          :code $ quote $ defn normalize-ref (value message)
-            if (nil? value) nil $ if (fn? value) value $ raise message
+          :code $ quote $ defn normalize-ref (value-option message)
+            match value-option
+              (:none) nil
+              (:some value)
+                if (nil? value) nil $ if (fn? value) value $ raise message
           :examples $ []
           :schema $ :: 'Fn $ {}
-            :args $ [] 'RefInput 'String
+            :args $ [] (:: 'Option 'RefInput) 'String
             :generics $ [] 'RefInput
             :return $ :: 'JsNullish 'Fn
           :tags $ #{} :internal
@@ -2439,13 +2432,15 @@
                       :args $ [] $ :: 'JsNullish 'respo.dom/DomElement
                       :return 'Unit
                     , &unit
-                assert= nil $ normalize-ref nil |expected-ref
-                assert |ref-identity-preserved $ identical? callback $ normalize-ref callback |expected-ref
+                assert= nil $ normalize-ref (%none) |expected-ref
+                assert= nil $ normalize-ref (%some nil) |expected-ref
+                assert |ref-identity-preserved $ identical? callback $ normalize-ref (%some callback) |expected-ref
               :tags $ #{} :unit
             %{} 'TestEntry (:name |rejects-invalid-ref)
               :code $ quote $ let
                   caught? $ ref false
-                try (normalize-ref :invalid |expected-ref)
+                try
+                  normalize-ref (%some :invalid) |expected-ref
                   fn (error) (assert= |expected-ref error) (reset! caught? true)
                 assert |invalid-ref-rejected @caught?
               :tags $ #{} :unit
@@ -2478,12 +2473,15 @@
             :args $ [] 'PropsInput
             :generics $ [] 'PropsInput
         'props-style-map $ %{} 'CodeEntry (:doc "|在 props 开放数据边界检查 :style，nil 视为空 map。")
-          :code $ quote $ defn props-style-map (value)
-            if (nil? value) ({})
-              if (map? value) value $ raise $ str "|[Respo] expected :style to be a map, got: " (type-of value)
+          :code $ quote $ defn props-style-map (value-option)
+            match value-option
+              (:none) ({})
+              (:some value)
+                if (nil? value) ({})
+                  if (map? value) value $ raise $ str "|[Respo] expected :style to be a map, got: " (type-of value)
           :examples $ []
           :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic
+            :args $ [] $ :: 'Option 'Dynamic
             :return $ :: 'Map 'Dynamic 'Dynamic
         'realize-ssr! $ %{} 'CodeEntry
           :doc "|Adopt server-rendered DOM before the first client render. It compares the component tree to the existing HTML, attaches events by diffing a muted tree against the live tree, and mounts effects once. The live tree and shared dispatch reference are recorded before patches run, so events work immediately and later render! calls update handlers and dispatch without remounting."
@@ -8601,7 +8599,10 @@
         'val-exists? $ %{} 'CodeEntry
           :doc "|Predicate to check if a key-value pair has a non-nil value."
           :code $ quote $ defn val-exists? (pair)
-            not $ nil? $ option:unwrap-or (last pair) nil
+            match (last pair)
+              (:some value)
+                not $ nil? value
+              (:none) false
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Bool)
             :args $ [] 'Dynamic
