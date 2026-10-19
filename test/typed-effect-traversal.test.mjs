@@ -9,6 +9,7 @@ const { div, span } = await import('../js-out/respo.core.mjs');
 const { as_render_node, make_child_pair } = await import('../js-out/respo.util.detect.mjs');
 const { collect_mounting, collect_unmounting } = await import('../js-out/respo.render.effect.mjs');
 const { apply_dom_changes, run_effect } = await import('../js-out/respo.render.patch.mjs');
+const { find_element_diffs } = await import('../js-out/respo.render.diff.mjs');
 const { with_fixture_children } = await import('../js-out/respo.test.dom.mjs');
 const t = c.init_tags(['name', 'effects', 'listeners', 'tree', 'coord', 'args', 'method', 'children', 'ref', 'outer', 'first', 'second']);
 const list = c.arrayToList;
@@ -41,6 +42,60 @@ test('effect callback exceptions propagate unchanged after one invocation', () =
     throw failure;
   }, list([])), error => error === failure);
   assert.equal(calls, 1);
+});
+
+function refChanges(oldRef, newRef) {
+  const changes = [];
+  const element = callback => c.assoc(div(c.parse_cirru_edn('{}')), t.ref, callback);
+  find_element_diffs(op => { changes.push(op); }, list([]), list([]), element(oldRef), element(newRef));
+  return changes;
+}
+
+test('changed refs retain checked callbacks and clear before setting the actual DOM target', () => {
+  const calls = [];
+  const changes = refChanges(target => { calls.push(['old', target]); return 42; },
+    target => { calls.push(['new', target]); return { ignored: true }; });
+  assert.deepEqual(changes.map(op => op.tag.value), ['effect-before-update', 'effect-update']);
+  const target = new ElementHost('div');
+  const mount = new ElementHost('main');
+  mount.appendChild(target);
+  assert.equal(apply_dom_changes(list(changes), mount, () => () => {}), undefined);
+  assert.deepEqual(calls, [['old', null], ['new', target]]);
+});
+
+test('ref patch callbacks return Unit without leaking handler results', () => {
+  const calls = [];
+  const changes = refChanges(target => { calls.push(['old', target]); return 42; },
+    target => { calls.push(['new', target]); return 'ignored'; });
+  const target = new ElementHost('div');
+  for (const patch of changes) {
+    const callback = c._$n_enum_$o_nth(patch, 3);
+    assert.equal(callback(target), undefined);
+  }
+  assert.deepEqual(calls, [['old', null], ['new', target]]);
+});
+
+test('unchanged and absent refs do not schedule callbacks; failures propagate once', () => {
+  const unchanged = () => { throw new Error('unchanged callback must not run'); };
+  assert.deepEqual(refChanges(unchanged, unchanged), []);
+  assert.deepEqual(refChanges(null, null), []);
+  const failure = new Error('ref update fixture');
+  const target = new ElementHost('div');
+  for (const beforeUpdate of [true, false]) {
+    let calls = 0;
+    const failing = value => {
+      assert.equal(value, beforeUpdate ? null : target);
+      calls += 1;
+      throw failure;
+    };
+    const changes = beforeUpdate ? refChanges(failing, null) : refChanges(null, failing);
+    assert.equal(changes.length, 1);
+    assert.equal(changes[0].tag.value, beforeUpdate ? 'effect-before-update' : 'effect-update');
+    const mount = new ElementHost('main');
+    mount.appendChild(target);
+    assert.throws(() => apply_dom_changes(list(changes), mount, () => () => {}), error => error === failure);
+    assert.equal(calls, 1);
+  }
 });
 
 function fixture(includeEmpty) {
