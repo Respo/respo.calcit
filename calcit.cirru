@@ -4779,9 +4779,13 @@
                                       new-ref-option $ :ref new-tree
                                     when (not= old-ref-option new-ref-option)
                                       when (js-present? old-ref-option)
-                                        collect! $ DomPatch :effect-before-update coord n-coord $ fn (_target) (old-ref-option legacy-nil)
+                                        let
+                                            checked-old-ref old-ref-option
+                                          collect! $ DomPatch :effect-before-update coord n-coord $ fn (_target) (checked-old-ref legacy-nil) &unit
                                       when (js-present? new-ref-option)
-                                        collect! $ DomPatch :effect-update coord n-coord $ fn (target) (new-ref-option target)
+                                        let
+                                            checked-new-ref new-ref-option
+                                          collect! $ DomPatch :effect-update coord n-coord $ fn (target) (checked-new-ref target) &unit
                                   let
                                       old-style $ :style old-tree
                                       new-style $ :style new-tree
