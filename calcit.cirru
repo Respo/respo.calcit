@@ -1823,6 +1823,48 @@
             :capabilities $ #{}
             :expansion $ :: 'Definition 'Fn
             :required $ [] 'SyntaxSymbol 'SyntaxList
+        'dispatch-fn $ %{} 'CodeEntry
+          :doc "|Macro for an inline callback that dispatches.\n\n`dispatch-fn (value d!) body` expands to a `fn` with a `hint-fn`: every argument before the last is `Dynamic`, and the last one, `d!`, takes the entry's `*dispatch-op`. Use it where a typed field such as a component's `:on-change` option expects a callback, so you don't write the annotation by hand. The body's result is discarded and the callback returns `Unit`.\n\nThe last argument is always treated as `d!`, so write it even when the body does not dispatch. The entry needs the `:dispatch-op` type slot bound (`calcit config set-type-slot :dispatch-op app.schema/Op`); without it, checking a typed field rejects the callback."
+          :code $ quote $ defmacro dispatch-fn (args & body)
+            assert "|expected args like (value d!), ending with d!" $ and (list? args) (every? args symbol?)
+              &> (count args) 0
+            let
+                value-types $ map
+                  range $ dec $ count args
+                  fn (_i) (quote 'Dynamic)
+              quasiquote $ fn ~args
+                hint-fn $ {} (:return 'Unit)
+                  :args $ [] (~@ value-types)
+                    :: 'Fn $ {} (:return 'Unit)
+                      :args $ [] *dispatch-op
+                ~@ body
+                , &unit
+          :examples $ []
+            quote $ dispatch-fn (value d!)
+              d! $ :: :update |task-id value
+            quote $ dispatch-fn (d!)
+              d! $ :: :clear
+          :schema $ :: 'Macro $ {}
+            :capabilities $ #{} :log
+            :expansion $ :: 'Expr 'Fn
+            :required $ [] 'SyntaxList
+            :rest $ :: 'Expr 'Dynamic
+          :tests $ [] $ %{} 'TestEntry (:name |forwards-op-and-returns-unit)
+            :code $ quote $ let
+                *sent $ ref $ assert-type ([]) (:: 'List 'Dynamic)
+                handler $ dispatch-fn (value d!)
+                  d! $ :: :toggle value
+                  , |ignored-result
+                d! $ fn (op)
+                  hint-fn $ {} (:return 'Unit)
+                    :args $ [] *dispatch-op
+                  swap! *sent append op
+                  , &unit
+              assert= &unit $ handler |task-a d!
+              assert=
+                [] $ :: :toggle |task-a
+                , @*sent
+            :tags $ #{} :unit
         'div $ %{} 'CodeEntry
           :doc "|Create a `<div>` virtual element.\n\nThe first argument is an optional props map. Remaining arguments are child nodes. Put DOM props such as `:class-name`, `:style`, and event handlers in the props map."
           :code $ quote $ defn div (props & children) (create-element :div props & children)
