@@ -1824,7 +1824,7 @@
             :expansion $ :: 'Definition 'Fn
             :required $ [] 'SyntaxSymbol 'SyntaxList
         'dispatch-fn $ %{} 'CodeEntry
-          :doc "|Macro for an inline callback that dispatches.\n\n`dispatch-fn (value d!) body` expands to a `fn` with a `hint-fn`: every argument before the last is `Dynamic`, and the last one, `d!`, takes the entry's `*dispatch-op`. Use it where a typed field such as a component's `:on-change` option expects a callback, so you don't write the annotation by hand. The body's result is discarded and the callback returns `Unit`."
+          :doc "|Macro for an inline callback that dispatches.\n\n`dispatch-fn (value d!) body` expands to a `fn` with a `hint-fn`: every argument before the last is `Dynamic`, and the last one, `d!`, takes the entry's `*dispatch-op`. Use it where a typed field such as a component's `:on-change` option expects a callback, so you don't write the annotation by hand. The body's result is discarded and the callback returns `Unit`.\n\nThe last argument is always treated as `d!`, so write it even when the body does not dispatch. The entry needs the `:dispatch-op` type slot bound (`calcit config set-type-slot :dispatch-op app.schema/Op`); without it, checking a typed field rejects the callback."
           :code $ quote $ defmacro dispatch-fn (args & body)
             assert "|expected args like (value d!), ending with d!" $ and (list? args) (every? args symbol?)
               &> (count args) 0
@@ -1845,7 +1845,7 @@
             quote $ dispatch-fn (d!)
               d! $ :: :clear
           :schema $ :: 'Macro $ {}
-            :capabilities $ #{}
+            :capabilities $ #{} :log
             :expansion $ :: 'Expr 'Fn
             :required $ [] 'SyntaxList
             :rest $ :: 'Expr 'Dynamic

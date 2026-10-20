@@ -85,3 +85,9 @@ test('dispatch-fn keeps d! checked against Op', () => {
   assert.notEqual(result.status, 0, 'invalid dispatch must fail checking');
   assert.match(result.output, /calling `d!` arg 1 expects type `type-slot\(dispatch-op\)`, but got `:number`/);
 });
+
+test('dispatch-fn explains a missing d! argument', () => {
+  const result = check([['probe-bad', 'quote $ defn probe-bad () (respo.core/dispatch-fn () (println 1))']]);
+  assert.notEqual(result.status, 0, 'dispatch-fn without arguments must fail checking');
+  assert.match(result.output, /expected args like \(value d!\), ending with d!/);
+});

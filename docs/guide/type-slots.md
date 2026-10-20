@@ -72,7 +72,7 @@ alerts 的组件只发 `:states`，respo-ui 的组件转发调用方传入的 op
 
 检查器需要知道回调的期望类型，才会给 `d!` 套上 Op 类型：
 
-- 有 schema 的 handler 定义、`hint-fn` 标注过的回调、`DomProps` 等 struct 字段里的回调：会检查，写错的值、未知变体和旧的 cursor 简写都会报错。
+- 有 schema 的 handler 定义、`hint-fn` 标注过的回调、`DomProps` 等 struct 字段里的回调：会检查，写错类型的值、未知变体和旧的 cursor 简写都会报错。元组变体的参数个数和参数类型目前不检查，`:: :toggle 1` 也能通过。
 - 普通 `{}` props map 里内联的回调：Calcit 目前不给 map 字面量的值提供期望类型，所以不检查。需要检查时，把回调提成带 schema 的定义，或者用 `hint-fn` 标注。
 
 内联 `hint-fn` 中写裸符号 `*dispatch-op`，持久化 schema 中写 `'*dispatch-op`：
@@ -97,8 +97,10 @@ comp-input text $ Option :some $ InputOptions
     d! $ :: :update task-id value
 ```
 
-`d!` 仍然按 Op 检查，写错变体照样报错。前面的参数是 `Dynamic`，需要更精确的
-类型时还是手写 `hint-fn`。
+`d!` 仍然按 Op 检查：传错类型的值、不存在的变体都会报错。前面的参数是
+`Dynamic`，需要更精确的类型时还是手写 `hint-fn`。最后一个参数总被当作 `d!`，
+即使 body 不发 op 也要写上。这个宏依赖 entry 绑定了 `:dispatch-op`；没绑定时，
+带类型的字段会拒绝这个回调。
 
 `test/typed-dispatch.test.mjs` 在 demo 的 entry 上验证正例与反例，可以用
 `yarn test-typed-dispatch` 运行。
