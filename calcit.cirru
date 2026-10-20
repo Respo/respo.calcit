@@ -5980,10 +5980,13 @@
                   let
                       k $ respo.util.list/pair-key pair
                       v $ respo.util.list/pair-value pair
+                      attr $ if (tag? k) (to-string k) (str k)
+                    ; "HTML treats a present boolean attribute as true, so false is left out; aria-* and data-* keep their text"
                     and (calcit.core/non-nil? v)
-                      not $ starts-with?
-                        if (tag? k) (to-string k) (str k)
-                        , |on-
+                      not $ starts-with? attr |on-
+                      not $ and (= v false)
+                        not $ starts-with? attr |aria-
+                        not $ starts-with? attr |data-
                 sorted $ &list:sort-by visible respo.util.list/pair-key
               calcit.core/join-string (map sorted entry->html) "| "
           :examples $ []
@@ -5995,6 +5998,9 @@
               assert= "|1=\"one\"" $ props->html $ {} (1 |one)
               assert= "|data-label=\"hello\"" $ props->html $ {} (|data-label |hello)
               assert= "|title=\"safe\"" $ props->html $ {} (|on-click |ignored) (:title |safe)
+              assert= "|type=\"button\"" $ props->html $ {} (:disabled false) (:type |button)
+              assert= "|disabled=\"true\"" $ props->html $ {} (:disabled true)
+              assert= "|aria-hidden=\"false\" data-open=\"false\"" $ props->html $ {} (:aria-hidden false) (:data-open false)
             :tags $ #{} :regression :unit
         'self-closing $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def self-closing
