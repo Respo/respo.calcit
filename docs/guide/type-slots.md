@@ -86,6 +86,20 @@ alerts 的组件只发 `:states`，respo-ui 的组件转发调用方传入的 op
   d! $ :: :toggle task-id
 ```
 
+回调放进带类型的字段时（比如 respo-ui 组件的 `:on-change` 选项），可以用
+`respo.core/dispatch-fn` 省掉这段标注。它展开成同样的 `fn` 和 `hint-fn`：
+最后一个参数是 `d!`，类型是 `*dispatch-op`；前面的参数都是 `Dynamic`；
+回调返回 `Unit`，body 的结果被丢弃。
+
+```cirru.no-check
+comp-input text $ Option :some $ InputOptions
+  , :on-change $ Option :some $ dispatch-fn (value d!)
+    d! $ :: :update task-id value
+```
+
+`d!` 仍然按 Op 检查，写错变体照样报错。前面的参数是 `Dynamic`，需要更精确的
+类型时还是手写 `hint-fn`。
+
 `test/typed-dispatch.test.mjs` 在 demo 的 entry 上验证正例与反例，可以用
 `yarn test-typed-dispatch` 运行。
 

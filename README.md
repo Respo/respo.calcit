@@ -322,6 +322,7 @@ calcit query def respo.render.html/make-string
 | ----------------------- | -------------------------------------------- | -------------------------------------- |
 | `defcomp`               | `respo.core/defcomp`                         | Define components with macro           |
 | `defeffect`             | `respo.core/defeffect`                       | Define lifecycle effects               |
+| `dispatch-fn`           | `respo.core/dispatch-fn`                     | Inline callback with a typed `d!`      |
 | `div`                   | `respo.core/div`                             | Create div elements                    |
 | `create-element`        | `respo.core/create-element`                  | Dynamically create elements            |
 | `render!`               | `respo.core/render!`                         | Sync virtual DOM to real DOM           |

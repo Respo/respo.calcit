@@ -486,6 +486,8 @@ button $ {}
 ```
 
 普通 `{}` props 里的内联回调目前不做检查；带 schema 或 `hint-fn` 标注的回调会检查。
+传给带类型字段（例如组件选项里的 `:on-change`）的内联回调可以写成
+`dispatch-fn (value d!) ...`，宏会补上 `hint-fn`，`d!` 按 Op 检查。
 迁移表和库组件的约定见 [dispatch 类型槽指南](./guide/type-slots.md)。
 
 ---

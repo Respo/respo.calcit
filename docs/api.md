@@ -44,6 +44,7 @@ calcit query def respo.render.html/make-string
 |                      | `div`             |
 |                      | `<>`              |
 |                      | `defeffect`       |
+|                      | `dispatch-fn`     |
 |                      | `create-element`  |
 |                      | `render!`         |
 |                      | `configure-events!` |
