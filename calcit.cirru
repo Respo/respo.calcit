@@ -8051,7 +8051,10 @@
                 , x
               (tag? x) (to-string x)
               (number? x)
-                if (contains? unitless-props prop) (str x) (str x |px)
+                if
+                  or (contains? unitless-props prop) (includes? unitless-dashed-props prop)
+                  str x
+                  str x |px
               (nil? x) |
               true $ str x
           :examples $ []
@@ -8060,14 +8063,22 @@
             quote $ assert= | $ get-style-value nil |width
           :schema $ :: 'Fn $ {} (:return 'String)
             :args $ [] 'Dynamic 'String
-          :tests $ [] $ %{} 'TestEntry (:name |formats-style-values)
-            :code $ quote $ do
-              assert |string-is-kept $ = |12rem $ get-style-value |12rem |width
-              assert |tag-is-stringified $ = |block $ get-style-value :block |display
-              assert |length-numbers-use-pixels $ = |12px $ get-style-value 12 |width
-              assert |unitless-numbers-stay-unitless $ = |0.5 $ get-style-value 0.5 |opacity
-              assert |nil-clears-the-value $ = | $ get-style-value nil |width
-            :tags $ #{} :unit
+          :tests $ []
+            %{} 'TestEntry (:name |formats-style-values)
+              :code $ quote $ do
+                assert |string-is-kept $ = |12rem $ get-style-value |12rem |width
+                assert |tag-is-stringified $ = |block $ get-style-value :block |display
+                assert |length-numbers-use-pixels $ = |12px $ get-style-value 12 |width
+                assert |unitless-numbers-stay-unitless $ = |0.5 $ get-style-value 0.5 |opacity
+                assert |nil-clears-the-value $ = | $ get-style-value nil |width
+              :tags $ #{} :unit
+            %{} 'TestEntry (:name |keeps-dashed-unitless-props)
+              :code $ quote $ do
+                assert= |500 $ get-style-value 500 |font-weight
+                assert= |10 $ get-style-value 10 |z-index
+                assert= |500 $ get-style-value 500 |fontWeight
+                assert= |8px $ get-style-value 8 |margin-top
+              :tags $ #{} :regression :unit
         'hsl $ %{} 'CodeEntry
           :doc "|Generates HSL color string. Arguments: h, s (percent), l (percent), optional alpha (0-1)."
           :code $ quote $ defn hsl (h s l & alpha-values)
@@ -8373,6 +8384,11 @@
                   text->html $ #{} :ready
                   fn (error) error
               :tags $ #{} :unit
+        'unitless-dashed-props $ %{} 'CodeEntry
+          :doc "|Dashed spellings of unitless-props, for style names that reach get-style-value without camelCase conversion, such as defstyle rules."
+          :code $ quote $ def unitless-dashed-props
+            #{} |animation-delay |animation-duration |animation-iteration-count |aspect-ratio |border-image-outset |border-image-slice |border-image-width |box-flex |box-flex-group |box-ordinal-group |column-count |columns |fill-opacity |flex |flex-grow |flex-negative |flex-positive |flex-shrink |flood-opacity |font-size-adjust |font-weight |grid-area |grid-column |grid-column-end |grid-column-span |grid-column-start |grid-row |grid-row-end |grid-row-span |grid-row-start |line-clamp |line-height |opacity |order |orphans |stop-opacity |stroke-dasharray |stroke-dashoffset |stroke-miterlimit |stroke-opacity |stroke-width |tab-size |transition-delay |transition-duration |widows |z-index |zoom
+          :examples $ []
         'unitless-props $ %{} 'CodeEntry (:doc "|gemini suggested from popular libs\n")
           :code $ quote $ def unitless-props
             {} (|animationDelay true) (|animationDuration true) (|animationIterationCount true) (|aspectRatio true) (|borderImageOutset true) (|borderImageSlice true) (|borderImageWidth true) (|boxFlex true) (|boxFlexGroup true) (|boxOrdinalGroup true) (|columnCount true) (|columns true) (|fillOpacity true) (|flex true) (|flexGrow true) (|flexNegative true) (|flexPositive true) (|flexShrink true) (|floodOpacity true) (|fontSizeAdjust true) (|fontWeight true) (|gridArea true) (|gridColumn true) (|gridColumnEnd true) (|gridColumnSpan true) (|gridColumnStart true) (|gridRow true) (|gridRowEnd true) (|gridRowSpan true) (|gridRowStart true) (|lineClamp true) (|lineHeight true) (|opacity true) (|order true) (|orphans true) (|stopOpacity true) (|strokeDasharray true) (|strokeDashoffset true) (|strokeMiterlimit true) (|strokeOpacity true) (|strokeWidth true) (|tabSize true) (|transitionDelay true) (|transitionDuration true) (|widows true) (|zIndex true) (|zoom true)
