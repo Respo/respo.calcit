@@ -37,7 +37,7 @@ jobs:
       - uses: calcit-lang/setup-calcit@v1.5.0
         with:
           tools: calcit,caps
-          version: 0.30.1-alpha.4
+          deps-file: deps.cirru
           caps-version: 0.1.1
 
       - name: "load deps"
