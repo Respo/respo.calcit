@@ -5771,6 +5771,11 @@
             respo.schema :refer $ ListenerMode EventConfig
     'respo.render.html $ %{} 'FileEntry
       :defs $ {}
+        'boolean-attrs $ %{} 'CodeEntry
+          :doc "|HTML boolean attributes: present means true, so SSR leaves them out when the value is false. Enumerated attributes such as draggable, spellcheck and contenteditable keep the text \"false\"."
+          :code $ quote $ def boolean-attrs
+            #{} |allowfullscreen |async |autofocus |autoplay |checked |controls |default |defer |disabled |formnovalidate |hidden |inert |ismap |itemscope |loop |multiple |muted |nomodule |novalidate |open |playsinline |readonly |required |reversed |selected
+          :examples $ []
         'coerce-pairs $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn coerce-pairs (value) value
           :examples $ []
@@ -5981,12 +5986,11 @@
                       k $ respo.util.list/pair-key pair
                       v $ respo.util.list/pair-value pair
                       attr $ if (tag? k) (to-string k) (str k)
-                    ; "HTML treats a present boolean attribute as true, so false is left out; aria-* and data-* keep their text"
+                    ; "A present boolean attribute reads as true, so false leaves it out; other attributes keep the text false"
                     and (calcit.core/non-nil? v)
                       not $ starts-with? attr |on-
                       not $ and (= v false)
-                        not $ starts-with? attr |aria-
-                        not $ starts-with? attr |data-
+                        includes? boolean-attrs $ prop->attr attr
                 sorted $ &list:sort-by visible respo.util.list/pair-key
               calcit.core/join-string (map sorted entry->html) "| "
           :examples $ []
@@ -6000,7 +6004,9 @@
               assert= "|title=\"safe\"" $ props->html $ {} (|on-click |ignored) (:title |safe)
               assert= "|type=\"button\"" $ props->html $ {} (:disabled false) (:type |button)
               assert= "|disabled=\"true\"" $ props->html $ {} (:disabled true)
+              assert= | $ props->html $ {} (:read-only false) (:open false) (:checked false)
               assert= "|aria-hidden=\"false\" data-open=\"false\"" $ props->html $ {} (:aria-hidden false) (:data-open false)
+              assert= "|draggable=\"false\" spellcheck=\"false\"" $ props->html $ {} (:draggable false) (:spell-check false)
             :tags $ #{} :regression :unit
         'self-closing $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def self-closing
