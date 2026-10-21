@@ -128,48 +128,45 @@ Then you call `(>> states "task-1-id")` and you get new `states` for child "task
     :draft "|xxx..."
 ```
 
-For state inside each component, it's `nil` at first.
-You want to have an initial state, use `or` to provide one.
+A component reads its own state with `pick-state` and its cursor with
+`state-cursor`. `pick-state` takes the expected type and a default: it returns
+the default while the branch has no `:data`, and otherwise decodes the stored
+value into that type. A Struct written through `:states` and a plain Map
+restored from `localStorage` both come back as the same Struct, and a value of
+the wrong shape raises an error with the failing path instead of reaching your
+render code.
 
-```cirru.no-check
-; ns app.demo
-  :require
-    respo.core :refer $ defcomp div
-
-let
-    comp-task $ fn (states)
-      let
-          cursor (:cursor states)
-          state $ or (:data states) $ {}
-            :draft "|empty"
-        respo.core/div $ {}
-  , comp-task
-```
-
-By accessing `(:data states)`, you get `nil`, so `&{} :draft "|empty"` is used.
-After there's data in states, you get data that was set.
-
-Then you want to update component state
-
-```cirru.no-check
-; ns app.demo
-  :require
-    respo.core :refer $ defcomp div
+```cirru
+ns app.demo $ :require
+  respo.core :refer $ >> pick-state state-cursor
 
 let
-    comp-task $ fn (states)
-      let
-          cursor (:cursor states)
-          state $ or (:data states) $ {}
-            :draft "|empty"
-        respo.core/div
-          {}
-            :on-click $ fn (e dispatch!)
-              dispatch! $ :: :states cursor (assoc state :draft "|New state")
-  , comp-task
+    states $ >> ({} $ :task $ {} $ :data |draft) :task
+  assert= ([] :task) (state-cursor states)
+  assert= |draft $ pick-state states 'String |empty
+  assert= |empty $ pick-state (>> states :other) 'String |empty
 ```
 
-So `(dispatch! (:: :states cursor state))` sends the new state.
+In a component, state is usually a Struct of the application:
+
+```cirru.no-check
+; ns app.comp.task
+  :require
+    respo.core :refer $ defcomp div input pick-state state-cursor
+
+defstruct TaskState (:draft 'String)
+
+defcomp comp-task (states)
+  let
+      cursor $ state-cursor states
+      state $ pick-state states app.comp.task/TaskState $ TaskState :draft |empty
+    input $ {} (:value $ :draft state)
+      :on-input $ fn (e d!)
+        d! $ :: :states cursor $ assoc state :draft $ :value e
+```
+
+`state` has the type `TaskState`, so `:draft state` is checked. To update it,
+send the new value with `(d! (:: :states cursor new-state))`.
 
 The last step is to update global states. A nominal application `Store` should
 keep its Struct field access typed and pass only the intentionally deep state

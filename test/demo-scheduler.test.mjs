@@ -223,13 +223,15 @@ test('demo state boundaries preserve mixed keys and require nominal TodoState', 
   assert.equal(inputHandlers(rendered).length, 1);
   const calls = [];
   inputHandlers(rendered)[0](c.parse_cirru_edn('{} (:value |next)'), op => { calls.push(op); });
-  assert.equal(c._$n_enum_$o_nth(calls[0], 2), state, 'state identity survives checking');
+  assert.equal(c.format_cirru_edn(c._$n_enum_$o_nth(calls[0], 2)), c.format_cirru_edn(state), 'checked state keeps the stored fields');
   const task = c.option_$o_unwrap(normalize_task(c.parse_cirru_edn('{} (:id |t1) (:text |task) (:done? false)')));
-  for (const invalid of [null, 42, c.arrayToList([])]) {
+  // nil states is an empty branch, same as `>>` treats a missing branch.
+  assert.equal(inputHandlers(comp_todolist(null, c.arrayToList([]))).length, 1);
+  for (const invalid of [42, c.arrayToList([])]) {
     assert.throws(() => comp_todolist(invalid, c.arrayToList([])));
     assert.throws(() => comp_task(invalid, task));
   }
   for (const invalid of [42, c.parse_cirru_edn('{} (:draft |bad)'), task]) {
-    assert.throws(() => comp_todolist(c._$n__$M_(tags.data, invalid), c.arrayToList([])), /expected TodoState/);
+    assert.throws(() => comp_todolist(c._$n__$M_(tags.data, invalid), c.arrayToList([])), /component state does not match its type/);
   }
 });
