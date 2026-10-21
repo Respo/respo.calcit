@@ -576,7 +576,8 @@ defcomp comp-with-effect (props)
     div $ {}                   ; Then render
       <> "|content"
 
-; Effect must match action lifecycle
+; Effect must match action lifecycle; bind at most (action el at-place?)
+; Browser-only effects read `el` as a typed DomElement with respo.ffi.browser/effect-element
 defeffect my-effect (initial-value)
   (action element at-place?)
   when (= action :mount)

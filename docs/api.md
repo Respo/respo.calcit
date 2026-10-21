@@ -70,6 +70,7 @@ calcit query def respo.render.html/make-string
 | `respo.comp.inspect` | `comp-inspect`    |
 | `respo.render.html`  | `make-string`     |
 | `respo.ffi.browser`  | `query-selector`：查询并返回 `Option<respo.dom/DomElement>` |
+|                      | `effect-element`：把 effect 收到的 `el` 校验为 `respo.dom/DomElement` |
 
 ### Lower level APIs
 

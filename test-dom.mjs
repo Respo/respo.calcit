@@ -95,7 +95,7 @@ const { event__GT_edn, input_event_checked_$q_, input_event_value } = await impo
 const { event_checked_$q_, event_value } = await import("./js-out/respo.core.mjs")
 const { shared_canvas_context, text_width } = await import("./js-out/respo.util.dom.mjs")
 const { document_available_$q_ } = await import("./js-out/js-ffi.browser.mjs")
-const { query_selector } = await import("./js-out/respo.ffi.browser.mjs")
+const { effect_element, query_selector } = await import("./js-out/respo.ffi.browser.mjs")
 const { option_$o_unwrap, option_$o_none_$q_ } = await import("./js-out/calcit.core.mjs")
 
 // Query results cross the existing renderer boundary without cloning or adding properties.
@@ -297,6 +297,21 @@ if (!input_event_checked_$q_({ target: inputTarget })) {
 if (input_event_value({ target: inputTarget }) !== "typed-value") {
   throw new Error("typed input event did not read value from its target")
 }
+// effect-element keeps the effect target itself and rejects values that are not host objects.
+const effectTarget = { nodeType: 1, tagName: "DIV" }
+if (effect_element(effectTarget) !== effectTarget) {
+  throw new Error("effect-element did not return the original effect target")
+}
+for (const invalid of [null, undefined, "div", 42, {}, { nodeType: 3, tagName: "DIV" }]) {
+  let rejected = false
+  try {
+    effect_element(invalid)
+  } catch (error) {
+    rejected = String(error).includes("DOM.element-host")
+  }
+  if (!rejected) throw new Error(`effect-element accepted ${JSON.stringify(invalid)}`)
+}
+
 // change events carry :checked as well as :value, so checkbox handlers can read them with event-checked?.
 for (const type of ["input", "change"]) {
   for (const checked of [true, false]) {

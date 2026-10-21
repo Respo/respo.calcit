@@ -1832,10 +1832,11 @@
             :expansion $ :: 'Definition 'Fn
             :required $ [] 'SyntaxSymbol 'SyntaxList
         'defeffect $ %{} 'CodeEntry
-          :doc "|Macro for defining component effects.\n\nThe generated effect receives lifecycle information such as `action`, the root element, and `at-place?`, and is typically used inside a component effect vector like `[] (effect ...) child-tree`.\n\nSupported actions are `:mount`, `:before-update`, `:update`, and `:unmount`."
+          :doc "|Macro for defining component effects.\n\n`defeffect name (args...) (action el at-place?) body` builds an effect. Respo calls it with up to three lifecycle values: `action` (`:mount`, `:before-update`, `:update` or `:unmount`), the root element `el`, and `at-place?`. You may bind fewer than three; binding more raises when the macro expands, because Respo never supplies a fourth value.\n\nUse it inside a component effect vector like `[] (effect ...) child-tree`. `el` stays open (Dynamic) so effects also work on non-browser targets; browser-only effects can read it as a typed `respo.dom/DomElement` with `respo.ffi.browser/effect-element`."
           :code $ quote $ defmacro defeffect (effect-name args params & body)
             assert "|args in symbol" $ and (list? args) (every? args symbol?)
             assert "|params like [action el at-place?]" $ and (list? params) (every? params symbol?)
+            assert "|defeffect binds at most 3 lifecycle params: (action el at-place?)" $ &<= (count params) 3
             let
                 args-var $ gensym |args
                 params-var $ gensym |params
@@ -1858,17 +1859,33 @@
             :capabilities $ #{}
             :expansion $ :: 'Definition 'Fn
             :required $ [] 'SyntaxSymbol 'SyntaxList 'SyntaxList
-          :tests $ [] $ %{} 'TestEntry (:name |discards-body-result-after-running-effects)
-            :code $ quote $ let
-                hits $ ref 0
-                factory $ defeffect effect-result-probe (payload) (action target at?) (assert= :payload payload) (assert= :mount action) (assert= :target target) (assert= true at?) (swap! hits inc) |ignored-result
-                effect $ respo.util.detect/as-effect $ factory :payload
-              assert= &unit $
-                :method effect
-                :args effect
-                [] :mount :target true
-              assert= 1 $ deref hits
-            :tags $ #{} :regression :unit
+          :tests $ []
+            %{} 'TestEntry (:name |discards-body-result-after-running-effects)
+              :code $ quote $ let
+                  hits $ ref 0
+                  factory $ defeffect effect-result-probe (payload) (action target at?) (assert= :payload payload) (assert= :mount action) (assert= :target target) (assert= true at?) (swap! hits inc) |ignored-result
+                  effect $ respo.util.detect/as-effect $ factory :payload
+                assert= &unit $
+                  :method effect
+                  :args effect
+                  [] :mount :target true
+                assert= 1 $ deref hits
+              :tags $ #{} :regression :unit
+            %{} 'TestEntry (:name |rejects-extra-lifecycle-params)
+              :code $ quote $ do
+                assert= true $ starts-with?
+                  try
+                    do
+                      macroexpand $ quote $ defeffect four-params () (action el local at?) &unit
+                      , |unexpected-success
+                    fn (message)
+                      hint-fn $ {}
+                        :args $ [] 'String
+                        :return 'String
+                      , message
+                  , "|defeffect binds at most 3 lifecycle params"
+                assert= true $ list? $ macroexpand
+                  quote $ defeffect two-params () (action el) &unit
         'defplugin $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defmacro defplugin (x params & body)
             assert "|expected symbol" $ symbol? x
@@ -3967,6 +3984,14 @@
         :code $ quote $ ns respo.dom
     'respo.ffi.browser $ %{} 'FileEntry
       :defs $ {}
+        'effect-element $ %{} 'CodeEntry
+          :doc "|Turn the `el` a browser effect receives into a typed `respo.dom/DomElement`. Raises a JS FFI contract violation when the value is not a DOM element host (an object with `nodeType` 1 and a tag name), so a wrong target fails at the effect boundary instead of deep inside a DOM call. Use it in browser-only effects, for example `(when (= action :mount) (.select! (effect-element el)))`. Effects that also run on other targets keep `el` open."
+          :code $ quote $ defn effect-element (el)
+            narrow-element $ browser/element-host el
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'respo.dom/DomElement)
+            :args $ [] 'Dynamic
+            :features $ #{} :js-ffi
         'host-element $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn host-element (element) (unsafe-coerce element 'js-ffi.browser/DomElementHost)
           :examples $ []
