@@ -5901,26 +5901,26 @@
             if (= tag-name :textarea)
               match
                 calcit.core/get-in attrs $ [] :value
-                (:some value)
+                (:ok value)
                   if (calcit.core/non-nil? value)
                     escape-html $ respo.util.format/scalar-attribute-text value
                     calcit.core/join-string children |
-                (:none) (calcit.core/join-string children |)
+                (:err _) (calcit.core/join-string children |)
               match
                 calcit.core/get-in attrs $ [] :innerHTML
-                (:some html)
+                (:ok html)
                   if (calcit.core/non-nil? html) (respo.util.format/scalar-attribute-text html)
                     match
                       calcit.core/get-in attrs $ [] :inner-text
-                      (:some text)
+                      (:ok text)
                         if (calcit.core/non-nil? text) (text->html text) (calcit.core/join-string children |)
-                      (:none) (calcit.core/join-string children |)
-                (:none)
+                      (:err _) (calcit.core/join-string children |)
+                (:err _)
                   match
                     calcit.core/get-in attrs $ [] :inner-text
-                    (:some text)
+                    (:ok text)
                       if (calcit.core/non-nil? text) (text->html text) (calcit.core/join-string children |)
-                    (:none) (calcit.core/join-string children |)
+                    (:err _) (calcit.core/join-string children |)
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'String)
             :args $ [] 'Tag (:: 'Map 'AttrKey 'Dynamic) (:: 'List 'String)
