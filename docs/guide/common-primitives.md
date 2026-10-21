@@ -133,7 +133,7 @@ defcomp comp-chart (chart-data)
 ```cirru.no-check
 defeffect effect-select-all () (action el)
   when (= action :mount)
-    .select! $ effect-element el
+    .select! $ respo.ffi.browser/effect-element el
 ```
 
 `defeffect` 的生命周期参数最多绑定三个：`(action el at-place?)`，可以少写，多写会在宏展开时报错，因为 Respo 不会提供第四个值。
