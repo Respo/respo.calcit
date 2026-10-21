@@ -1,4 +1,4 @@
 
-{} (:calcit-version |0.30.1-alpha.5)
-  :version |0.16.123
-  :dependencies $ {} (|calcit-lang/js-ffi |0.2.4)
+{} (:calcit-version |0.30.1)
+  :version |0.16.124
+  :dependencies $ {} (|calcit-lang/js-ffi |0.2.5)
