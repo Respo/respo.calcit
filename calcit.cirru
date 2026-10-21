@@ -1372,13 +1372,30 @@
             :generics $ [] 'PropsInput
         'append-dynamic! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn append-dynamic! (target value)
-            reset! target $ append @target value
+            reset! target $ .append @target value
             , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
-              :: 'Ref $ :: 'List 'Dynamic
-              , 'Dynamic
+              :: 'Ref $ :: 'List 'T
+              , 'T
+            :generics $ [] 'T
+          :tests $ []
+            %{} 'TestEntry (:name |preserves-number-ref-element-type)
+              :code $ quote $ let
+                  values $ ref $ assert-type ([]) (:: 'List 'Number)
+                append-dynamic! values 7
+                assert-type @values $ :: 'List 'Number
+                assert= ([] 7) @values
+              :tags $ #{} :unit
+            %{} 'TestEntry (:name |preserves-nominal-ref-element-type)
+              :code $ quote $ let
+                  values $ ref $ assert-type ([]) (:: 'List 'calcit.core/FsPath)
+                  item $ calcit.core/FsPath :value |demo
+                append-dynamic! values item
+                assert-type @values $ :: 'List 'calcit.core/FsPath
+                assert= ([] item) @values
+              :tags $ #{} :unit
         'as-states-map $ %{} 'CodeEntry (:doc "|在状态树开放边界校验 states map，nil 视为空。")
           :code $ quote $ defn as-states-map (value)
             if (nil? value) ({})
@@ -1582,8 +1599,12 @@
               :tags $ #{} :unit
             %{} 'TestEntry (:name |ignores-new-nil-child)
               :code $ quote $ let
-                  patches $ ref $ []
-                  collect! $ fn (patch) (append-dynamic! patches patch)
+                  patches $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
+                  collect! $ fn (patch)
+                    hint-fn $ {}
+                      :args $ [] 'respo.schema/DomPatch
+                      :return 'Unit
+                    append-dynamic! patches patch
                   empty-tree $ list-> ({}) ([])
                   nil-tree $ list-> ({})
                     [] $ [] :missing nil
@@ -1592,8 +1613,12 @@
               :tags $ #{} :unit
             %{} 'TestEntry (:name |replaces-and-removes-nil-children)
               :code $ quote $ let
-                  patches $ ref $ []
-                  collect! $ fn (patch) (append-dynamic! patches patch)
+                  patches $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
+                  collect! $ fn (patch)
+                    hint-fn $ {}
+                      :args $ [] 'respo.schema/DomPatch
+                      :return 'Unit
+                    append-dynamic! patches patch
                   child $ span $ {}
                   live-tree $ list-> ({})
                     [] $ [] :live child
@@ -1675,8 +1700,12 @@
           :tests $ []
             %{} 'TestEntry (:name |title-removal-keeps-component-marker)
               :code $ quote $ let
-                  patches $ ref $ []
-                  collect! $ fn (patch) (append-dynamic! patches patch)
+                  patches $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
+                  collect! $ fn (patch)
+                    hint-fn $ {}
+                      :args $ [] 'respo.schema/DomPatch
+                      :return 'Unit
+                    append-dynamic! patches patch
                   old-component $ decorate-defcomp
                     schema/Component :name :link :effects ([]) :listeners ([]) :tree $ Option :some $ respo.util.detect/as-render-node
                       div $ {} (:href |/page) (:title |title)
@@ -1699,8 +1728,12 @@
             %{} 'TestEntry
               :name |property-addition-and-update-keep-component-marker
               :code $ quote $ let
-                  patches $ ref $ []
-                  collect! $ fn (patch) (append-dynamic! patches patch)
+                  patches $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
+                  collect! $ fn (patch)
+                    hint-fn $ {}
+                      :args $ [] 'respo.schema/DomPatch
+                      :return 'Unit
+                    append-dynamic! patches patch
                   old-component $ decorate-defcomp
                     schema/Component :name :link :effects ([]) :listeners ([]) :tree $ Option :some $ respo.util.detect/as-render-node
                       div $ {} $ :href |/old
@@ -1987,9 +2020,14 @@
           :tests $ []
             %{} 'TestEntry (:name |cleans-old-closure-before-new-setup)
               :code $ quote $ let
-                  log $ ref $ []
-                  ops $ ref $ []
-                  collect! $ fn (op) (append-dynamic! ops op)
+                  log $ ref $ assert-type ([])
+                    :: 'List $ :: 'List 'Dynamic
+                  ops $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
+                  collect! $ fn (op)
+                    hint-fn $ {}
+                      :args $ [] 'respo.schema/DomPatch
+                      :return 'Unit
+                    append-dynamic! ops op
                   element $ schema/Element :name :div :coord (%none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref nil
                   old-effect $ effect-watch ([] 1)
                     fn (target)
@@ -2010,8 +2048,12 @@
               :tags $ #{} :unit
             %{} 'TestEntry (:name |keeps-unchanged-effects-idle)
               :code $ quote $ let
-                  ops $ ref $ []
-                  collect! $ fn (op) (append-dynamic! ops op)
+                  ops $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
+                  collect! $ fn (op)
+                    hint-fn $ {}
+                      :args $ [] 'respo.schema/DomPatch
+                      :return 'Unit
+                    append-dynamic! ops op
                   element $ schema/Element :name :div :coord (%none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref nil
                   old-effect $ effect-watch ([] 1)
                     fn (_target) &unit
@@ -2027,9 +2069,14 @@
               :tags $ #{} :unit
             %{} 'TestEntry (:name |handles-effect-list-addition-and-removal)
               :code $ quote $ let
-                  log $ ref $ []
-                  ops $ ref $ []
-                  collect! $ fn (op) (append-dynamic! ops op)
+                  log $ ref $ assert-type ([])
+                    :: 'List $ :: 'List 'Dynamic
+                  ops $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
+                  collect! $ fn (op)
+                    hint-fn $ {}
+                      :args $ [] 'respo.schema/DomPatch
+                      :return 'Unit
+                    append-dynamic! ops op
                   element $ schema/Element :name :div :coord (%none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref nil
                   watch $ effect-watch ([])
                     fn (target)
@@ -2049,9 +2096,14 @@
               :tags $ #{} :unit
             %{} 'TestEntry (:name |replaces-effect-kinds-with-unmount-and-mount)
               :code $ quote $ let
-                  log $ ref $ []
-                  ops $ ref $ []
-                  collect! $ fn (op) (append-dynamic! ops op)
+                  log $ ref $ assert-type ([])
+                    :: 'List $ :: 'List 'Dynamic
+                  ops $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
+                  collect! $ fn (op)
+                    hint-fn $ {}
+                      :args $ [] 'respo.schema/DomPatch
+                      :return 'Unit
+                    append-dynamic! ops op
                   element $ schema/Element :name :div :coord (%none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref nil
                   old-effect $ effect-watch ([])
                     fn (_target) &unit
@@ -2344,10 +2396,20 @@
           :tests $ [] $ %{} 'TestEntry (:name |coalesces-custom-queue-requests)
             :code $ quote $ let
                 render-count $ ref 0
-                tasks $ ref $ []
+                tasks $ ref $ assert-type ([])
+                  :: 'List $ :: 'Fn $ {}
+                    :args $ []
+                    :return 'Unit
                 schedule! $ make-render-scheduler
                   fn () $ do (swap! render-count inc) &unit
-                  some-enqueue $ fn (task) (append-dynamic! tasks task)
+                  some-enqueue $ fn (task)
+                    hint-fn $ {}
+                      :args $ [] $ :: 'Fn
+                        {}
+                          :args $ []
+                          :return 'Unit
+                      :return 'Unit
+                    append-dynamic! tasks task
               schedule!
               schedule!
               assert |requests-are-coalesced $ = 1 $ count @tasks
@@ -3360,7 +3422,7 @@
               :tags $ #{} :regression :unit
         'update-states $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn update-states (store cursor new-state)
-            .assoc store :states $ update-state-tree
+            assoc store :states $ update-state-tree
               option:unwrap-or (get store :states) ({})
               , cursor new-state
           :examples $ []
@@ -4261,8 +4323,12 @@
             :generics $ [] 'K
           :tests $ [] $ %{} 'TestEntry (:name |skips-nil-children-and-handlers)
             :code $ quote $ let
-                ops $ ref $ []
-                collect! $ fn (op) (respo.core/append-dynamic! ops op)
+                ops $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
+                collect! $ fn (op)
+                  hint-fn $ {}
+                    :args $ [] 'respo.schema/DomPatch
+                    :return 'Unit
+                  respo.core/append-dynamic! ops op
                 leaf $ respo.schema/Element :name :span :coord (Option :none) :attrs ([]) :style ([]) :ref nil :children ([]) :event $ {}
                   :click $ fn (_event _d!)
                     hint-fn $ {}
@@ -4579,8 +4645,12 @@
             %{} 'TestEntry (:name |accepts-list-map-representation-transitions)
               :code $ quote $ let
                   child $ respo.schema/Element :name :div :coord (%none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref nil
-                  effects $ ref $ []
-                  collect! $ fn (effect) (respo.core/append-dynamic! effects effect)
+                  effects $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
+                  collect! $ fn (effect)
+                    hint-fn $ {}
+                      :args $ [] 'respo.schema/DomPatch
+                      :return 'Unit
+                    respo.core/append-dynamic! effects effect
                   child-list $ [] $ respo.util.detect/make-child-pair :a child
                   same-child-list $ [] $ respo.util.detect/make-child-pair :a child
                 find-children-diffs collect! ([]) ([]) 0 child-list same-child-list
@@ -4629,8 +4699,9 @@
           :tests $ []
             %{} 'TestEntry (:name |clears-old-ref-before-setting-new-ref)
               :code $ quote $ let
-                  log $ ref $ []
-                  ops $ ref $ []
+                  log $ ref $ assert-type ([])
+                    :: 'List $ :: 'List 'Dynamic
+                  ops $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
                   old-ref! $ fn (target)
                     hint-fn $ {}
                       :args $ [] $ :: 'JsNullish 'respo.dom/DomElement
@@ -4643,7 +4714,11 @@
                     respo.core/append-dynamic! log $ [] :new target
                   old-element $ respo.schema/Element :name :div :coord (%none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref old-ref!
                   new-element $ respo.schema/Element :name :div :coord (%none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref new-ref!
-                  collect! $ fn (op) (respo.core/append-dynamic! ops op)
+                  collect! $ fn (op)
+                    hint-fn $ {}
+                      :args $ [] 'respo.schema/DomPatch
+                      :return 'Unit
+                    respo.core/append-dynamic! ops op
                 find-element-diffs collect! ([]) ([]) old-element new-element
                 respo.core/run-effect-ops! @ops :dom-node
                 assert |both-ref-actions-run $ &= 2 $ count @log
@@ -4651,9 +4726,14 @@
               :tags $ #{} :unit
             %{} 'TestEntry (:name |handles-component-element-boundaries-once)
               :code $ quote $ let
-                  log $ ref $ []
-                  ops $ ref $ []
-                  collect! $ fn (op) (respo.core/append-dynamic! ops op)
+                  log $ ref $ assert-type ([])
+                    :: 'List $ :: 'List 'Dynamic
+                  ops $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
+                  collect! $ fn (op)
+                    hint-fn $ {}
+                      :args $ [] 'respo.schema/DomPatch
+                      :return 'Unit
+                    respo.core/append-dynamic! ops op
                   plain $ respo.schema/Element :name :div :coord (%none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref nil
                   inner $ .assoc plain :ref $ fn (target)
                     respo.core/append-dynamic! log $ [] :ref target
@@ -4675,8 +4755,12 @@
               :tags $ #{} :unit
             %{} 'TestEntry (:name |handles-none-component-tree-transitions)
               :code $ quote $ let
-                  ops $ ref $ []
-                  collect! $ fn (op) (respo.core/append-dynamic! ops op)
+                  ops $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
+                  collect! $ fn (op)
+                    hint-fn $ {}
+                      :args $ [] 'respo.schema/DomPatch
+                      :return 'Unit
+                    respo.core/append-dynamic! ops op
                   inner $ respo.schema/Element :name :span :coord (%none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref nil
                   plain $ .assoc inner :name :div
                   empty-old $ respo.schema/Component :name :same :effects ([]) :listeners ([]) :tree $ %none
@@ -4692,8 +4776,12 @@
               :tags $ #{} :unit
             %{} 'TestEntry (:name |identical-tree-produces-no-patches)
               :code $ quote $ let
-                  ops $ ref $ []
-                  collect! $ fn (op) (respo.core/append-dynamic! ops op)
+                  ops $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
+                  collect! $ fn (op)
+                    hint-fn $ {}
+                      :args $ [] 'respo.schema/DomPatch
+                      :return 'Unit
+                    respo.core/append-dynamic! ops op
                   tree $ respo.schema/Element :name :div :coord (%none) :attrs
                     [] $ [] :inner-text |same
                     , :style ([]) :event ({}) :children ([]) :ref nil
@@ -4757,8 +4845,12 @@
               :: 'List $ :: 'List 'Dynamic
           :tests $ [] $ %{} 'TestEntry (:name |reports-property-changes)
             :code $ quote $ let
-                effects $ ref $ []
-                collect! $ fn (effect) (respo.core/append-dynamic! effects effect)
+                effects $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
+                collect! $ fn (effect)
+                  hint-fn $ {}
+                    :args $ [] 'respo.schema/DomPatch
+                    :return 'Unit
+                  respo.core/append-dynamic! effects effect
               find-props-diffs collect! ([]) ([])
                 [] $ [] :class-name |old
                 [] $ [] :class-name |new
@@ -4833,11 +4925,21 @@
                                       when (js-present? old-ref-option)
                                         let
                                             checked-old-ref old-ref-option
-                                          collect! $ DomPatch :effect-before-update coord n-coord $ fn (_target) (checked-old-ref legacy-nil) &unit
+                                          collect! $ DomPatch :effect-before-update coord n-coord $ fn (_target)
+                                            hint-fn $ {}
+                                              :args $ [] 'respo.dom/DomElement
+                                              :return 'Unit
+                                            checked-old-ref legacy-nil
+                                            , &unit
                                       when (js-present? new-ref-option)
                                         let
                                             checked-new-ref new-ref-option
-                                          collect! $ DomPatch :effect-update coord n-coord $ fn (target) (checked-new-ref target) &unit
+                                          collect! $ DomPatch :effect-update coord n-coord $ fn (target)
+                                            hint-fn $ {}
+                                              :args $ [] 'respo.dom/DomElement
+                                              :return 'Unit
+                                            checked-new-ref target
+                                            , &unit
                                   let
                                       old-style $ :style old-tree
                                       new-style $ :style new-tree
@@ -5445,15 +5547,19 @@
           :tests $ []
             %{} 'TestEntry (:name |runs-ref-mount-and-unmount-lifecycle)
               :code $ quote $ let
-                  log $ ref $ []
-                  ops $ ref $ []
+                  log $ ref $ assert-type ([]) (:: 'List 'Dynamic)
+                  ops $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
                   ref! $ fn (target)
                     hint-fn $ {}
                       :args $ [] $ :: 'JsNullish 'respo.dom/DomElement
                       :return 'Unit
                     respo.core/append-dynamic! log target
                   element $ respo.schema/Element :name :div :coord (%none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref ref!
-                  collect! $ fn (op) (respo.core/append-dynamic! ops op)
+                  collect! $ fn (op)
+                    hint-fn $ {}
+                      :args $ [] 'respo.schema/DomPatch
+                      :return 'Unit
+                    respo.core/append-dynamic! ops op
                 collect-mounting collect! ([]) ([]) element false
                 collect-unmounting collect! ([]) ([]) element false
                 respo.core/run-effect-ops! @ops :dom-node
@@ -5462,12 +5568,16 @@
               :tags $ #{} :unit
             %{} 'TestEntry (:name |keeps-own-effects-for-none-component-tree)
               :code $ quote $ let
-                  actions $ ref $ []
-                  ops $ ref $ []
+                  actions $ ref $ assert-type ([]) (:: 'List 'Dynamic)
+                  ops $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
                   effect $ respo.schema/Effect :name :watch :coord ([]) :args ([]) :method $ fn (_args params)
                     respo.core/append-dynamic! actions $ &list:nth params 0
                   component $ respo.schema/Component :name :empty :effects ([] effect) :listeners ([]) :tree $ %none
-                  collect! $ fn (op) (respo.core/append-dynamic! ops op)
+                  collect! $ fn (op)
+                    hint-fn $ {}
+                      :args $ [] 'respo.schema/DomPatch
+                      :return 'Unit
+                    respo.core/append-dynamic! ops op
                 collect-mounting collect! ([]) ([]) component true
                 collect-unmounting collect! ([]) ([]) component true
                 respo.core/run-effect-ops! @ops :dom-node
@@ -5475,7 +5585,7 @@
               :tags $ #{} :unit
             %{} 'TestEntry (:name |keeps-dom-indices-dense-through-empty-children)
               :code $ quote $ let
-                  ops $ ref $ []
+                  ops $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
                   ref! $ fn (_target)
                     hint-fn $ {}
                       :args $ [] $ :: 'JsNullish 'respo.dom/DomElement
@@ -5487,7 +5597,11 @@
                   parent $ &struct:assoc
                     respo.core/div $ {}
                     , :children $ [] (respo.util.detect/make-child-pair :empty nil) (respo.util.detect/make-child-pair |leaf leaf)
-                  collect! $ fn (op) (respo.core/append-dynamic! ops op)
+                  collect! $ fn (op)
+                    hint-fn $ {}
+                      :args $ [] 'respo.schema/DomPatch
+                      :return 'Unit
+                    respo.core/append-dynamic! ops op
                 collect-mounting collect! ([]) ([]) parent false
                 collect-unmounting collect! ([]) ([]) parent false
                 assert= 2 $ count @ops
@@ -5505,13 +5619,17 @@
                   _ $ raise |expected-unmount
             %{} 'TestEntry (:name |keeps-root-at-place-flag-after-descending)
               :code $ quote $ let
-                  flags $ ref $ []
-                  ops $ ref $ []
+                  flags $ ref $ assert-type ([]) (:: 'List 'Dynamic)
+                  ops $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
                   effect $ respo.schema/Effect :name :watch :coord ([]) :args ([]) :method $ fn (_args params)
                     respo.core/append-dynamic! flags $ &list:nth params 2
                   component $ respo.schema/Component :name :root :effects ([] effect) :listeners ([]) :tree $ %some
                     respo.util.detect/as-render-node $ respo.core/div $ {}
-                  collect! $ fn (op) (respo.core/append-dynamic! ops op)
+                  collect! $ fn (op)
+                    hint-fn $ {}
+                      :args $ [] 'respo.schema/DomPatch
+                      :return 'Unit
+                    respo.core/append-dynamic! ops op
                 collect-mounting collect! ([]) ([]) component true
                 respo.core/run-effect-ops! @ops :dom-node
                 assert= ([] true) @flags
@@ -5529,6 +5647,9 @@
                           typed-effect effect
                           method $ :method typed-effect
                         collect! $ DomPatch :effect-mount next-coord n-coord $ fn (target)
+                          hint-fn $ {}
+                            :args $ [] 'respo.dom/DomElement
+                            :return 'Unit
                           method (:args typed-effect) ([] :mount target at-place?)
                   match (:tree component-value)
                     (:none) &unit
@@ -5539,7 +5660,12 @@
                     js-nullish->option $ :ref tree
                     (:none) &unit
                     (:some ref!)
-                      collect! $ DomPatch :effect-mount coord n-coord $ fn (target) (ref! target)
+                      collect! $ DomPatch :effect-mount coord n-coord $ fn (target)
+                        hint-fn $ {}
+                          :args $ [] 'respo.dom/DomElement
+                          :return 'Unit
+                        ref! target
+                        , &unit
                   loop
                       children $ :children tree
                       idx 0
@@ -5577,6 +5703,9 @@
                 let
                     method $ :method effect
                   collect! $ DomPatch :effect-mount next-coord n-coord $ fn (target)
+                    hint-fn $ {}
+                      :args $ [] 'respo.dom/DomElement
+                      :return 'Unit
                     method (effect-args effect) ([] :mount target at-place?)
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
@@ -5599,6 +5728,9 @@
                 let
                     method $ :method effect
                   collect! $ DomPatch :effect-unmount next-coord n-coord $ fn (target)
+                    hint-fn $ {}
+                      :args $ [] 'respo.dom/DomElement
+                      :return 'Unit
                     method (effect-args effect) ([] :unmount target at-place?)
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
@@ -5643,6 +5775,9 @@
                           typed-effect effect
                           method $ :method typed-effect
                         collect! $ DomPatch :effect-unmount new-coord n-coord $ fn (target)
+                          hint-fn $ {}
+                            :args $ [] 'respo.dom/DomElement
+                            :return 'Unit
                           method (:args typed-effect) ([] :unmount target at-place?)
               (:element tree)
                 do
@@ -5664,7 +5799,12 @@
                     js-nullish->option $ :ref tree
                     (:none) &unit
                     (:some ref!)
-                      collect! $ DomPatch :effect-unmount coord n-coord $ fn (_target) (ref! nil)
+                      collect! $ DomPatch :effect-unmount coord n-coord $ fn (_target)
+                        hint-fn $ {}
+                          :args $ [] 'respo.dom/DomElement
+                          :return 'Unit
+                        ref! nil
+                        , &unit
             , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
@@ -5707,8 +5847,14 @@
                                   method $ :method effect
                                 collect! $ if (= :update action)
                                   DomPatch :effect-update next-coord n-coord $ fn (target)
+                                    hint-fn $ {}
+                                      :args $ [] 'respo.dom/DomElement
+                                      :return 'Unit
                                     method (effect-args effect) ([] action target false)
                                   DomPatch :effect-before-update next-coord n-coord $ fn (target)
+                                    hint-fn $ {}
+                                      :args $ [] 'respo.dom/DomElement
+                                      :return 'Unit
                                     method (effect-args effect) ([] action target false)
                             let
                                 effect $ if (= action :before-update) old-effect new-effect
@@ -5716,8 +5862,14 @@
                                 lifecycle-action $ if (= action :before-update) :unmount :mount
                               collect! $ if (= :update action)
                                 DomPatch :effect-update next-coord n-coord $ fn (target)
+                                  hint-fn $ {}
+                                    :args $ [] 'respo.dom/DomElement
+                                    :return 'Unit
                                   method (effect-args effect) ([] lifecycle-action target false)
                                 DomPatch :effect-before-update next-coord n-coord $ fn (target)
+                                  hint-fn $ {}
+                                    :args $ [] 'respo.dom/DomElement
+                                    :return 'Unit
                                   method (effect-args effect) ([] lifecycle-action target false)
                           , &unit
                         do
@@ -5725,6 +5877,9 @@
                             let
                                 method $ :method old-effect
                               collect! $ DomPatch :effect-before-update next-coord n-coord $ fn (target)
+                                hint-fn $ {}
+                                  :args $ [] 'respo.dom/DomElement
+                                  :return 'Unit
                                 method (effect-args old-effect) ([] :unmount target false)
                           , &unit
                       , &unit
@@ -5734,6 +5889,9 @@
                           let
                               method $ :method new-effect
                             collect! $ DomPatch :effect-update next-coord n-coord $ fn (target)
+                              hint-fn $ {}
+                                :args $ [] 'respo.dom/DomElement
+                                :return 'Unit
                               method (effect-args new-effect) ([] :mount target false)
                       , &unit
           :examples $ []
@@ -7267,7 +7425,7 @@
           :doc "|DOM regression for component to element and element to component switches, including an identical nested defcomp child. Root and descendant clicks must resolve the current handlers; removed focus handlers must stay removed."
           :code $ quote $ defn verify-component-event-coords! (mount root child click!)
             let
-                dispatched $ ref $ decode-map-as ([]) 'List
+                dispatched $ ref $ assert-type ([]) (:: 'List *dispatch-op)
                 dispatch! $ fn (op)
                   hint-fn $ {}
                     :args $ [] *dispatch-op
@@ -7332,10 +7490,10 @@
           :doc "|SSR adoption regression: preserve root and descendant DOM nodes, attach click handlers immediately, update shared dispatch and handlers on later renders, and run the ref and mount effect exactly once."
           :code $ quote $ defn verify-realize-ssr-ref! (mount root child click!)
             let
-                refs $ ref $ decode-map-as ([]) 'List
-                mounts $ ref $ decode-map-as ([]) 'List
-                dispatched $ ref $ decode-map-as ([]) 'List
-                later-dispatched $ ref $ decode-map-as ([]) 'List
+                refs $ ref $ assert-type ([]) (:: 'List 'respo.dom/DomElement)
+                mounts $ ref $ assert-type ([]) (:: 'List 'respo.dom/DomElement)
+                dispatched $ ref $ assert-type ([]) (:: 'List *dispatch-op)
+                later-dispatched $ ref $ assert-type ([]) (:: 'List *dispatch-op)
                 dispatch! $ fn (op)
                   hint-fn $ {}
                     :args $ [] *dispatch-op
@@ -7351,7 +7509,11 @@
                     :args $ [] 'respo.dom/DomElement
                     :return 'Unit
                   respo.core/append-dynamic! refs target
-                mount-effect $ respo.core/effect-on-mount $ fn (target) (respo.core/append-dynamic! mounts target)
+                mount-effect $ respo.core/effect-on-mount $ fn (target)
+                  hint-fn $ {}
+                    :args $ [] 'respo.dom/DomElement
+                    :return 'Unit
+                  respo.core/append-dynamic! mounts target
                 make-component $ fn (op)
                   hint-fn $ {}
                     :args $ [] 'Tag
@@ -7872,10 +8034,12 @@
         'expect-function $ %{} 'CodeEntry
           :doc "|验证值可调用后原样返回，保留调用方已有的具体函数签名；运行时仍对非法输入抛出指定消息。开放 Dynamic 输入仍需在业务边界建立具体合同。"
           :code $ quote $ defn expect-function (value message)
-            when
-              not $ fn? value
-              raise message
-            , value
+            let
+                original value
+              when
+                not $ fn? value
+                raise message
+              , original
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Callback)
             :args $ [] 'Callback 'String
