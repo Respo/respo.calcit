@@ -64,6 +64,7 @@ calcit query def respo.render.html/make-string
 |                      | `make-render-scheduler` |
 |                      | `>>`              |
 |                      | `pick-state` `state-cursor` |
+|                      | `event-value` `event-checked?` `keyboard-info` |
 | `respo.resource`     | `resource-idle` `resource-reducer` `load-resource!` |
 | `respo.comp.space`   | `comp-space` `=<` |
 | `respo.comp.inspect` | `comp-inspect`    |

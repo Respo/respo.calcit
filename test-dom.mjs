@@ -91,7 +91,8 @@ const { main_$x_, svg_host_smoke_$x_, verify_dom_regressions_$x_ } = await impor
 const { add_event, add_prop, insert_before_target_$x_, remove_target_$x_, replace_prop, rm_prop } = await import("./js-out/respo.render.patch.mjs")
 const { CalcitSliceList, init_tags, parse_cirru_edn, turn_tag } = await import("@calcit/procs")
 const { set_inner_html_$x_ } = await import("./js-out/respo.dom.mjs")
-const { input_event_checked_$q_, input_event_value } = await import("./js-out/respo.util.format.mjs")
+const { event__GT_edn, input_event_checked_$q_, input_event_value } = await import("./js-out/respo.util.format.mjs")
+const { event_checked_$q_, event_value } = await import("./js-out/respo.core.mjs")
 const { shared_canvas_context, text_width } = await import("./js-out/respo.util.dom.mjs")
 const { document_available_$q_ } = await import("./js-out/js-ffi.browser.mjs")
 const { query_selector } = await import("./js-out/respo.ffi.browser.mjs")
@@ -295,6 +296,15 @@ if (!input_event_checked_$q_({ target: inputTarget })) {
 }
 if (input_event_value({ target: inputTarget }) !== "typed-value") {
   throw new Error("typed input event did not read value from its target")
+}
+// change events carry :checked as well as :value, so checkbox handlers can read them with event-checked?.
+for (const type of ["input", "change"]) {
+  for (const checked of [true, false]) {
+    const edn = event__GT_edn({ type, target: { checked, value: "on" } })
+    if (event_checked_$q_(edn) !== checked || event_value(edn) !== "on") {
+      throw new Error(`${type} event lost :checked or :value in event->edn`)
+    }
+  }
 }
 for (const [name, readInput] of [
   ["input-event-checked?", input_event_checked_$q_],

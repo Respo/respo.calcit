@@ -68,19 +68,11 @@
                   =< 8 0
                   input $ {} (:value task-text) (:class-name widget/style-input)
                     :on-input $ fn (e d!)
-                      let
-                          event $ decode-map-as e $ :: 'Map 'Tag 'Dynamic
-                        let
-                            text $ str $ decode-map-as
-                              .unwrap $ calcit.core/get event :value
-                              , 'String
-                          d! $ Op :update task-id text
+                      d! $ Op :update task-id $ event-value e
                   =< 8 0
                   input $ {} (:value state) (:class-name widget/style-input)
                     :on-input $ fn (e d!)
-                      let
-                          event $ decode-map-as e $ :: 'Map 'Tag 'Dynamic
-                        d! $ Op :states cursor $ .unwrap (calcit.core/get event :value)
+                      d! $ Op :states cursor $ event-value e
                   =< 8 0
                   div
                     {} (:class-name widget/style-button)
@@ -121,7 +113,7 @@
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.app.comp.task
           :require
-            respo.core :refer $ defcomp div input span button <> defeffect pick-state state-cursor
+            respo.core :refer $ defcomp div input span button <> defeffect pick-state state-cursor event-value
             respo.util.format :refer $ hsl
             respo.comp.space :refer $ =<
             respo.comp.inspect :refer $ comp-inspect
@@ -148,12 +140,8 @@
                       :style $ {} $ :width
                         &max 200 $ + 24 $ text-width draft 16 |BlinkMacSystemFont
                       :on-input $ fn (e d!)
-                        let
-                            event $ decode-map-as e $ :: 'Map 'Tag 'Dynamic
-                          d! $ Op :states-merge cursor state $ {}
-                            :draft $ decode-map-as
-                              .unwrap $ calcit.core/get event :value
-                              , 'String
+                        d! $ Op :states-merge cursor state $ {}
+                          :draft $ event-value e
                       :on-focus on-focus
                     =< 8 0
                     span
@@ -336,7 +324,7 @@
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.app.comp.todolist
           :require
-            respo.core :refer $ defcomp div span input <> list-> defeffect >> a memo-comp-by pick-state state-cursor
+            respo.core :refer $ defcomp div span input <> list-> defeffect >> a memo-comp-by pick-state state-cursor event-value
             respo.util.format :refer $ hsl
             respo.app.comp.task :refer $ comp-task
             respo.comp.space :refer $ =<
@@ -1225,6 +1213,18 @@
           :require $ respo.util.detect :refer $ component? element? listener? component-tree element-children element-event
     'respo.core $ %{} 'FileEntry
       :defs $ {}
+        '&event-field $ %{} 'CodeEntry
+          :doc "|Read one field from an event map; raises when the field is missing. Internal helper for event-value, event-checked? and keyboard-info."
+          :code $ quote $ defn &event-field (e field)
+            let
+                event $ decode-map-as e $ :: 'Map 'Tag 'Dynamic
+              match (calcit.core/get event field)
+                (:some value) value
+                (:none)
+                  raise $ str "|[Respo] event has no " field "|, got type: " $ .unwrap-or (calcit.core/get event :type) nil
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] 'Dynamic 'Tag
         '&state-plain $ %{} 'CodeEntry
           :doc "|Internal helper of `pick-state`: turns Structs inside a stored state into Maps, recursively through Maps and Lists. Used only when decoding the shallow form fails, for states whose typed fields hold nested Structs."
           :code $ quote $ defn &state-plain (value)
@@ -2190,6 +2190,73 @@
               assert |fallback-result-is-returned $ &= |fallback result
               assert |fallback-receives-the-error @caught?
             :tags $ #{} :unit
+        'event-checked? $ %{} 'CodeEntry
+          :doc "|Read :checked from an input or change event as a Bool. Raises when the event has no :checked or the value is not a bool."
+          :code $ quote $ defn event-checked? (e)
+            let
+                raw $ &event-field e :checked
+              match (try-decode-map-as raw 'Bool)
+                (:ok checked?) checked?
+                (:err message)
+                  raise $ str "|[Respo] expected event :checked as a bool: " message
+          :examples $ [] $ quote
+            event-checked? $ {} (:type :change) (:checked true)
+          :schema $ :: 'Fn $ {} (:return 'Bool)
+            :args $ [] 'Dynamic
+          :tests $ [] $ %{} 'TestEntry (:name |reads-checked)
+            :code $ quote $ do
+              assert= true $ event-checked? $ {} (:type :change) (:checked true)
+              assert= false $ event-checked? $ {} (:type :change) (:checked false)
+              assert= true $ starts-with?
+                try
+                  do
+                    event-checked? $ {} (:type :change) (:checked |on)
+                    , |unexpected-success
+                  fn (message)
+                    hint-fn $ {}
+                      :args $ [] 'String
+                      :return 'String
+                    , message
+                , "|[Respo] expected event :checked as a bool"
+        'event-value $ %{} 'CodeEntry
+          :doc "|Read :value from an input or change event as a String. Raises when the event has no :value or the value is not a string."
+          :code $ quote $ defn event-value (e)
+            let
+                raw $ &event-field e :value
+              match (try-decode-map-as raw 'String)
+                (:ok value) value
+                (:err message)
+                  raise $ str "|[Respo] expected event :value as a string: " message
+          :examples $ [] $ quote
+            event-value $ {} (:type :input) (:value |draft)
+          :schema $ :: 'Fn $ {} (:return 'String)
+            :args $ [] 'Dynamic
+          :tests $ [] $ %{} 'TestEntry (:name |reads-value)
+            :code $ quote $ do
+              assert= |draft $ event-value $ {} (:type :input) (:value |draft)
+              assert= | $ event-value $ {} (:type :input) (:value |)
+              assert= true $ starts-with?
+                try
+                  do
+                    event-value $ {} $ :type :input
+                    , |unexpected-success
+                  fn (message)
+                    hint-fn $ {}
+                      :args $ [] 'String
+                      :return 'String
+                    , message
+                , "|[Respo] event has no :value"
+              assert= true $ starts-with?
+                try
+                  do
+                    event-value $ {} (:type :input) (:value 1)
+                    , |unexpected-success
+                  fn (message)
+                    hint-fn $ {}
+                      :args $ [] 'String
+                      :return 'String
+                    , message
+                , "|[Respo] expected event :value as a string"
         'extract-effects-list $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn extract-effects-list (component-name markup-tree)
             if (nil? markup-tree)
@@ -2369,6 +2436,42 @@
                 [] ([] :placeholder |example) ([] :value |text)
                 :attrs node
             :tags $ #{} :regression :unit
+        'keyboard-info $ %{} 'CodeEntry
+          :doc "|Read :key, :code and the modifier flags (:ctrl? :meta? :alt? :shift?) from a keyboard event as a respo.schema/KeyboardInfo. Raises when a field is missing or has the wrong type."
+          :code $ quote $ defn keyboard-info (e)
+            let
+                fields $ {}
+                  :key $ &event-field e :key
+                  :code $ &event-field e :code
+                  :ctrl? $ &event-field e :ctrl?
+                  :meta? $ &event-field e :meta?
+                  :alt? $ &event-field e :alt?
+                  :shift? $ &event-field e :shift?
+              match (try-decode-map-as fields respo.schema/KeyboardInfo)
+                (:ok info) info
+                (:err message)
+                  raise $ str "|[Respo] expected keyboard event fields: " message
+          :examples $ [] $ quote
+            keyboard-info $ {} (:type :keydown) (:key |Enter) (:code |Enter) (:ctrl? false) (:meta? false) (:alt? false) (:shift? false)
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/KeyboardInfo)
+            :args $ [] 'Dynamic
+          :tests $ [] $ %{} 'TestEntry (:name |reads-keyboard-fields)
+            :code $ quote $ let
+                info $ keyboard-info $ {} (:type :keydown) (:key |Enter) (:code |Enter) (:ctrl? true) (:meta? false) (:alt? false) (:shift? false) (:key-code 13)
+              assert= |Enter $ :key info
+              assert= true $ :ctrl? info
+              assert= false $ :shift? info
+              assert= true $ starts-with?
+                try
+                  do
+                    keyboard-info $ {} $ :type :click
+                    , |unexpected-success
+                  fn (message)
+                    hint-fn $ {}
+                      :args $ [] 'String
+                      :return 'String
+                    , message
+                , "|[Respo] event has no :key"
         'li $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn li (props & children) (create-element :li props & children)
           :examples $ []
@@ -7400,6 +7503,11 @@
             :args $ [] (:: 'Map 'Tag 'Dynamic)
               :: 'Fn $ {} (:return 'Unit)
                 :args $ [] '*dispatch-op
+        'KeyboardInfo $ %{} 'CodeEntry
+          :doc "|Keyboard fields of a :keydown, :keyup or :keypress event, read with respo.core/keyboard-info."
+          :code $ quote $ defstruct KeyboardInfo (:key 'String) (:code 'String) (:ctrl? 'Bool) (:meta? 'Bool) (:alt? 'Bool) (:shift? 'Bool)
+          :examples $ []
+          :schema $ :: 'StructDef
         'ListenerMode $ %{} 'CodeEntry
           :doc "|Event installation policy. :property preserves the existing on* property behavior; :add-event-listener preserves external property handlers and registers independent Respo callbacks."
           :code $ quote $ defenum ListenerMode (:property) (:add-event-listener)
@@ -8390,6 +8498,7 @@
                 :checked $ input-event-checked? event
               |change $ {} (:type :change)
                 :value $ input-event-value event
+                :checked $ input-event-checked? event
               |focus $ {} $ :type :focus
               _ $ {} (:type event-type)
                 :msg $ str "|Unhandled event: " event-type

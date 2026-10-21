@@ -152,7 +152,7 @@ In a component, state is usually a Struct of the application:
 ```cirru.no-check
 ; ns app.comp.task
   :require
-    respo.core :refer $ defcomp div input pick-state state-cursor
+    respo.core :refer $ defcomp div input pick-state state-cursor event-value
 
 defstruct TaskState (:draft 'String)
 
@@ -162,7 +162,7 @@ defcomp comp-task (states)
       state $ pick-state states app.comp.task/TaskState $ TaskState :draft |empty
     input $ {} (:value $ :draft state)
       :on-input $ fn (e d!)
-        d! $ :: :states cursor $ assoc state :draft $ :value e
+        d! $ :: :states cursor $ assoc state :draft $ event-value e
 ```
 
 `state` has the type `TaskState`, so `:draft state` is checked. To update it,

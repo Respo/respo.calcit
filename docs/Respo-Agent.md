@@ -392,15 +392,15 @@ input
   {}
     :value "|current-value"
     :on-input $ fn (e dispatch!)
-      let
-        value (e.target.value)
-      dispatch! $ :: :input-changed value
+      ; event-value reads :value as a String, raises on other shapes
+      dispatch! $ :: :input-changed $ event-value e
 
 ; Keyboard events
 div
   {}
     :on-keydown $ fn (e dispatch!)
-      when (= (e.key) "|Enter")
+      ; keyboard-info returns respo.schema/KeyboardInfo: :key :code :ctrl? :meta? :alt? :shift?
+      when (= |Enter $ :key $ keyboard-info e)
         dispatch! $ :: :submit-form
 ```
 
