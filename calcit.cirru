@@ -8498,6 +8498,7 @@
                 :checked $ input-event-checked? event
               |change $ {} (:type :change)
                 :value $ input-event-value event
+                :checked $ input-event-checked? event
               |focus $ {} $ :type :focus
               _ $ {} (:type event-type)
                 :msg $ str "|Unhandled event: " event-type
