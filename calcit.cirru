@@ -170,7 +170,7 @@
                       {} (:class-name widget/style-button)
                         :on-click $ fn (e d!)
                           d! $ Op :add draft
-                          d! $ Op :states cursor $ assoc state :draft |
+                          d! $ Op :states cursor $ .assoc state :draft |
                       span $ {} (:on-click nil) (:inner-text |Add)
                     =< 8 0
                     span $ {} (:inner-text |Clear) (:class-name widget/style-button)
@@ -205,7 +205,7 @@
                       div
                         {} (:class-name widget/style-button)
                           :on-click $ fn (e d!)
-                            d! $ Op :states cursor $ assoc state :locked?
+                            d! $ Op :states cursor $ .assoc state :locked?
                               not $ :locked? state
                         <> (str-spaced |Lock? locked?)
                           {} $ :font-size 13
@@ -256,9 +256,9 @@
                       &= |m $ .unwrap-or (calcit.core/get info :key) |
                       identical? true $ .unwrap-or (calcit.core/get info :ctrl) false
                     do
-                      dispatch! $ Op :states cursor $ assoc state :message "|Message changed by Ctrl+M!"
+                      dispatch! $ Op :states cursor $ .assoc state :message "|Message changed by Ctrl+M!"
                       js/window.setTimeout
-                        fn () $ dispatch! $ Op :states cursor (assoc state :message "|Press Ctrl+M to change message")
+                        fn () $ dispatch! $ Op :states cursor (.assoc state :message "|Press Ctrl+M to change message")
                         , 2000
           :examples $ [] $ quote
             on-keydown ([] :todolist)
@@ -669,31 +669,31 @@
           :code $ quote $ defn updater (store op op-id)
             match op
               (:states cursor s)
-                assoc store :states $ update-state-tree (:states store) cursor s
+                .assoc store :states $ update-state-tree (:states store) cursor s
               (:states-kv cursor k v)
-                assoc store :states $ update-state-tree-kv (:states store) cursor k v
+                .assoc store :states $ update-state-tree-kv (:states store) cursor k v
               (:states-merge cursor s o)
-                assoc store :states $ update-state-tree-merge (:states store) cursor s o
+                .assoc store :states $ update-state-tree-merge (:states store) cursor s o
               (:add text)
-                assoc store :tasks $ conj (:tasks store) (respo.app.schema/Task :text text :id op-id :done? false)
+                .assoc store :tasks $ conj (:tasks store) (respo.app.schema/Task :text text :id op-id :done? false)
               (:remove task-id)
-                assoc store :tasks $ filter (:tasks store)
+                .assoc store :tasks $ filter (:tasks store)
                   fn (task)
                     hint-fn $ {}
                       :args $ [] 'respo.app.schema/Task
                       :return 'Bool
                     not $ = (:id task) task-id
               (:clear)
-                assoc store :tasks $ []
+                .assoc store :tasks $ []
               (:update task-id text)
-                assoc store :tasks $ map (:tasks store)
+                .assoc store :tasks $ map (:tasks store)
                   fn (task)
                     hint-fn $ {}
                       :args $ [] 'respo.app.schema/Task
                       :return 'respo.app.schema/Task
                     if
                       = (:id task) task-id
-                      assoc task :text text
+                      .assoc task :text text
                       , task
               (:hit-first rd)
                 let
@@ -702,16 +702,16 @@
                       first-task $ assert-type
                         .unwrap $ calcit.core/first tasks
                         , 'respo.app.schema/Task
-                    assoc store :tasks $ &list:assoc tasks 0 $ assoc first-task :text rd
+                    .assoc store :tasks $ &list:assoc tasks 0 $ .assoc first-task :text rd
               (:toggle task-id)
-                assoc store :tasks $ map (:tasks store)
+                .assoc store :tasks $ map (:tasks store)
                   fn (task)
                     hint-fn $ {}
                       :args $ [] 'respo.app.schema/Task
                       :return 'respo.app.schema/Task
                     if
                       = (:id task) task-id
-                      assoc task :done? $ not $ :done? task
+                      .assoc task :done? $ not $ :done? task
                       , task
               _ $ do (eprintln |Unknown-op: op) store
           :examples $ []
@@ -1650,7 +1650,7 @@
                   (:component _component) c
                   (:element element)
                     let
-                        updated $ assoc element :attrs $ loop
+                        updated $ .assoc element :attrs $ loop
                             before $ []
                             remaining $ :attrs element
                           hint-fn $ {}
@@ -1668,7 +1668,7 @@
                                 concat before
                                   [] $ [] :data-comp name
                                   if (&= order 0) (&list:rest remaining) remaining
-                      assoc c :tree $ Option :some $ respo.schema/RenderNode :element updated
+                      .assoc c :tree $ Option :some $ respo.schema/RenderNode :element updated
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
             :args $ [] 'respo.schema/Component 'String
@@ -2880,12 +2880,16 @@
                   =
                     option:unwrap $ nth @*style-list-in-nodejs index
                     , css-block
-                  swap! *style-list-in-nodejs assoc index css-block
+                  swap! *style-list-in-nodejs
+                    fn (container key value) (.assoc container key value)
+                    , index css-block
               (:none)
                 let
                     index $ count @*style-list-in-nodejs
                   swap! *style-list-in-nodejs append css-block
-                  swap! *style-indices-in-nodejs assoc style-name index
+                  swap! *style-indices-in-nodejs
+                    fn (container key value) (.assoc container key value)
+                    , style-name index
             , style-name
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'String)
@@ -2905,7 +2909,9 @@
                           style-el $ present-element $ :el cached-entry
                           css-block $ render-css-block style-name rules
                         set! style-el.:inner-html css-block
-                        swap! *style-caches assoc style-name $ StyleCacheEntry :rules rules :el style-el
+                        swap! *style-caches
+                          fn (container key value) (.assoc container key value)
+                          , style-name $ StyleCacheEntry :rules rules :el style-el
                         , style-name
                 (:none)
                   let
@@ -2915,7 +2921,9 @@
                       set! style-el.:inner-html css-block
                       set! style-el.:id style-name
                       js/document.head.appendChild style-el
-                      swap! *style-caches assoc style-name $ StyleCacheEntry :rules rules :el style-el
+                      swap! *style-caches
+                        fn (container key value) (.assoc container key value)
+                        , style-name $ StyleCacheEntry :rules rules :el style-el
                     , style-name
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'String)
@@ -3259,7 +3267,7 @@
                   initial $ CursorTestState :draft |old :locked? false :message |hello
                   states $ update-state-tree ({}) ([] :panel |task-1) initial
                   updated $ update-state-tree-kv states ([] :panel |task-1) :draft |new
-                assert= (assoc initial :draft |new)
+                assert= (.assoc initial :draft |new)
                   get-state-at updated $ [] :panel |task-1 :data
                 assert= initial $ get-state-at states $ [] :panel |task-1 :data
               :tags $ #{} :regression :unit
@@ -3352,7 +3360,7 @@
               :tags $ #{} :regression :unit
         'update-states $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn update-states (store cursor new-state)
-            assoc store :states $ update-state-tree
+            .assoc store :states $ update-state-tree
               option:unwrap-or (get store :states) ({})
               , cursor new-state
           :examples $ []
@@ -3362,7 +3370,7 @@
         'update-states-kv $ %{} 'CodeEntry
           :doc "|a quick dirty trick to partially update component state.\n\nnotice: need to handle empty state manually."
           :code $ quote $ defn update-states-kv (store cursor k v)
-            assoc store :states $ update-state-tree-kv
+            .assoc store :states $ update-state-tree-kv
               option:unwrap-or (get store :states) ({})
               , cursor k v
           :examples $ []
@@ -3377,7 +3385,7 @@
                   (:some maybe-states)
                     if (nil? maybe-states) ({}) maybe-states
                   (:none) ({})
-              assoc store :states $ update-state-tree-merge states cursor state0 changes
+              .assoc store :states $ update-state-tree-merge states cursor state0 changes
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] (:: 'Map 'Tag 'Dynamic) (:: 'List 'Dynamic) 'Dynamic 'Dynamic
@@ -4163,7 +4171,7 @@
               let
                   index $ dec $ count @*memo-dependency-stack
                   children $ .unwrap $ .get @*memo-dependency-stack index
-                reset! *memo-dependency-stack $ assoc @*memo-dependency-stack index $ include children cache-key
+                reset! *memo-dependency-stack $ .assoc @*memo-dependency-stack index $ include children cache-key
             , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
@@ -4645,7 +4653,7 @@
                   ops $ ref $ []
                   collect! $ fn (op) (respo.core/append-dynamic! ops op)
                   plain $ respo.schema/Element :name :div :coord (%none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref nil
-                  inner $ assoc plain :ref $ fn (target)
+                  inner $ .assoc plain :ref $ fn (target)
                     respo.core/append-dynamic! log $ [] :ref target
                   watch $ respo.schema/Effect :name :effect-watch :coord ([]) :args ([]) :method $ fn (_args params)
                     let[] (action target _at-place?) params $ if (&= action :mount)
@@ -4668,7 +4676,7 @@
                   ops $ ref $ []
                   collect! $ fn (op) (respo.core/append-dynamic! ops op)
                   inner $ respo.schema/Element :name :span :coord (%none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref nil
-                  plain $ assoc inner :name :div
+                  plain $ .assoc inner :name :div
                   empty-old $ respo.schema/Component :name :same :effects ([]) :listeners ([]) :tree $ %none
                   empty-new $ respo.schema/Component :name :same :effects ([]) :listeners ([]) :tree $ %none
                   rendered $ respo.schema/Component :name :same :effects ([]) :listeners ([]) :tree $ %some (respo.util.detect/as-render-node inner)
@@ -5213,11 +5221,11 @@
                       new-tails $ if
                         = slot $ count tails
                         append tails value
-                        assoc tails slot value
+                        .assoc tails slot value
                       new-positions $ if
                         = slot $ count positions
                         append positions index
-                        assoc positions slot index
+                        .assoc positions slot index
                     recur rest-values (inc index) new-tails new-positions $ append previous predecessor
           :examples $ []
           :schema $ :: 'Fn $ {}
@@ -5771,7 +5779,7 @@
                         listeners $ match (js-nullish->option target.:owned-event-listeners)
                           (:none) ({})
                           (:some listeners) listeners
-                      set! target.:owned-event-listeners $ assoc listeners event-name handler
+                      set! target.:owned-event-listeners $ .assoc listeners event-name handler
                       .add-event-listener! target (calcit.core/to-string event-name) handler
             , &unit
           :examples $ []
@@ -5797,7 +5805,7 @@
                     do
                       .remove-event-listener! target (calcit.core/to-string event-name) listener
                       let
-                          remaining $ dissoc listeners event-name
+                          remaining $ .dissoc listeners event-name
                         if (empty? remaining) (js-delete target |__respo_calcit_event_listeners) (set! target.:owned-event-listeners remaining)
             , &unit
           :examples $ []
@@ -5854,8 +5862,8 @@
                           (:component _) (raise |expected-purified-element)
                 text-inside $ element-content (element :name) attrs children
                 tailored-props $ &let
-                  props $ dissoc (dissoc attrs :innerHTML) :inner-text
-                  if (empty? styles) props $ assoc props :style styles
+                  props $ .dissoc (.dissoc attrs :innerHTML) :inner-text
+                  if (empty? styles) props $ .assoc props :style styles
                 props-in-string $ props->html tailored-props
                 opening-props $ if (blank? props-in-string) | $ str (char-from-code 32) props-in-string
               if (&set:includes? self-closing tag-name)
@@ -6289,10 +6297,14 @@
                             (:none) (snapshot-children parent)
                             (:some cached) cached
                           :: 'List 'respo.dom/DomElement
-                      swap! child-snapshots assoc n-coord $ assert-type nodes $ :: 'List 'respo.dom/DomElement
+                      swap! child-snapshots
+                        fn (container key value) (.assoc container key value)
+                        , n-coord $ assert-type nodes $ :: 'List 'respo.dom/DomElement
                       when
                         not $ contains? @scroll-snapshot n-coord
-                        swap! scroll-snapshot assoc n-coord $ collect-scroll-states parent
+                        swap! scroll-snapshot
+                          fn (container key value) (.assoc container key value)
+                          , n-coord $ collect-scroll-states parent
                       move-element! parent nodes source anchor
                       invalidate-target-children! target-cache n-coord
                   (:effect-mount _coord n-coord run!)
@@ -6375,7 +6387,11 @@
               (:some node) (Option :some node)
               (:none)
                 if (empty? coord)
-                  do (swap! cache assoc coord root) (Option :some root)
+                  do
+                    swap! cache
+                      fn (container key value) (.assoc container key value)
+                      , coord root
+                    Option :some root
                   let
                       parent-coord $ slice coord 0 $ dec (count coord)
                       index $ &list:nth coord $ dec (count coord)
@@ -6386,7 +6402,11 @@
                           js-nullish->option $ .item (parent.:children) index
                           (:none) (Option :none)
                           (:some child)
-                            do (swap! cache assoc coord child) (Option :some child)
+                            do
+                              swap! cache
+                                fn (container key value) (.assoc container key value)
+                                , coord child
+                              Option :some child
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] 'respo.dom/DomElement (:: 'List 'Number)
@@ -6423,7 +6443,7 @@
                   entries retained
                   next $ match (get @cache path)
                     (:none) entries
-                    (:some node) (assoc entries path node)
+                    (:some node) (.assoc entries path node)
                 if (empty? path)
                   do (reset! cache next) &unit
                   recur
@@ -8043,7 +8063,7 @@
             let
                 event-type $ event.:type
                 keyboard-event $ unsafe-coerce event 'respo.dom/DomKeyboardEvent
-              -> (event-base-edn event event-type keyboard-event) (assoc :original-event event) (assoc :event event)
+              -> (event-base-edn event event-type keyboard-event) (.assoc :original-event event) (.assoc :event event)
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] 'respo.dom/DomEvent
@@ -8230,8 +8250,8 @@
                 respo.schema/RenderNode :component $ &struct:assoc component :tree $ option:map (:tree component) mute-render-node
               (:element element)
                 respo.schema/RenderNode :element $ -> element
-                  assoc :event $ {}
-                  assoc :children $ map (:children element)
+                  .assoc :event $ {}
+                  .assoc :children $ map (:children element)
                     fn (pair)
                       hint-fn $ {}
                         :args $ [] 'respo.schema/ChildPair
@@ -8318,9 +8338,9 @@
                   (:none) (raise |tree-is-empty)
                   (:some tree) (purify-render-node tree)
               (:element element)
-                -> element (assoc :ref nil)
-                  assoc :event $ {}
-                  assoc :children $ map (:children element)
+                -> element (.assoc :ref nil)
+                  .assoc :event $ {}
+                  .assoc :children $ map (:children element)
                     fn (pair)
                       hint-fn $ {}
                         :args $ [] 'respo.schema/ChildPair
