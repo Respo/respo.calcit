@@ -1226,7 +1226,7 @@
     'respo.core $ %{} 'FileEntry
       :defs $ {}
         '&state-plain $ %{} 'CodeEntry
-          :doc "|Internal helper of `pick-state`: turns Structs inside a stored state into Maps, recursively through Maps and Lists."
+          :doc "|Internal helper of `pick-state`: turns Structs inside a stored state into Maps, recursively through Maps and Lists. Used only when decoding the shallow form fails, for states whose typed fields hold nested Structs."
           :code $ quote $ defn &state-plain (value)
             if (struct? value)
               &state-plain $ &struct:to-map value
@@ -1252,6 +1252,13 @@
           :schema $ :: 'Fn $ {}
             :args $ [] 'Dynamic
             :return $ :: 'Option 'Dynamic
+        '&state-shallow $ %{} 'CodeEntry
+          :doc "|Internal helper of `pick-state`: turns a stored top-level Struct into a Map for decoding and leaves nested values as they are, so Structs under Dynamic fields keep their type."
+          :code $ quote $ defn &state-shallow (value)
+            if (struct? value) (&struct:to-map value) value
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] 'Dynamic
         '*changes-logger $ %{} 'CodeEntry
           :doc "|Atom to hold a logging function for observing changes during rerenders. Function signature: (old-tree new-tree changes)."
           :code $ quote $ defref *changes-logger (Option :none)
@@ -2590,14 +2597,19 @@
                 raw-var $ gensym |raw
                 value-var $ gensym |value
                 message-var $ gensym |message
+                retry-message-var $ gensym |retry-message
               quasiquote $ match (respo.core/&state-raw ~states)
                 (:none) ~default-state
                 (:some ~raw-var)
                   match
-                    try-decode-map-as (respo.core/&state-plain ~raw-var) ~type-expr
+                    try-decode-map-as (respo.core/&state-shallow ~raw-var) ~type-expr
                     (:ok ~value-var) ~value-var
                     (:err ~message-var)
-                      raise $ str "|[Respo] component state does not match its type: " ~message-var
+                      match
+                        try-decode-map-as (respo.core/&state-plain ~raw-var) ~type-expr
+                        (:ok ~value-var) ~value-var
+                        (:err ~retry-message-var)
+                          raise $ str "|[Respo] component state does not match its type: " ~message-var
           :examples $ [] $ quote
             pick-state
               &{} :cursor ([] :draft) :data |hello
@@ -2636,6 +2648,20 @@
                         :return 'String
                       , message
                   , "|[Respo] component state does not match its type: "
+            %{} 'TestEntry (:name |keeps-nested-structs)
+              :code $ quote $ let
+                  saved $ respo.cursor/CursorTestState :draft |saved :locked? true :message |m
+                  dynamic-state $ pick-state
+                    &{} :data $ {} $ :child saved
+                    :: 'Map 'Tag 'Dynamic
+                    {}
+                  nested-state $ pick-state
+                    &{} :data $ [] saved
+                    :: 'List 'respo.cursor/CursorTestState
+                    []
+                assert= true $ struct? $ .unwrap (get dynamic-state :child)
+                assert= saved $ .unwrap $ get dynamic-state :child
+                assert= ([] saved) nested-state
         'pre $ %{} 'CodeEntry
           :doc "|Renders a <pre> element. Wrapper around create-element."
           :code $ quote $ defn pre (props & children) (create-element :pre props & children)
