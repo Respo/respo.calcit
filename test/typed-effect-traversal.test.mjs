@@ -75,6 +75,38 @@ test('ref patch callbacks return Unit without leaking handler results', () => {
   assert.deepEqual(calls, [['old', null], ['new', target]]);
 });
 
+for (const [phase, collect, absent] of [
+  ['mount', collect_mounting, false], ['unmount', collect_unmounting, true],
+]) {
+  test(`${phase} ref patch returns Unit and preserves callback failures`, () => {
+    const target = new ElementHost('div');
+    const calls = [];
+    const patches = [];
+    const element = c.assoc(div(c.parse_cirru_edn('{}')), t.ref, value => {
+      calls.push(value);
+      return 42;
+    });
+    collect(op => { patches.push(op); }, list([]), list([]), element, false);
+    assert.equal(patches.length, 1);
+    assert.equal(patches[0].tag.value, `effect-${phase}`);
+    assert.equal(c._$n_enum_$o_nth(patches[0], 3)(target), undefined);
+    assert.deepEqual(calls, [absent ? null : target]);
+
+    const failure = new Error(`ref ${phase} fixture`);
+    let attempts = 0;
+    const failing = c.assoc(element, t.ref, value => {
+      assert.equal(value, absent ? null : target);
+      attempts += 1;
+      throw failure;
+    });
+    const failedPatches = [];
+    collect(op => { failedPatches.push(op); }, list([]), list([]), failing, false);
+    assert.equal(failedPatches.length, 1);
+    assert.throws(() => c._$n_enum_$o_nth(failedPatches[0], 3)(target), error => error === failure);
+    assert.equal(attempts, 1);
+  });
+}
+
 test('unchanged and absent refs do not schedule callbacks; failures propagate once', () => {
   const unchanged = () => { throw new Error('unchanged callback must not run'); };
   assert.deepEqual(refChanges(unchanged, unchanged), []);

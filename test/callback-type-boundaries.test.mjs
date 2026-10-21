@@ -17,6 +17,21 @@ function evaluate(source) {
   return { status: result.status, output: result.stdout + result.stderr };
 }
 
+for (const [name, value, diagnostic] of [
+  ['rejects a String in a Number collector', '|wrong', /W_FN_ARG_TYPE_MISMATCH/],
+  ['rejects an unproved Dynamic in a Number collector', "(assert-type 7 'Dynamic)", /E_ERASED_GENERIC_RELATION/],
+]) {
+  test(`generic append ${name}`, () => {
+    const result = evaluate(`let
+    values $ ref $ assert-type ([]) $ :: 'List 'Number
+  respo.core/append-dynamic! values ${value}`);
+    assert.notEqual(result.status, 0, 'incompatible elements must fail preprocessing');
+    assert.match(result.output, diagnostic);
+    assert.match(result.output, /respo.core\/append-dynamic!/);
+    assert.doesNotMatch(result.output, /took [\d.]+ms:/, 'invalid collectors must not run');
+  });
+}
+
 test('typed render fixtures preserve ChildPair and nullable callback contracts', () => {
   const result = evaluate(`respo.test.dom/fixture-entry!`);
   assert.equal(result.status, 0, result.output);
