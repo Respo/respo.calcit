@@ -172,16 +172,14 @@ test('rendered demo inputs validate event maps and text before dispatch', () => 
       assert.throws(() => handler(invalid, dispatch));
       assert.deepEqual(calls, []);
     }
-    if (op !== 'states') {
-      for (const invalid of ['{}', '{} (:value 42)', '{} (:value nil)']) {
-        assert.throws(() => handler(c.parse_cirru_edn(invalid), dispatch));
-        assert.deepEqual(calls, []);
-      }
+    for (const invalid of ['{}', '{} (:value 42)', '{} (:value nil)']) {
+      assert.throws(() => handler(c.parse_cirru_edn(invalid), dispatch));
+      assert.deepEqual(calls, []);
     }
   }
   const opaque = c.parse_cirru_edn('{} (:nested 42)'), calls = [];
-  taskInputs[1](c._$n__$M_(c.turn_tag('value'), opaque), value => { calls.push(value); });
-  assert.equal(c._$n_enum_$o_nth(calls[0], 2), opaque, 'local state remains an open value');
+  assert.throws(() => taskInputs[1](c._$n__$M_(c.turn_tag('value'), opaque), value => { calls.push(value); }), /expected event :value as a string/);
+  assert.deepEqual(calls, [], 'the String task state rejects a non-string :value before dispatch');
 });
 
 test('demo Ctrl+M listener checks payload and preserves shortcut and timer behavior', () => {

@@ -25,11 +25,39 @@ entry_for:
 ```cirru.no-check
 input $ {}
   :on-input $ fn (e dispatch!)
-    println (:value e)
+    println $ event-value e
 ```
 
 `e` 是不可变 Map，包含事件类型、表单字段和原生事件。输入事件的
 `:type` 是 Tag `:input`；未单独识别的事件（例如 paste）保留原生类型字符串。
+
+### 读取常用字段
+
+`respo.core` 提供三个读取函数，返回有类型的值，字段缺失或类型不符时直接报错，
+错误信息带上字段名和事件类型：
+
+| 函数 | 返回 | 适用事件 |
+| --- | --- | --- |
+| `event-value` | `String` | `:input` / `:change` 的 `:value` |
+| `event-checked?` | `Bool` | checkbox / radio 的 `:checked` |
+| `keyboard-info` | `respo.schema/KeyboardInfo` | `:keydown` / `:keyup` / `:keypress` |
+
+```cirru
+ns app.demo $ :require
+  respo.core :refer $ event-value event-checked? keyboard-info
+
+let
+    input-event $ {} (:type :input) (:value |draft) (:checked false)
+    key-event $ {} (:type :keydown) (:key |Enter) (:code |Enter) (:ctrl? true) (:meta? false) (:alt? false) (:shift? false)
+    info $ keyboard-info key-event
+  assert= |draft $ event-value input-event
+  assert= false $ event-checked? input-event
+  assert= |Enter $ :key info
+  assert= true $ :ctrl? info
+```
+
+相比 `(:value e)`，这些函数让 handler 中的值有确定类型，后续字段访问可以被检查；
+需要其他字段时仍可直接读取 `e`。
 
 ```cirru.no-check
 ; ns app.demo
