@@ -16,10 +16,12 @@ append-dynamic! 保留现有名称，将实际元素类型关联为 Ref<List<T>>
 
 DomPatch 原来已要求一个 DomElement 参数和 Unit 返回，但 effect 闭包经过开放列表传参后不能独立恢复该输入。仅在这十四个现有边界补充函数体注解。两个 ref 包装器显式以 &unit 收尾，与 diff 的既有包装器一致；旧 ref 仍可返回任意值，调用顺序与异常传播不变。既有宿主测试增加 mount/unmount 对应断言，不放宽 Element.ref 的旧合同。
 
+expect-function 仍校验 fn? 并返回同一参数，但先保存 original 引用再检查分类，避免把收窄后的 :fn 当作泛型 Callback 的独立证明。原 schema、错误消息及两项身份/拒绝测试不变，独立 callable proof 已通过；没有恢复“知道 kind 就能构造任意泛型”的规则。
+
 正式 0.31.0-alpha.1 CLI/runtime 配对回放 147/147 native 与 147/147 JS，零排除；340 个框架定义、34 项 callback 类型测试通过。原 DOM host、SSR、事件、memo、keyed move、混合 cursor、类型拒绝、文档与构建门禁已回放；DOM helper 的五个开放 List Ref 在首次 codegen 拒绝后按真实生产者补齐。真实独立浏览器通过新增、修改文本、切换状态和刷新恢复，保留同一 ID、文本及完成状态，控制台无错误。首次共享回放误用了 alpha.5 runtime，已更正运行器自身依赖并重跑，不用那次结果作为配对证据。
 
 ## 剩余门槛
 
 - update-states 的公开 store 仍是既有 js-ffi Dynamic 边界，直接 .assoc 无法证明。保留旧函数调用与 Map/Struct 等原行为；不能把 Map-only、update 对缺失 Struct 字段的不同语义或无证明动态方法伪装成等价迁移。
-- 本地完整 strict 曾实际超过三分钟和四分钟的进程时限。采样定位到 strict_workflow_type_findings → collect_schema_candidates → merge_callsite_argument_evidence → trace_definition_source_usages 的重复预处理；普通框架检查和执行测试通过不能代替它。保留原 CI 门禁，单独追踪编译器性能问题，不以加大预算或排除定义宣称完成。
+- 本地完整 strict 曾实际超过三分钟和四分钟的进程时限，随后一轮实际运行 566 秒并报告当时 DOM helper 和 expect-function 的合同问题，不能记为通过；这些问题已按上述真实类型和原值身份修复，最终完整重跑仍需通过。采样定位到 strict_workflow_type_findings → collect_schema_candidates → merge_callsite_argument_evidence → trace_definition_source_usages 的重复预处理；普通框架检查和执行测试通过不能代替它。保留原 CI 门禁，单独追踪编译器性能问题，不以加大预算或排除定义宣称完成。
 - 最新 HEAD review/CI 和精确 main 仍是合并/发布门槛；本迁移不表示旧入口已可删除，也未发布模块版本。
