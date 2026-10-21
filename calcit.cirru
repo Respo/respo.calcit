@@ -51,11 +51,8 @@
         'comp-task $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-task (states task)
             let
-                states $ decode-map-as states $ :: 'Map 'Dynamic 'Dynamic
-                cursor $ decode-map-as
-                  .unwrap-or (calcit.core/get states :cursor) ([])
-                  :: 'List 'Dynamic
-                state $ .unwrap-or (calcit.core/get states :data) |
+                cursor $ state-cursor states
+                state $ pick-state states 'String |
                 task-id $ :id task
                 task-text $ :text task
                 done? $ :done? task
@@ -124,7 +121,7 @@
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.app.comp.task
           :require
-            respo.core :refer $ defcomp div input span button <> defeffect
+            respo.core :refer $ defcomp div input span button <> defeffect pick-state state-cursor
             respo.util.format :refer $ hsl
             respo.comp.space :refer $ =<
             respo.comp.inspect :refer $ comp-inspect
@@ -136,15 +133,8 @@
         'comp-todolist $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-todolist (states tasks)
             let
-                states $ decode-map-as states $ :: 'Map 'Dynamic 'Dynamic
-                cursor $ decode-map-as
-                  .unwrap-or (calcit.core/get states :cursor) ([])
-                  :: 'List 'Dynamic
-                state $ let
-                    stored-state $ .unwrap-or (calcit.core/get states :data) (respo.app.schema/TodoState :draft | :locked? false :message "|Press Ctrl+M to change message")
-                  if (struct? stored-state)
-                    if (&struct:matches? stored-state respo.app.schema/TodoState) stored-state $ raise "|[Respo/demo] expected TodoState"
-                    raise "|[Respo/demo] expected TodoState"
+                cursor $ state-cursor states
+                state $ pick-state states respo.app.schema/TodoState $ respo.app.schema/TodoState :draft | :locked? false :message "|Press Ctrl+M to change message"
                 draft $ :draft state
                 locked? $ :locked? state
                 message $ :message state
@@ -346,7 +336,7 @@
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.app.comp.todolist
           :require
-            respo.core :refer $ defcomp div span input <> list-> defeffect >> a memo-comp-by
+            respo.core :refer $ defcomp div span input <> list-> defeffect >> a memo-comp-by pick-state state-cursor
             respo.util.format :refer $ hsl
             respo.app.comp.task :refer $ comp-task
             respo.comp.space :refer $ =<
@@ -1235,6 +1225,40 @@
           :require $ respo.util.detect :refer $ component? element? listener? component-tree element-children element-event
     'respo.core $ %{} 'FileEntry
       :defs $ {}
+        '&state-plain $ %{} 'CodeEntry
+          :doc "|Internal helper of `pick-state`: turns Structs inside a stored state into Maps, recursively through Maps and Lists. Used only when decoding the shallow form fails, for states whose typed fields hold nested Structs."
+          :code $ quote $ defn &state-plain (value)
+            if (struct? value)
+              &state-plain $ &struct:to-map value
+              if (map? value)
+                filter-map-kv value $ fn (k v)
+                  hint-fn $ {}
+                    :args $ [] 'Dynamic 'Dynamic
+                    :return $ :: 'MapEntryDecision 'Dynamic 'Dynamic
+                  MapEntryDecision :keep k $ &state-plain v
+                if (list? value) (map value &state-plain) value
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] 'Dynamic
+        '&state-raw $ %{} 'CodeEntry
+          :doc "|Internal helper of `pick-state`: the branch's `:data` as an Option; nil counts as missing."
+          :code $ quote $ defn &state-raw (states)
+            match
+              calcit.core/get (as-states-map states) :data
+              (:some raw)
+                if (nil? raw) (Option :none) (Option :some raw)
+              (:none) (Option :none)
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] 'Dynamic
+            :return $ :: 'Option 'Dynamic
+        '&state-shallow $ %{} 'CodeEntry
+          :doc "|Internal helper of `pick-state`: turns a stored top-level Struct into a Map for decoding and leaves nested values as they are, so Structs under Dynamic fields keep their type."
+          :code $ quote $ defn &state-shallow (value)
+            if (struct? value) (&struct:to-map value) value
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] 'Dynamic
         '*changes-logger $ %{} 'CodeEntry
           :doc "|Atom to hold a logging function for observing changes during rerenders. Function signature: (old-tree new-tree changes)."
           :code $ quote $ defref *changes-logger (Option :none)
@@ -2566,6 +2590,78 @@
           :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
             :args $ [] 'PropsInput
             :generics $ [] 'PropsInput
+        'pick-state $ %{} 'CodeEntry
+          :doc "|Read the component's own state from `states` as a typed value.\n\n`pick-state states TypeExpr default-state` returns `default-state` when the branch has no `:data` (or `:data` is nil). Otherwise it decodes the stored value with `try-decode-map-as` against `TypeExpr`, so the result has that type. A Struct written through `:: :states cursor state` and a plain Map restored from storage both decode to the same Struct. A value that does not match raises an error naming the failing path.\n\nUse it together with `state-cursor`, which reads the cursor for writing the state back."
+          :code $ quote $ defmacro pick-state (states type-expr default-state)
+            let
+                raw-var $ gensym |raw
+                value-var $ gensym |value
+                message-var $ gensym |message
+                retry-message-var $ gensym |retry-message
+              quasiquote $ match (respo.core/&state-raw ~states)
+                (:none) ~default-state
+                (:some ~raw-var)
+                  match
+                    try-decode-map-as (respo.core/&state-shallow ~raw-var) ~type-expr
+                    (:ok ~value-var) ~value-var
+                    (:err ~message-var)
+                      match
+                        try-decode-map-as (respo.core/&state-plain ~raw-var) ~type-expr
+                        (:ok ~value-var) ~value-var
+                        (:err ~retry-message-var)
+                          raise $ str "|[Respo] component state does not match its type: " ~message-var
+          :examples $ [] $ quote
+            pick-state
+              &{} :cursor ([] :draft) :data |hello
+              , 'String |
+          :schema $ :: 'Macro $ {}
+            :capabilities $ #{}
+            :expansion $ :: 'Expr 'Dynamic
+            :required $ [] (:: 'Expr 'Dynamic) (:: 'Expr 'Dynamic) (:: 'Expr 'Dynamic)
+          :tests $ []
+            %{} 'TestEntry (:name |reads-missing-stored-and-persisted)
+              :code $ quote $ let
+                  fallback $ respo.cursor/CursorTestState :draft | :locked? false :message |hint
+                  saved $ respo.cursor/CursorTestState :draft |saved :locked? true :message |m
+                assert= fallback $ pick-state nil respo.cursor/CursorTestState fallback
+                assert= fallback $ pick-state ({}) respo.cursor/CursorTestState fallback
+                assert= fallback $ pick-state (&{} :data nil) respo.cursor/CursorTestState fallback
+                assert= saved $ pick-state (&{} :data saved) respo.cursor/CursorTestState fallback
+                assert= saved $ pick-state
+                  &{} :cursor ([] :todolist) :data $ {} (:draft |saved) (:locked? true) (:message |m)
+                  , respo.cursor/CursorTestState fallback
+                assert= |draft $ pick-state
+                  >>
+                    &{} :task $ &{} :data |draft
+                    , :task
+                  , 'String |
+            %{} 'TestEntry (:name |rejects-mismatched-state)
+              :code $ quote $ assert= true
+                starts-with?
+                  try
+                    do
+                      pick-state (&{} :data 1) 'String |
+                      , |unexpected-success
+                    fn (message)
+                      hint-fn $ {}
+                        :args $ [] 'String
+                        :return 'String
+                      , message
+                  , "|[Respo] component state does not match its type: "
+            %{} 'TestEntry (:name |keeps-nested-structs)
+              :code $ quote $ let
+                  saved $ respo.cursor/CursorTestState :draft |saved :locked? true :message |m
+                  dynamic-state $ pick-state
+                    &{} :data $ {} $ :child saved
+                    :: 'Map 'Tag 'Dynamic
+                    {}
+                  nested-state $ pick-state
+                    &{} :data $ [] saved
+                    :: 'List 'respo.cursor/CursorTestState
+                    []
+                assert= true $ struct? $ .unwrap (get dynamic-state :child)
+                assert= saved $ .unwrap $ get dynamic-state :child
+                assert= ([] saved) nested-state
         'pre $ %{} 'CodeEntry
           :doc "|Renders a <pre> element. Wrapper around create-element."
           :code $ quote $ defn pre (props & children) (create-element :pre props & children)
@@ -2811,6 +2907,29 @@
           :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
             :args $ [] 'PropsInput
             :generics $ [] 'PropsInput
+        'state-cursor $ %{} 'CodeEntry
+          :doc "|Read the state cursor from `states` (the value `>>` returns). Missing or nil cursors become an empty list; a cursor that is not a list raises an error. Send it back with `:: :states cursor new-state`."
+          :code $ quote $ defn state-cursor (states)
+            match
+              calcit.core/get (as-states-map states) :cursor
+              (:some raw-cursor)
+                if (nil? raw-cursor) ([])
+                  if (list? raw-cursor) raw-cursor $ raise $ str "|[Respo] expected states cursor as a list, got: " (type-of raw-cursor)
+              (:none) ([])
+          :examples $ [] $ quote
+            state-cursor $ >> ({}) :todolist
+          :schema $ :: 'Fn $ {}
+            :args $ [] 'Dynamic
+            :return $ :: 'List 'Dynamic
+          :tests $ [] $ %{} 'TestEntry (:name |reads-cursor)
+            :code $ quote $ do
+              assert= ([]) (state-cursor nil)
+              assert= ([])
+                state-cursor $ &{} :data 1
+              assert= ([] :tasks |task-1)
+                state-cursor $ >>
+                  >> ({}) :tasks
+                  , |task-1
         'strong $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn strong (props & children) (create-element :strong props & children)
           :examples $ []

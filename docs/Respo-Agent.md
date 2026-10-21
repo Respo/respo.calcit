@@ -426,8 +426,8 @@ defn on-keydown (cursor state)
 ; Use listener in component by including it in the component body
 defcomp comp-with-listener (states data)
   let
-      cursor $ :cursor states
-      state $ either (:data states) ({})
+      cursor $ state-cursor states
+      state $ pick-state states app.schema/FormState $ app.schema/FormState :message |
     [] (on-keydown cursor state)  ; Add listener to component
       div $ {}
         <> $ :message state
