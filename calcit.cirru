@@ -1163,7 +1163,7 @@
                     contains? (element-event target-element) event-name
               if event-present? target-element-option $ if (empty? coord) (Option :none)
                 recur element
-                  slice coord 0 $ - (count coord) 1
+                  slice coord 0 $ Option :some $ - (count coord) 1
                   , event-name
           :examples $ []
           :schema $ :: 'Fn $ {}
@@ -4423,8 +4423,10 @@
                         boundaries $ keyed-boundaries full-old-keys full-new-keys
                         prefix $ &list:nth boundaries 0
                         suffix $ &list:nth boundaries 1
-                        middle-old-children $ slice old-children prefix $ - (count old-children) suffix
-                        middle-new-children $ slice new-children prefix $ - (count new-children) suffix
+                        middle-old-children $ slice old-children prefix $ Option :some
+                          - (count old-children) suffix
+                        middle-new-children $ slice new-children prefix $ Option :some
+                          - (count new-children) suffix
                         suffix-keys $ slice full-old-keys $ - (count full-old-keys) suffix
                         index-offset $ + index prefix
                       &doseq
@@ -6205,7 +6207,8 @@
                     :args $ [] $ :: 'List 'Number
                   if (empty? n-coord)
                     reset! target-cache $ {}
-                    invalidate-target-children! target-cache $ slice n-coord 0 $ dec (count n-coord)
+                    invalidate-target-children! target-cache $ slice n-coord 0 $ Option :some
+                      dec $ count n-coord
                   , &unit
               &doseq (op changes)
                 match op
@@ -6393,7 +6396,8 @@
                       , coord root
                     Option :some root
                   let
-                      parent-coord $ slice coord 0 $ dec (count coord)
+                      parent-coord $ slice coord 0 $ Option :some
+                        dec $ count coord
                       index $ &list:nth coord $ dec (count coord)
                     match (find-target-cached root parent-coord cache)
                       (:none) (Option :none)
@@ -6447,7 +6451,7 @@
                 if (empty? path)
                   do (reset! cache next) &unit
                   recur
-                    slice path 0 $ dec $ count path
+                    slice path 0 $ Option :some $ dec (count path)
                     , next
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
