@@ -125,6 +125,14 @@ jobs:
           calcit calcit.cirru js
           && yarn vite build --base="$VITE_BASE_URL"
 
+      - name: Save PR frontend build for browser acceptance
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: frontend-${{ github.sha }}
+          path: dist/
+          retention-days: 1
+
       - name: Check current production revision
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         id: production
