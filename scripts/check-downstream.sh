@@ -41,6 +41,9 @@ if ! git clone -q "${CLONE_ARGS[@]}" "$URL" "$DIR"; then
   echo "check-downstream: cannot clone $REPO (private repositories need DOWNSTREAM_TOKEN)" >&2
   exit 2
 fi
+# Keep the token out of .git/config and out of the environment of project code.
+git -C "$DIR" remote set-url origin "https://github.com/${REPO}.git"
+unset DOWNSTREAM_TOKEN URL
 cd "$DIR" || exit 2
 HEAD_SHA="$(git rev-parse --short HEAD)"
 
@@ -70,7 +73,10 @@ run_step() {
     tail -n 40 "$log"
     echo "check-downstream: $name failed, retrying with the baseline Respo at $BASELINE"
     ln -sfn "$BASELINE" .calcit/modules/respo.calcit
-    if "$@" >"$log.pinned" 2>&1; then
+    # The bundle consumes js-out, so regenerate it from the baseline first.
+    if [ "$name" = bundle ] && ! build_js >"$log.pinned" 2>&1; then
+      RESULTS+=("| $name | needs upgrade | $((SECONDS - started))s |")
+    elif "$@" >>"$log.pinned" 2>&1; then
       RESULTS+=("| $name | **regression** | $((SECONDS - started))s |")
       REGRESSION=1
     else

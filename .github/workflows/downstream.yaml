@@ -78,7 +78,10 @@ jobs:
           npx --no-install vite build --base=./
 
   downstream:
-    needs: plan
+    # Wait for `self` so a broken candidate toolchain does not produce misleading results.
+    # `self` is skipped without a candidate version, which must not skip this job.
+    needs: [plan, self]
+    if: ${{ !cancelled() && needs.plan.result == 'success' && needs.self.result != 'failure' }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     strategy:

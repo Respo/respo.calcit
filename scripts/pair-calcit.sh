@@ -11,7 +11,7 @@
 set -euo pipefail
 
 VERSION="${1:?usage: pair-calcit.sh <calcit-version>}"
-if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]]; then
+if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$ ]]; then
   echo "pair-calcit: '$VERSION' is not a Calcit release version" >&2
   exit 1
 fi
