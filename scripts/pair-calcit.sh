@@ -11,7 +11,10 @@
 set -euo pipefail
 
 VERSION="${1:?usage: pair-calcit.sh <calcit-version>}"
-if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$ ]]; then
+# SemVer: numeric identifiers carry no leading zeroes.
+NUM='(0|[1-9][0-9]*)'
+PRE='(0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)'
+if ! [[ "$VERSION" =~ ^$NUM\.$NUM\.$NUM(-$PRE(\.$PRE)*)?$ ]]; then
   echo "pair-calcit: '$VERSION' is not a Calcit release version" >&2
   exit 1
 fi
