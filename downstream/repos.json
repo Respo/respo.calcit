@@ -8,5 +8,8 @@
   { "name": "respo-message", "repo": "Respo/respo-message.calcit", "layer": "library" },
   { "name": "alerts", "repo": "Respo/alerts.calcit", "layer": "library" },
   { "name": "leaf-reading", "repo": "jiyinyiyong/leaf-reading", "layer": "app" },
-  { "name": "sedum-slide", "repo": "Memkits/sedum-slide", "layer": "app" }
+  { "name": "sedum-slide", "repo": "Memkits/sedum-slide", "layer": "app" },
+  { "name": "camera-try", "repo": "worktools/camera-try", "layer": "app" },
+  { "name": "topix-im", "repo": "TopixIM/topix.im", "layer": "app" },
+  { "name": "everyday", "repo": "TopixIM/everyday", "layer": "app" }
 ]
