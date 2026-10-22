@@ -1,0 +1,127 @@
+name: Downstream
+
+on:
+  workflow_dispatch:
+    inputs:
+      calcit-version:
+        description: "Candidate Calcit version for an alpha pairing check; empty uses deps.cirru"
+        required: false
+        default: ""
+      require-green:
+        description: "Fail a project that needs an upgrade, not only a Respo regression"
+        type: boolean
+        required: false
+        default: false
+      strict:
+        description: "Also run `fix --workflow strict --verify` (slow: up to 30 minutes a project)"
+        type: boolean
+        required: false
+        default: false
+  schedule:
+    - cron: "0 2 * * 1"
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: downstream-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  plan:
+    # Pull requests run the matrix only when they carry the `downstream` label.
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'downstream')
+    runs-on: ubuntu-latest
+    outputs:
+      repos: ${{ steps.repos.outputs.repos }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - id: repos
+        run: echo "repos=$(jq -c . downstream/repos.json)" >> "$GITHUB_OUTPUT"
+
+  self:
+    # A candidate toolchain must still pass Respo's own checks before downstream results mean anything.
+    needs: plan
+    if: inputs.calcit-version != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v6.5.0
+        with:
+          node-version: 24
+
+      - uses: calcit-lang/setup-calcit@v1.5.0
+        with:
+          tools: calcit,caps
+          version: ${{ inputs.calcit-version }}
+          deps-file: downstream/candidate-has-no-deps.cirru
+          caps-version: 0.1.1
+
+      - name: Check Respo with the candidate toolchain
+        env:
+          CALCIT_VERSION: ${{ inputs.calcit-version }}
+        run: |
+          caps --ci
+          npm install --no-save --no-package-lock --no-audit --no-fund
+          npm install --no-save --no-package-lock --no-audit --no-fund "@calcit/procs@$CALCIT_VERSION"
+          calcit calcit.cirru --check-only
+          calcit calcit.cirru test --require-match --summary-only --format json
+          calcit calcit.cirru js
+          npx --no-install vite build --base=./
+
+  downstream:
+    # Wait for `self` so a broken candidate toolchain does not produce misleading results.
+    # `self` is skipped without a candidate version, which must not skip this job.
+    needs: [plan, self]
+    if: ${{ !cancelled() && needs.plan.result == 'success' && needs.self.result != 'failure' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        project: ${{ fromJSON(needs.plan.outputs.repos) }}
+    name: ${{ matrix.project.name }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v6.5.0
+        with:
+          node-version: 24
+
+      - uses: calcit-lang/setup-calcit@v1.5.0
+        with:
+          tools: calcit,caps
+          version: ${{ inputs.calcit-version }}
+          deps-file: ${{ inputs.calcit-version != '' && 'downstream/candidate-has-no-deps.cirru' || 'deps.cirru' }}
+          caps-version: 0.1.1
+
+      # On a pull request, a failing step is retried against the base branch, so
+      # "regression" means this change broke the project. Elsewhere the baseline
+      # is the Respo release each project pins.
+      - name: Check out the base branch as the baseline
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: tmp/baseline
+          persist-credentials: false
+
+      - name: Check ${{ matrix.project.repo }}
+        env:
+          DOWNSTREAM_BASELINE: ${{ github.event_name == 'pull_request' && format('{0}/tmp/baseline', github.workspace) || '' }}
+          DOWNSTREAM_TOKEN: ${{ secrets.DOWNSTREAM_TOKEN }}
+          DOWNSTREAM_REQUIRE_GREEN: ${{ inputs.require-green && '1' || '0' }}
+          DOWNSTREAM_STRICT: ${{ inputs.strict && '1' || '0' }}
+          PROJECT_REPO: ${{ matrix.project.repo }}
+          PROJECT_REF: ${{ matrix.project.ref }}
+        run: bash scripts/check-downstream.sh "$PROJECT_REPO" "$PROJECT_REF"

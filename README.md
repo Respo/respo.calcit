@@ -14,6 +14,8 @@ Respo 的开发版本以 `deps.cirru` 固定 Calcit 与 js-ffi 依赖，通过�
 
 js-ffi 使用正式 Git tag，不使用提交 hash。Respo `0.16.115` 增加 `respo.ffi.browser/query-selector`，返回可直接交给 Respo renderer 的 `Option<respo.dom/DomElement>`；应用无需自行强转跨库 DOM 类型。通过普通 Calcit 引用复用 JS FFI，不需要片段专用 npm 包。版本以 `deps.cirru :version` 为准，旧 Snapshot 的镜像字段不作为发布依据。此前 alpha 工具链的历史验收见[发布依赖验收](docs/guide/calcit-0.28-alpha3-validation.md)，不代表当前组合的完整验收。
 
+升级 Calcit alpha 配对或改动公共 API 时，用下游回归矩阵检查 Router、UI、Reel 和应用，流程见[alpha 配对升级](docs/guide/alpha-pairing.md)。
+
 演示页前端构建使用 `https://cos-sh.tiye.me/Respo/respo.calcit/` 作为资源 base。仅 main push 在测试、构建通过后上传 `dist/`，使用 `cos-upload-action@v1.2.0` 的 `public-base-url` 内置逐文件校验，不维护额外验证脚本。PR 只构建，不读取部署 secrets。原 rsync 页面路径 `/web-assets/repo/${github.repository}` 保持不变；生产运行串行且上传前检查 main SHA，跳过已过期提交，这并非原子发布。
 
 当前组合保留原 definition `:tests` 及其断言，并增加缺失值、状态分支、名义类型和属性 key 合同回归；native 和生成 JS 均不排除测试。框架检查继续覆盖 23 个命名空间的 340 个定义。测试中的空列表 Ref 显式声明元素类型，避免初始化为 `List<Never>` 后再写入其他值；dispatch 测试使用 entry 绑定的 Op 类型，`yarn test-typed-dispatch` 覆盖正例与反例。SSR、DOM patch/lifecycle、正反类型检查、Markdown 示例和生产构建继续保留。EDN 解析所得 Task 名称与字段布局不是名义类型证明：恢复时复用受检 decoder 校验字段，恢复当前 Task 身份；已验证的当前 Task 保留对象身份。`yarn test-persisted-tasks` 验证生成 JS 的序列化往返和错误字段拒绝；真实浏览器继续验证新增、编辑、切换状态及刷新后，同一份任务的 ID、内容和完成状态恢复且控制台无错误。`with-attrs` 接收已序列化的 SVG 扩展属性；DOM anchor 末尾移动使用 null，保留宿主边界的运行时验证。

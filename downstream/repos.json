@@ -1,0 +1,15 @@
+[
+  { "name": "respo-router", "repo": "Respo/respo-router.calcit", "layer": "library" },
+  { "name": "respo-ui", "repo": "Respo/respo-ui.calcit", "layer": "library" },
+  { "name": "reel", "repo": "Respo/reel.calcit", "layer": "library" },
+  { "name": "respo-value", "repo": "Respo/respo-value.calcit", "layer": "library" },
+  { "name": "respo-markdown", "repo": "Respo/respo-markdown.calcit", "layer": "library" },
+  { "name": "respo-feather", "repo": "Respo/respo-feather.calcit", "layer": "library" },
+  { "name": "respo-message", "repo": "Respo/respo-message.calcit", "layer": "library" },
+  { "name": "alerts", "repo": "Respo/alerts.calcit", "layer": "library" },
+  { "name": "leaf-reading", "repo": "jiyinyiyong/leaf-reading", "layer": "app" },
+  { "name": "sedum-slide", "repo": "Memkits/sedum-slide", "layer": "app" },
+  { "name": "camera-try", "repo": "worktools/camera-try", "layer": "app" },
+  { "name": "topix-im", "repo": "TopixIM/topix.im", "layer": "app" },
+  { "name": "everyday", "repo": "TopixIM/everyday", "layer": "app" }
+]
