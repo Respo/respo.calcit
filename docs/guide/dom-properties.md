@@ -67,9 +67,9 @@ defn add-prop (target op)
   let
       prop-name $ dashed->camel (name (key op))
       prop-value $ val op
-    case-default prop-name
-      aset target prop-name prop-value
+    match prop-name
       "|style" $ aset target prop-name (style->string prop-value)
+      _ $ aset target prop-name prop-value
 
 defn rm-prop (target op)
   aset target (dashed->camel (name op)) nil

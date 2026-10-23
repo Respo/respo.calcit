@@ -18,7 +18,7 @@ expect_argument_failure() {
   fi
 }
 
-component='(respo.schema/Component :name :probe :effects ([]) :listeners ([]) :tree (%none))'
+component='(respo.schema/Component :name :probe :effects ([]) :listeners ([]) :tree (Option :none))'
 effect='(respo.schema/Effect :name :probe :coord ([]) :args ([]) :method (fn (args params) &unit))'
 
 for accessor in effect-args effect-name effect-method; do
@@ -43,7 +43,7 @@ expect_argument_failure respo.util.format/coerce-component "$effect"
 expect_argument_failure respo.util.format/purify-element-node 42
 expect_argument_failure respo.util.format/purify-element-node "$component"
 
-element='(respo.schema/Element :name :span :coord (%none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref nil)'
+element='(respo.schema/Element :name :span :coord (Option :none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref nil)'
 for target in respo.util.detect/element-name respo.util.detect/element-ref respo.util.format/coerce-element respo.util.format/coerce-component respo.util.format/purify-element-node; do
   if output=$("$calcit_bin" eval --dep ./calcit.cirru "$target (respo.util.format/purify-element $element)" 2>&1); then
     printf 'Expected %s to reject an unvalidated Dynamic producer.\n' "$target" >&2
@@ -59,7 +59,7 @@ positive=$(cat <<'CIRRU'
 &let (args $ [] |original 42)
   &let (effect $ respo.schema/Effect :name :probe :coord ([]) :args args :method (fn (args params) &unit))
     &let (effects $ [] effect)
-      &let (component $ respo.schema/Component :name :probe :effects effects :listeners ([]) :tree (%none))
+      &let (component $ respo.schema/Component :name :probe :effects effects :listeners ([]) :tree (Option :none))
         assert |preserves-component-identity $ identical? component $ respo.util.format/coerce-component component
         assert |preserves-effect-list-identity $ identical? effects $ respo.util.detect/component-effects component
         assert |preserves-effect-args-identity $ identical? args $ respo.util.detect/effect-args effect
@@ -73,7 +73,7 @@ fields_positive=$(cat <<'CIRRU'
 &let (attrs $ [] ([] :id |probe))
   &let (styles $ [] ([] :color |red))
     &let (events $ {} (:click nil))
-      &let (element $ respo.schema/Element :name :span :coord (%none) :attrs attrs :style styles :event events :children ([]) :ref nil)
+      &let (element $ respo.schema/Element :name :span :coord (Option :none) :attrs attrs :style styles :event events :children ([]) :ref nil)
         assert= :span $ respo.util.detect/element-name element
         assert |preserves-element-identity $ identical? element $ respo.util.format/coerce-element element
         &let (opaque-ref $ fn (target) 42)
@@ -86,13 +86,13 @@ fields_positive=$(cat <<'CIRRU'
           &let (listener $ respo.schema/RespoListener :name :probe :handler handler)
             assert |preserves-handler-identity $ identical? handler $ respo.util.detect/listener-handler listener
             &let (listeners $ [] listener)
-              &let (component $ respo.schema/Component :name :probe :effects ([]) :listeners listeners :tree (%some (respo.schema/RenderNode :element element)))
+              &let (component $ respo.schema/Component :name :probe :effects ([]) :listeners listeners :tree (Option :some (respo.schema/RenderNode :element element)))
                 assert= :probe $ respo.util.detect/component-name component
                 assert |preserves-listeners-identity $ identical? listeners $ respo.util.detect/component-listeners component
                 assert |preserves-tree-payload-identity $ identical? element $ option:unwrap $ respo.util.detect/component-tree component
-                &let (outer-component $ respo.schema/Component :name :outer :effects ([]) :listeners ([]) :tree (%some (respo.schema/RenderNode :component component)))
+                &let (outer-component $ respo.schema/Component :name :outer :effects ([]) :listeners ([]) :tree (Option :some (respo.schema/RenderNode :component component)))
                   assert |preserves-component-payload-identity $ identical? component $ option:unwrap $ respo.util.detect/component-tree outer-component
-                &let (empty-component $ respo.schema/Component :name :probe :effects ([]) :listeners listeners :tree (%none))
+                &let (empty-component $ respo.schema/Component :name :probe :effects ([]) :listeners listeners :tree (Option :none))
                   assert |preserves-none-tree $ option:none? $ respo.util.detect/component-tree empty-component
 CIRRU
 )
