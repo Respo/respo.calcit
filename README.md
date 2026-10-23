@@ -1,5 +1,7 @@
 ## Respo: A virtual DOM library in Calcit-js
 
+使用者影响：候选 `0.16.125` 仅在正式 `0.16.124` 维护线上配对已发布 JS-FFI `0.2.6`，Calcit CLI / procs 仍为正式 `0.30.1`。Snapshot、公开 API、dispatch 和原测试不变，不引入 main 的 0.17 typed-dispatch 改动。JS-FFI 修复普通 div/canvas 不能通过通用 DOM 受检转换的问题；直接依赖 JS-FFI 的应用及其他模块也须选用同一正式版本。此处尚不代表下游实际交互已验收，需等待完整 CI 与消费者回归。维护分支 push 执行原门禁，不触发 main Demo 的 COS/rsync 部署。
+
 ### JS FFI 文件模块试验
 
 Respo 的开发版本以 `deps.cirru` 固定 Calcit 与 js-ffi 依赖，通过普通 `:modules` 和 `:require` 调用 `js-ffi.browser/document-available?`。该实现由 js-ffi 模块携带单表达式 JS 文件，Respo 不引用文件路径，也不安装片段专用 npm 包。运行 `caps --strict --ci`、`yarn install --immutable` 和 `yarn test-dom-host`，可验证干净安装、生成模块中的内嵌实现及有无 `document` 时的行为。文件修改后需显式重新构建。
