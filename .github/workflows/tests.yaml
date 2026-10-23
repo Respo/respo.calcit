@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - maintenance/0.16
+      - prepare/respo-option031
   pull_request: {}
 
 permissions:
@@ -49,8 +50,12 @@ jobs:
 
       - name: Validate Calcit snapshot and strict types
         run: |
+          set -euo pipefail
+          test "$(git hash-object calcit.cirru)" = '25181ad6160623d4797f9e03bd98c2f68ecd7f25'
+          node acceptance/prepare-option.mjs
+          prepared_blob="$(git hash-object calcit.cirru)"
           calcit calcit.cirru edit format
-          git diff --exit-code -- calcit.cirru
+          test "$(git hash-object calcit.cirru)" = "$prepared_blob"
           calcit calcit.cirru --check-only
           calcit calcit.cirru fix --workflow strict --verify --format edn
 
@@ -127,6 +132,16 @@ jobs:
         run: >
           calcit calcit.cirru js
           && yarn vite build --base="$VITE_BASE_URL"
+
+      - name: Preserve formal prepared source and transaction evidence
+        run: cp calcit.cirru acceptance/calcit.cirru
+
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: respo-option-prepared
+          path: acceptance/
+          if-no-files-found: error
+          retention-days: 7
 
       - name: Save PR frontend build for browser acceptance
         if: github.event_name == 'pull_request'
