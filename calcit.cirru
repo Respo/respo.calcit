@@ -699,30 +699,42 @@
               :code $ quote $ do
                 let
                     task $ Task :id |task-1 :text |saved :done? false
-                    normalized $ option:unwrap $ normalize-task task
+                    normalized $
+                      normalize-task task
+                      , .unwrap
                   assert |struct-id-is-kept $ = |task-1 $ &struct:nth normalized 1 :id
                   assert |struct-text-is-kept $ = |saved $ &struct:nth normalized 2 :text
                   assert |struct-status-is-kept $ = false $ &struct:nth normalized 0 :done?
                 let
-                    normalized $ option:unwrap $ normalize-task
-                      {} (:id |task-2) (:text |mapped) (:done? true)
+                    normalized $
+                      normalize-task $ {} (:id |task-2) (:text |mapped) (:done? true)
+                      , .unwrap
                   assert |map-input-is-restored $ = |task-2 $ &struct:nth normalized 1 :id
-                assert |invalid-data-is-rejected $ option:none? $ normalize-task
-                  {} $ :id |missing-fields
+                assert |invalid-data-is-rejected $
+                  normalize-task $ {} $ :id |missing-fields
+                  , .none?
             %{} 'TestEntry (:name |rejects-invalid-task-fields)
               :code $ quote $ do
-                assert |invalid-task-shape-or-field-is-rejected $ option:none? $ normalize-task nil
-                assert |invalid-task-shape-or-field-is-rejected $ option:none? $ normalize-task 42
-                assert |invalid-task-shape-or-field-is-rejected $ option:none? $ normalize-task
-                  {} (:id |t) (:text |text) (:done? |wrong)
-                assert |invalid-task-shape-or-field-is-rejected $ option:none? $ normalize-task
-                  {} (:id 42) (:text |text) (:done? false)
-                assert |invalid-task-shape-or-field-is-rejected $ option:none? $ normalize-task
-                  {} (:id |t) (:text |text)
+                assert |invalid-task-shape-or-field-is-rejected $
+                  normalize-task nil
+                  , .none?
+                assert |invalid-task-shape-or-field-is-rejected $
+                  normalize-task 42
+                  , .none?
+                assert |invalid-task-shape-or-field-is-rejected $
+                  normalize-task $ {} (:id |t) (:text |text) (:done? |wrong)
+                  , .none?
+                assert |invalid-task-shape-or-field-is-rejected $
+                  normalize-task $ {} (:id 42) (:text |text) (:done? false)
+                  , .none?
+                assert |invalid-task-shape-or-field-is-rejected $
+                  normalize-task $ {} (:id |t) (:text |text)
+                  , .none?
               :tags $ #{} :unit
             %{} 'TestEntry (:name |rejects-other-nominal-struct)
               :code $ quote $ assert |other-nominal-struct-is-rejected
-                option:none? $ normalize-task $ respo.core/span ({})
+                (normalize-task (respo.core/span ({})))
+                  , .none?
               :tags $ #{} :unit
             %{} 'TestEntry (:name |parsed-record-requires-field-validation)
               :code $ quote $ assert= (Option :none)
@@ -875,7 +887,9 @@
                 or (= action :mount) (= action :update)
                 let
                     disabled-commands $ let
-                        raw-disabled $ option:unwrap-or (get options :disabled-commands) (#{} |p |s)
+                        raw-disabled $
+                          get options :disabled-commands
+                          , .unwrap-or $ #{} |p |s
                       decode-map-as raw-disabled $ :: 'Set 'String
                     handler $ fn (event)
                       hint-fn $ {}
@@ -1307,7 +1321,9 @@
                   elements $ filter component-result $ fn (x)
                     not $ listener? x
                 {} (:listeners listeners)
-                  :element $ option:unwrap-or (first elements) nil
+                  :element $
+                    first elements
+                    , .unwrap-or nil
               {}
                 :listeners $ []
                 :element component-result
@@ -1317,7 +1333,7 @@
             :return $ :: 'Map 'Tag 'Dynamic
         'find-child-by-key $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn find-child-by-key (children expected-key)
-            option:map (find-child-node children expected-key) respo.util.detect/render-node-value
+            (find-child-node children expected-key) .map respo.util.detect/render-node-value
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] (:: 'List 'respo.schema/ChildPair) 'Dynamic
@@ -1359,7 +1375,7 @@
                         (:component component)
                           recur $ :tree component
                         (:element target) (Option :some target)
-                event-present? $ option:fold target-element-option
+                event-present? $ target-element-option .fold
                   fn ()
                     hint-fn $ {}
                       :args $ []
@@ -1381,15 +1397,18 @@
           :tests $ [] $ %{} 'TestEntry (:name |returns-none-through-empty-component-tree)
             :code $ quote $ let
                 component $ respo.schema/Component :name :empty :effects ([]) :listeners ([]) :tree $ %none
-              assert |coordinate-descent-stops-at-none-tree $ option:none? $ get-markup-at component ([] :child)
-              assert |event-target-stops-at-none-tree $ option:none? $ find-event-target component ([]) :click
+              assert |coordinate-descent-stops-at-none-tree $
+                get-markup-at component $ [] :child
+                , .none?
+              assert |event-target-stops-at-none-tree $
+                find-event-target component ([]) :click
+                , .none?
             :tags $ #{} :unit
         'get-markup-at $ %{} 'CodeEntry
           :doc "|Retrieves the virtual DOM element at the specified coordinate."
           :code $ quote $ defn get-markup-at (markup coord)
-            option:map
-              get-render-node-at (respo.util.detect/as-render-node markup) coord
-              , respo.util.detect/render-node-value
+            (get-render-node-at (respo.util.detect/as-render-node markup) coord)
+              , .map respo.util.detect/render-node-value
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] 'Struct $ :: 'List 'Dynamic
@@ -3041,7 +3060,8 @@
               (:some index)
                 when-not
                   =
-                    option:unwrap $ nth @*style-list-in-nodejs index
+                      nth @*style-list-in-nodejs index
+                      , .unwrap
                     , css-block
                   swap! *style-list-in-nodejs assoc index css-block
               (:none)
@@ -3516,7 +3536,8 @@
         'update-states $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn update-states (store cursor new-state)
             assoc store :states $ update-state-tree
-              option:unwrap-or (get store :states) ({})
+                get store :states
+                , .unwrap-or $ {}
               , cursor new-state
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Dynamic)
@@ -3526,7 +3547,8 @@
           :doc "|a quick dirty trick to partially update component state.\n\nnotice: need to handle empty state manually."
           :code $ quote $ defn update-states-kv (store cursor k v)
             assoc store :states $ update-state-tree-kv
-              option:unwrap-or (get store :states) ({})
+                get store :states
+                , .unwrap-or $ {}
               , cursor k v
           :examples $ []
           :schema $ :: 'Fn $ {}
@@ -4647,7 +4669,9 @@
                                 old-position $ assert-type
                                   .unwrap $ calcit.core/get old-index key
                                   , 'Number
-                                child $ option:unwrap $ :node (&list:nth middle-old-children old-position)
+                                child $
+                                  :node $ &list:nth middle-old-children old-position
+                                  , .unwrap
                                 child-n-coord $ append n-coord $ + index-offset old-position
                               respo.render.effect/collect-unmounting-node collect! (append coord key) child-n-coord child true
                               collect! $ DomPatch :rm-element (append coord key) child-n-coord
@@ -4656,7 +4680,9 @@
                               new-position $ assert-type
                                 .unwrap $ calcit.core/get new-index key
                                 , 'Number
-                              child $ option:unwrap $ :node (&list:nth middle-new-children new-position)
+                              child $
+                                :node $ &list:nth middle-new-children new-position
+                                , .unwrap
                               child-coord $ append coord key
                             collect! $ DomPatch :append-element child-coord n-coord $ respo.util.detect/render-node-value child
                         loop
@@ -4672,14 +4698,16 @@
                               do
                                 when-not (contains? kept source)
                                   collect! $ DomPatch :move-element n-coord (+ index-offset source)
-                                    option:map anchor $ fn (position) (+ index-offset position)
+                                    anchor .map $ fn (position) (+ index-offset position)
                                 recur rest-sources $ Option :some source
                         &doseq (key added-keys)
                           let
                               new-position $ assert-type
                                 .unwrap $ calcit.core/get new-index key
                                 , 'Number
-                              child $ option:unwrap $ :node (&list:nth middle-new-children new-position)
+                              child $
+                                :node $ &list:nth middle-new-children new-position
+                                , .unwrap
                               child-coord $ append coord key
                             respo.render.effect/collect-mounting-node collect! child-coord
                               append n-coord $ + index-offset new-position
@@ -4716,7 +4744,7 @@
                             do
                               when-not (contains? kept source)
                                 collect! $ DomPatch :move-element n-coord (+ index source)
-                                  option:map anchor $ fn (position) (+ index position)
+                                  anchor .map $ fn (position) (+ index position)
                               recur rest-sources $ Option :some source
             , &unit
           :examples $ []
@@ -6351,7 +6379,8 @@
                   (:replace-prop _coord n-coord key value)
                     do (flush-scroll!)
                       replace-prop
-                        option:unwrap $ find-target-at n-coord
+                          find-target-at n-coord
+                          , .unwrap
                         , key value
                       if
                         contains? (#{} :outerHTML :outer-html) key
@@ -6362,7 +6391,8 @@
                   (:add-prop _coord n-coord key value)
                     do (flush-scroll!)
                       add-prop
-                        option:unwrap $ find-target-at n-coord
+                          find-target-at n-coord
+                          , .unwrap
                         , key value
                       if
                         contains? (#{} :outerHTML :outer-html) key
@@ -6373,7 +6403,8 @@
                   (:rm-prop _coord n-coord key)
                     do (flush-scroll!)
                       rm-prop
-                        option:unwrap $ find-target-at n-coord
+                          find-target-at n-coord
+                          , .unwrap
                         , key
                       if
                         contains? (#{} :outerHTML :outer-html) key
@@ -6384,32 +6415,38 @@
                   (:add-style _coord n-coord key value)
                     do (flush-scroll!)
                       add-style
-                        option:unwrap $ find-target-at n-coord
+                          find-target-at n-coord
+                          , .unwrap
                         , key value
                   (:replace-style _coord n-coord key value)
                     do (flush-scroll!)
                       replace-style
-                        option:unwrap $ find-target-at n-coord
+                          find-target-at n-coord
+                          , .unwrap
                         , key value
                   (:rm-style _coord n-coord key)
                     do (flush-scroll!)
                       rm-style
-                        option:unwrap $ find-target-at n-coord
+                          find-target-at n-coord
+                          , .unwrap
                         , key
                   (:set-event coord n-coord event-name)
                     do (flush-scroll!)
                       add-event
-                        option:unwrap $ find-target-at n-coord
+                          find-target-at n-coord
+                          , .unwrap
                         , event-name listener-builder coord
                   (:rm-event _coord n-coord event-name)
                     do (flush-scroll!)
                       rm-event
-                        option:unwrap $ find-target-at n-coord
+                          find-target-at n-coord
+                          , .unwrap
                         , event-name
                   (:add-element coord n-coord element)
                     do (flush-scroll!)
                       add-element
-                        option:unwrap $ find-target-at n-coord
+                          find-target-at n-coord
+                          , .unwrap
                         , element listener-builder coord
                       invalidate-at! n-coord
                   (:rm-element _coord n-coord)
@@ -6419,18 +6456,22 @@
                   (:replace-element coord n-coord element)
                     do (flush-scroll!)
                       replace-element
-                        option:unwrap $ find-target-at n-coord
+                          find-target-at n-coord
+                          , .unwrap
                         , element listener-builder coord
                       invalidate-at! n-coord
                   (:append-element coord n-coord element)
                     do (flush-scroll!)
                       append-element
-                        option:unwrap $ find-target-at n-coord
+                          find-target-at n-coord
+                          , .unwrap
                         , element listener-builder coord
                       invalidate-target-children! target-cache n-coord
                   (:move-element n-coord source anchor)
                     let
-                        parent $ option:unwrap $ find-target-at n-coord
+                        parent $
+                          find-target-at n-coord
+                          , .unwrap
                         nodes $ assert-type
                           match (get @child-snapshots n-coord)
                             (:none) (snapshot-children parent)
@@ -6445,25 +6486,29 @@
                   (:effect-mount _coord n-coord run!)
                     do (flush-scroll!)
                       run-effect
-                        option:unwrap $ find-target-at n-coord
+                          find-target-at n-coord
+                          , .unwrap
                         , run! n-coord
                       reset! target-cache $ {}
                   (:effect-unmount _coord n-coord run!)
                     do (flush-scroll!)
                       run-effect
-                        option:unwrap $ find-target-at n-coord
+                          find-target-at n-coord
+                          , .unwrap
                         , run! n-coord
                       reset! target-cache $ {}
                   (:effect-update _coord n-coord run!)
                     do (flush-scroll!)
                       run-effect
-                        option:unwrap $ find-target-at n-coord
+                          find-target-at n-coord
+                          , .unwrap
                         , run! n-coord
                       reset! target-cache $ {}
                   (:effect-before-update _coord n-coord run!)
                     do (flush-scroll!)
                       run-effect
-                        option:unwrap $ find-target-at n-coord
+                          find-target-at n-coord
+                          , .unwrap
                         , run! n-coord
                       reset! target-cache $ {}
               flush-scroll!
@@ -6932,7 +6977,7 @@
         'resource-idle $ %{} 'CodeEntry
           :doc "|Creates an immutable idle ResourceState with optional initial data."
           :code $ quote $ defn resource-idle (initial-data-option)
-            ResourceState :status :idle :request-id (Option :none) :data (option:unwrap-or initial-data-option nil) :error nil
+            ResourceState :status :idle :request-id (Option :none) :data (initial-data-option .unwrap-or nil) :error nil
           :examples $ []
             quote $ resource-idle $ Option :none
             quote $ resource-idle $ Option :some
@@ -7042,7 +7087,9 @@
                   pending $ resource-reducer idle $ resource-started 7
                   ready $ resource-reducer pending $ resource-ready 7 |ok
                   stale $ resource-reducer pending $ resource-ready 8 |stale
-                assert |idle-has-no-request $ option:none? $ &struct:nth idle 2 :request-id
+                assert |idle-has-no-request $
+                  &struct:nth idle 2 :request-id
+                  , .none?
                 match (&struct:nth pending 2 :request-id)
                   (:some id)
                     assert |pending-keeps-request-id $ = 7 id
@@ -7342,7 +7389,9 @@
             assert= |spellcheck $ dashed->camel |spell-check
             println |typed-DOM-host-contract-ok
             svg-host-smoke!
-            assert= true $ option:none? $ dom-ffi/query-selector |#respo-query-missing
+            assert= true $
+              dom-ffi/query-selector |#respo-query-missing
+              , .none?
             , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
@@ -7611,12 +7660,14 @@
               assert |resource-fetcher-runs-once $ = 1 @calls
               assert |resource-load-starts-synchronously $ = (resource-started request-id)
                 assert-type
-                  option:unwrap $ first @actions
+                    first @actions
+                    , .unwrap
                   , 'respo.resource/ResourceAction
               shared/queue-microtask! $ fn () (swap! *async-checks inc)
                 assert |resolved-resource-emits-ready $ = (resource-ready request-id |ready)
                   assert-type
-                    option:unwrap $ get @actions 1
+                      get @actions 1
+                      , .unwrap
                     , 'respo.resource/ResourceAction
             let
                 actions $ ref $ assert-type ([]) (:: 'List 'respo.resource/ResourceAction)
@@ -7778,7 +7829,9 @@
                     assert |component-identity $ identical? component payload
                   (:element _) (assert |expected-component false)
                 assert |value-identity $ identical? component $ render-node-value node
-                assert |keeps-none-tree $ option:none? $ component-tree component
+                assert |keeps-none-tree $
+                  component-tree component
+                  , .none?
               :tags $ #{} :unit
             %{} 'TestEntry (:name |rejects-invalid-node)
               :code $ quote $ let
@@ -7826,7 +7879,7 @@
           :code $ quote $ defn component-tree (value)
             let
                 component $ assert-type value 'respo.schema/Component
-              option:map (:tree component) respo.util.detect/render-node-value
+              (:tree component) .map respo.util.detect/render-node-value
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] 'respo.schema/Component
@@ -8096,7 +8149,7 @@
                     not $ empty? other-children
                     compare-to-dom!
                       as-element $ respo.util.detect/child-pair-value $ &list:nth other-children 0
-                      option:unwrap $ browser/child-element-at real-children acc
+                      (browser/child-element-at real-children acc) .unwrap
                     recur (inc acc) (&list:rest other-children)
             , &unit
           :examples $ []
@@ -8341,24 +8394,33 @@
                 component $ respo.schema/Component :name :root :effects ([]) :listeners ([]) :tree $ %some (respo.util.detect/as-render-node root)
                 muted $ assert-type (mute-element component) 'respo.schema/Component
                 muted-root $ assert-type
-                  option:unwrap $ respo.util.detect/component-tree muted
+                    respo.util.detect/component-tree muted
+                    , .unwrap
                   , 'respo.schema/Element
-                child-pair $ option:unwrap $ first (respo.util.detect/element-children muted-root)
+                child-pair $
+                  first $ respo.util.detect/element-children muted-root
+                  , .unwrap
                 muted-child $ assert-type (respo.util.detect/child-pair-value child-pair) 'respo.schema/Element
-                nil-pair $ option:unwrap $ last (respo.util.detect/element-children muted-root)
+                nil-pair $
+                  last $ respo.util.detect/element-children muted-root
+                  , .unwrap
               assert= 1 $ count $ :event root
               assert= 1 $ count $ :event leaf
               assert= ({}) (:event muted-root)
               assert= ({}) (:event muted-child)
               assert= :root $ :name muted
               assert= :empty $ :key nil-pair
-              assert |empty-child-is-preserved $ option:none? $ :node nil-pair
+              assert |empty-child-is-preserved $
+                :node nil-pair
+                , .none?
             :tags $ #{} :unit
         'mute-render-node $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn mute-render-node (node)
             match node
               (:component component)
-                respo.schema/RenderNode :component $ &struct:assoc component :tree $ option:map (:tree component) mute-render-node
+                respo.schema/RenderNode :component $ &struct:assoc component :tree $
+                  :tree component
+                  , .map mute-render-node
               (:element element)
                 respo.schema/RenderNode :element $ -> element
                   assoc :event $ {}
@@ -8367,7 +8429,9 @@
                       hint-fn $ {}
                         :args $ [] 'respo.schema/ChildPair
                         :return 'respo.schema/ChildPair
-                      &struct:assoc pair :node $ option:map (:node pair) mute-render-node
+                      &struct:assoc pair :node $
+                        :node pair
+                        , .map mute-render-node
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/RenderNode)
             :args $ [] 'respo.schema/RenderNode
@@ -8456,8 +8520,9 @@
                       hint-fn $ {}
                         :args $ [] 'respo.schema/ChildPair
                         :return 'respo.schema/ChildPair
-                      &struct:assoc pair :node $ option:map (:node pair)
-                        fn (child)
+                      &struct:assoc pair :node $
+                        :node pair
+                        , .map $ fn (child)
                           hint-fn $ {}
                             :args $ [] 'respo.schema/RenderNode
                             :return 'respo.schema/RenderNode
@@ -8480,7 +8545,9 @@
                 cleaned $ respo.util.detect/as-element $ respo.util.detect/child-pair-value child
               assert= 7 $ :key child
               assert= |empty $ :key empty-pair
-              assert |nil-child-preserved $ option:none? $ :node empty-pair
+              assert |nil-child-preserved $
+                :node empty-pair
+                , .none?
               assert= :span $ :name cleaned
               assert= (:attrs leaf) (:attrs cleaned)
               assert= ({}) (:event cleaned)
@@ -8799,7 +8866,9 @@
         'val-exists? $ %{} 'CodeEntry
           :doc "|Predicate to check if a key-value pair has a non-nil value."
           :code $ quote $ defn val-exists? (pair)
-            not $ nil? $ option:unwrap-or (last pair) nil
+            not $ nil? $
+              last pair
+              , .unwrap-or nil
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Bool)
             :args $ [] 'Dynamic

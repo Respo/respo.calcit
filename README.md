@@ -1,5 +1,9 @@
 ## Respo: A virtual DOM library in Calcit-js
 
+使用者影响：候选 `0.16.126` 在正式 `0.30.1` / JS-FFI `0.2.6` 的兼容维护线上，将 39 处代码及 18 处原附带测试中的 `option:` 调用迁到 `.unwrap`、`.unwrap-or`、`.map`、`.fold`、`.none?`。公开签名、`Option<Struct>` 返回、缺失值和回调合同不变，不包含 main 的 0.17 typed-dispatch 改动。仅整理同一 core 实现的调用方式，不添加默认值、强转、质量预算或编译器改写规则。
+
+147 个原附带测试的名称、标签和断言预期保留，74 个示例不改；测试内只替换同义调用。等待候选的完整 DOM/SSR、类型、测试、文档及构建验收，未发布前不要作为正式依赖使用。维护线与本次 PR 不部署 Demo 或下游应用。
+
 使用者影响：候选 `0.16.125` 仅在正式 `0.16.124` 维护线上配对已发布 JS-FFI `0.2.6`，Calcit CLI / procs 仍为正式 `0.30.1`。Snapshot、公开 API、dispatch 和原测试不变，不引入 main 的 0.17 typed-dispatch 改动。JS-FFI 修复普通 div/canvas 不能通过通用 DOM 受检转换的问题；直接依赖 JS-FFI 的应用及其他模块也须选用同一正式版本。此处尚不代表下游实际交互已验收，需等待完整 CI 与消费者回归。维护分支 push 执行原门禁，不触发 main Demo 的 COS/rsync 部署。
 
 ### JS FFI 文件模块试验
