@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import * as c from '../js-out/calcit.core.mjs';
+const optionTags = c.init_tags(['none', 'some']);
+const optionNone = () => c._PCT__$o__$o_(c.Option, optionTags.none);
+const optionSome = value => c._PCT__$o__$o_(c.Option, optionTags.some, value);
 import { Component, RespoListener } from '../js-out/respo.schema.mjs';
 import { div } from '../js-out/respo.core.mjs';
 import { as_render_node, make_child_pair } from '../js-out/respo.util.detect.mjs';
@@ -25,13 +28,13 @@ function fixture(includeEmpty, fail = false) {
   const component = (name, tree, listeners) => c._$n__PCT__$M_(Component,
     t.name, name, t.effects, list([]), t.listeners, list(listeners), t.tree, tree);
   const direct = c._$o__$o_(t.direct);
-  const first = component(t.first, c._PCT_none(), [listener('first', d => d(direct))]);
-  const second = component(t.second, c._PCT_none(), [listener('second')]);
+  const first = component(t.first, optionNone(), [listener('first', d => d(direct))]);
+  const second = component(t.second, optionNone(), [listener('second')]);
   const pairs = [make_child_pair('first', first), make_child_pair('second', second)];
   if (includeEmpty) pairs.splice(1, 0, make_child_pair('empty', null));
   const element = with_fixture_children(div(c.parse_cirru_edn('{}')), list(pairs));
-  const nested = component(t.nested, c._PCT_some(as_render_node(element)), [listener('nested')]);
-  const root = component(t.root, c._PCT_some(as_render_node(nested)), [
+  const nested = component(t.nested, optionSome(as_render_node(element)), [listener('nested')]);
+  const root = component(t.root, optionSome(as_render_node(nested)), [
     listener('root-1', d => d(c._$o__$o_(t.states, list(['cursor']), 'value'))),
     listener('root-2', d => { if (fail) throw new Error('listener-failed'); d(c._$o__$o_(t.persist)); }),
   ]);

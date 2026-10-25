@@ -19,6 +19,9 @@ globalThis.document = {
 };
 
 const c = await import('../js-out/calcit.core.mjs');
+const optionTags = c.init_tags(['none', 'some']);
+const optionNone = () => c._PCT__$o__$o_(c.Option, optionTags.none);
+const optionSome = value => c._PCT__$o__$o_(c.Option, optionTags.some, value);
 const { Component } = await import('../js-out/respo.schema.mjs');
 const { div, span } = await import('../js-out/respo.core.mjs');
 const { as_render_node, make_child_pair } = await import('../js-out/respo.util.detect.mjs');
@@ -30,7 +33,7 @@ const t = c.init_tags(['name', 'effects', 'listeners', 'tree', 'children', 'root
 const event = c.init_tags(['event', 'click', 'input']);
 const component = (name, element) => c._$n__PCT__$M_(Component,
   t.name, name, t.effects, c.arrayToList([]), t.listeners, c.arrayToList([]),
-  t.tree, c._PCT_some(as_render_node(element)));
+  t.tree, optionSome(as_render_node(element)));
 
 test('SSR mismatch diagnostics preserve element and component child names', () => {
   const leaf = span(c.parse_cirru_edn('{}'));

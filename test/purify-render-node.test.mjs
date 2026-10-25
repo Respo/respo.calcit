@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import * as c from '../js-out/calcit.core.mjs';
+const optionTags = c.init_tags(['none', 'some']);
+const optionNone = () => c._PCT__$o__$o_(c.Option, optionTags.none);
+const optionSome = value => c._PCT__$o__$o_(c.Option, optionTags.some, value);
 import { Component } from '../js-out/respo.schema.mjs';
 import { div, span } from '../js-out/respo.core.mjs';
 import { as_render_node, make_child_pair, child_pair_value, element_name, element_ref } from '../js-out/respo.util.detect.mjs';
@@ -18,7 +21,7 @@ test('nominal helpers preserve the original element, component, ref and child id
   const leaf = span(c.parse_cirru_edn('{} (:inner-text |leaf)'));
   const ref = () => 42;
   const live = c.assoc(leaf, tags.ref, ref);
-  const wrapped = component(c._PCT_some(as_render_node(live)));
+  const wrapped = component(optionSome(as_render_node(live)));
   assert.equal(coerce_element(live), live);
   assert.equal(coerce_component(wrapped), wrapped);
   assert.equal(field(coerce_element(live), tags.ref), ref);
@@ -39,7 +42,7 @@ test('purification unwraps nested components, clears refs/events and preserves c
   const leaf = span(c.parse_cirru_edn('{} (:inner-text |leaf)'));
   const liveLeaf = with_fixture_events(c.assoc(leaf, tags.ref, () => {}),
     c.parse_cirru_edn('{} (:click nil)'));
-  const wrapped = component(c._PCT_some(as_render_node(component(c._PCT_some(as_render_node(liveLeaf))))));
+  const wrapped = component(optionSome(as_render_node(component(optionSome(as_render_node(liveLeaf))))));
   const root = with_fixture_children(div(c.parse_cirru_edn('{}')), c.arrayToList([
     make_child_pair(7, wrapped), make_child_pair('empty', null),
   ]));
@@ -57,8 +60,8 @@ test('purification unwraps nested components, clears refs/events and preserves c
 });
 
 test('purification keeps the explicit error for an empty nested component tree', () => {
-  const empty = component(c._PCT_none());
-  const wrapped = component(c._PCT_some(as_render_node(empty)));
+  const empty = component(optionNone());
+  const wrapped = component(optionSome(as_render_node(empty)));
   assert.throws(() => purify_element(wrapped), /tree-is-empty/);
 });
 

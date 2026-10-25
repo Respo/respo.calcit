@@ -544,7 +544,7 @@
                         , data checked
                     (:err _) (Option :none)
                   match
-                    try-decode-map-as (data.to-map) 'respo.app.schema/Task
+                    try-decode-map-as (&struct:to-map data) 'respo.app.schema/Task
                     (:ok checked) (Option :some checked)
                     (:err _) (Option :none)
               (map? data)
@@ -1266,7 +1266,11 @@
           :doc "|Atom to hold a logging function for observing changes during rerenders. Function signature: (old-tree new-tree changes)."
           :code $ quote $ defref *changes-logger (Option :none)
           :examples $ [] $ quote
-            reset! *changes-logger $ Option :some $ fn (_old-tree _new-tree changes) (println changes)
+            reset! *changes-logger $ Option :some $ fn (_old-tree _new-tree changes)
+              hint-fn $ {}
+                :args $ [] 'respo.schema/Component 'respo.schema/Component $ :: 'List 'respo.schema/DomPatch
+                :return 'Unit
+              println changes
           :schema $ :: 'Ref $ :: 'calcit.core/Option
             :: 'Fn $ {} (:return 'Unit)
               :args $ [] 'respo.schema/Component 'respo.schema/Component $ :: 'List 'respo.schema/DomPatch

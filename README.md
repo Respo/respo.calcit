@@ -234,7 +234,7 @@ let
     render-app! $ fn () &unit
   add-watch! *store :changes $ fn (_previous _next)
     render-app!
-  remove-watch *store :changes
+  remove-watch! *store :changes
   add-watch! *store :changes $ fn (_previous _next)
     render-app!
   respo.core/clear-cache!
@@ -259,7 +259,7 @@ let
         respo.core/div ({})
 ```
 
-Define a hooks plugin based on Calcit Record, better use a pure function:
+Define a hooks plugin as a pure function that returns its rendered node together with its helpers:
 
 ```cirru.no-run
 ; ns app.demo $ :require
@@ -267,12 +267,9 @@ Define a hooks plugin based on Calcit Record, better use a pure function:
 
 let
     plugin-x $ fn (states options)
-      %::
-        %{} :PluginX
-          :render $ fn (self) (nth self 1)
-          :show $ fn (self d! text) nil
-        , :plugin-name
-        respo.core/div ({}) (respo.core/<> "|Demo")
+      {}
+        :ui $ respo.core/div ({}) (respo.core/<> "|Demo")
+        :show $ fn (d! text) nil
 ```
 
 ### License

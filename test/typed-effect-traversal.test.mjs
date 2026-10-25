@@ -4,6 +4,9 @@ import { ElementHost } from './dom-host.mjs';
 globalThis.Element = ElementHost;
 globalThis.document = { createElement: name => new ElementHost(name) };
 const c = await import('../js-out/calcit.core.mjs');
+const optionTags = c.init_tags(['none', 'some']);
+const optionNone = () => c._PCT__$o__$o_(c.Option, optionTags.none);
+const optionSome = value => c._PCT__$o__$o_(c.Option, optionTags.some, value);
 const { Component, Effect } = await import('../js-out/respo.schema.mjs');
 const { div, span } = await import('../js-out/respo.core.mjs');
 const { as_render_node, make_child_pair } = await import('../js-out/respo.util.detect.mjs');
@@ -133,7 +136,7 @@ test('unchanged and absent refs do not schedule callbacks; failures propagate on
 function fixture(includeEmpty) {
   const calls = [];
   const component = (name, element) => c._$n__PCT__$M_(Component,
-    t.name, name, t.listeners, list([]), t.tree, c._PCT_some(as_render_node(element)),
+    t.name, name, t.listeners, list([]), t.tree, optionSome(as_render_node(element)),
     t.effects, list([c._$n__PCT__$M_(Effect, t.name, name, t.coord, list([]), t.args, list([name.value]),
       t.method, (args, params) => {
         const [action, target, atPlace] = c.listToArray(params);

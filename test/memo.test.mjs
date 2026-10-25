@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import * as c from '../js-out/calcit.core.mjs';
+const optionTags = c.init_tags(['none', 'some']);
+const optionNone = () => c._PCT__$o__$o_(c.Option, optionTags.none);
+const optionSome = value => c._PCT__$o__$o_(c.Option, optionTags.some, value);
 import * as m from '../js-out/respo.memo.mjs';
 import { Component } from '../js-out/respo.schema.mjs';
 import { render_with_$x_ } from '../js-out/respo.core.mjs';
@@ -79,7 +82,7 @@ test('compiled memo calls outside frames compute without reading or writing cach
 
 test('component call boundaries retain identity, callback arguments, errors and cache behavior', () => {
   const tags = c.init_tags(['name', 'effects', 'listeners', 'tree', 'probe']);
-  const expected = c._$n__PCT__$M_(Component, tags.name, tags.probe, tags.effects, c.arrayToList([]), tags.listeners, c.arrayToList([]), tags.tree, c._PCT_none());
+  const expected = c._$n__PCT__$M_(Component, tags.name, tags.probe, tags.effects, c.arrayToList([]), tags.listeners, c.arrayToList([]), tags.tree, optionNone());
   let calls = 0;
   const build = (...args) => { calls++; assert.deepEqual(args, [42, 'probe']); return expected; };
   assert.equal(m.call_component(build, c.arrayToList([42, 'probe'])), expected);
