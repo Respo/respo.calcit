@@ -18,7 +18,7 @@ let
     leaf $ respo.core/span $ {}
     pair $ respo.util.detect/make-child-pair :child leaf
     empty-pair $ respo.util.detect/make-child-pair :empty nil
-    parent $ respo.schema/Element :name :div :coord (%none) :attrs ([]) :style ([]) :event ({}) :children ([] pair empty-pair) :ref nil
+    parent $ respo.schema/Element :name :div :coord (Option :none) :attrs ([]) :style ([]) :event ({}) :children ([] pair empty-pair) :ref nil
     children $ respo.util.detect/element-children parent
   assert= 2 $ count children
   assert |payload-identity $ identical? leaf $ respo.util.detect/child-pair-value pair

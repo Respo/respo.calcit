@@ -1,4 +1,7 @@
 import * as c from '../js-out/calcit.core.mjs';
+const optionTags = c.init_tags(['none', 'some']);
+const optionNone = () => c._PCT__$o__$o_(c.Option, optionTags.none);
+const optionSome = value => c._PCT__$o__$o_(c.Option, optionTags.some, value);
 import { button, render_$x_, realize_ssr_$x_, configure_events_$x_, _$s_global_element } from '../js-out/respo.core.mjs';
 import { Component, DomProps, EventConfig, ListenerMode } from '../js-out/respo.schema.mjs';
 import { make_string } from '../js-out/respo.render.html.mjs';
@@ -13,7 +16,7 @@ function tree(handler) {
   const props = c._$n__PCT__$M_(DomProps, ...DomProps.fields.flatMap(field => [field,
     field.value === 'on-click' ? handler : field.value === 'inner-text' ? 'event button' : null]));
   return c._$n__PCT__$M_(Component, tags.name, tags.root,
-    tags.effects, list, tags.listeners, list, tags.tree, c._PCT_some(as_render_node(button(props))));
+    tags.effects, list, tags.listeners, list, tags.tree, optionSome(as_render_node(button(props))));
 }
 const check = (condition, message) => { if (!condition) throw new Error(message); };
 
@@ -22,7 +25,7 @@ export function verifyEventConfig(mount) {
   for (const ssr of [false, true]) {
     for (const mode of ['property', 'add-event-listener']) {
       for (const stop of [true, false]) {
-        c.reset_$x_(_$s_global_element, c._PCT_none());
+        c.reset_$x_(_$s_global_element, optionNone());
         configure_events_$x_(makeConfig(stop, mode));
         let handled = 0;
         let updated = 0;
@@ -77,7 +80,7 @@ export function verifyEventConfig(mount) {
       }
     }
   }
-  c.reset_$x_(_$s_global_element, c._PCT_none());
+  c.reset_$x_(_$s_global_element, optionNone());
   configure_events_$x_(default_config);
   return results;
 }

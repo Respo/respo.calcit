@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import * as c from '../js-out/calcit.core.mjs';
+const optionTags = c.init_tags(['none', 'some']);
+const optionNone = () => c._PCT__$o__$o_(c.Option, optionTags.none);
+const optionSome = value => c._PCT__$o__$o_(c.Option, optionTags.some, value);
 import { configure_events_$x_, _$s_global_element } from '../js-out/respo.core.mjs';
 import { EventConfig, ListenerMode, Component } from '../js-out/respo.schema.mjs';
 import { add_event, rm_event } from '../js-out/respo.render.patch.mjs';
@@ -14,7 +17,7 @@ const coord = c.arrayToList([]);
 const builder = callback => () => callback;
 
 function cleanup() {
-  c.reset_$x_(_$s_global_element, c._PCT_none());
+  c.reset_$x_(_$s_global_element, optionNone());
   configure_events_$x_(default_config);
 }
 
@@ -99,7 +102,7 @@ test('event configuration cannot change after a tree has mounted', () => {
   cleanup();
   const component = c._$n__PCT__$M_(Component,
     tags.name, tags.root,
-    tags.tree, c._PCT_none(),
+    tags.tree, optionNone(),
     tags.effects, coord,
     tags.listeners, coord);
   c.reset_$x_(_$s_global_element, c._PCT__$o__$o_(c.Option, tags.some, component));

@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import * as c from '../js-out/calcit.core.mjs';
+const optionTags = c.init_tags(['none', 'some']);
+const optionNone = () => c._PCT__$o__$o_(c.Option, optionTags.none);
+const optionSome = value => c._PCT__$o__$o_(c.Option, optionTags.some, value);
 import { Component } from '../js-out/respo.schema.mjs';
 import { div, span } from '../js-out/respo.core.mjs';
 import { as_render_node, make_child_pair } from '../js-out/respo.util.detect.mjs';
@@ -18,10 +21,10 @@ const withClick = element => with_fixture_events(element, c.parse_cirru_edn('{} 
 
 test('lookup keeps component coordinate segments and separates String and Number keys', () => {
   const leaf = withClick(span(props));
-  const wrapped = component(t.wrapped, c._PCT_some(as_render_node(leaf)));
+  const wrapped = component(t.wrapped, optionSome(as_render_node(leaf)));
   const numeric = div(props);
   const parent = withChildren(div(props), [make_child_pair('7', wrapped), make_child_pair(7, numeric)]);
-  const root = component(t.root, c._PCT_some(as_render_node(parent)));
+  const root = component(t.root, optionSome(as_render_node(parent)));
   assert.equal(unwrap(get_markup_at(root, list([]))), root);
   assert.equal(unwrap(get_markup_at(root, list([t.root, '7']))), wrapped);
   assert.equal(unwrap(get_markup_at(root, list([t.root, 7]))), numeric);
@@ -37,7 +40,7 @@ test('event lookup bubbles to the parent and keeps missing/empty child errors', 
   assert.throws(() => get_markup_at(parent, list(['missing'])), /child-not-found/);
   assert.throws(() => get_markup_at(parent, list(['empty'])), /child-not-found/);
   assert.equal(find_child_by_key(list([make_child_pair('empty', null)]), 'empty').tag.value, 'none');
-  const emptyComponent = component(t.root, c._PCT_none());
+  const emptyComponent = component(t.root, optionNone());
   assert.equal(get_markup_at(emptyComponent, list([t.root])).tag.value, 'none');
   assert.equal(find_event_target(emptyComponent, list([]), t.click).tag.value, 'none');
 });
