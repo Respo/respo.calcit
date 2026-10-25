@@ -543,7 +543,10 @@
                           , Task
                         , data checked
                     (:err _) (Option :none)
-                  Option :none
+                  match
+                    try-decode-map-as (data.to-map) 'respo.app.schema/Task
+                    (:ok checked) (Option :some checked)
+                    (:err _) (Option :none)
               (map? data)
                 match (try-decode-map-as data 'respo.app.schema/Task)
                   (:ok task) (Option :some task)
