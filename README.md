@@ -1,9 +1,10 @@
 ## Respo: A virtual DOM library in Calcit-js
 
-### 当前候选：正式 Calcit 0.31.0
+### 当前配对：正式 Calcit 0.31.0
 
-使用者影响：本轮只将 CLI 与 @calcit/procs 从 alpha.7 成对升级至正式 0.31.0，Snapshot、公开 API、原断言、HUD 和精确依赖不变。应用需同步工具链并重新生成 JS。
-本提交仍是未发布的模块候选，需等待对应模块 tag；下文 0.17 的累计 API 变化已存在于基线，不是本轮新增。原完整 strict、DOM/SSR 与下游门禁保持。
+Respo 0.17 系列配对 Calcit CLI / `@calcit/procs` `0.31.0` 与 JS-FFI `0.2.6`，目前通过 alpha 版本验证下游迁移。应用需同步工具链、重新生成 JS，并迁移下文说明的 typed dispatch 等累计变化。
+
+安装使用已发布的精确模块 tag，版本以 `deps.cirru :version` 为准；main 是开发候选。Router、UI、Reel 和应用还需请求同一精确依赖图，通过完整 strict、DOM/SSR 和各自业务验收后才能完成升级。步骤见[配对升级指南](docs/guide/alpha-pairing.md)。
 
 ### JS FFI 文件模块试验
 
@@ -23,7 +24,7 @@ js-ffi 使用正式 Git tag，不使用提交 hash。Respo `0.16.115` 增加 `re
 
 演示页前端构建使用 `https://cos-sh.tiye.me/Respo/respo.calcit/` 作为资源 base。仅 main push 在测试、构建通过后上传 `dist/`，使用 `cos-upload-action@v1.2.0` 的 `public-base-url` 内置逐文件校验，不维护额外验证脚本。PR 只构建，不读取部署 secrets。原 rsync 页面路径 `/web-assets/repo/${github.repository}` 保持不变；生产运行串行且上传前检查 main SHA，跳过已过期提交，这并非原子发布。
 
-当前组合保留原 definition `:tests` 及其断言，并增加缺失值、状态分支、名义类型和属性 key 合同回归；native 和生成 JS 均不排除测试。框架检查继续覆盖 23 个命名空间的 340 个定义。测试中的空列表 Ref 显式声明元素类型，避免初始化为 `List<Never>` 后再写入其他值；dispatch 测试使用 entry 绑定的 Op 类型，`yarn test-typed-dispatch` 覆盖正例与反例。SSR、DOM patch/lifecycle、正反类型检查、Markdown 示例和生产构建继续保留。EDN 解析所得 Task 名称与字段布局不是名义类型证明：恢复时复用受检 decoder 校验字段，恢复当前 Task 身份；已验证的当前 Task 保留对象身份。`yarn test-persisted-tasks` 验证生成 JS 的序列化往返和错误字段拒绝；真实浏览器继续验证新增、编辑、切换状态及刷新后，同一份任务的 ID、内容和完成状态恢复且控制台无错误。`with-attrs` 接收已序列化的 SVG 扩展属性；DOM anchor 末尾移动使用 null，保留宿主边界的运行时验证。
+当前组合保留原 definition `:tests` 及其断言，并增加缺失值、状态分支、名义类型和属性 key 合同回归；native 与生成 JS 的语义回归继续按原命令执行。框架检查也覆盖未被 demo 直接调用的公开定义。测试中的空列表 Ref 显式声明元素类型，避免初始化为 `List<Never>` 后再写入其他值；dispatch 测试使用 entry 绑定的 Op 类型，`yarn test-typed-dispatch` 覆盖正例与反例。SSR、DOM patch/lifecycle、正反类型检查、Markdown 示例和生产构建继续保留。EDN 解析所得 Task 名称与字段布局不是名义类型证明：恢复时复用受检 decoder 校验字段，恢复当前 Task 身份；已验证的当前 Task 保留对象身份。`yarn test-persisted-tasks` 验证生成 JS 的序列化往返和错误字段拒绝；真实浏览器继续验证新增、编辑、切换状态及刷新后，同一份任务的 ID、内容和完成状态恢复且控制台无错误。`with-attrs` 接收已序列化的 SVG 扩展属性；DOM anchor 末尾移动使用 null，保留宿主边界的运行时验证。
 
 缺失值查询使用公共 `get`、`first`、`last`、`struct-definition` 和 `enum-definition` 的 Option 合同，不依赖底层原语曾经返回 nil 的行为。已证明非空的列表或已存在的内部索引用 `.unwrap`；可能缺失的属性与类型查询使用 `match`。宿主 ref、旧 states 和开放事件数据仍在既有边界保留 nil，并由原来的校验、默认值或错误分支处理；这不扩大参数类型，也不把 nil payload 与缺失混为一谈。源码使用 canonical core 名称。已弃用的 quality 计数基线、`check-quality` 命令及对应 CI 步骤已移除；类型正确性由严格检查、definition 测试和 DOM/SSR 等实际语义验收保证，不再以 nil/Dynamic 数量判断回退。新的 Calcit 版本仍须与同版本 `@calcit/procs` 配对验收后才升级 pin。
 
