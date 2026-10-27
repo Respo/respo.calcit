@@ -1,5 +1,10 @@
 ## Respo: A virtual DOM library in Calcit-js
 
+### 当前候选：正式 Calcit 0.31.0
+
+使用者影响：本轮只将 CLI 与 @calcit/procs 从 alpha.7 成对升级至正式 0.31.0，Snapshot、公开 API、原断言、HUD 和精确依赖不变。应用需同步工具链并重新生成 JS。
+本提交仍是未发布的模块候选，需等待对应模块 tag；下文 0.17 的累计 API 变化已存在于基线，不是本轮新增。原完整 strict、DOM/SSR 与下游门禁保持。
+
 ### JS FFI 文件模块试验
 
 Respo 的开发版本以 `deps.cirru` 固定 Calcit 与 js-ffi 依赖，通过普通 `:modules` 和 `:require` 调用 `js-ffi.browser/document-available?`。该实现由 js-ffi 模块携带单表达式 JS 文件，Respo 不引用文件路径，也不安装片段专用 npm 包。运行 `caps --strict --ci`、`yarn install --immutable` 和 `yarn test-dom-host`，可验证干净安装、生成模块中的内嵌实现及有无 `document` 时的行为。文件修改后需显式重新构建。
@@ -8,7 +13,7 @@ Respo 的开发版本以 `deps.cirru` 固定 Calcit 与 js-ffi 依赖，通过�
 
 升级时同时固定 `deps.cirru :calcit-version` 和 `package.json` 的 `@calcit/procs` 为同一精确版本，并执行 `yarn install --immutable`。只更新 CLI 而沿用旧 JS runtime，可能在运行时缺失新的 trait 实现；编译成功不能代替 DOM/SSR 测试。核心 API 迁移先用当前 CLI 的 `--check-only` 诊断和 `analyze weak-types` 只读视图定位，再根据真实类型契约和调用点，通过 `query`、`tree`、`edit` 按需改写。不要长期依赖旧版本的固定迁移 preset；开放输入和 macro 能力仍需审阅，并运行原有测试。
 
-使用者影响：本分支计划作为 Respo `0.17.0` 发布，配对 Calcit CLI / `@calcit/procs` `0.31.0-alpha.7` 和正式 JS-FFI `0.2.5`。这是破坏性改动：`d!` 只接受一个参数，类型是当前 entry 用 `:dispatch-op` 类型槽绑定的应用 `Op`；`wrap-dispatch` 已删除，旧的 `d! cursor state`、`d! :tag payload` 写法改为 `d! $ :: :states cursor state`、`d! $ :: :tag payload`。`render!`、`render-with!`、`realize-ssr!` 直接接收应用的 `dispatch!`，demo 不再需要运行时解码。迁移步骤见[类型槽指南](docs/guide/type-slots.md)。升级应用时需一起选择请求同一 Respo / JS-FFI 版本的 Router、UI 等正式模块；不能只改根依赖并放宽 Caps。仍使用旧派发 API 的应用应留在 `maintenance/0.16` 的正式维护版本。旧正式 tag 保持原依赖，不改写历史版本。候选需通过原门禁并正式发版后才可消费。
+使用者影响：本分支计划作为 Respo `0.17.0` 发布，配对 Calcit CLI / `@calcit/procs` `0.31.0` 和正式 JS-FFI `0.2.5`。这是破坏性改动：`d!` 只接受一个参数，类型是当前 entry 用 `:dispatch-op` 类型槽绑定的应用 `Op`；`wrap-dispatch` 已删除，旧的 `d! cursor state`、`d! :tag payload` 写法改为 `d! $ :: :states cursor state`、`d! $ :: :tag payload`。`render!`、`render-with!`、`realize-ssr!` 直接接收应用的 `dispatch!`，demo 不再需要运行时解码。迁移步骤见[类型槽指南](docs/guide/type-slots.md)。升级应用时需一起选择请求同一 Respo / JS-FFI 版本的 Router、UI 等正式模块；不能只改根依赖并放宽 Caps。仍使用旧派发 API 的应用应留在 `maintenance/0.16` 的正式维护版本。旧正式 tag 保持原依赖，不改写历史版本。候选需通过原门禁并正式发版后才可消费。
 
 当前源码逐步使用已有 `.assoc` / `.dissoc` 方法，显式 `slice` 终点传 `Option :some`，省略终点仍表示到末尾。SSR 内容查询直接匹配 `get-in` 的 `Result :ok / :err`，保留缺失属性、混合键及内容优先级。兼容 helper `append-dynamic!` 保留名字，但以同一个泛型关联 `Ref<List<T>>` 与写入值；初始化空 Ref 时声明实际元素类型，不把可变引用扩宽为任意元素类型。
 
