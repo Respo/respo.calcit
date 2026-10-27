@@ -1,9 +1,10 @@
 ## Respo: A virtual DOM library in Calcit-js
 
-### 当前候选：正式 Calcit 0.31.0
+### 当前配对：正式 Calcit 0.31.0
 
-使用者影响：本轮只将 CLI 与 @calcit/procs 从 alpha.7 成对升级至正式 0.31.0，Snapshot、公开 API、原断言、HUD 和精确依赖不变。应用需同步工具链并重新生成 JS。
-本提交仍是未发布的模块候选，需等待对应模块 tag；下文 0.17 的累计 API 变化已存在于基线，不是本轮新增。原完整 strict、DOM/SSR 与下游门禁保持。
+Respo 0.17 系列配对 Calcit CLI / `@calcit/procs` `0.31.0` 与 JS-FFI `0.2.6`，目前通过 alpha 版本验证下游迁移。应用需同步工具链、重新生成 JS，并迁移下文说明的 typed dispatch 等累计变化。
+
+安装使用已发布的精确模块 tag，版本以 `deps.cirru :version` 为准；main 是开发候选。Router、UI、Reel 和应用还需请求同一精确依赖图，通过完整 strict、DOM/SSR 和各自业务验收后才能完成升级。步骤见[配对升级指南](docs/guide/alpha-pairing.md)。
 
 ### JS FFI 文件模块试验
 
