@@ -15,7 +15,7 @@ concurrency:
   queue: max
 
 env:
-  VITE_BASE_URL: https://cos-sh.tiye.me/${{ github.repository }}/
+  VITE_BASE_URL: ${{ github.event_name == 'pull_request' && './' || format('https://cos-sh.tiye.me/{0}/', github.repository) }}
 
 jobs:
   test:
