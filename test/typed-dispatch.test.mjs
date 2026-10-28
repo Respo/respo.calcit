@@ -10,10 +10,7 @@ import test from 'node:test';
 // A handler checked against EventHandler must reject values that are not Op.
 const root = fileURLToPath(new URL('../', import.meta.url));
 const bin = process.env.CALCIT_BIN ?? 'calcit';
-const handlerSchema = `quote $ :: 'Fn $ {} (:return 'Unit)
-  :args $ [] (:: 'Map 'Tag 'Dynamic)
-    :: 'Fn $ {} (:return 'Unit)
-      :args $ [] '*dispatch-op`;
+const handlerSchema = `quote $ Fn (Map Tag Dynamic) (Fn *dispatch-op (-> Unit)) (-> Unit)`;
 
 // Each edit is [def, code, schema] written into respo.app.comp.task before checking.
 function check(edits) {
@@ -44,9 +41,7 @@ const checkHandler = body =>
   check([['probe-handler', `quote $ defn probe-handler (_event d!) (${body})`, handlerSchema]]);
 
 // dispatch-fn callbacks passed through an Option field, like a component's :on-change option.
-const takerSchema = `quote $ :: 'Fn $ {} (:return 'Unit)
-  :args $ [] $ :: 'Option $ :: 'Fn $ {} (:return 'Unit)
-    :args $ [] 'String $ :: 'Fn $ {} (:return 'Unit) $ :args $ [] '*dispatch-op`;
+const takerSchema = `quote $ Fn (Option (Fn String (Fn *dispatch-op (-> Unit)) (-> Unit))) (-> Unit)`;
 const checkDispatchFn = body =>
   check([
     ['probe-take', 'quote $ defn probe-take (f) (println f)', takerSchema],
@@ -66,7 +61,7 @@ for (const [name, body] of [
 for (const [name, body, diagnostic] of [
   ['a Number', 'd! 42', /calling `d!` arg 1 expects type `type-slot\(dispatch-op\)`, but got `:number`/],
   ['an unknown variant', 'd! $ :: :not-an-op', /Enum `Op` does not have variant `:not-an-op`/],
-  ['the removed cursor shorthand', 'd! ([] :field) :value', /calling `d!` arg 1 expects type `type-slot\(dispatch-op\)`, but got `list<tag>`/],
+  ['the removed cursor shorthand', 'd! ([] :field) :value', /Function `'d!` expects 1 args, got 2/],
 ]) {
   test(`d! rejects ${name}`, () => {
     const result = checkHandler(body);

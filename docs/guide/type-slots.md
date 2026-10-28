@@ -52,7 +52,7 @@ d! $ :: :states cursor new-state
 
 | 用途 | 元组 | 应用 Op 需要的变体 |
 | --- | --- | --- |
-| 组件局部状态 | `:: :states cursor state` | `:states (:: 'List 'Dynamic) 'Dynamic` |
+| 组件局部状态 | `:: :states cursor state` | `:states (quote (List Dynamic)) 'Dynamic` |
 | reel 的 `comp-reel` 控制面板 | `:: :reel/toggle`、`:: :reel/recall idx` 等 | `:reel/toggle` `:reel/recall 'Number` `:reel/run` `:reel/step` `:reel/merge` `:reel/reset` `:reel/remove 'Number` |
 | respo-router 的路由 handler | `:: :router/route route-map` | `:router/route 'Dynamic` |
 
@@ -75,14 +75,11 @@ alerts 的组件只发 `:states`，respo-ui 的组件转发调用方传入的 op
 - 有 schema 的 handler 定义、`hint-fn` 标注过的回调、`DomProps` 等 struct 字段里的回调：会检查，写错类型的值、未知变体和旧的 cursor 简写都会报错。元组变体的参数个数和参数类型目前不检查，`:: :toggle 1` 也能通过。
 - 普通 `{}` props map 里内联的回调：Calcit 目前不给 map 字面量的值提供期望类型，所以不检查。需要检查时，把回调提成带 schema 的定义，或者用 `hint-fn` 标注。
 
-内联 `hint-fn` 中写裸符号 `*dispatch-op`，持久化 schema 中写 `'*dispatch-op`：
+内联 `hint-fn $ Fn …` 与持久化 `quote $ Fn …` 中都使用类型槽名 `*dispatch-op`：
 
 ```cirru.no-check
 :on-click $ fn (e d!)
-  hint-fn $ {} (:return 'Unit)
-    :args $ [] (:: 'Map 'Tag 'Dynamic)
-      :: 'Fn $ {} (:return 'Unit)
-        :args $ [] *dispatch-op
+  hint-fn $ Fn (Map Tag Dynamic) (Fn *dispatch-op (-> Unit)) (-> Unit)
   d! $ :: :toggle task-id
 ```
 
