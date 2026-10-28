@@ -22,8 +22,7 @@
                   {} $ :style style-states
                   <> $ str "|states: " $ to-lispy-string states
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] 'respo.app.schema/Store
+          :schema $ quote $ Fn respo.app.schema/Store (-> respo.schema/Component)
         'style-global $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-global
             {}
@@ -31,12 +30,12 @@
               |& $ {} ('contained "|@media only screen and (max-width: 600px)")
                 :background-color $ hsl 0 0 90
           :examples $ []
-          :schema $ :: 'String
+          :schema $ quote String
         'style-states $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def style-states
             {} $ :padding 8
           :examples $ []
-          :schema $ :: 'Map
+          :schema $ quote Map
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.app.comp.container
           :require
@@ -83,8 +82,7 @@
                   div ({})
                     <> $ str state
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] 'Dynamic 'respo.app.schema/Task
+          :schema $ quote $ Fn Dynamic respo.app.schema/Task (-> respo.schema/Component)
         'effect-log $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defeffect effect-log (task) (action parent at-place?) (; js/console.log "|Task effect" action at-place?)
             match action
@@ -97,19 +95,17 @@
               _ nil
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Effect)
-            :args $ [] 'respo.app.schema/Task
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn respo.app.schema/Task (-> respo.schema/Effect) (:features :js-ffi)
         'style-done $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-done
             {} $ :& $ {} (:width 32) (:height 32) (:outline :none) (:border :none) (:vertical-align :middle) (:cursor :pointer)
           :examples $ []
-          :schema $ :: 'String
+          :schema $ quote String
         'style-task $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-task
             {} $ |& $ {} (:display :flex) (:padding "|4px 0px")
           :examples $ []
-          :schema $ :: 'String
+          :schema $ quote String
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.app.comp.task
           :require
@@ -163,9 +159,7 @@
                     {} (:class-name |task-list) (:style style-list)
                     map (reverse tasks)
                       fn (task)
-                        hint-fn $ {}
-                          :args $ [] 'respo.app.schema/Task
-                          :return $ :: 'List 'Dynamic
+                        hint-fn $ Fn respo.app.schema/Task $ -> (List Dynamic)
                         let
                             task-id $ :id task
                           [] task-id $ memo-comp-by task-id comp-task (>> states task-id) task
@@ -194,8 +188,7 @@
                     {} $ :style $ {} (:padding |8px) (:font-size 12) (:color |#999) (:margin-top |16px)
                     <> message
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] 'Dynamic $ :: 'List 'respo.app.schema/Task
+          :schema $ quote $ Fn Dynamic (List respo.app.schema/Task) (-> respo.schema/Component)
         'effect-focus $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defeffect effect-focus (pattern) (action parent at-place?)
             when
@@ -205,22 +198,18 @@
                 (:some target) (.select! target)
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Effect)
-            :args $ [] 'String
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn String (-> respo.schema/Effect) (:features :js-ffi)
         'number-order $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn number-order (a b)
             if (&< a b) -1 $ if (&> a b) 1 0
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Number)
-            :args $ [] 'Number 'Number
+          :schema $ quote $ Fn Number Number (-> Number)
         'on-focus $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn on-focus (e dispatch!) (println "|Just focused~") &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] (:: 'Map 'Tag 'Dynamic)
-              :: 'Fn $ {} (:return 'Unit)
-                :args $ [] 'Dynamic
+          :schema $ quote $ Fn (Map Tag Dynamic)
+            Fn Dynamic $ -> Unit
+            -> Unit
         'on-keydown $ %{} 'CodeEntry
           :doc "|Creates a keyboard listener for Ctrl+M shortcut. This function demonstrates how to create component-local listeners that can access component state through closures. Returns a RespoListener that updates the message state when Ctrl+M is pressed."
           :code $ quote $ defn on-keydown (cursor state)
@@ -241,33 +230,30 @@
           :examples $ [] $ quote
             on-keydown ([] :todolist)
               %{} respo.app.schema/TodoState (:draft |task) (:locked? false) (:message |)
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/RespoListener)
-            :args $ [] (:: 'List 'Dynamic) 'respo.app.schema/TodoState
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (List Dynamic) respo.app.schema/TodoState (-> respo.schema/RespoListener) (:features :js-ffi)
         'on-test $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn on-test (e dispatch!) (println "|trigger test!")
             try-test! dispatch! $ []
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] (:: 'Map 'Tag 'Dynamic)
-              :: 'Fn $ {} (:return 'Unit)
-                :args $ [] 'Dynamic
+          :schema $ quote $ Fn (Map Tag Dynamic)
+            Fn Dynamic $ -> Unit
+            -> Unit
         'style-bold! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-bold!
             {} $ |& $ {} (:font-weight "|bold !important")
           :examples $ []
-          :schema $ :: 'String
+          :schema $ quote String
         'style-list $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def style-list
             {} (:color :black)
               :background-color $ hsl 120 20 98
           :examples $ []
-          :schema $ :: 'Map
+          :schema $ quote Map
         'style-panel $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def style-panel
             {} (:display :flex) (:margin-bottom 4)
           :examples $ []
-          :schema $ :: 'Map
+          :schema $ quote Map
         'style-todo-root $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-todo-root
             {} $ |& $ {} (:color :black)
@@ -277,12 +263,12 @@
               :padding 10
               :font-family "|\"微软雅黑\", Verdana"
           :examples $ []
-          :schema $ :: 'String
+          :schema $ quote String
         'style-toolbar $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-toolbar
             {} $ |& $ {} (:display :flex) (:flex-direction :row) (:justify-content :start) (:padding "|4px 0") (:white-space :nowrap)
           :examples $ []
-          :schema $ :: 'String
+          :schema $ quote String
         'try-test! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn try-test! (dispatch! acc)
             let
@@ -315,12 +301,11 @@
                     println |result: $ sort acc number-order
                 , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
-              :: 'Fn $ {} (:return 'Unit)
-                :args $ [] 'Dynamic
-              :: 'List 'Number
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn
+            Fn Dynamic $ -> Unit
+            List Number
+            -> Unit
+            :features :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.app.comp.todolist
           :require
@@ -343,8 +328,7 @@
           :code $ quote $ defcomp comp-wrap (x)
             div ({}) x
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] 'Dynamic
+          :schema $ quote $ Fn Dynamic (-> respo.schema/Component)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.app.comp.wrap
           :require $ respo.core :refer $ defcomp div
@@ -354,8 +338,7 @@
           :code $ quote $ defcomp comp-zero ()
             div $ {} $ :inner-text 0
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ []
+          :schema $ quote $ Fn (-> respo.schema/Component)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.app.comp.zero
           :require $ respo.core :refer $ defcomp div
@@ -365,7 +348,7 @@
           :doc "|Global state storage Ref for the Respo application.\n\nThis is a Ref containing all application state data, initialized with the structure defined by schema/store.\nIn Respo applications, all component states are stored in this global store and updated through the dispatch mechanism."
           :code $ quote $ defref *store schema/store
           :examples $ []
-          :schema $ :: 'Ref 'respo.app.schema/Store
+          :schema $ quote $ Ref respo.app.schema/Store
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op)
             if dev? $ js/console.log op
@@ -374,28 +357,23 @@
               reset! *store store
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'respo.app.schema/Op
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn respo.app.schema/Op (-> Unit) (:features :js-ffi)
         'handle-ssr! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn handle-ssr! (mount-target)
             realize-ssr! mount-target (comp-container @*store) dispatch!
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'respo.dom/DomElement
+          :schema $ quote $ Fn respo.dom/DomElement (-> Unit)
         'new-fn $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn new-fn () (println |hello) &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
+          :schema $ quote $ Fn (-> Unit)
         'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app! (mount-target)
             render-with! mount-target
               fn () $ comp-container @*store
               , dispatch!
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] $ :: 'JsNullish 'respo.dom/DomElement
+          :schema $ quote $ Fn (JsNullish respo.dom/DomElement) (-> Unit)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.app.core
           :require
@@ -410,20 +388,19 @@
           :doc "|Whether the demo scheduler owns the rerender registration."
           :code $ quote $ defref *render-watch-active? false
           :examples $ []
-          :schema $ :: 'Ref 'Bool
+          :schema $ quote $ Ref Bool
           :tags $ #{} :internal
         '*render-watch-generation $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defref *render-watch-generation 0
           :examples $ []
-          :schema $ :: 'Ref 'Number
+          :schema $ quote $ Ref Number
         'stop-render-watch! $ %{} 'CodeEntry
           :doc "|Invalidate queued render callbacks and remove the demo-owned watcher when active. Safe before installation and after repeated stops."
           :code $ quote $ defn stop-render-watch! () (swap! *render-watch-generation inc)
             when @*render-watch-active? (remove-watch! *store :rerender) (reset! *render-watch-active? false)
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
+          :schema $ quote $ Fn (-> Unit)
           :tags $ #{} :internal
         'watch-render! $ %{} 'CodeEntry
           :doc "|Install the demo store watch with one scheduler per registration. Read application state when the render callback runs; replacing the watch invalidates pending callbacks from the previous registration. Pass Option:none for queueMicrotask or Option:some enqueue! for deterministic tests."
@@ -439,15 +416,13 @@
             reset! *render-watch-active? true
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
-              :: 'Fn $ {} (:return 'Unit)
-                :args $ []
-              :: 'Option $ :: 'Fn $ {} (:return 'Unit)
-                :args $ [] $ :: 'Fn
-                  {} (:return 'Unit)
-                    :args $ []
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn
+            Fn $ -> Unit
+            Option $ Fn
+              Fn $ -> Unit
+              -> Unit
+            -> Unit
+            :features :js-ffi
           :tags $ #{} :internal
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.app.scheduler
@@ -458,9 +433,15 @@
       :defs $ {}
         'Op $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum Op
-            :states (:: 'List 'Dynamic) 'Dynamic
-            :states-kv (:: 'List 'Dynamic) 'Dynamic 'Dynamic
-            :states-merge (:: 'List 'Dynamic) 'respo.app.schema/TodoState 'Dynamic
+            :states
+              quote $ List Dynamic
+              , 'Dynamic
+            :states-kv
+              quote $ List Dynamic
+              , 'Dynamic 'Dynamic
+            :states-merge
+              quote $ List Dynamic
+              , 'respo.app.schema/TodoState 'Dynamic
             :add 'String
             :remove 'String
             :clear
@@ -468,33 +449,33 @@
             :hit-first 'String
             :toggle 'String
           :examples $ []
-          :schema $ :: 'EnumDef
+          :schema $ quote EnumDef
         'Store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Store
-            :tasks $ :: 'List 'respo.app.schema/Task
+            :tasks $ quote $ List respo.app.schema/Task
             :states 'Dynamic
-            :cursor $ :: 'List 'Dynamic
+            :cursor $ quote $ List Dynamic
           :examples $ []
-          :schema $ :: 'StructDef
+          :schema $ quote StructDef
         'Task $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Task (:id 'String) (:text 'String) (:done? 'Bool)
           :examples $ []
-          :schema $ :: 'StructDef
+          :schema $ quote StructDef
         'TodoState $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct TodoState (:draft 'String) (:locked? 'Bool) (:message 'String)
           :examples $ []
-          :schema $ :: 'StructDef
+          :schema $ quote StructDef
         'store $ %{} 'CodeEntry
           :doc "|Default immutable Store record value used by the example application."
           :code $ quote $ def store
             Store :tasks ([]) :states ({}) :cursor $ []
           :examples $ []
-          :schema $ :: 'respo.app.schema/Store
+          :schema $ quote respo.app.schema/Store
         'task $ %{} 'CodeEntry
           :doc "|Default immutable Task record value used when constructing example tasks."
           :code $ quote $ def task (Task :id | :text | :done? false)
           :examples $ []
-          :schema $ :: 'respo.app.schema/Task
+          :schema $ quote respo.app.schema/Task
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.app.schema
     'respo.app.style.widget $ %{} 'FileEntry
@@ -508,20 +489,20 @@
               :line-height |28px
               :transition-duration |200ms
           :examples $ []
-          :schema $ :: 'Map
+          :schema $ quote Map
         'style-button $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-button
             {} (:& button)
               |&:hover $ {} $ :transform "|scale(1.04)"
           :examples $ []
-          :schema $ :: 'String
+          :schema $ quote String
         'style-input $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-input
             {} $ |& $ {} (:font-size |16px) (:line-height |24px) (:padding "|0px 8px") (:outline :none) (:min-width |300px)
               :background-color $ hsl 0 0 94
               :border :none
           :examples $ []
-          :schema $ :: 'String
+          :schema $ quote String
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.app.style.widget
           :require
@@ -553,9 +534,8 @@
                   (:err _) (Option :none)
               true $ Option :none
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic
-            :return $ :: 'calcit.core/Option 'respo.app.schema/Task
+          :schema $ quote $ Fn Dynamic
+            -> $ calcit.core/Option respo.app.schema/Task
           :tests $ []
             %{} 'TestEntry (:name |restores-valid-task-data)
               :code $ quote $ do
@@ -592,7 +572,8 @@
         'normalize-tasks $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn normalize-tasks (items)
             loop
-                acc $ assert-type ([]) (:: 'List 'respo.app.schema/Task)
+                acc $ assert-type ([])
+                  quote $ List respo.app.schema/Task
                 xs items
               if (empty? xs) acc $ let
                   next-acc $ match
@@ -601,15 +582,13 @@
                     (:some task) (append acc task)
                 recur next-acc $ &list:rest xs
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] $ :: 'List 'Dynamic
-            :return $ :: 'List 'respo.app.schema/Task
+          :schema $ quote $ Fn (List Dynamic)
+            -> $ List respo.app.schema/Task
         'restore-tasks $ %{} 'CodeEntry
           :doc "|把已完成受检 normalization 的 Task 列表写入 Store；不接收原始开放输入。"
           :code $ quote $ defn restore-tasks (store tasks) (store.assoc :tasks tasks)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.app.schema/Store)
-            :args $ [] 'respo.app.schema/Store $ :: 'List 'respo.app.schema/Task
+          :schema $ quote $ Fn respo.app.schema/Store (List respo.app.schema/Task) (-> respo.app.schema/Store)
           :tests $ []
             %{} 'TestEntry (:name |restored-tasks-update-preserves-store)
               :code $ quote $ let
@@ -660,18 +639,14 @@
               (:remove task-id)
                 .assoc store :tasks $ filter (:tasks store)
                   fn (task)
-                    hint-fn $ {}
-                      :args $ [] 'respo.app.schema/Task
-                      :return 'Bool
+                    hint-fn $ Fn respo.app.schema/Task $ -> Bool
                     not $ = (:id task) task-id
               (:clear)
                 .assoc store :tasks $ []
               (:update task-id text)
                 .assoc store :tasks $ map (:tasks store)
                   fn (task)
-                    hint-fn $ {}
-                      :args $ [] 'respo.app.schema/Task
-                      :return 'respo.app.schema/Task
+                    hint-fn $ Fn respo.app.schema/Task $ -> respo.app.schema/Task
                     if
                       = (:id task) task-id
                       .assoc task :text text
@@ -687,17 +662,14 @@
               (:toggle task-id)
                 .assoc store :tasks $ map (:tasks store)
                   fn (task)
-                    hint-fn $ {}
-                      :args $ [] 'respo.app.schema/Task
-                      :return 'respo.app.schema/Task
+                    hint-fn $ Fn respo.app.schema/Task $ -> respo.app.schema/Task
                     if
                       = (:id task) task-id
                       .assoc task :done? $ not $ :done? task
                       , task
               _ $ do (eprintln |Unknown-op: op) store
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.app.schema/Store)
-            :args $ [] 'respo.app.schema/Store 'respo.app.schema/Op 'String
+          :schema $ quote $ Fn respo.app.schema/Store respo.app.schema/Op String (-> respo.app.schema/Store)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.app.updater
           :require $ respo.cursor :refer $ update-state-tree update-state-tree-kv update-state-tree-merge
@@ -710,10 +682,9 @@
               span $ {} $ :on-keydown
                 fn (e d!) (on-event e d!)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ []
-              :: 'Map 'Tag $ :: 'Set 'String
-              , 'Fn
+          :schema $ quote $ Fn
+            Map Tag $ Set String
+            , Fn (-> respo.schema/Component)
         'comp-global-keyup $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-global-keyup (options on-event)
             ; "|dirty solution: proxy window keydown event to a `<span/>`, comes with some restrictions. however Respo does not allow effects to modify states."
@@ -721,15 +692,14 @@
               span $ {} $ :on-keyup
                 fn (e d!) (on-event e d!)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ []
-              :: 'Map 'Tag $ :: 'Set 'String
-              , 'Fn
+          :schema $ quote $ Fn
+            Map Tag $ Set String
+            , Fn (-> respo.schema/Component)
         'dirty-field $ %{} 'CodeEntry
           :doc "|Constant string key for the global keyboard listener."
           :code $ quote $ def dirty-field |_global_listener
           :examples $ []
-          :schema $ :: 'String
+          :schema $ quote String
         'effect-listen-keyboard $ %{} 'CodeEntry
           :doc "|Effect for listening to global keyboard events on the window object."
           :code $ quote $ defeffect effect-listen-keyboard (options event-name) (action el at?)
@@ -740,9 +710,7 @@
                         raw-disabled $ option:unwrap-or (get options :disabled-commands) (#{} |p |s)
                       decode-map-as raw-disabled $ :: 'Set 'String
                     handler $ fn (event)
-                      hint-fn $ {}
-                        :args $ [] 'js-ffi.browser/EventHost
-                        :return 'Unit
+                      hint-fn $ Fn js-ffi.browser/EventHost $ -> Unit
                       let
                           key $ contract/expect-string |KeyboardEvent.key $ .-key event
                           ctrl-key? $ contract/expect-bool |KeyboardEvent.ctrlKey $ .-ctrlKey event
@@ -760,27 +728,21 @@
                 remove-stored-listener! el $ str event-name
               true nil
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Effect)
-            :args $ []
-              :: 'Map 'Tag $ :: 'Set 'String
-              , 'String
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn
+            Map Tag $ Set String
+            , String (-> respo.schema/Effect) (:features :js-ffi)
         'remove-stored-listener! $ %{} 'CodeEntry
           :doc "|Remove the window listener previously stored on the effect element, if any. The stored handler is read back from a JS property, so this is the one place it is trusted as a handler."
           :code $ quote $ defn remove-stored-listener! (el event-name)
             let
                 stored $ aget el dirty-field
               if (js-present? stored)
-                browser/remove-event-listener! event-name $ unsafe-coerce stored $ :: 'Fn
-                  {}
-                    :args $ [] 'js-ffi.browser/EventHost
-                    :return 'Unit
+                browser/remove-event-listener! event-name $ unsafe-coerce stored $ quote
+                  Fn js-ffi.browser/EventHost $ -> Unit
               js-delete el dirty-field
               , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'Dynamic 'String
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn Dynamic String (-> Unit) (:features :js-ffi)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.comp.global-keydown
           :require
@@ -804,9 +766,7 @@
                     js/console.log $ to-js-data data
                   , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] 'Dynamic 'Dynamic 'Dynamic
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn Dynamic Dynamic Dynamic (-> respo.schema/Component) (:features :js-ffi)
         'grab-info $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn grab-info (data)
             cond
@@ -823,19 +783,18 @@
               (fn? data) |Fn
               true $ to-lispy-string data
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'String)
-            :args $ [] 'Dynamic
+          :schema $ quote $ Fn Dynamic (-> String)
         'highlight-defcomp $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle highlight-defcomp
             {} $ "|& *" $ {}
               :outline $ str "|1px dashed " $ hsl 200 40 50 0.5
           :examples $ []
-          :schema $ :: 'String
+          :schema $ quote String
         'style-data $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-data
             {} $ |& $ {} (:position :absolute) (:background-color "|hsl(240,100%,0%)") (:color :white) (:opacity 0.2) (:font-size |12px) (:font-family |Avenir,Verdana) (:line-height |1.4em) (:padding "|2px 6px") (:border-radius |4px) (:max-width 160) (:max-height 32) (:white-space :normal) (:text-overflow :ellipsis) (:cursor :default)
           :examples $ []
-          :schema $ :: 'String
+          :schema $ quote String
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.comp.inspect
           :require
@@ -851,8 +810,7 @@
             quote $ =< 8 nil
             quote $ =< nil 16
             quote $ =< 12 nil
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] 'Dynamic 'Dynamic
+          :schema $ quote $ Fn Dynamic Dynamic (-> respo.schema/Component)
         'comp-space $ %{} 'CodeEntry
           :doc "|A tiny spacer component that renders an empty styled `<div>` with either width or height.\n\nUse it for explicit horizontal or vertical gaps when you want spacing as a component, although plain CSS margin is often cheaper."
           :code $ quote $ defcomp comp-space (w h)
@@ -861,13 +819,12 @@
           :examples $ []
             quote $ comp-space 10 nil
             quote $ comp-space nil 16
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] 'Dynamic 'Dynamic
+          :schema $ quote $ Fn Dynamic Dynamic (-> respo.schema/Component)
         'style-space $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-space
             {} $ :& $ {} (:height 1) (:width 1) (:display :inline-block)
           :examples $ []
-          :schema $ :: 'String
+          :schema $ quote String
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.comp.space
           :require
@@ -880,55 +837,45 @@
           :code $ quote $ defn activate-instance! (entire-dom mount-point deliver-event)
             let
                 listener-builder $ fn (event-name)
-                  hint-fn $ {}
-                    :args $ [] 'Tag
-                    :return $ :: 'Fn $ {} (:return 'Unit)
-                      :args $ [] 'respo.dom/DomEvent $ :: 'List 'Dynamic
+                  hint-fn $ Fn Tag $ ->
+                    Fn respo.dom/DomEvent (List Dynamic) (-> Unit)
                   build-listener event-name deliver-event
               set! mount-point.:inner-html |
               mount-point .append-child! $ make-element entire-dom listener-builder $ []
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'respo.schema/Component 'respo.dom/DomElement $ :: 'Fn
-              {} (:return 'Unit)
-                :args $ [] (:: 'List 'Dynamic) 'Tag $ :: 'Map 'Tag 'Dynamic
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn respo.schema/Component respo.dom/DomElement
+            Fn (List Dynamic) Tag (Map Tag Dynamic) (-> Unit)
+            -> Unit
+            :features :js-ffi
         'build-listener $ %{} 'CodeEntry
           :doc "|Creates a DOM event listener that converts events and dispatches them to Respo."
           :code $ quote $ defn build-listener (event-name deliver-event)
             fn (event coord)
-              hint-fn $ {} (:return 'Unit)
-                :args $ [] 'respo.dom/DomEvent $ :: 'List 'Dynamic
+              hint-fn $ Fn respo.dom/DomEvent (List Dynamic) (-> Unit)
               let
                   simple-event $ event->edn event
                 deliver-event coord event-name simple-event
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Tag $ :: 'Fn
-              {} (:return 'Unit)
-                :args $ [] (:: 'List 'Dynamic) 'Tag $ :: 'Map 'Tag 'Dynamic
-            :features $ #{} :js-ffi
-            :return $ :: 'Fn $ {} (:return 'Unit)
-              :args $ [] 'respo.dom/DomEvent $ :: 'List 'Dynamic
+          :schema $ quote $ Fn Tag
+            Fn (List Dynamic) Tag (Map Tag Dynamic) (-> Unit)
+            -> $ Fn respo.dom/DomEvent (List Dynamic) (-> Unit)
+            :features :js-ffi
         'patch-instance! $ %{} 'CodeEntry
           :doc "|Apply collected patch operations to the mounted DOM root.\n\nIt builds event listeners from `deliver-event` and delegates concrete DOM mutations to `apply-dom-changes`."
           :code $ quote $ defn patch-instance! (changes mount-point deliver-event)
             let
                 listener-builder $ fn (event-name)
-                  hint-fn $ {}
-                    :args $ [] 'Tag
-                    :return $ :: 'Fn $ {} (:return 'Unit)
-                      :args $ [] 'respo.dom/DomEvent $ :: 'List 'Dynamic
+                  hint-fn $ Fn Tag $ ->
+                    Fn respo.dom/DomEvent (List Dynamic) (-> Unit)
                   build-listener event-name deliver-event
               apply-dom-changes changes mount-point listener-builder
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] (:: 'List 'respo.schema/DomPatch) 'respo.dom/DomElement $ :: 'Fn
-              {} (:return 'Unit)
-                :args $ [] (:: 'List 'Dynamic) 'Tag $ :: 'Map 'Tag 'Dynamic
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (List respo.schema/DomPatch) respo.dom/DomElement
+            Fn (List Dynamic) Tag (Map Tag Dynamic) (-> Unit)
+            -> Unit
+            :features :js-ffi
         'send-to-component! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn send-to-component! (event-tuple)
             let
@@ -938,8 +885,7 @@
                 (:none) &unit
                 (:some component) (traverse-and-call component event-tuple dispatch!)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'Enum
+          :schema $ quote $ Fn Enum (-> Unit)
         'traverse-and-call $ %{} 'CodeEntry
           :doc "|Traverses the rendered tree and invokes component listeners. Listeners receive the app dispatch function unchanged."
           :code $ quote $ defn traverse-and-call (element event-tuple dispatch!)
@@ -947,9 +893,7 @@
               or (component? element) (element? element)
               loop
                   xs $ [] $ respo.util.detect/as-render-node element
-                hint-fn $ {}
-                  :args $ [] $ :: 'List 'respo.schema/RenderNode
-                  :return 'Unit
+                hint-fn $ Fn (List respo.schema/RenderNode) (-> Unit)
                 if (empty? xs) &unit $ let
                     node $ &list:nth xs 0
                     pending $ &list:rest xs
@@ -958,9 +902,7 @@
                       do
                         each (:listeners component)
                           fn (listener)
-                            hint-fn $ {}
-                              :args $ [] 'respo.schema/RespoListener
-                              :return 'Unit
+                            hint-fn $ Fn respo.schema/RespoListener $ -> Unit
                             (:handler listener) event-tuple dispatch!
                             , &unit
                         match (:tree component)
@@ -971,21 +913,19 @@
                       recur $ foldl
                         reverse $ :children markup
                         , pending $ fn (acc pair)
-                          hint-fn $ {}
-                            :args $ [] (:: 'List 'respo.schema/RenderNode) 'respo.schema/ChildPair
-                            :return $ :: 'List 'respo.schema/RenderNode
+                          hint-fn $ Fn (List respo.schema/RenderNode) respo.schema/ChildPair $ -> (List respo.schema/RenderNode)
                           match (:node pair)
                             (:none) acc
                             (:some child) (prepend acc child)
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'Struct 'Enum 'Fn
+          :schema $ quote $ Fn Struct Enum Fn (-> Unit)
           :tests $ []
             %{} 'TestEntry
               :name |tolerates-none-subtree-and-keeps-component-listener
               :code $ quote $ let
-                  log $ ref $ assert-type ([]) (:: 'List 'Dynamic)
+                  log $ ref $ assert-type ([])
+                    quote $ List Dynamic
                   listener $ respo.schema/RespoListener :name :watch :handler $ fn (event _dispatch!)
                     reset! log $ [] event
                   component $ respo.schema/Component :name :empty :effects ([]) :listeners ([] listener) :tree $ Option :none
@@ -997,16 +937,16 @@
             %{} 'TestEntry
               :name |keeps-listener-order-dispatch-and-empty-children
               :code $ quote $ let
-                  calls $ ref $ assert-type ([]) (:: 'List 'Tag)
-                  operations $ ref $ assert-type ([]) (:: 'List 'Dynamic)
+                  calls $ ref $ assert-type ([])
+                    quote $ List Tag
+                  operations $ ref $ assert-type ([])
+                    quote $ List Dynamic
                   event $ :: :changed
                   dispatch! $ fn (op)
                     reset! operations $ append @operations op
                     , &unit
                   make-component $ fn (name tree)
-                    hint-fn $ {}
-                      :args $ [] 'Tag $ :: 'Option 'respo.schema/RenderNode
-                      :return 'respo.schema/Component
+                    hint-fn $ Fn Tag (Option respo.schema/RenderNode) (-> respo.schema/Component)
                     respo.schema/Component :name name :effects ([]) :tree tree :listeners $ [] $ respo.schema/RespoListener :name :watch :handler
                       fn (received dispatch!) (assert= event received)
                         reset! calls $ append @calls name
@@ -1040,8 +980,7 @@
           :doc "|Creates a function to dispatch events from the DOM to Respo's event handling system."
           :code $ quote $ defn build-deliver-event (*global-element *dispatch-fn)
             fn (coord event-name simple-event)
-              hint-fn $ {} (:return 'Unit)
-                :args $ [] (:: 'List 'Dynamic) 'Tag $ :: 'Map 'Tag 'Dynamic
+              hint-fn $ Fn (List Dynamic) Tag (Map Tag Dynamic) (-> Unit)
               let
                   target-element-option $ find-event-target
                       deref *global-element
@@ -1063,14 +1002,11 @@
                       _handled $ target-listener simple-event $ deref *dispatch-fn
                       , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ []
-              :: 'Ref $ :: 'calcit.core/Option 'respo.schema/Component
-              :: 'Ref $ :: 'Fn $ {} (:return 'Unit)
-                :args $ [] '*dispatch-op
-            :features $ #{} :js-ffi
-            :return $ :: 'Fn $ {} (:return 'Unit)
-              :args $ [] (:: 'List 'Dynamic) 'Tag $ :: 'Map 'Tag 'Dynamic
+          :schema $ quote $ Fn
+            Ref $ calcit.core/Option respo.schema/Component
+            Ref $ Fn *dispatch-op $ -> Unit
+            -> $ Fn (List Dynamic) Tag (Map Tag Dynamic) (-> Unit)
+            :features :js-ffi
         'extract-listeners $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn extract-listeners (component-result)
             if (list? component-result)
@@ -1084,23 +1020,20 @@
                 :listeners $ []
                 :element component-result
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic
-            :return $ :: 'Map 'Tag 'Dynamic
+          :schema $ quote $ Fn Dynamic
+            -> $ Map Tag Dynamic
         'find-child-by-key $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn find-child-by-key (children expected-key)
             option:map (find-child-node children expected-key) respo.util.detect/render-node-value
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] (:: 'List 'respo.schema/ChildPair) 'Dynamic
-            :return $ :: 'Option 'Struct
+          :schema $ quote $ Fn (List respo.schema/ChildPair) Dynamic
+            -> $ Option Struct
         'find-child-node $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn find-child-node (children expected-key)
             loop
                 xs children
-              hint-fn $ {}
-                :args $ [] $ :: 'List 'respo.schema/ChildPair
-                :return $ :: 'Option 'respo.schema/RenderNode
+              hint-fn $ Fn (List respo.schema/ChildPair)
+                -> $ Option respo.schema/RenderNode
               if (empty? xs) (Option :none)
                 let
                     pair $ &list:nth xs 0
@@ -1109,10 +1042,9 @@
                     :node pair
                     recur $ &list:rest xs
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] (:: 'List 'respo.schema/ChildPair) 'KeyInput
-            :generics $ [] 'KeyInput
-            :return $ :: 'Option 'respo.schema/RenderNode
+          :schema $ quote $ Fn (List respo.schema/ChildPair) KeyInput
+            -> $ Option respo.schema/RenderNode
+            :generics KeyInput
         'find-event-target $ %{} 'CodeEntry
           :doc "|Traverses the virtual DOM to find the element that should handle a specific event."
           :code $ quote $ defn find-event-target (element coord event-name)
@@ -1121,9 +1053,8 @@
             let
                 target-element-option $ loop
                     m-option $ get-render-node-at (respo.util.detect/as-render-node element) coord
-                  hint-fn $ {}
-                    :args $ [] $ :: 'Option 'respo.schema/RenderNode
-                    :return $ :: 'Option 'respo.schema/Element
+                  hint-fn $ Fn (Option respo.schema/RenderNode)
+                    -> $ Option respo.schema/Element
                   match m-option
                     (:none) (Option :none)
                     (:some node)
@@ -1133,23 +1064,18 @@
                         (:element target) (Option :some target)
                 event-present? $ option:fold target-element-option
                   fn ()
-                    hint-fn $ {}
-                      :args $ []
-                      :return 'Bool
+                    hint-fn $ Fn $ -> Bool
                     , false
                   fn (target-element)
-                    hint-fn $ {}
-                      :args $ [] 'respo.schema/Element
-                      :return 'Bool
+                    hint-fn $ Fn respo.schema/Element $ -> Bool
                     contains? (element-event target-element) event-name
               if event-present? target-element-option $ if (empty? coord) (Option :none)
                 recur element
                   slice coord 0 $ Option :some $ - (count coord) 1
                   , event-name
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Struct (:: 'List 'Dynamic) 'Tag
-            :return $ :: 'calcit.core/Option 'respo.schema/Element
+          :schema $ quote $ Fn Struct (List Dynamic) Tag
+            -> $ calcit.core/Option respo.schema/Element
           :tests $ [] $ %{} 'TestEntry (:name |returns-none-through-empty-component-tree)
             :code $ quote $ let
                 component $ respo.schema/Component :name :empty :effects ([]) :listeners ([]) :tree $ Option :none
@@ -1163,9 +1089,8 @@
               get-render-node-at (respo.util.detect/as-render-node markup) coord
               , respo.util.detect/render-node-value
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Struct $ :: 'List 'Dynamic
-            :return $ :: 'calcit.core/Option 'Struct
+          :schema $ quote $ Fn Struct (List Dynamic)
+            -> $ calcit.core/Option Struct
         'get-render-node-at $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn get-render-node-at (node coord)
             match (destruct-list coord)
@@ -1184,15 +1109,12 @@
                         (:none)
                           raise $ str |child-not-found: coord $ map children
                             fn (pair)
-                              hint-fn $ {}
-                                :args $ [] 'respo.schema/ChildPair
-                                :return 'Dynamic
+                              hint-fn $ Fn respo.schema/ChildPair $ -> Dynamic
                               :key pair
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'respo.schema/RenderNode $ :: 'List 'CoordKey
-            :generics $ [] 'CoordKey
-            :return $ :: 'Option 'respo.schema/RenderNode
+          :schema $ quote $ Fn respo.schema/RenderNode (List CoordKey)
+            -> $ Option respo.schema/RenderNode
+            :generics CoordKey
           :tests $ [] $ %{} 'TestEntry (:name |preserves-component-segments-and-mixed-keys)
             :code $ quote $ let
                 leaf $ respo.core/span $ {}
@@ -1226,8 +1148,7 @@
                 (:none)
                   raise $ str "|[Respo] event has no " field "|, got type: " $ .unwrap-or (calcit.core/get event :type) nil
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ [] 'Dynamic 'Tag
+          :schema $ quote $ Fn Dynamic Tag (-> Dynamic)
         '&state-plain $ %{} 'CodeEntry
           :doc "|Internal helper of `pick-state`: turns Structs inside a stored state into Maps, recursively through Maps and Lists. Used only when decoding the shallow form fails, for states whose typed fields hold nested Structs."
           :code $ quote $ defn &state-plain (value)
@@ -1235,14 +1156,11 @@
               &state-plain $ &struct:to-map value
               if (map? value)
                 filter-map-kv value $ fn (k v)
-                  hint-fn $ {}
-                    :args $ [] 'Dynamic 'Dynamic
-                    :return $ :: 'MapEntryDecision 'Dynamic 'Dynamic
+                  hint-fn $ Fn Dynamic Dynamic $ -> (MapEntryDecision Dynamic Dynamic)
                   MapEntryDecision :keep k $ &state-plain v
                 if (list? value) (map value &state-plain) value
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ [] 'Dynamic
+          :schema $ quote $ Fn Dynamic (-> Dynamic)
         '&state-raw $ %{} 'CodeEntry
           :doc "|Internal helper of `pick-state`: the branch's `:data` as an Option; nil counts as missing."
           :code $ quote $ defn &state-raw (states)
@@ -1252,41 +1170,35 @@
                 if (nil? raw) (Option :none) (Option :some raw)
               (:none) (Option :none)
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic
-            :return $ :: 'Option 'Dynamic
+          :schema $ quote $ Fn Dynamic
+            -> $ Option Dynamic
         '&state-shallow $ %{} 'CodeEntry
           :doc "|Internal helper of `pick-state`: turns a stored top-level Struct into a Map for decoding and leaves nested values as they are, so Structs under Dynamic fields keep their type."
           :code $ quote $ defn &state-shallow (value)
             if (struct? value) (&struct:to-map value) value
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ [] 'Dynamic
+          :schema $ quote $ Fn Dynamic (-> Dynamic)
         '*changes-logger $ %{} 'CodeEntry
           :doc "|Atom to hold a logging function for observing changes during rerenders. Function signature: (old-tree new-tree changes)."
           :code $ quote $ defref *changes-logger (Option :none)
           :examples $ [] $ quote
             reset! *changes-logger $ Option :some $ fn (_old-tree _new-tree changes)
-              hint-fn $ {}
-                :args $ [] 'respo.schema/Component 'respo.schema/Component $ :: 'List 'respo.schema/DomPatch
-                :return 'Unit
+              hint-fn $ Fn respo.schema/Component respo.schema/Component (List respo.schema/DomPatch) (-> Unit)
               println changes
-          :schema $ :: 'Ref $ :: 'calcit.core/Option
-            :: 'Fn $ {} (:return 'Unit)
-              :args $ [] 'respo.schema/Component 'respo.schema/Component $ :: 'List 'respo.schema/DomPatch
+          :schema $ quote $ Ref
+            calcit.core/Option $ Fn respo.schema/Component respo.schema/Component (List respo.schema/DomPatch) (-> Unit)
         '*dispatch-fn $ %{} 'CodeEntry
           :doc "|internal Ref storing the dispatch function. used to handle events and state updates throughout the application."
           :code $ quote $ defref *dispatch-fn
             fn (op) (raise |[Respo]-dispatch-before-render)
           :examples $ []
-          :schema $ :: 'Ref $ :: 'Fn
-            {} (:return 'Unit)
-              :args $ [] '*dispatch-op
+          :schema $ quote $ Ref
+            Fn *dispatch-op $ -> Unit
         '*global-element $ %{} 'CodeEntry
           :doc "|internal Ref storing the current virtual DOM tree. used by render! to track and update the application state."
           :code $ quote $ defref *global-element (Option :none)
           :examples $ []
-          :schema $ :: 'Ref $ :: 'calcit.core/Option 'respo.schema/Component
+          :schema $ quote $ Ref (calcit.core/Option respo.schema/Component)
         '<> $ %{} 'CodeEntry
           :doc "|Create a text node with `span`.\n\nThe first argument is the content string. The optional second argument can be a style map or a class-name string."
           :code $ quote $ defn <> (content & styles)
@@ -1296,8 +1208,7 @@
                 span $ {} (:inner-text content) (:class-name style)
                 span $ {} (:inner-text content) (:style style)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-            :args $ [] 'String
+          :schema $ quote $ Fn String & Dynamic (-> respo.schema/Element)
         '>> $ %{} 'CodeEntry
           :doc "|Create a nested state cursor for a child branch.\n\nThe returned map reuses branch data and extends `:cursor` with the new key, so child components can manage local state without losing the parent path."
           :code $ quote $ defn >> (states k)
@@ -1314,10 +1225,9 @@
               &map:assoc branch :cursor $ append parent-cursor k
           :examples $ [] $ quote
             >> ({}) :task-a
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic 'Dynamic
-            :features $ #{} :js-ffi
-            :return $ :: 'Map 'Dynamic 'Dynamic
+          :schema $ quote $ Fn Dynamic Dynamic
+            -> $ Map Dynamic Dynamic
+            :features :js-ffi
           :tests $ []
             %{} 'TestEntry (:name |mixed-state-keys)
               :code $ quote $ let
@@ -1377,9 +1287,7 @@
                       >> (&{} :cursor false) :child
                       , |unexpected-success
                     fn (message)
-                      hint-fn $ {}
-                        :args $ [] 'String
-                        :return 'String
+                      hint-fn $ Fn String $ -> String
                       , message
                 assert=
                   str "|[Respo] expected states as a map, got: " $ type-of false
@@ -1388,9 +1296,7 @@
                       >> (&{} :child false) :child
                       , |unexpected-success
                     fn (message)
-                      hint-fn $ {}
-                        :args $ [] 'String
-                        :return 'String
+                      hint-fn $ Fn String $ -> String
                       , message
               :tags $ #{} :regression :unit
         'a $ %{} 'CodeEntry
@@ -1398,33 +1304,31 @@
           :code $ quote $ defn a (props & children) (create-element :a props & children)
           :examples $ [] $ quote
             a $ {} (:href |https://example.com) (:inner-text "|Visit Example")
-          :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-            :args $ [] 'PropsInput
-            :generics $ [] 'PropsInput
+          :schema $ quote $ Fn PropsInput & Dynamic (-> respo.schema/Element) (:generics PropsInput)
         'append-dynamic! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn append-dynamic! (target value)
             reset! target $ .append @target value
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
-              :: 'Ref $ :: 'List 'T
-              , 'T
-            :generics $ [] 'T
+          :schema $ quote $ Fn
+            Ref $ List T
+            , T (-> Unit) (:generics T)
           :tests $ []
             %{} 'TestEntry (:name |preserves-number-ref-element-type)
               :code $ quote $ let
-                  values $ ref $ assert-type ([]) (:: 'List 'Number)
+                  values $ ref $ assert-type ([])
+                    quote $ List Number
                 append-dynamic! values 7
-                assert-type @values $ :: 'List 'Number
+                assert-type @values $ quote $ List Number
                 assert= ([] 7) @values
               :tags $ #{} :unit
             %{} 'TestEntry (:name |preserves-nominal-ref-element-type)
               :code $ quote $ let
-                  values $ ref $ assert-type ([]) (:: 'List 'calcit.core/FsPath)
+                  values $ ref $ assert-type ([])
+                    quote $ List calcit.core/FsPath
                   item $ calcit.core/FsPath :value |demo
                 append-dynamic! values item
-                assert-type @values $ :: 'List 'calcit.core/FsPath
+                assert-type @values $ quote $ List calcit.core/FsPath
                 assert= ([] item) @values
               :tags $ #{} :unit
         'as-states-map $ %{} 'CodeEntry (:doc "|在状态树开放边界校验 states map，nil 视为空。")
@@ -1432,15 +1336,12 @@
             if (nil? value) ({})
               if (map? value) value $ raise $ str "|[Respo] expected states as a map, got: " (type-of value)
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic
-            :return $ :: 'Map 'Dynamic 'Dynamic
+          :schema $ quote $ Fn Dynamic
+            -> $ Map Dynamic Dynamic
         'blockquote $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn blockquote (props & children) (create-element :blockquote props & children)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-            :args $ [] 'PropsInput
-            :generics $ [] 'PropsInput
+          :schema $ quote $ Fn PropsInput & Dynamic (-> respo.schema/Element) (:generics PropsInput)
         'body $ %{} 'CodeEntry
           :doc "|create a body element with properties and children. first argument is a hashmap for properties, rest arguments are children elements."
           :code $ quote $ defn body (props & children) (create-element :body props & children)
@@ -1449,9 +1350,7 @@
               div ({}) (<> |Content)
             quote $ body $ {}
               :style $ {} $ :margin |0
-          :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-            :args $ [] 'PropsInput
-            :generics $ [] 'PropsInput
+          :schema $ quote $ Fn PropsInput & Dynamic (-> respo.schema/Element) (:generics PropsInput)
         'build-effect $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn build-effect (name deps method)
             when
@@ -1464,10 +1363,9 @@
                 method-fn $ expect-function method "|[Respo/build-effect] expected a lifecycle method function"
               schema/Effect :name name :coord ([]) :args deps :method method-fn
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Effect)
-            :args $ [] 'Tag (:: 'List 'Dynamic)
-              :: 'Fn $ {} (:return 'Unit)
-                :args $ [] (:: 'List 'Dynamic) (:: 'List 'Dynamic)
+          :schema $ quote $ Fn Tag (List Dynamic)
+            Fn (List Dynamic) (List Dynamic) (-> Unit)
+            -> respo.schema/Effect
           :tags $ #{} :internal
         'button $ %{} 'CodeEntry
           :doc "|Renders a <button> element. Wrapper around create-element."
@@ -1478,40 +1376,33 @@
               {} $ :on-click $ fn (e d!)
                 d! $ :: :click
               <> "|Click me"
-          :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-            :args $ [] 'PropsInput
-            :generics $ [] 'PropsInput
+          :schema $ quote $ Fn PropsInput & Dynamic (-> respo.schema/Element) (:generics PropsInput)
         'clear-cache! $ %{} 'CodeEntry
           :doc "|Clear memoized render caches used by Respo.\n\nThis is mainly useful during hot reloading or code swapping, where mounted DOM may stay in place but cached render results must be dropped before the next render."
           :code $ quote $ defn clear-cache! () (memo/reset-component-caches!)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
+          :schema $ quote $ Fn (-> Unit)
         'code $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn code (props & children) (create-element :code props & children)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-            :args $ [] 'PropsInput
-            :generics $ [] 'PropsInput
+          :schema $ quote $ Fn PropsInput & Dynamic (-> respo.schema/Element) (:generics PropsInput)
         'collect-patches $ %{} 'CodeEntry
           :doc "|Runs f with a collect! callback and returns the DomPatch list it collected, in order."
           :code $ quote $ defn collect-patches (f)
             let
-                *changes $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
+                *changes $ ref $ assert-type ([])
+                  quote $ List respo.schema/DomPatch
               f $ fn (op)
-                hint-fn $ {} (:return 'Unit)
-                  :args $ [] 'respo.schema/DomPatch
+                hint-fn $ Fn respo.schema/DomPatch $ -> Unit
                 reset! *changes $ append (deref *changes) op
                 , &unit
               deref *changes
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] $ :: 'Fn
-              {} (:return 'Dynamic)
-                :args $ [] $ :: 'Fn
-                  {} (:return 'Unit)
-                    :args $ [] 'respo.schema/DomPatch
-            :return $ :: 'List 'respo.schema/DomPatch
+          :schema $ quote $ Fn
+            Fn
+              Fn respo.schema/DomPatch $ -> Unit
+              -> Dynamic
+            -> $ List respo.schema/DomPatch
         'configure-events! $ %{} 'CodeEntry
           :doc "|Configure event installation before the first render! or realize-ssr!. EventConfig contains stop-propagation? (default true) and ListenerMode :property (default) or :add-event-listener. Configuration is immutable after mounting and is preserved during hot reload."
           :code $ quote $ defn configure-events! (config)
@@ -1521,16 +1412,14 @@
                 raise |[Respo/configure-events!]-configure-before-mount
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'respo.schema/EventConfig
+          :schema $ quote $ Fn respo.schema/EventConfig (-> Unit)
         'confirm-child $ %{} 'CodeEntry
           :doc "|Validates if the item is a valid Respo node (element, component, or nil). Returns the item."
           :code $ quote $ defn confirm-child (x)
             assert "|Invalid data in elements tree: " $ or (nil? x) (element? x) (component? x)
             , x
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ [] 'Dynamic
+          :schema $ quote $ Fn Dynamic (-> Dynamic)
         'confirm-child-pair $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn confirm-child-pair (pair)
             assert "|expected pair" $ and (list? pair)
@@ -1541,9 +1430,8 @@
               assert "|Invalid data in elements tree: " $ or (nil? x) (element? x) (component? x)
             , pair
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] $ :: 'List 'Dynamic
-            :return $ :: 'List 'Dynamic
+          :schema $ quote $ Fn (List Dynamic)
+            -> $ List Dynamic
         'create-element $ %{} 'CodeEntry
           :doc "|Low-level helper for creating a virtual DOM element.\n\nPass a tag name, an optional props map, and child nodes. Public helpers such as `div`, `span`, `button`, and `input` are thin wrappers around this function."
           :code $ quote $ defn create-element (tag-name props & children)
@@ -1561,9 +1449,7 @@
                     acc $ []
                     xs children
                     idx 0
-                  hint-fn $ {}
-                    :args $ [] (:: 'List 'respo.schema/ChildPair) (:: 'List 'Dynamic) 'Number
-                    :return $ :: 'List 'respo.schema/ChildPair
+                  hint-fn $ Fn (List respo.schema/ChildPair) (List Dynamic) Number $ -> (List respo.schema/ChildPair)
                   if (empty? xs) acc $ let
                       item $ .unwrap $ calcit.core/first xs
                     confirm-child item
@@ -1580,9 +1466,7 @@
             quote $ create-element :a
               {} $ :href |/home
               <> |Home
-          :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-            :args $ [] 'Tag 'PropsInput
-            :generics $ [] 'PropsInput
+          :schema $ quote $ Fn Tag PropsInput & Dynamic (-> respo.schema/Element) (:generics PropsInput)
         'create-list-element $ %{} 'CodeEntry
           :doc "|Creates an element for ordered keyed children. Validates each [key child] pair before omitting nil-valued children, matching ordinary element children. Keys must be non-nil, including for omitted children."
           :code $ quote $ defn create-list-element (tag-name props child-pairs)
@@ -1596,7 +1480,7 @@
                 styles $ sort
                   assert-type
                     &map:to-list $ props-style-map $ calcit.core/get props-map :style
-                    :: List $ :: List Dynamic
+                    quote $ List $ List Dynamic
                   fn (x y)
                     &compare
                       .unwrap $ calcit.core/first x
@@ -1608,17 +1492,16 @@
                     fn (pair)
                       calcit.core/non-nil? $ respo.util.list/pair-value pair
                   fn (pair)
-                    hint-fn $ {}
-                      :args $ [] $ :: 'List 'Dynamic
-                      :return 'respo.schema/ChildPair
+                    hint-fn $ Fn (List Dynamic) (-> respo.schema/ChildPair)
                     respo.util.detect/make-child-pair (respo.util.list/pair-key pair) (respo.util.list/pair-value pair)
                 , :ref ref!
           :examples $ [] $ quote
             create-list-element :div
               {} $ :class-name |list
               [] $ [] :item-1 $ span ({})
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Element)
-            :args $ [] 'Tag 'Dynamic $ :: 'List (:: 'List 'Dynamic)
+          :schema $ quote $ Fn Tag Dynamic
+            List $ List Dynamic
+            -> respo.schema/Element
           :tests $ []
             %{} 'TestEntry (:name |rejects-invalid-child-collections)
               :code $ quote $ let
@@ -1630,11 +1513,10 @@
               :tags $ #{} :unit
             %{} 'TestEntry (:name |ignores-new-nil-child)
               :code $ quote $ let
-                  patches $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
+                  patches $ ref $ assert-type ([])
+                    quote $ List respo.schema/DomPatch
                   collect! $ fn (patch)
-                    hint-fn $ {}
-                      :args $ [] 'respo.schema/DomPatch
-                      :return 'Unit
+                    hint-fn $ Fn respo.schema/DomPatch $ -> Unit
                     append-dynamic! patches patch
                   empty-tree $ list-> ({}) ([])
                   nil-tree $ list-> ({})
@@ -1644,11 +1526,10 @@
               :tags $ #{} :unit
             %{} 'TestEntry (:name |replaces-and-removes-nil-children)
               :code $ quote $ let
-                  patches $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
+                  patches $ ref $ assert-type ([])
+                    quote $ List respo.schema/DomPatch
                   collect! $ fn (patch)
-                    hint-fn $ {}
-                      :args $ [] 'respo.schema/DomPatch
-                      :return 'Unit
+                    hint-fn $ Fn respo.schema/DomPatch $ -> Unit
                     append-dynamic! patches patch
                   child $ span $ {}
                   live-tree $ list-> ({})
@@ -1693,9 +1574,7 @@
           :code $ quote $ defn create-list-element-open (name attrs children)
             create-list-element name attrs $ decode-map-as children $ :: 'List (:: 'List 'Dynamic)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Element)
-            :args $ [] 'Tag (:: 'Map 'Tag 'Dynamic) 'Dynamic
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn Tag (Map Tag Dynamic) Dynamic (-> respo.schema/Element) (:features :js-ffi)
         'decorate-defcomp $ %{} 'CodeEntry
           :doc "|Add the component name to the root element as one data-comp attribute at its sorted position. Preserves the property ordering required by the merge diff, replacing an existing marker when necessary."
           :code $ quote $ defn decorate-defcomp (c name)
@@ -1709,11 +1588,10 @@
                         updated $ .assoc element :attrs $ loop
                             before $ []
                             remaining $ :attrs element
-                          hint-fn $ {}
-                            :args $ []
-                              :: 'List $ :: 'List 'Dynamic
-                              :: 'List $ :: 'List 'Dynamic
-                            :return $ :: 'List $ :: 'List 'Dynamic
+                          hint-fn $ Fn
+                            List $ List Dynamic
+                            List $ List Dynamic
+                            -> $ List $ List Dynamic
                           if (empty? remaining)
                             append before $ [] :data-comp name
                             let
@@ -1726,16 +1604,14 @@
                                   if (&= order 0) (&list:rest remaining) remaining
                       .assoc c :tree $ Option :some $ respo.schema/RenderNode :element updated
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] 'respo.schema/Component 'String
+          :schema $ quote $ Fn respo.schema/Component String (-> respo.schema/Component)
           :tests $ []
             %{} 'TestEntry (:name |title-removal-keeps-component-marker)
               :code $ quote $ let
-                  patches $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
+                  patches $ ref $ assert-type ([])
+                    quote $ List respo.schema/DomPatch
                   collect! $ fn (patch)
-                    hint-fn $ {}
-                      :args $ [] 'respo.schema/DomPatch
-                      :return 'Unit
+                    hint-fn $ Fn respo.schema/DomPatch $ -> Unit
                     append-dynamic! patches patch
                   old-component $ decorate-defcomp
                     schema/Component :name :link :effects ([]) :listeners ([]) :tree $ Option :some $ respo.util.detect/as-render-node
@@ -1759,11 +1635,10 @@
             %{} 'TestEntry
               :name |property-addition-and-update-keep-component-marker
               :code $ quote $ let
-                  patches $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
+                  patches $ ref $ assert-type ([])
+                    quote $ List respo.schema/DomPatch
                   collect! $ fn (patch)
-                    hint-fn $ {}
-                      :args $ [] 'respo.schema/DomPatch
-                      :return 'Unit
+                    hint-fn $ Fn respo.schema/DomPatch $ -> Unit
                     append-dynamic! patches patch
                   old-component $ decorate-defcomp
                     schema/Component :name :link :effects ([]) :listeners ([]) :tree $ Option :some $ respo.util.detect/as-render-node
@@ -1834,10 +1709,8 @@
                 effect-on-update ([] value)
                   fn (_target) &unit
                 div ({}) (<> value)
-          :schema $ :: 'Macro $ {} (:rest 'Syntax)
-            :capabilities $ #{}
-            :expansion $ :: 'Definition 'Fn
-            :required $ [] 'SyntaxSymbol 'SyntaxList
+          :schema $ quote $ Macro SyntaxSymbol SyntaxList & Syntax
+            -> $ Definition Fn
         'defeffect $ %{} 'CodeEntry
           :doc "|Macro for defining component effects.\n\n`defeffect name (args...) (action el at-place?) body` builds an effect. Respo calls it with up to three lifecycle values: `action` (`:mount`, `:before-update`, `:update` or `:unmount`), the root element `el`, and `at-place?`. You may bind fewer than three; binding more raises when the macro expands, because Respo never supplies a fourth value.\n\nUse it inside a component effect vector like `[] (effect ...) child-tree`. `el` stays open (Dynamic) so effects also work on non-browser targets; browser-only effects can read it as a typed `respo.dom/DomElement` with `respo.ffi.browser/effect-element`."
           :code $ quote $ defmacro defeffect (effect-name args params & body)
@@ -1851,9 +1724,7 @@
                 ~ $ turn-tag effect-name
                 , :coord ([]) :args ([] ~@args) :method
                   fn (~args-var ~params-var)
-                    hint-fn $ {}
-                      :args $ [] (:: 'List 'Dynamic) (:: 'List 'Dynamic)
-                      :return 'Unit
+                    hint-fn $ Fn (List Dynamic) (List Dynamic) (-> Unit)
                     let[] ~args ~args-var $ let[] ~params ~params-var $ ~
                       if (empty? body)
                         quasiquote $ do $ println (str-spaced |WARNING: ~effect-name "|lack code for handling effects!")
@@ -1862,10 +1733,8 @@
           :examples $ [] $ quote
             defeffect log-message (message) (action el at-place?)
               if (= action :mount) (js/console.log message)
-          :schema $ :: 'Macro $ {} (:rest 'Syntax)
-            :capabilities $ #{}
-            :expansion $ :: 'Definition 'Fn
-            :required $ [] 'SyntaxSymbol 'SyntaxList 'SyntaxList
+          :schema $ quote $ Macro SyntaxSymbol SyntaxList SyntaxList & Syntax
+            -> $ Definition Fn
           :tests $ []
             %{} 'TestEntry (:name |discards-body-result-after-running-effects)
               :code $ quote $ let
@@ -1886,9 +1755,7 @@
                       macroexpand $ quote $ defeffect four-params () (action el local at?) &unit
                       , |unexpected-success
                     fn (message)
-                      hint-fn $ {}
-                        :args $ [] 'String
-                        :return 'String
+                      hint-fn $ Fn String $ -> String
                       , message
                   , "|defeffect binds at most 3 lifecycle params"
                 assert= true $ list? $ macroexpand
@@ -1900,10 +1767,8 @@
             assert "|expected some result" $ > (count body) 0
             quasiquote $ defn ~x ~params ~@body
           :examples $ []
-          :schema $ :: 'Macro $ {} (:rest 'Syntax)
-            :capabilities $ #{}
-            :expansion $ :: 'Definition 'Fn
-            :required $ [] 'SyntaxSymbol 'SyntaxList
+          :schema $ quote $ Macro SyntaxSymbol SyntaxList & Syntax
+            -> $ Definition Fn
         'dispatch-fn $ %{} 'CodeEntry
           :doc "|Macro for an inline callback that dispatches.\n\n`dispatch-fn (value d!) body` expands to a `fn` with a `hint-fn`: every argument before the last is `Dynamic`, and the last one, `d!`, takes the entry's `*dispatch-op`. Use it where a typed field such as a component's `:on-change` option expects a callback, so you don't write the annotation by hand. The body's result is discarded and the callback returns `Unit`.\n\nThe last argument is always treated as `d!`, so write it even when the body does not dispatch. The entry needs the `:dispatch-op` type slot bound (`calcit config set-type-slot :dispatch-op app.schema/Op`); without it, checking a typed field rejects the callback."
           :code $ quote $ defmacro dispatch-fn (args & body)
@@ -1925,20 +1790,18 @@
               d! $ :: :update |task-id value
             quote $ dispatch-fn (d!)
               d! $ :: :clear
-          :schema $ :: 'Macro $ {}
-            :capabilities $ #{} :log
-            :expansion $ :: 'Expr 'Fn
-            :required $ [] 'SyntaxList
-            :rest $ :: 'Expr 'Dynamic
+          :schema $ quote $ Macro SyntaxList & (Expr Dynamic)
+            -> $ Expr Fn
+            :capabilities :log
           :tests $ [] $ %{} 'TestEntry (:name |forwards-op-and-returns-unit)
             :code $ quote $ let
-                *sent $ ref $ assert-type ([]) (:: 'List 'Dynamic)
+                *sent $ ref $ assert-type ([])
+                  quote $ List Dynamic
                 handler $ dispatch-fn (value d!)
                   d! $ :: :toggle value
                   , |ignored-result
                 d! $ fn (op)
-                  hint-fn $ {} (:return 'Unit)
-                    :args $ [] *dispatch-op
+                  hint-fn $ Fn *dispatch-op $ -> Unit
                   swap! *sent append op
                   , &unit
               assert= &unit $ handler |task-a d!
@@ -1960,9 +1823,7 @@
             quote $ div ({})
               div ({}) (<> |child1)
               div ({}) (<> |child2)
-          :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-            :args $ [] 'PropsInput
-            :generics $ [] 'PropsInput
+          :schema $ quote $ Fn PropsInput & Dynamic (-> respo.schema/Element) (:generics PropsInput)
         'effect-on-mount $ %{} 'CodeEntry
           :doc "|Creates a component effect that calls mount! with the real DOM target after mounting."
           :code $ quote $ defn effect-on-mount (mount!)
@@ -1975,8 +1836,7 @@
                     , &unit
           :examples $ [] $ quote
             effect-on-mount $ fn (_target) nil
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Effect)
-            :args $ [] 'Fn
+          :schema $ quote $ Fn Fn (-> respo.schema/Effect)
         'effect-on-unmount $ %{} 'CodeEntry
           :doc "|Creates a component effect that calls unmount! with the current DOM target before removal."
           :code $ quote $ defn effect-on-unmount (unmount!)
@@ -1989,8 +1849,7 @@
                     , &unit
           :examples $ [] $ quote
             effect-on-unmount $ fn (_target) nil
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Effect)
-            :args $ [] 'Fn
+          :schema $ quote $ Fn Fn (-> respo.schema/Effect)
         'effect-on-update $ %{} 'CodeEntry
           :doc "|Creates a component effect that calls update! when the immutable dependency list changes."
           :code $ quote $ defn effect-on-update (deps update!)
@@ -2006,14 +1865,13 @@
           :examples $ [] $ quote
             effect-on-update ([] 1)
               fn (_target) &unit
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Effect)
-            :args $ [] (:: 'List 'Dynamic)
-              :: 'Fn $ {} (:return 'Unit)
-                :args $ [] 'Dynamic
+          :schema $ quote $ Fn (List Dynamic)
+            Fn Dynamic $ -> Unit
+            -> respo.schema/Effect
           :tests $ [] $ %{} 'TestEntry (:name |dispatches-only-matching-lifecycle-phases)
             :code $ quote $ let
                 log $ ref $ assert-type ([])
-                  :: 'List $ :: 'List 'Dynamic
+                  quote $ List $ List Dynamic
                 update-effect $ effect-on-update ([] :value)
                   fn (target)
                     do
@@ -2059,22 +1917,19 @@
             effect-watch ([] 1)
               fn (_target) &unit
               Option :some $ fn (_target) &unit
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Effect)
-            :args $ [] (:: 'List 'Dynamic)
-              :: 'Fn $ {} (:return 'Unit)
-                :args $ [] 'Dynamic
-              :: 'calcit.core/Option $ :: 'Fn $ {} (:return 'Unit)
-                :args $ [] 'Dynamic
+          :schema $ quote $ Fn (List Dynamic)
+            Fn Dynamic $ -> Unit
+            calcit.core/Option $ Fn Dynamic $ -> Unit
+            -> respo.schema/Effect
           :tests $ []
             %{} 'TestEntry (:name |cleans-old-closure-before-new-setup)
               :code $ quote $ let
                   log $ ref $ assert-type ([])
-                    :: 'List $ :: 'List 'Dynamic
-                  ops $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
+                    quote $ List $ List Dynamic
+                  ops $ ref $ assert-type ([])
+                    quote $ List respo.schema/DomPatch
                   collect! $ fn (op)
-                    hint-fn $ {}
-                      :args $ [] 'respo.schema/DomPatch
-                      :return 'Unit
+                    hint-fn $ Fn respo.schema/DomPatch $ -> Unit
                     append-dynamic! ops op
                   element $ schema/Element :name :div :coord (Option :none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref nil
                   old-effect $ effect-watch ([] 1)
@@ -2096,11 +1951,10 @@
               :tags $ #{} :unit
             %{} 'TestEntry (:name |keeps-unchanged-effects-idle)
               :code $ quote $ let
-                  ops $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
+                  ops $ ref $ assert-type ([])
+                    quote $ List respo.schema/DomPatch
                   collect! $ fn (op)
-                    hint-fn $ {}
-                      :args $ [] 'respo.schema/DomPatch
-                      :return 'Unit
+                    hint-fn $ Fn respo.schema/DomPatch $ -> Unit
                     append-dynamic! ops op
                   element $ schema/Element :name :div :coord (Option :none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref nil
                   old-effect $ effect-watch ([] 1)
@@ -2118,12 +1972,11 @@
             %{} 'TestEntry (:name |handles-effect-list-addition-and-removal)
               :code $ quote $ let
                   log $ ref $ assert-type ([])
-                    :: 'List $ :: 'List 'Dynamic
-                  ops $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
+                    quote $ List $ List Dynamic
+                  ops $ ref $ assert-type ([])
+                    quote $ List respo.schema/DomPatch
                   collect! $ fn (op)
-                    hint-fn $ {}
-                      :args $ [] 'respo.schema/DomPatch
-                      :return 'Unit
+                    hint-fn $ Fn respo.schema/DomPatch $ -> Unit
                     append-dynamic! ops op
                   element $ schema/Element :name :div :coord (Option :none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref nil
                   watch $ effect-watch ([])
@@ -2145,12 +1998,11 @@
             %{} 'TestEntry (:name |replaces-effect-kinds-with-unmount-and-mount)
               :code $ quote $ let
                   log $ ref $ assert-type ([])
-                    :: 'List $ :: 'List 'Dynamic
-                  ops $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
+                    quote $ List $ List Dynamic
+                  ops $ ref $ assert-type ([])
+                    quote $ List respo.schema/DomPatch
                   collect! $ fn (op)
-                    hint-fn $ {}
-                      :args $ [] 'respo.schema/DomPatch
-                      :return 'Unit
+                    hint-fn $ Fn respo.schema/DomPatch $ -> Unit
                     append-dynamic! ops op
                   element $ schema/Element :name :div :coord (Option :none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref nil
                   old-effect $ effect-watch ([])
@@ -2169,19 +2021,17 @@
         'element-type $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def element-type (resolve-element-constructor)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ quote Dynamic
         'empty-effects $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn empty-effects () ([])
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ []
-            :return $ :: 'List 'respo.schema/Effect
+          :schema $ quote $ Fn
+            -> $ List respo.schema/Effect
         'empty-listeners $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn empty-listeners () ([])
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ []
-            :return $ :: 'List 'respo.schema/RespoListener
+          :schema $ quote $ Fn
+            -> $ List respo.schema/RespoListener
         'error-boundary $ %{} 'CodeEntry
           :doc "|Catches synchronous errors while evaluating one child expression and calls fallback with the error. It stores no hidden error state, so the next immutable store render retries the child."
           :code $ quote $ defmacro error-boundary (fallback & body)
@@ -2200,11 +2050,8 @@
               fn (_error)
                 div ({}) (<> |Failed)
               div ({}) (<> |Ready)
-          :schema $ :: 'Macro $ {}
-            :capabilities $ #{}
-            :expansion $ :: 'Expr 'Dynamic
-            :required $ [] $ :: 'Expr 'Fn
-            :rest $ :: 'Expr 'Dynamic
+          :schema $ quote $ Macro (Expr Fn) & (Expr Dynamic)
+            -> $ Expr Dynamic
           :tests $ [] $ %{} 'TestEntry (:name |catches-render-errors)
             :code $ quote $ let
                 caught? $ ref false
@@ -2225,8 +2072,7 @@
                   raise $ str "|[Respo] expected event :checked as a bool: " message
           :examples $ [] $ quote
             event-checked? $ {} (:type :change) (:checked true)
-          :schema $ :: 'Fn $ {} (:return 'Bool)
-            :args $ [] 'Dynamic
+          :schema $ quote $ Fn Dynamic (-> Bool)
           :tests $ [] $ %{} 'TestEntry (:name |reads-checked)
             :code $ quote $ do
               assert= true $ event-checked? $ {} (:type :change) (:checked true)
@@ -2237,9 +2083,7 @@
                     event-checked? $ {} (:type :change) (:checked |on)
                     , |unexpected-success
                   fn (message)
-                    hint-fn $ {}
-                      :args $ [] 'String
-                      :return 'String
+                    hint-fn $ Fn String $ -> String
                     , message
                 , "|[Respo] expected event :checked as a bool"
         'event-value $ %{} 'CodeEntry
@@ -2253,8 +2097,7 @@
                   raise $ str "|[Respo] expected event :value as a string: " message
           :examples $ [] $ quote
             event-value $ {} (:type :input) (:value |draft)
-          :schema $ :: 'Fn $ {} (:return 'String)
-            :args $ [] 'Dynamic
+          :schema $ quote $ Fn Dynamic (-> String)
           :tests $ [] $ %{} 'TestEntry (:name |reads-value)
             :code $ quote $ do
               assert= |draft $ event-value $ {} (:type :input) (:value |draft)
@@ -2265,9 +2108,7 @@
                     event-value $ {} $ :type :input
                     , |unexpected-success
                   fn (message)
-                    hint-fn $ {}
-                      :args $ [] 'String
-                      :return 'String
+                    hint-fn $ Fn String $ -> String
                     , message
                 , "|[Respo] event has no :value"
               assert= true $ starts-with?
@@ -2276,9 +2117,7 @@
                     event-value $ {} (:type :input) (:value 1)
                     , |unexpected-success
                   fn (message)
-                    hint-fn $ {}
-                      :args $ [] 'String
-                      :return 'String
+                    hint-fn $ Fn String $ -> String
                     , message
                 , "|[Respo] expected event :value as a string"
         'extract-effects-list $ %{} 'CodeEntry (:doc |)
@@ -2317,9 +2156,7 @@
                   schema/Component :effects ([]) :name component-name :listeners ([]) :tree $ Option :some $ respo.util.detect/as-render-node markup-tree
                   raise |invalid-component-tree
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] 'Tag 'Dynamic
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn Tag Dynamic (-> respo.schema/Component) (:features :js-ffi)
         'for-keyed $ %{} 'CodeEntry
           :doc "|Maps an ordered immutable list to keyed [key child] pairs for list->. key-fn receives the item; render-item receives item and index. Nil keys raise an indexed error."
           :code $ quote $ defn for-keyed (items key-fn render-item)
@@ -2340,28 +2177,21 @@
               fn (item) item
               fn (item _idx)
                 div ({}) (<> item)
-          :schema $ :: 'Fn $ {}
-            :args $ [] (:: 'List 'T)
-              :: 'Fn $ {} (:return 'K)
-                :args $ [] 'T
-              :: 'Fn $ {} (:return 'Dynamic)
-                :args $ [] 'T 'Number
-            :generics $ [] 'T 'K
-            :return $ :: 'List $ :: 'List 'Dynamic
+          :schema $ quote $ Fn (List T)
+            Fn T $ -> K
+            Fn T Number $ -> Dynamic
+            -> $ List $ List Dynamic
+            :generics T K
           :tests $ [] $ %{} 'TestEntry (:name |preserves-order-and-rejects-nil-keys)
             :code $ quote $ do
               let
                   items $ [] :a :b
                   pairs $ for-keyed items
                     fn (item)
-                      hint-fn $ {}
-                        :args $ [] 'Tag
-                        :return 'Tag
+                      hint-fn $ Fn Tag $ -> Tag
                       , item
                     fn (_item _idx)
-                      hint-fn $ {}
-                        :args $ [] 'Tag 'Number
-                        :return 'respo.schema/Element
+                      hint-fn $ Fn Tag Number $ -> respo.schema/Element
                       schema/Element :name :div :coord (Option :none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref nil
                 assert |keys-preserve-input-order $ &= ([] :a :b) (map pairs respo.util.list/pair-key)
                 assert |all-items-are-rendered $ = 2 $ count pairs
@@ -2370,14 +2200,10 @@
                 try
                   for-keyed ([] 1)
                     fn (_item)
-                      hint-fn $ {}
-                        :args $ [] 'Number
-                        :return 'Nil
+                      hint-fn $ Fn Number $ -> Nil
                       , nil
                     fn (_item _idx)
-                      hint-fn $ {}
-                        :args $ [] 'Number 'Number
-                        :return 'respo.schema/Element
+                      hint-fn $ Fn Number Number $ -> respo.schema/Element
                       schema/Element :name :div :coord (Option :none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref nil
                   fn (_error) (reset! caught? true)
                 assert |nil-key-reports-index @caught?
@@ -2385,72 +2211,50 @@
         'h1 $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn h1 (props & children) (create-element :h1 props & children)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-            :args $ [] 'PropsInput
-            :generics $ [] 'PropsInput
+          :schema $ quote $ Fn PropsInput & Dynamic (-> respo.schema/Element) (:generics PropsInput)
         'h2 $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn h2 (props & children) (create-element :h2 props & children)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-            :args $ [] 'PropsInput
-            :generics $ [] 'PropsInput
+          :schema $ quote $ Fn PropsInput & Dynamic (-> respo.schema/Element) (:generics PropsInput)
         'h3 $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn h3 (props & children) (create-element :h3 props & children)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-            :args $ [] 'PropsInput
-            :generics $ [] 'PropsInput
+          :schema $ quote $ Fn PropsInput & Dynamic (-> respo.schema/Element) (:generics PropsInput)
         'h4 $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn h4 (props & children) (create-element :h4 props & children)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-            :args $ [] 'PropsInput
-            :generics $ [] 'PropsInput
+          :schema $ quote $ Fn PropsInput & Dynamic (-> respo.schema/Element) (:generics PropsInput)
         'h5 $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn h5 (props & children) (create-element :h5 props & children)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-            :args $ [] 'PropsInput
-            :generics $ [] 'PropsInput
+          :schema $ quote $ Fn PropsInput & Dynamic (-> respo.schema/Element) (:generics PropsInput)
         'h6 $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn h6 (props & children) (create-element :h6 props & children)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-            :args $ [] 'PropsInput
-            :generics $ [] 'PropsInput
+          :schema $ quote $ Fn PropsInput & Dynamic (-> respo.schema/Element) (:generics PropsInput)
         'head $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn head (props & children) (create-element :head props & children)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-            :args $ [] 'PropsInput
-            :generics $ [] 'PropsInput
+          :schema $ quote $ Fn PropsInput & Dynamic (-> respo.schema/Element) (:generics PropsInput)
         'hr $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn hr (props) (create-element :hr props)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Element)
-            :args $ [] 'PropsInput
-            :generics $ [] 'PropsInput
+          :schema $ quote $ Fn PropsInput (-> respo.schema/Element) (:generics PropsInput)
         'html $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn html (props & children)
             create-element :html props & $ map children confirm-child
           :examples $ []
-          :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-            :args $ [] 'PropsInput
-            :generics $ [] 'PropsInput
+          :schema $ quote $ Fn PropsInput & Dynamic (-> respo.schema/Element) (:generics PropsInput)
         'img $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn img (props & children) (create-element :img props & children)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-            :args $ [] 'PropsInput
-            :generics $ [] 'PropsInput
+          :schema $ quote $ Fn PropsInput & Dynamic (-> respo.schema/Element) (:generics PropsInput)
         'input $ %{} 'CodeEntry
           :doc "|Creates HTML input element (input tag).\n\nParameters:\n  props - Attribute map, can include standard HTML attributes and event handlers like type, value, placeholder, on-input, etc.\n  & children - Variable arguments for child elements, usually empty since input is self-closing\n\nReturns:\n  Created input element component\n\nUsed to create various form input controls, supports text, password, number and other input types."
           :code $ quote $ defn input (props & children) (create-element :input props & children)
           :examples $ [] $ quote
             input $ {} (:type |text) (:placeholder "|Enter your name")
-          :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-            :args $ [] 'PropsInput
-            :generics $ [] 'PropsInput
+          :schema $ quote $ Fn PropsInput & Dynamic (-> respo.schema/Element) (:generics PropsInput)
           :tests $ [] $ %{} 'TestEntry (:name |accepts-props-from-a-variable-map)
             :code $ quote $ let
                 props $ {} (:placeholder |example) (:value |text)
@@ -2477,8 +2281,7 @@
                   raise $ str "|[Respo] expected keyboard event fields: " message
           :examples $ [] $ quote
             keyboard-info $ {} (:type :keydown) (:key |Enter) (:code |Enter) (:ctrl? false) (:meta? false) (:alt? false) (:shift? false)
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/KeyboardInfo)
-            :args $ [] 'Dynamic
+          :schema $ quote $ Fn Dynamic (-> respo.schema/KeyboardInfo)
           :tests $ [] $ %{} 'TestEntry (:name |reads-keyboard-fields)
             :code $ quote $ let
                 info $ keyboard-info $ {} (:type :keydown) (:key |Enter) (:code |Enter) (:ctrl? true) (:meta? false) (:alt? false) (:shift? false) (:key-code 13)
@@ -2491,32 +2294,27 @@
                     keyboard-info $ {} $ :type :click
                     , |unexpected-success
                   fn (message)
-                    hint-fn $ {}
-                      :args $ [] 'String
-                      :return 'String
+                    hint-fn $ Fn String $ -> String
                     , message
                 , "|[Respo] event has no :key"
         'li $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn li (props & children) (create-element :li props & children)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-            :args $ [] 'PropsInput
-            :generics $ [] 'PropsInput
+          :schema $ quote $ Fn PropsInput & Dynamic (-> respo.schema/Element) (:generics PropsInput)
         'link $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn link (props & children) (create-element :link props & children)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-            :args $ [] 'PropsInput
-            :generics $ [] 'PropsInput
+          :schema $ quote $ Fn PropsInput & Dynamic (-> respo.schema/Element) (:generics PropsInput)
         'list-> $ %{} 'CodeEntry
           :doc "|Render keyed children inside a `<div>`.\n\nPass an optional props map and a keyed children collection of `[key child]` pairs so diffing can reconcile inserts, removals, and reordering by key."
           :code $ quote $ defn list-> (props children) (create-list-element :div props children)
           :examples $ [] $ quote
             list-> ({})
               [] $ [] :a $ div ({})
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Element)
-            :args $ [] 'PropsInput $ :: 'List (:: 'List 'Dynamic)
-            :generics $ [] 'PropsInput
+          :schema $ quote $ Fn PropsInput
+            List $ List Dynamic
+            -> respo.schema/Element
+            :generics PropsInput
         'make-render-scheduler $ %{} 'CodeEntry
           :doc "|Returns a zero-argument scheduler. Pass Option:none (or omit the trailing Option argument) to coalesce requests via queueMicrotask, or Option:some enqueue! to supply custom timing. The callback reads the latest application state when it runs; only queued metadata is stored. render! and render-with! themselves remain synchronous. Reuse one scheduler per store watch; resetting its queued flag before rendering allows later requests to schedule another callback."
           :code $ quote $ defn make-render-scheduler (render! enqueue-option)
@@ -2533,33 +2331,24 @@
             make-render-scheduler
               fn () &unit
               Option :some $ fn (task) (task)
-          :schema $ :: 'Fn $ {}
-            :args $ []
-              :: 'Fn $ {} (:return 'Unit)
-                :args $ []
-              :: 'calcit.core/Option $ :: 'Fn $ {} (:return 'Unit)
-                :args $ [] $ :: 'Fn
-                  {} (:return 'Unit)
-                    :args $ []
-            :features $ #{} :js-ffi
-            :return $ :: 'Fn $ {} (:return 'Unit)
-              :args $ []
+          :schema $ quote $ Fn
+            Fn $ -> Unit
+            calcit.core/Option $ Fn
+              Fn $ -> Unit
+              -> Unit
+            -> $ Fn $ -> Unit
+            :features :js-ffi
           :tests $ [] $ %{} 'TestEntry (:name |coalesces-custom-queue-requests)
             :code $ quote $ let
                 render-count $ ref 0
                 tasks $ ref $ assert-type ([])
-                  :: 'List $ :: 'Fn $ {}
-                    :args $ []
-                    :return 'Unit
+                  quote $ List $ Fn (-> Unit)
                 schedule! $ make-render-scheduler
                   fn () $ do (swap! render-count inc) &unit
                   some-enqueue $ fn (task)
-                    hint-fn $ {}
-                      :args $ [] $ :: 'Fn
-                        {}
-                          :args $ []
-                          :return 'Unit
-                      :return 'Unit
+                    hint-fn $ Fn
+                      Fn $ -> Unit
+                      -> Unit
                     append-dynamic! tasks task
               schedule!
               schedule!
@@ -2576,15 +2365,13 @@
             memo-comp-by :demo
               defcomp comp-label (label) (<> label)
               , |demo
-          :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Component)
-            :args $ [] 'Dynamic 'Fn
+          :schema $ quote $ Fn Dynamic Fn & Dynamic (-> respo.schema/Component)
         'memo-value-by $ %{} 'CodeEntry
           :doc "|Memoizes an immutable derived value by function, stable key, and complete argument list. Use inside render-with! so frame pruning follows the rendered tree. A nil key bypasses the cache."
           :code $ quote $ defn memo-value-by (key f & args) (memo/memo-value-by key f & args)
           :examples $ [] $ quote
             memo-value-by :task-count count $ [] :a :b :c
-          :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'Dynamic)
-            :args $ [] 'Dynamic 'Fn
+          :schema $ quote $ Fn Dynamic Fn & Dynamic (-> Dynamic)
         'mount-app! $ %{} 'CodeEntry
           :doc "|Mounts the Respo application to the DOM. Initializes the global element and event listeners. Browser-only (needs a DOM mount target), so usage is shown here rather than as an executable example: `mount-app! mount-target (comp-app) *dispatch-fn`"
           :code $ quote $ defn mount-app! (target element *dispatch-fn)
@@ -2598,23 +2385,20 @@
                 patch-instance! changes target deliver-event
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'respo.dom/DomElement 'respo.schema/Component $ :: 'Ref
-              :: 'Fn $ {} (:return 'Unit)
-                :args $ [] '*dispatch-op
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn respo.dom/DomElement respo.schema/Component
+            Ref $ Fn *dispatch-op $ -> Unit
+            -> Unit
+            :features :js-ffi
         'none-render-node $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn none-render-node () (Option :none)
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ []
-            :return $ :: 'calcit.core/Option 'respo.schema/RenderNode
+          :schema $ quote $ Fn
+            -> $ calcit.core/Option respo.schema/RenderNode
         'none-struct $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn none-struct () (Option :none)
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ []
-            :return $ :: 'calcit.core/Option 'Struct
+          :schema $ quote $ Fn
+            -> $ calcit.core/Option Struct
         'normalize-dom-props $ %{} 'CodeEntry
           :doc "|Normalize nil, map, or DomProps record input into a map. This isolates the intentionally dynamic public props boundary before typed DOM processing."
           :code $ quote $ defn normalize-dom-props (props)
@@ -2623,18 +2407,13 @@
                 {}
               (struct? props)
                 let
-                    filter-present $ assert-type &map:filter-kv $ :: 'Fn
-                      {}
-                        :args $ [] (:: 'Map 'Tag 'Dynamic)
-                          :: 'Fn $ {}
-                            :args $ [] 'Tag 'Dynamic
-                            :return 'Bool
-                        :return $ :: 'Map 'Tag 'Dynamic
+                    filter-present $ assert-type &map:filter-kv $ quote
+                      Fn (Map Tag Dynamic)
+                        Fn Tag Dynamic $ -> Bool
+                        -> $ Map Tag Dynamic
                   filter-present (&struct:to-map props)
                     fn (_k v)
-                      hint-fn $ {}
-                        :args $ [] 'Tag 'Dynamic
-                        :return 'Bool
+                      hint-fn $ Fn Tag Dynamic $ -> Bool
                       and (calcit.core/non-nil? v) (not= v js/undefined)
               (map? props)
                 foldl props ({})
@@ -2651,11 +2430,10 @@
                         raise $ str "|Expected DOM prop keys to be tags, got: " k
               true $ raise $ str |Expected_DOM_props_map_or_record,_got: (type-of props)
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'PropsInput
-            :features $ #{} :js-ffi
-            :generics $ [] 'PropsInput
-            :return $ :: 'Map 'Tag 'Dynamic
+          :schema $ quote $ Fn PropsInput
+            -> $ Map Tag Dynamic
+            :generics PropsInput
+            :features :js-ffi
           :tests $ [] $ %{} 'TestEntry (:name |rejects-invalid-props-input)
             :code $ quote $ each
               [] 0 false $ []
@@ -2674,18 +2452,15 @@
               (:some value)
                 if (nil? value) nil $ if (fn? value) value $ raise message
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] (:: 'Option 'RefInput) 'String
-            :generics $ [] 'RefInput
-            :return $ :: 'JsNullish 'Fn
+          :schema $ quote $ Fn (Option RefInput) String
+            -> $ JsNullish Fn
+            :generics RefInput
           :tags $ #{} :internal
           :tests $ []
             %{} 'TestEntry (:name |preserves-nil-and-callback)
               :code $ quote $ let
                   callback $ fn (_target)
-                    hint-fn $ {}
-                      :args $ [] $ :: 'JsNullish 'respo.dom/DomElement
-                      :return 'Unit
+                    hint-fn $ Fn (JsNullish respo.dom/DomElement) (-> Unit)
                     , &unit
                 assert= nil $ normalize-ref (Option :none) |expected-ref
                 assert= nil $ normalize-ref (Option :some nil) |expected-ref
@@ -2702,21 +2477,15 @@
         'ol $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn ol (props & children) (create-element :ol props & children)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-            :args $ [] 'PropsInput
-            :generics $ [] 'PropsInput
+          :schema $ quote $ Fn PropsInput & Dynamic (-> respo.schema/Element) (:generics PropsInput)
         'option $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn option (props & children) (create-element :option props & children)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-            :args $ [] 'PropsInput
-            :generics $ [] 'PropsInput
+          :schema $ quote $ Fn PropsInput & Dynamic (-> respo.schema/Element) (:generics PropsInput)
         'p $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn p (props & children) (create-element :p props & children)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-            :args $ [] 'PropsInput
-            :generics $ [] 'PropsInput
+          :schema $ quote $ Fn PropsInput & Dynamic (-> respo.schema/Element) (:generics PropsInput)
         'pick-state $ %{} 'CodeEntry
           :doc "|Read the component's own state from `states` as a typed value.\n\n`pick-state states TypeExpr default-state` returns `default-state` when the branch has no `:data` (or `:data` is nil). Otherwise it decodes the stored value with `try-decode-map-as` against `TypeExpr`, so the result has that type. A Struct written through `:: :states cursor state` and a plain Map restored from storage both decode to the same Struct. A value that does not match raises an error naming the failing path.\n\nUse it together with `state-cursor`, which reads the cursor for writing the state back."
           :code $ quote $ defmacro pick-state (states type-expr default-state)
@@ -2741,10 +2510,8 @@
             pick-state
               &{} :cursor ([] :draft) :data |hello
               , 'String |
-          :schema $ :: 'Macro $ {}
-            :capabilities $ #{}
-            :expansion $ :: 'Expr 'Dynamic
-            :required $ [] (:: 'Expr 'Dynamic) (:: 'Expr 'Dynamic) (:: 'Expr 'Dynamic)
+          :schema $ quote $ Macro (Expr Dynamic) (Expr Dynamic) (Expr Dynamic)
+            -> $ Expr Dynamic
           :tests $ []
             %{} 'TestEntry (:name |reads-missing-stored-and-persisted)
               :code $ quote $ let
@@ -2770,9 +2537,7 @@
                       pick-state (&{} :data 1) 'String |
                       , |unexpected-success
                     fn (message)
-                      hint-fn $ {}
-                        :args $ [] 'String
-                        :return 'String
+                      hint-fn $ Fn String $ -> String
                       , message
                   , "|[Respo] component state does not match its type: "
             %{} 'TestEntry (:name |keeps-nested-structs)
@@ -2796,9 +2561,7 @@
             pre
               {} $ :style $ {} (:color :red)
               <> "|Code block"
-          :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-            :args $ [] 'PropsInput
-            :generics $ [] 'PropsInput
+          :schema $ quote $ Fn PropsInput & Dynamic (-> respo.schema/Element) (:generics PropsInput)
         'props-style-map $ %{} 'CodeEntry (:doc "|在 props 开放数据边界检查 :style，nil 视为空 map。")
           :code $ quote $ defn props-style-map (value-option)
             match value-option
@@ -2807,9 +2570,8 @@
                 if (nil? value) ({})
                   if (map? value) value $ raise $ str "|[Respo] expected :style to be a map, got: " (type-of value)
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] $ :: 'Option 'Dynamic
-            :return $ :: 'Map 'Dynamic 'Dynamic
+          :schema $ quote $ Fn (Option Dynamic)
+            -> $ Map Dynamic Dynamic
         'realize-ssr! $ %{} 'CodeEntry
           :doc "|Adopt server-rendered DOM before the first client render. It compares the component tree to the existing HTML, attaches events by diffing a muted tree against the live tree, and mounts effects once. The live tree and shared dispatch reference are recorded before patches run, so events work immediately and later render! calls update handlers and dispatch without remounting."
           :code $ quote $ defn realize-ssr! (target element dispatch!)
@@ -2832,11 +2594,10 @@
                 patch-instance! changes target deliver-event
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'respo.dom/DomElement 'respo.schema/Component $ :: 'Fn
-              {} (:return 'Unit)
-                :args $ [] '*dispatch-op
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn respo.dom/DomElement respo.schema/Component
+            Fn *dispatch-op $ -> Unit
+            -> Unit
+            :features :js-ffi
         'render! $ %{} 'CodeEntry
           :doc "|Synchronize a component tree to a mount target.\n\nThe first call mounts the app. Later calls diff against `*global-element` and patch the existing DOM. `dispatch!` is stored internally and used by generated event listeners to deliver action tuples.\n\nThe stored example wraps the call in a function so `check-examples` validates the public call shape without executing browser DOM effects."
           :code $ quote $ defn render! (target markup dispatch!) (reset! *dispatch-fn dispatch!)
@@ -2847,11 +2608,10 @@
             , &unit
           :examples $ [] $ quote
             fn (mount-target component dispatch!) (render! mount-target component dispatch!)
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] (:: 'JsNullish 'respo.dom/DomElement) 'respo.schema/Component $ :: 'Fn
-              {} (:return 'Unit)
-                :args $ [] '*dispatch-op
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (JsNullish respo.dom/DomElement) respo.schema/Component
+            Fn *dispatch-op $ -> Unit
+            -> Unit
+            :features :js-ffi
           :tests $ [] $ %{} 'TestEntry (:name |rejects-nil-mount-target)
             :code $ quote $ let
                 caught? $ ref false
@@ -2872,13 +2632,11 @@
               fn (error) (memo/abort-memo-frame!) (raise error)
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] (:: 'JsNullish 'respo.dom/DomElement)
-              :: 'Fn $ {} (:return 'respo.schema/Component)
-                :args $ []
-              :: 'Fn $ {} (:return 'Unit)
-                :args $ [] '*dispatch-op
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (JsNullish respo.dom/DomElement)
+            Fn $ -> respo.schema/Component
+            Fn *dispatch-op $ -> Unit
+            -> Unit
+            :features :js-ffi
         'rerender-app! $ %{} 'CodeEntry
           :doc "|Diffs the new element against the global element and patches the DOM. Used internally by render!. Browser-only (needs a DOM mount target); usage: `rerender-app! mount-target (comp-demo) *dispatch-fn`"
           :code $ quote $ defn rerender-app! (target element *dispatch-fn)
@@ -2896,19 +2654,16 @@
                   patch-instance! changes-list target deliver-event
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'respo.dom/DomElement 'respo.schema/Component $ :: 'Ref
-              :: 'Fn $ {} (:return 'Unit)
-                :args $ [] '*dispatch-op
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn respo.dom/DomElement respo.schema/Component
+            Ref $ Fn *dispatch-op $ -> Unit
+            -> Unit
+            :features :js-ffi
         'resolve-element-constructor $ %{} 'CodeEntry
           :doc "|Resolves the browser Element constructor behind an explicit JavaScript FFI function so element-type remains a value rather than a zero-argument function."
           :code $ quote $ defn resolve-element-constructor ()
             if (exists? js/globalThis.Element) js/globalThis.Element js/Error
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ []
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (-> Dynamic) (:features :js-ffi)
         'run-effect-ops! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn run-effect-ops! (items target)
             &doseq (op items)
@@ -2932,9 +2687,7 @@
                 _ &unit
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] (:: 'List 'Dynamic) 'Dynamic
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (List Dynamic) Dynamic (-> Unit) (:features :js-ffi)
         'run-first-task! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn run-first-task! (tasks)
             let
@@ -2942,9 +2695,7 @@
               if (fn? task!) (task!) (raise "|[Respo/test] expected queued task callback")
               , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] $ :: 'List 'Dynamic
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (List Dynamic) (-> Unit) (:features :js-ffi)
           :tests $ [] $ %{} 'TestEntry (:name |checks-queued-task-callability)
             :code $ quote $ let
                 calls $ ref 0
@@ -2960,15 +2711,11 @@
         'script $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn script (props & children) (create-element :script props & children)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-            :args $ [] 'PropsInput
-            :generics $ [] 'PropsInput
+          :schema $ quote $ Fn PropsInput & Dynamic (-> respo.schema/Element) (:generics PropsInput)
         'select $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn select (props & children) (create-element :select props & children)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-            :args $ [] 'PropsInput
-            :generics $ [] 'PropsInput
+          :schema $ quote $ Fn PropsInput & Dynamic (-> respo.schema/Element) (:generics PropsInput)
         'show $ %{} 'CodeEntry
           :doc "|Conditional rendering macro. Accepts one child and an optional fallback without introducing hidden component state."
           :code $ quote $ defmacro show (condition & branches)
@@ -2987,11 +2734,8 @@
             show true
               div ({}) (<> |Ready)
               div ({}) (<> |Loading)
-          :schema $ :: 'Macro $ {}
-            :capabilities $ #{}
-            :expansion $ :: 'Expr 'Dynamic
-            :required $ [] $ :: 'Expr 'Dynamic
-            :rest $ :: 'Expr 'Dynamic
+          :schema $ quote $ Macro (Expr Dynamic) & (Expr Dynamic)
+            -> $ Expr Dynamic
           :tests $ [] $ %{} 'TestEntry (:name |selects-one-branch)
             :code $ quote $ do
               assert |true-selects-child $ = |child $ show true |child
@@ -3001,27 +2745,19 @@
         'some-effect-callback $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn some-effect-callback (callback) (Option :some callback)
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] $ :: 'Fn
-              {} (:return 'Unit)
-                :args $ [] 'Dynamic
-            :return $ :: 'calcit.core/Option $ :: 'Fn
-              {} (:return 'Unit)
-                :args $ [] 'Dynamic
+          :schema $ quote $ Fn
+            Fn Dynamic $ -> Unit
+            -> $ calcit.core/Option $ Fn Dynamic (-> Unit)
         'some-enqueue $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn some-enqueue (enqueue!) (Option :some enqueue!)
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] $ :: 'Fn
-              {} (:return 'Unit)
-                :args $ [] $ :: 'Fn
-                  {} (:return 'Unit)
-                    :args $ []
-            :return $ :: 'calcit.core/Option $ :: 'Fn
-              {} (:return 'Unit)
-                :args $ [] $ :: 'Fn
-                  {} (:return 'Unit)
-                    :args $ []
+          :schema $ quote $ Fn
+            Fn
+              Fn $ -> Unit
+              -> Unit
+            -> $ calcit.core/Option $ Fn
+              Fn $ -> Unit
+              -> Unit
         'span $ %{} 'CodeEntry
           :doc "|create a span element with properties and children. first argument is a hashmap for properties, rest arguments are children elements."
           :code $ quote $ defn span (props & children) (create-element :span props & children)
@@ -3031,9 +2767,7 @@
             quote $ span
               {} $ :style $ {} (:color |blue)
               <> |Blue
-          :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-            :args $ [] 'PropsInput
-            :generics $ [] 'PropsInput
+          :schema $ quote $ Fn PropsInput & Dynamic (-> respo.schema/Element) (:generics PropsInput)
         'state-cursor $ %{} 'CodeEntry
           :doc "|Read the state cursor from `states` (the value `>>` returns). Missing or nil cursors become an empty list; a cursor that is not a list raises an error. Send it back with `:: :states cursor new-state`."
           :code $ quote $ defn state-cursor (states)
@@ -3045,9 +2779,8 @@
               (:none) ([])
           :examples $ [] $ quote
             state-cursor $ >> ({}) :todolist
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic
-            :return $ :: 'List 'Dynamic
+          :schema $ quote $ Fn Dynamic
+            -> $ List Dynamic
           :tests $ [] $ %{} 'TestEntry (:name |reads-cursor)
             :code $ quote $ do
               assert= ([]) (state-cursor nil)
@@ -3060,24 +2793,18 @@
         'strong $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn strong (props & children) (create-element :strong props & children)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-            :args $ [] 'PropsInput
-            :generics $ [] 'PropsInput
+          :schema $ quote $ Fn PropsInput & Dynamic (-> respo.schema/Element) (:generics PropsInput)
         'style $ %{} 'CodeEntry
           :doc "|Creates HTML style element for defining CSS styles.\n\nParameters:\n  props - Attribute map, can include standard HTML attributes for style elements\n  & children - Variable arguments for child elements, typically CSS style content\n\nReturns:\n  Created style element component\n\nUsed to dynamically define CSS styles within components, supports nested and dynamic style generation."
           :code $ quote $ defn style (props & children) (create-element :style props & children)
           :examples $ [] $ quote
             style $ {} $ :innerHTML "|body { margin: 0; padding: 0; }"
-          :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-            :args $ [] 'PropsInput
-            :generics $ [] 'PropsInput
+          :schema $ quote $ Fn PropsInput & Dynamic (-> respo.schema/Element) (:generics PropsInput)
         'textarea $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn textarea (props & children)
             create-element :textarea props & $ map children confirm-child
           :examples $ []
-          :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-            :args $ [] 'PropsInput
-            :generics $ [] 'PropsInput
+          :schema $ quote $ Fn PropsInput & Dynamic (-> respo.schema/Element) (:generics PropsInput)
           :tests $ []
             %{} 'TestEntry (:name |paste-event-prop)
               :code $ quote $ let
@@ -3100,15 +2827,11 @@
         'title $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn title (props & children) (create-element :title props & children)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-            :args $ [] 'PropsInput
-            :generics $ [] 'PropsInput
+          :schema $ quote $ Fn PropsInput & Dynamic (-> respo.schema/Element) (:generics PropsInput)
         'ul $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn ul (props & children) (create-element :ul props & children)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Element)
-            :args $ [] 'PropsInput
-            :generics $ [] 'PropsInput
+          :schema $ quote $ Fn PropsInput & Dynamic (-> respo.schema/Element) (:generics PropsInput)
         'with-attrs $ %{} 'CodeEntry
           :doc "|Merge serialized DOM attributes (Map<Tag, String>) into an Element without changing its children, event handlers, ref or styles. New values replace attributes with the same Tag; the result retains canonical Tag ordering. Use common props with create-element and this helper for SVG/custom attributes. Convert numbers explicitly with to-string; this is not an event/style props entry."
           :code $ quote $ defn with-attrs (element attrs)
@@ -3120,8 +2843,7 @@
               element.assoc :attrs $ sort combined $ fn (x y)
                 &compare (&list:nth x 0) (&list:nth y 0)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Element)
-            :args $ [] 'respo.schema/Element $ :: 'Map 'Tag 'String
+          :schema $ quote $ Fn respo.schema/Element (Map Tag String) (-> respo.schema/Element)
           :tests $ [] $ %{} 'TestEntry (:name |merge-preserves-element)
             :code $ quote $ let
                 original $ create-element :svg $ {} (:class-name |common) (:id |before)
@@ -3157,26 +2879,26 @@
         '*style-caches $ %{} 'CodeEntry (:doc "|Atom for caching style information.")
           :code $ quote $ defref *style-caches ({})
           :examples $ []
-          :schema $ :: 'Ref $ :: 'Map 'String 'respo.css/StyleCacheEntry
+          :schema $ quote $ Ref (Map String respo.css/StyleCacheEntry)
         '*style-indices-in-nodejs $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defref *style-indices-in-nodejs ({})
           :examples $ []
-          :schema $ :: 'Ref $ :: 'Map 'String 'Number
+          :schema $ quote $ Ref (Map String Number)
         '*style-list-in-nodejs $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defref *style-list-in-nodejs ([])
           :examples $ []
-          :schema $ :: 'Ref $ :: 'List 'String
+          :schema $ quote $ Ref (List String)
         'StyleCacheEntry $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct StyleCacheEntry (:rules 'Dynamic)
-            :el $ :: 'JsNullish 'respo.css/StyleElement
+            :el $ quote $ JsNullish respo.css/StyleElement
           :examples $ []
-          :schema $ :: 'StructDef
+          :schema $ quote StructDef
         'StyleElement $ %{} 'CodeEntry (:doc "|样式缓存使用的宿主元素合同：仅包含 id 和 innerHTML。")
           :code $ quote $ deftrait StyleElement (:id 'String) (:inner-html 'String)
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
             :names $ {} $ :inner-html |innerHTML
-          :schema $ :: 'Trait
+          :schema $ quote Trait
         'cache-node-style! $ %{} 'CodeEntry
           :doc "|Store one CSS block per style name in Node, preserving first registration order. Repeated blocks reuse their position; changed blocks replace it. Clearing the public CSS list resets the index cache on the next registration."
           :code $ quote $ defn cache-node-style! (style-name css-block)
@@ -3200,8 +2922,7 @@
                     , style-name index
             , style-name
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'String)
-            :args $ [] 'String 'String
+          :schema $ quote $ Fn String String (-> String)
         'create-style! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn create-style! (style-name rules)
             assert |expected-rules-in-map $ map? rules
@@ -3234,9 +2955,7 @@
                         , style-name $ StyleCacheEntry :rules rules :el style-el
                     , style-name
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'String)
-            :args $ [] 'String 'Dynamic
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn String Dynamic (-> String) (:features :js-ffi)
         'defstyle $ %{} 'CodeEntry
           :doc "|a macro for turning CSS rules into className, and only works for JavaScript.\n\nuse `defstyle` like:\n\n```cirru\ndefstyle style-demo $ {}\n  |& $ {} (:color :red)\n  \"|&:hover\" $ {}\n    :background-color :blue\n```\n\nwhere `&` refers to current element.\n\nIn the rules, it's nested hashmaps. `|&` and `|&:hover` are CSS queries. and in nested hashmaps there are CSS properties defined in calcit data.\n"
           :code $ quote $ defmacro defstyle (style-name rules)
@@ -3277,10 +2996,9 @@
             quote $ defstyle style-text $ {}
               |& $ {} (:font-size |14px) (:line-height |1.6) (:color "|hsl(0,0%,20%)")
               |&::before $ {} $ :content "|\"→ \""
-          :schema $ :: 'Macro $ {}
-            :capabilities $ #{} :log
-            :expansion $ :: 'Expr 'String
-            :required $ [] 'SyntaxSymbol 'SyntaxList
+          :schema $ quote $ Macro SyntaxSymbol SyntaxList
+            -> $ Expr String
+            :capabilities :log
         'detect-nodejs? $ %{} 'CodeEntry
           :doc "|Detects Node.js behind an explicit JavaScript FFI function so nodejs? remains a Boolean value."
           :code $ quote $ defn detect-nodejs? ()
@@ -3289,27 +3007,22 @@
                   release-name js/process.release.name
                 and (string? release-name) (= |node release-name)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Bool)
-            :args $ []
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (-> Bool) (:features :js-ffi)
         'map-entries $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn map-entries (value)
             if (map? value) (&map:to-list value) ([])
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic
-            :return $ :: 'List 'Dynamic
+          :schema $ quote $ Fn Dynamic
+            -> $ List Dynamic
         'nodejs? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def nodejs? (detect-nodejs?)
           :examples $ []
-          :schema $ :: 'Bool
+          :schema $ quote Bool
         'present-element $ %{} 'CodeEntry (:doc "|在 DOM 边界确认样式元素存在。")
           :code $ quote $ defn present-element (value)
             if (js-present? value) (js-cast value 'respo.css/StyleElement) (raise |[Respo]-expected-a-DOM-element-for-style-cache)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.css/StyleElement)
-            :args $ [] $ :: 'JsNullish 'Dynamic
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (JsNullish Dynamic) (-> respo.css/StyleElement) (:features :js-ffi)
         'render-css-block $ %{} 'CodeEntry
           :doc "|Generates a CSS string block from a map of style rules."
           :code $ quote $ defn render-css-block (style-name rules)
@@ -3339,9 +3052,7 @@
                     next-acc $ if (empty? acc) block $ str acc &newline &newline block
                   recur next-acc $ &list:rest xs
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'String)
-            :args $ [] 'String 'Dynamic
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn String Dynamic (-> String) (:features :js-ffi)
         'warn-style-literals $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn warn-style-literals (x)
             if (list? x)
@@ -3368,9 +3079,7 @@
                 , &unit
               , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'Dynamic
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn Dynamic (-> Unit) (:features :js-ffi)
           :tests $ []
             %{} 'TestEntry (:name |returns-unit-for-non-enum)
               :code $ quote $ do (warn-style-literals |plain) (assert |non-enum-style-is-accepted true)
@@ -3408,16 +3117,14 @@
         'CursorTestState $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct CursorTestState (:draft 'String) (:locked? 'Bool) (:message 'String)
           :examples $ []
-          :schema $ :: 'StructDef
+          :schema $ quote StructDef
         'coerce-cursor-test-state $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn coerce-cursor-test-state (value)
             if (struct? value)
               if (&struct:matches? value CursorTestState) value $ raise |[Respo/test]-expected-CursorTestState
               raise |[Respo/test]-expected-CursorTestState
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'CursorTestState)
-            :args $ [] 'StateInput
-            :generics $ [] 'StateInput
+          :schema $ quote $ Fn StateInput (-> CursorTestState) (:generics StateInput)
           :tests $ [] $ %{} 'TestEntry (:name |checks-nominal-identity)
             :code $ quote $ let
                 original $ CursorTestState :draft |a :locked? false :message |ready
@@ -3437,10 +3144,7 @@
             loop
                 current states
                 xs path
-              hint-fn $ {}
-                :args $ [] 'Dynamic $ :: 'List 'KeyInput
-                :return 'Dynamic
-                :generics $ [] 'KeyInput
+              hint-fn $ Fn Dynamic (List KeyInput) (-> Dynamic) (:generics KeyInput)
               if
                 or (empty? xs) (nil? current)
                 , current $ match
@@ -3449,10 +3153,7 @@
                   (:some value)
                     recur value $ &list:rest xs
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ [] 'Dynamic $ :: 'List 'KeyInput
-            :features $ #{} :js-ffi
-            :generics $ [] 'KeyInput
+          :schema $ quote $ Fn Dynamic (List KeyInput) (-> Dynamic) (:generics KeyInput) (:features :js-ffi)
           :tests $ [] $ %{} 'TestEntry (:name |missing-intermediate-returns-nil)
             :code $ quote $ do
               assert= nil $ get-state-at ({}) ([] :child :data)
@@ -3478,9 +3179,7 @@
                   concat cursor $ [] :data
                   , new-state
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ [] 'Dynamic (:: 'List 'Dynamic) 'Dynamic
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn Dynamic (List Dynamic) Dynamic (-> Dynamic) (:features :js-ffi)
           :tests $ []
             %{} 'TestEntry (:name |updates-root-state)
               :code $ quote $ let
@@ -3542,9 +3241,7 @@
                     do (eprintln |:states-kv-invalid-state state) states
                 do (eprintln |:states-kv-missing-state) states
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ [] 'Dynamic (:: 'List 'Dynamic) 'Dynamic 'Dynamic
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn Dynamic (List Dynamic) Dynamic Dynamic (-> Dynamic) (:features :js-ffi)
           :tests $ []
             %{} 'TestEntry (:name |updates-mixed-key-map-without-rewriting-path)
               :code $ quote $ let
@@ -3617,9 +3314,7 @@
                         recur next-state $ &list:rest xs
                 do (eprintln |unknown-changes-to-merge changes) states
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ [] 'Dynamic (:: 'List 'Dynamic) 'Dynamic 'Dynamic
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn Dynamic (List Dynamic) Dynamic Dynamic (-> Dynamic) (:features :js-ffi)
           :tests $ []
             %{} 'TestEntry (:name |preserves-tree-on-invalid-base)
               :code $ quote $ let
@@ -3672,9 +3367,7 @@
               option:unwrap-or (get store :states) ({})
               , cursor new-state
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ [] 'Dynamic (:: 'List 'Dynamic) 'Dynamic
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn Dynamic (List Dynamic) Dynamic (-> Dynamic) (:features :js-ffi)
         'update-states-kv $ %{} 'CodeEntry
           :doc "|a quick dirty trick to partially update component state.\n\nnotice: need to handle empty state manually."
           :code $ quote $ defn update-states-kv (store cursor k v)
@@ -3682,10 +3375,9 @@
               option:unwrap-or (get store :states) ({})
               , cursor k v
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] (:: 'Map 'Tag 'Dynamic) (:: 'List 'CursorKeyInput) 'K 'V
-            :generics $ [] 'K 'V 'CursorKeyInput
-            :return $ :: 'Map 'Tag 'Dynamic
+          :schema $ quote $ Fn (Map Tag Dynamic) (List CursorKeyInput) K V
+            -> $ Map Tag Dynamic
+            :generics K V CursorKeyInput
         'update-states-merge $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn update-states-merge (store cursor state0 changes)
             let
@@ -3695,10 +3387,9 @@
                   (:none) ({})
               .assoc store :states $ update-state-tree-merge states cursor state0 changes
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] (:: 'Map 'Tag 'Dynamic) (:: 'List 'Dynamic) 'Dynamic 'Dynamic
-            :features $ #{} :js-ffi
-            :return $ :: 'Map 'Tag 'Dynamic
+          :schema $ quote $ Fn (Map Tag Dynamic) (List Dynamic) Dynamic Dynamic
+            -> $ Map Tag Dynamic
+            :features :js-ffi
           :tests $ []
             %{} 'TestEntry (:name |merges-struct-state-repeatedly)
               :code $ quote $ let
@@ -3764,229 +3455,139 @@
         'DomCanvasContext $ %{} 'CodeEntry
           :doc "|Canvas 2D context capability used for text measurement."
           :code $ quote $ deftrait DomCanvasContext (:font 'String)
-            .measure-text $ :: 'Fn $ {}
-              :generics $ [] 'T
-              :args $ [] 'T 'String
-              :return 'respo.dom/DomTextMetrics
+            .measure-text $ quote $ Fn T String (-> respo.dom/DomTextMetrics) (:generics T)
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
             :names $ {} $ :measure-text |measureText
             :writable $ #{} :font
-          :schema $ :: 'Trait
+          :schema $ quote Trait
         'DomCanvasElement $ %{} 'CodeEntry
           :doc "|Canvas element capability; get-context returns a nullable 2D context in the subset Respo needs."
           :code $ quote $ deftrait DomCanvasElement
-            .get-context $ :: 'Fn $ {}
-              :generics $ [] 'T
-              :args $ [] 'T 'String
-              :return $ :: 'JsNullish 'respo.dom/DomCanvasContext
+            .get-context $ quote $ Fn T String
+              -> $ JsNullish respo.dom/DomCanvasContext
+              :generics T
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
             :names $ {} $ :get-context |getContext
-          :schema $ :: 'Trait
+          :schema $ quote Trait
         'DomDocument $ %{} 'CodeEntry
           :doc "|Document APIs used by Respo: querying elements, creating elements, and document roots."
           :code $ quote $ deftrait DomDocument (:head 'respo.dom/DomElement) (:body 'respo.dom/DomElement) (:document-element 'respo.dom/DomElement)
-            .create-element $ :: 'Fn $ {}
-              :generics $ [] 'T
-              :args $ [] 'T 'String
-              :return 'respo.dom/DomElement
-            .query-selector $ :: 'Fn $ {}
-              :generics $ [] 'T
-              :args $ [] 'T 'String
-              :return $ :: 'JsNullish 'respo.dom/DomElement
+            .create-element $ quote $ Fn T String (-> respo.dom/DomElement) (:generics T)
+            .query-selector $ quote $ Fn T String
+              -> $ JsNullish respo.dom/DomElement
+              :generics T
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
             :names $ {} (:create-element |createElement) (:document-element |documentElement) (:query-selector |querySelector)
-          :schema $ :: 'Trait
+          :schema $ quote Trait
         'DomElement $ %{} 'CodeEntry
           :doc "|Stable DOM element capability set used by renderer and patches."
           :code $ quote $ deftrait DomElement (:id 'String) (:text-content 'String) (:inner-html 'String) (:inner-text 'String) (:value 'Dynamic) (:checked 'Bool) (:disabled 'Bool) (:selected 'Bool) (:class-name 'String) (:type 'String) (:href 'String) (:dataset 'JsObject) (:style 'JsObject)
-            :parent-element $ :: 'JsNullish 'respo.dom/DomElement
+            :parent-element $ quote $ JsNullish respo.dom/DomElement
             :children 'respo.dom/DomElementCollection
-            :first-element-child $ :: 'JsNullish 'respo.dom/DomElement
+            :first-element-child $ quote $ JsNullish respo.dom/DomElement
             :tag-name 'String
             :namespace-uri 'String
             :scroll-top 'Number
             :scroll-left 'Number
-            .matches? $ :: 'Fn $ {}
-              :generics $ [] 'T
-              :args $ [] 'T 'String
-              :return 'Bool
-            .query-selector $ :: 'Fn $ {}
-              :generics $ [] 'T
-              :args $ [] 'T 'String
-              :return $ :: 'JsNullish 'respo.dom/DomElement
-            .append-child! $ :: 'Fn $ {}
-              :generics $ [] 'T
-              :args $ [] 'T 'T
-              :return 'respo.dom/DomElement
-            .insert-before! $ :: 'Fn $ {}
-              :generics $ [] 'T
-              :args $ [] 'T 'T 'T
-              :return 'respo.dom/DomElement
-            .remove! $ :: 'Fn $ {}
-              :generics $ [] 'T
-              :args $ [] 'T
-              :return 'Unit
-            .move-before! $ :: 'Fn $ {}
-              :generics $ [] 'T
-              :args $ [] 'T 'respo.dom/DomElement $ :: 'JsNullish 'respo.dom/DomElement
-              :return 'Unit
-            .remove-attribute! $ :: 'Fn $ {}
-              :generics $ [] 'T
-              :args $ [] 'T 'String
-              :return 'Unit
-            .add-event-listener! $ :: 'Fn $ {}
-              :generics $ [] 'T
-              :args $ [] 'T 'String 'Fn
-              :return 'Unit
-            .remove-event-listener! $ :: 'Fn $ {}
-              :generics $ [] 'T
-              :args $ [] 'T 'String 'Fn
-              :return 'Unit
-            .dispatch-event! $ :: 'Fn $ {}
-              :generics $ [] 'T
-              :args $ [] 'T 'Dynamic
-              :return 'Bool
-            .focus! $ :: 'Fn $ {}
-              :generics $ [] 'T
-              :args $ [] 'T
-              :return 'Unit
-            .focus-preserving-scroll! $ :: 'Fn $ {}
-              :generics $ [] 'T
-              :args $ [] 'T 'JsObject
-              :return 'Unit
-            .blur! $ :: 'Fn $ {}
-              :generics $ [] 'T
-              :args $ [] 'T
-              :return 'Unit
-            .select! $ :: 'Fn $ {}
-              :generics $ [] 'T
-              :args $ [] 'T
-              :return 'Unit
-            :owned-event-listeners $ :: 'JsNullish $ :: 'Map 'Tag
-              :: 'Fn $ {}
-                :args $ [] 'respo.dom/DomEvent
-                :return 'Unit
+            .matches? $ quote $ Fn T String (-> Bool) (:generics T)
+            .query-selector $ quote $ Fn T String
+              -> $ JsNullish respo.dom/DomElement
+              :generics T
+            .append-child! $ quote $ Fn T T (-> respo.dom/DomElement) (:generics T)
+            .insert-before! $ quote $ Fn T T T (-> respo.dom/DomElement) (:generics T)
+            .remove! $ quote $ Fn T (-> Unit) (:generics T)
+            .move-before! $ quote $ Fn T respo.dom/DomElement (JsNullish respo.dom/DomElement) (-> Unit) (:generics T)
+            .remove-attribute! $ quote $ Fn T String (-> Unit) (:generics T)
+            .add-event-listener! $ quote $ Fn T String Fn (-> Unit) (:generics T)
+            .remove-event-listener! $ quote $ Fn T String Fn (-> Unit) (:generics T)
+            .dispatch-event! $ quote $ Fn T Dynamic (-> Bool) (:generics T)
+            .focus! $ quote $ Fn T (-> Unit) (:generics T)
+            .focus-preserving-scroll! $ quote $ Fn T JsObject (-> Unit) (:generics T)
+            .blur! $ quote $ Fn T (-> Unit) (:generics T)
+            .select! $ quote $ Fn T (-> Unit) (:generics T)
+            :owned-event-listeners $ quote $ JsNullish
+              Map Tag $ Fn respo.dom/DomEvent $ -> Unit
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
             :names $ {} (:focus-preserving-scroll! |focus) (:inner-html |innerHTML) (:insert-before! |insertBefore) (:move-before! |moveBefore) (:namespace-uri |namespaceURI) (:owned-event-listeners |__respo_calcit_event_listeners) (:parent-element |parentElement) (:remove! |remove) (:scroll-left |scrollLeft) (:scroll-top |scrollTop)
             :writable $ #{} :checked :disabled :id :inner-html :inner-text :owned-event-listeners :scroll-left :scroll-top :selected
-          :schema $ :: 'Trait
+          :schema $ quote Trait
         'DomElementCollection $ %{} 'CodeEntry
           :doc "|Indexed child element collection returned by the children property."
           :code $ quote $ deftrait DomElementCollection (:length 'Number)
-            .item $ :: 'Fn $ {}
-              :generics $ [] 'T
-              :args $ [] 'T 'Number
-              :return $ :: 'JsNullish 'respo.dom/DomElement
+            .item $ quote $ Fn T Number
+              -> $ JsNullish respo.dom/DomElement
+              :generics T
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
-          :schema $ :: 'Trait
+          :schema $ quote Trait
         'DomEvent $ %{} 'CodeEntry
           :doc "|Base native DOM event before Respo converts it into immutable event data."
           :code $ quote $ deftrait DomEvent (:type 'String)
-            :target $ :: 'JsNullish 'respo.dom/DomElement
+            :target $ quote $ JsNullish respo.dom/DomElement
             :default-prevented 'Bool
-            .prevent-default! $ :: 'Fn $ {}
-              :generics $ [] 'T
-              :args $ [] 'T
-              :return 'Unit
-            .stop-propagation! $ :: 'Fn $ {}
-              :generics $ [] 'T
-              :args $ [] 'T
-              :return 'Unit
+            .prevent-default! $ quote $ Fn T (-> Unit) (:generics T)
+            .stop-propagation! $ quote $ Fn T (-> Unit) (:generics T)
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
             :names $ {} (:default-prevented |defaultPrevented) (:prevent-default! |preventDefault) (:stop-propagation! |stopPropagation)
-          :schema $ :: 'Trait
+          :schema $ quote Trait
         'DomInputEvent $ %{} 'CodeEntry
           :doc "|Input and change event surface used to read form values and checked state."
           :code $ quote $ deftrait DomInputEvent (:type 'String)
-            :target $ :: 'JsNullish 'respo.dom/DomElement
-            .prevent-default! $ :: 'Fn $ {}
-              :generics $ [] 'T
-              :args $ [] 'T
-              :return 'Unit
-            .stop-propagation! $ :: 'Fn $ {}
-              :generics $ [] 'T
-              :args $ [] 'T
-              :return 'Unit
+            :target $ quote $ JsNullish respo.dom/DomElement
+            .prevent-default! $ quote $ Fn T (-> Unit) (:generics T)
+            .stop-propagation! $ quote $ Fn T (-> Unit) (:generics T)
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
             :names $ {} (:prevent-default! |preventDefault) (:stop-propagation! |stopPropagation)
-          :schema $ :: 'Trait
+          :schema $ quote Trait
         'DomKeyboardEvent $ %{} 'CodeEntry
           :doc "|Keyboard event fields used by Respo key handlers and global keyboard forwarding."
           :code $ quote $ deftrait DomKeyboardEvent (:type 'String) (:key 'String) (:code 'String) (:key-code 'Number) (:ctrl-key 'Bool) (:meta-key 'Bool) (:alt-key 'Bool) (:shift-key 'Bool)
-            :target $ :: 'JsNullish 'respo.dom/DomElement
-            .prevent-default! $ :: 'Fn $ {}
-              :generics $ [] 'T
-              :args $ [] 'T
-              :return 'Unit
-            .stop-propagation! $ :: 'Fn $ {}
-              :generics $ [] 'T
-              :args $ [] 'T
-              :return 'Unit
+            :target $ quote $ JsNullish respo.dom/DomElement
+            .prevent-default! $ quote $ Fn T (-> Unit) (:generics T)
+            .stop-propagation! $ quote $ Fn T (-> Unit) (:generics T)
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
             :names $ {} (:alt-key |altKey) (:ctrl-key |ctrlKey) (:key-code |keyCode) (:meta-key |metaKey) (:prevent-default! |preventDefault) (:shift-key |shiftKey) (:stop-propagation! |stopPropagation)
-          :schema $ :: 'Trait
+          :schema $ quote Trait
         'DomStorage $ %{} 'CodeEntry
           :doc "|Browser storage capability used by Respo persistence. Nullish reads model absent keys."
           :code $ quote $ deftrait DomStorage
-            .get-item $ :: 'Fn $ {}
-              :generics $ [] 'T
-              :args $ [] 'T 'String
-              :return $ :: 'JsNullish 'String
-            .set-item! $ :: 'Fn $ {}
-              :generics $ [] 'T
-              :args $ [] 'T 'String 'String
-              :return 'Unit
-            .remove-item! $ :: 'Fn $ {}
-              :generics $ [] 'T
-              :args $ [] 'T 'String
-              :return 'Unit
-            .clear! $ :: 'Fn $ {}
-              :generics $ [] 'T
-              :args $ [] 'T
-              :return 'Unit
+            .get-item $ quote $ Fn T String
+              -> $ JsNullish String
+              :generics T
+            .set-item! $ quote $ Fn T String String (-> Unit) (:generics T)
+            .remove-item! $ quote $ Fn T String (-> Unit) (:generics T)
+            .clear! $ quote $ Fn T (-> Unit) (:generics T)
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
             :names $ {} (:clear! |clear) (:get-item |getItem) (:remove-item! |removeItem) (:set-item! |setItem)
-          :schema $ :: 'Trait
+          :schema $ quote Trait
         'DomTextMetrics $ %{} 'CodeEntry
           :doc "|Canvas text measurement result used by Respo; width is the required stable field."
           :code $ quote $ deftrait DomTextMetrics (:width 'Number)
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
-          :schema $ :: 'Trait
+          :schema $ quote Trait
         'DomWindow $ %{} 'CodeEntry
           :doc "|Window APIs used by Respo, including storage, timers, unload hooks, and global listeners."
           :code $ quote $ deftrait DomWindow (:document 'respo.dom/DomDocument) (:local-storage 'respo.dom/DomStorage) (:on-before-unload 'Fn) (:devtools-formatters 'Dynamic)
-            .add-event-listener! $ :: 'Fn $ {}
-              :generics $ [] 'T
-              :args $ [] 'T 'String 'Fn
-              :return 'Unit
-            .remove-event-listener! $ :: 'Fn $ {}
-              :generics $ [] 'T
-              :args $ [] 'T 'String 'Fn
-              :return 'Unit
-            .set-timeout $ :: 'Fn $ {}
-              :generics $ [] 'T
-              :args $ [] 'T 'Fn 'Number
-              :return 'Dynamic
+            .add-event-listener! $ quote $ Fn T String Fn (-> Unit) (:generics T)
+            .remove-event-listener! $ quote $ Fn T String Fn (-> Unit) (:generics T)
+            .set-timeout $ quote $ Fn T Fn Number (-> Dynamic) (:generics T)
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
             :names $ {} (:add-event-listener! |addEventListener) (:devtools-formatters |devtoolsFormatters) (:local-storage |localStorage) (:on-before-unload |onbeforeunload) (:remove-event-listener! |removeEventListener) (:set-timeout |setTimeout)
-          :schema $ :: 'Trait
+          :schema $ quote Trait
         'set-inner-html! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn set-inner-html! (style-el content) (set! style-el.:inner-html content) &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'respo.dom/DomElement 'String
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn respo.dom/DomElement String (-> Unit) (:features :js-ffi)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.dom
     'respo.ffi.browser $ %{} 'FileEntry
@@ -3996,24 +3597,18 @@
           :code $ quote $ defn effect-element (el)
             narrow-element $ browser/element-host el
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.dom/DomElement)
-            :args $ [] 'Dynamic
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn Dynamic (-> respo.dom/DomElement) (:features :js-ffi)
         'host-element $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn host-element (element) (unsafe-coerce element 'js-ffi.browser/DomElementHost)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'js-ffi.browser/DomElementHost)
-            :args $ [] 'T
-            :features $ #{} :js-ffi
-            :generics $ [] 'T
-            :where $ {} $ 'T 'DomElement
+          :schema $ quote $ Fn T (-> js-ffi.browser/DomElementHost) (:generics T)
+            :where $ T DomElement
+            :features :js-ffi
         'narrow-element $ %{} 'CodeEntry
           :doc "|Narrow the generic js-ffi DOM host to Respo's richer renderer DOM trait at the sole cross-library object boundary."
           :code $ quote $ defn narrow-element (host-element) (unsafe-coerce host-element 'respo.dom/DomElement)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.dom/DomElement)
-            :args $ [] 'js-ffi.browser/DomElementHost
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn js-ffi.browser/DomElementHost (-> respo.dom/DomElement) (:features :js-ffi)
         'query-selector $ %{} 'CodeEntry
           :doc "|查询浏览器 document，返回 Option<respo.dom/DomElement>，供 render! 等 Respo API 使用。命中时保留宿主对象身份，未命中返回 None，无效选择器及缺少 document 的宿主错误继续抛出。复用既有 narrow-element 跨库信任边界；不验证所有 DomElement 字段，不创建或修改元素。"
           :code $ quote $ defn query-selector (selector)
@@ -4022,10 +3617,9 @@
               (:some element)
                 Option :some $ narrow-element element
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'String
-            :features $ #{} :js-ffi
-            :return $ :: 'Option 'respo.dom/DomElement
+          :schema $ quote $ Fn String
+            -> $ Option respo.dom/DomElement
+            :features :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.ffi.browser
           :require $ js-ffi.browser :as browser
@@ -4062,14 +3656,12 @@
             println |Loaded.
             browser/set-before-unload! $ fn (_event) (save-store!)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
         'mount-target $ %{} 'CodeEntry
           :doc "|Default DOM element selector (.app) for mounting the application."
           :code $ quote $ def mount-target (query-mount-target)
           :examples $ []
-          :schema $ :: 'JsNullish 'respo.dom/DomElement
+          :schema $ quote $ JsNullish respo.dom/DomElement
         'query-mount-target $ %{} 'CodeEntry
           :doc "|Queries the default mount element behind an explicit JavaScript FFI function so mount-target remains an optional value."
           :code $ quote $ defn query-mount-target ()
@@ -4077,10 +3669,9 @@
               (:none) nil
               (:some element) element
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ []
-            :features $ #{} :js-ffi
-            :return $ :: 'JsNullish 'respo.dom/DomElement
+          :schema $ quote $ Fn
+            -> $ JsNullish respo.dom/DomElement
+            :features :js-ffi
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
             if (nil? build-errors)
@@ -4093,17 +3684,14 @@
               hud! |error build-errors
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
         'save-store! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn save-store! ()
             let
                 store @*store
               browser/storage-set! |respo.calcit $ format-cirru-edn $ :tasks store
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
+          :schema $ quote $ Fn (-> Unit)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.main
           :require
@@ -4123,38 +3711,38 @@
         '*component-caches $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defref *component-caches ({})
           :examples $ []
-          :schema $ :: 'Ref $ :: 'Map 'respo.memo/MemoCacheKey 'respo.memo/MemoEntry
+          :schema $ quote $ Ref (Map respo.memo/MemoCacheKey respo.memo/MemoEntry)
         '*frame-component-caches $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defref *frame-component-caches ({})
           :examples $ []
-          :schema $ :: 'Ref $ :: 'Map 'respo.memo/MemoCacheKey 'respo.memo/MemoEntry
+          :schema $ quote $ Ref (Map respo.memo/MemoCacheKey respo.memo/MemoEntry)
         '*memo-dependency-stack $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defref *memo-dependency-stack ([])
           :examples $ []
-          :schema $ :: 'Ref $ :: 'List (:: 'Set 'respo.memo/MemoCacheKey)
+          :schema $ quote $ Ref
+            List $ Set respo.memo/MemoCacheKey
         '*memo-frame-active? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defref *memo-frame-active? false
           :examples $ []
-          :schema $ :: 'Ref 'Bool
+          :schema $ quote $ Ref Bool
         'MemoCacheKey $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct MemoCacheKey (:callback 'Fn) (:key 'Dynamic)
           :examples $ []
-          :schema $ :: 'StructDef
+          :schema $ quote StructDef
         'MemoEntry $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct MemoEntry
-            :args $ :: 'List 'Dynamic
+            :args $ quote $ List Dynamic
             :value 'Dynamic
-            :children $ :: 'Set 'respo.memo/MemoCacheKey
+            :children $ quote $ Set respo.memo/MemoCacheKey
           :examples $ []
-          :schema $ :: 'StructDef
+          :schema $ quote StructDef
         'abort-memo-frame! $ %{} 'CodeEntry (:doc "|丢弃失败渲染帧的临时条目和依赖栈，保留上一次成功提交的缓存。")
           :code $ quote $ defn abort-memo-frame! () (reset! *memo-frame-active? false)
             reset! *frame-component-caches $ {}
             reset! *memo-dependency-stack $ []
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
+          :schema $ quote $ Fn (-> Unit)
           :tags $ #{} :internal
           :tests $ [] $ %{} 'TestEntry (:name |discards-only-failed-frame)
             :code $ quote $ let
@@ -4190,8 +3778,7 @@
             reset! *memo-dependency-stack $ []
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
+          :schema $ quote $ Fn (-> Unit)
         'call-component $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-component (f args)
             let
@@ -4201,8 +3788,7 @@
                 raise "|[Respo/memo-comp-by] component function must return respo.schema/Component"
               respo.util.detect/as-component value
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] 'Fn $ :: 'List 'Dynamic
+          :schema $ quote $ Fn Fn (List Dynamic) (-> respo.schema/Component)
           :tests $ [] $ %{} 'TestEntry (:name |keeps-component-identity-and-calls-once)
             :code $ quote $ let
                 expected $ respo.schema/Component :name :probe :effects ([]) :listeners ([]) :tree $ Option :none
@@ -4219,14 +3805,12 @@
               raise "|[Respo/memo] expected a memo callback function"
             f & args
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ [] 'Dynamic $ :: 'List 'Dynamic
+          :schema $ quote $ Fn Dynamic (List Dynamic) (-> Dynamic)
           :tags $ #{} :internal
         'component-cache-size $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn component-cache-size () (count @*component-caches)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Number)
-            :args $ []
+          :schema $ quote $ Fn (-> Number)
         'compute-memo-entry $ %{} 'CodeEntry
           :doc "|内部 memo 未命中计算器。记录直接嵌套的 memo key，并在回调成功或抛错后恢复依赖栈。"
           :code $ quote $ defn compute-memo-entry (f args)
@@ -4240,9 +3824,7 @@
                 reset! *memo-dependency-stack previous-stack
                 MemoEntry :args args :value value :children children
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.memo/MemoEntry)
-            :args $ [] 'Fn $ :: 'List 'A
-            :generics $ [] 'A
+          :schema $ quote $ Fn Fn (List A) (-> respo.memo/MemoEntry) (:generics A)
           :tags $ #{} :internal
         'finish-memo-frame! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn finish-memo-frame! ()
@@ -4252,8 +3834,7 @@
             reset! *memo-dependency-stack $ []
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
+          :schema $ quote $ Fn (-> Unit)
         'memo-comp-by $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn memo-comp-by (key f & args)
             let
@@ -4263,8 +3844,7 @@
                 raise "|[Respo/memo-comp-by] component function must return respo.schema/Component"
               respo.util.detect/as-component value
           :examples $ []
-          :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'respo.schema/Component)
-            :args $ [] 'Dynamic 'Fn
+          :schema $ quote $ Fn Dynamic Fn & Dynamic (-> respo.schema/Component)
           :tests $ [] $ %{} 'TestEntry (:name |caches-only-valid-components)
             :code $ quote $ let
                 calls $ ref 0
@@ -4289,15 +3869,13 @@
           :code $ quote $ defn memo-entry-args (entry)
             :args $ assert-type entry respo.memo/MemoEntry
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'respo.memo/MemoEntry
-            :return $ :: 'List 'Dynamic
+          :schema $ quote $ Fn respo.memo/MemoEntry
+            -> $ List Dynamic
         'memo-entry-value $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn memo-entry-value (entry)
             :value $ assert-type entry respo.memo/MemoEntry
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ [] 'respo.memo/MemoEntry
+          :schema $ quote $ Fn respo.memo/MemoEntry (-> Dynamic)
         'memo-value-by $ %{} 'CodeEntry
           :doc "|在受管理的渲染帧中，按回调、key 和完整参数列表的深度相等关系缓存不可变值。外层命中时递归保留已记录的嵌套依赖，未命中时替换依赖集合。nil key 或非活跃帧直接计算，不读取或增加缓存。"
           :code $ quote $ defn memo-value-by (key f & args)
@@ -4330,8 +3908,7 @@
                   when hit? $ retain-memo-children! resolved-entry
                   memo-entry-value resolved-entry
           :examples $ []
-          :schema $ :: 'Fn $ {} (:rest 'Dynamic) (:return 'Dynamic)
-            :args $ [] 'Dynamic 'Fn
+          :schema $ quote $ Fn Dynamic Fn & Dynamic (-> Dynamic)
           :tests $ []
             %{} 'TestEntry (:name |caches-values-and-prunes-frames)
               :code $ quote $ let
@@ -4490,8 +4067,7 @@
                 reset! *memo-dependency-stack $ .assoc @*memo-dependency-stack index $ include children cache-key
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'respo.memo/MemoCacheKey
+          :schema $ quote $ Fn respo.memo/MemoCacheKey (-> Unit)
           :tags $ #{} :internal
         'reset-component-caches! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reset-component-caches! ()
@@ -4501,8 +4077,7 @@
             reset! *memo-dependency-stack $ []
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
+          :schema $ quote $ Fn (-> Unit)
           :tests $ [] $ %{} 'TestEntry (:name |unit-memo-lifecycle)
             :code $ quote $ let
                 callback $ fn () 1
@@ -4541,8 +4116,7 @@
                     swap! *frame-component-caches &map:assoc child-key child
                     retain-memo-children! child
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'respo.memo/MemoEntry
+          :schema $ quote $ Fn respo.memo/MemoEntry (-> Unit)
           :tags $ #{} :internal
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.memo
@@ -4555,9 +4129,7 @@
           :examples $ []
           :ffi $ {} (:target :browser)
             :js $ {} $ :inline "|(buckets, keyHash, index) => { const positions = buckets.get(keyHash); if (positions === undefined) buckets.set(keyHash, [index]); else positions.push(index); }"
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'JsObject 'Number 'Number
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn JsObject Number Number (-> Unit) (:features :js-ffi)
           :tags $ #{} :internal
         'collect-event-refreshing $ %{} 'CodeEntry
           :doc "|Reattach live events with the current virtual and DOM coordinates after a component/element switch. Traverses shared descendants even when the normal diff skips identical subtrees. Ordinary diffing still handles removed events and lifecycle changes."
@@ -4567,30 +4139,23 @@
               collect-event-refreshing-node collect! coord n-coord $ respo.util.detect/as-render-node tree
               , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
-              :: 'Fn $ {} (:return 'Unit)
-                :args $ [] 'respo.schema/DomPatch
-              :: 'List 'K
-              :: 'List 'Number
-              , 'Struct
-            :generics $ [] 'K
+          :schema $ quote $ Fn
+            Fn respo.schema/DomPatch $ -> Unit
+            List K
+            List Number
+            , Struct (-> Unit) (:generics K)
           :tests $ [] $ %{} 'TestEntry (:name |skips-nil-children-and-handlers)
             :code $ quote $ let
-                ops $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
+                ops $ ref $ assert-type ([])
+                  quote $ List respo.schema/DomPatch
                 collect! $ fn (op)
-                  hint-fn $ {}
-                    :args $ [] 'respo.schema/DomPatch
-                    :return 'Unit
+                  hint-fn $ Fn respo.schema/DomPatch $ -> Unit
                   respo.core/append-dynamic! ops op
                 leaf $ respo.schema/Element :name :span :coord (Option :none) :attrs ([]) :style ([]) :ref nil :children ([]) :event $ {}
                   :click $ fn (_event _d!)
-                    hint-fn $ {}
-                      :args $ [] (:: 'Map 'Tag 'Dynamic)
-                        :: 'Fn $ {}
-                          :args $ [] 'Dynamic
-                          :return 'Unit
-                      :return 'Unit
+                    hint-fn $ Fn (Map Tag Dynamic)
+                      Fn Dynamic $ -> Unit
+                      -> Unit
                     , &unit
                   :focus nil
                 wrapped $ respo.schema/Component :name :inner :effects ([]) :listeners ([]) :tree $ Option :some (respo.util.detect/as-render-node leaf)
@@ -4618,9 +4183,7 @@
                   loop
                       children $ :children tree
                       idx 0
-                    hint-fn $ {}
-                      :args $ [] (:: 'List 'respo.schema/ChildPair) 'Number
-                      :return 'Unit
+                    hint-fn $ Fn (List respo.schema/ChildPair) Number $ -> Unit
                     if (empty? children) &unit $ let
                         pair $ &list:nth children 0
                         k $ :key pair
@@ -4630,30 +4193,24 @@
                       recur (&list:rest children)
                         if (child .some?) (inc idx) idx
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
-              :: 'Fn $ {} (:return 'Unit)
-                :args $ [] 'respo.schema/DomPatch
-              :: 'List 'Dynamic
-              :: 'List 'Number
-              , 'respo.schema/RenderNode
+          :schema $ quote $ Fn
+            Fn respo.schema/DomPatch $ -> Unit
+            List Dynamic
+            List Number
+            , respo.schema/RenderNode (-> Unit)
           :tests $ [] $ %{} 'TestEntry (:name |mixed-render-path)
             :code $ quote $ let
-                ops $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
+                ops $ ref $ assert-type ([])
+                  quote $ List respo.schema/DomPatch
                 collect! $ fn (op)
-                  hint-fn $ {}
-                    :args $ [] 'respo.schema/DomPatch
-                    :return 'Unit
+                  hint-fn $ Fn respo.schema/DomPatch $ -> Unit
                   reset! ops $ append @ops op
                   , &unit
                 leaf $ respo.schema/Element :name :span :coord (Option :none) :attrs ([]) :style ([]) :ref nil :children ([]) :event $ {}
                   :click $ fn (_event _d!)
-                    hint-fn $ {}
-                      :args $ [] (:: 'Map 'Tag 'Dynamic)
-                        :: 'Fn $ {}
-                          :args $ [] 'Dynamic
-                          :return 'Unit
-                      :return 'Unit
+                    hint-fn $ Fn (Map Tag Dynamic)
+                      Fn Dynamic $ -> Unit
+                      -> Unit
                     , &unit
                   :focus nil
                 wrapped $ respo.schema/Component :name :inner :effects ([]) :listeners ([]) :tree $ Option :some (respo.util.detect/as-render-node leaf)
@@ -4673,41 +4230,30 @@
               (:some key)
                 do (eprintln "|duplicated key" key) true
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Bool)
-            :args $ [] $ :: 'List 'Dynamic
+          :schema $ quote $ Fn (List Dynamic) (-> Bool)
         'find-children-diffs $ %{} 'CodeEntry
           :doc "|Reconcile whole keyed lists with common prefix/suffix trimming and an LIS over retained source positions. Update retained children before structural edits; remove missing nodes in descending order, append new nodes, and then move from right to left using stable node snapshots. Moves preserve DOM identity and component mount/unmount lifecycle."
           :code $ quote $ defn find-children-diffs (collect! coord n-coord index old-pairs-input new-pairs-input)
             let
                 old-children $ filter old-pairs-input $ fn (pair)
-                  hint-fn $ {}
-                    :args $ [] 'respo.schema/ChildPair
-                    :return 'Bool
+                  hint-fn $ Fn respo.schema/ChildPair $ -> Bool
                   (:node pair) .some?
                 new-children $ filter new-pairs-input $ fn (pair)
-                  hint-fn $ {}
-                    :args $ [] 'respo.schema/ChildPair
-                    :return 'Bool
+                  hint-fn $ Fn respo.schema/ChildPair $ -> Bool
                   (:node pair) .some?
               if
                 =
                   map old-children $ fn (pair)
-                    hint-fn $ {}
-                      :args $ [] 'respo.schema/ChildPair
-                      :return 'Dynamic
+                    hint-fn $ Fn respo.schema/ChildPair $ -> Dynamic
                     :key pair
                   map new-children $ fn (pair)
-                    hint-fn $ {}
-                      :args $ [] 'respo.schema/ChildPair
-                      :return 'Dynamic
+                    hint-fn $ Fn respo.schema/ChildPair $ -> Dynamic
                     :key pair
                 loop
                     old-pairs old-children
                     new-pairs new-children
                     position index
-                  hint-fn $ {}
-                    :args $ [] (:: 'List 'respo.schema/ChildPair) (:: 'List 'respo.schema/ChildPair) 'Number
-                    :return 'Unit
+                  hint-fn $ Fn (List respo.schema/ChildPair) (List respo.schema/ChildPair) Number $ -> Unit
                   match (destruct-list old-pairs)
                     (:none) &unit
                     (:some old-pair rest-old)
@@ -4719,26 +4265,18 @@
                 match
                   keyed-rotation
                     map old-children $ fn (pair)
-                      hint-fn $ {}
-                        :args $ [] 'respo.schema/ChildPair
-                        :return 'Dynamic
+                      hint-fn $ Fn respo.schema/ChildPair $ -> Dynamic
                       :key pair
                     map new-children $ fn (pair)
-                      hint-fn $ {}
-                        :args $ [] 'respo.schema/ChildPair
-                        :return 'Dynamic
+                      hint-fn $ Fn respo.schema/ChildPair $ -> Dynamic
                       :key pair
                   (:none)
                     let
                         full-old-keys $ map old-children $ fn (pair)
-                          hint-fn $ {}
-                            :args $ [] 'respo.schema/ChildPair
-                            :return 'Dynamic
+                          hint-fn $ Fn respo.schema/ChildPair $ -> Dynamic
                           :key pair
                         full-new-keys $ map new-children $ fn (pair)
-                          hint-fn $ {}
-                            :args $ [] 'respo.schema/ChildPair
-                            :return 'Dynamic
+                          hint-fn $ Fn respo.schema/ChildPair $ -> Dynamic
                           :key pair
                         boundaries $ keyed-boundaries full-old-keys full-new-keys
                         prefix $ &list:nth boundaries 0
@@ -4772,14 +4310,10 @@
                             :node $ &list:nth new-children new-position
                       let
                           old-keys $ map middle-old-children $ fn (pair)
-                            hint-fn $ {}
-                              :args $ [] 'respo.schema/ChildPair
-                              :return 'Dynamic
+                            hint-fn $ Fn respo.schema/ChildPair $ -> Dynamic
                             :key pair
                           new-keys $ map middle-new-children $ fn (pair)
-                            hint-fn $ {}
-                              :args $ [] 'respo.schema/ChildPair
-                              :return 'Dynamic
+                            hint-fn $ Fn respo.schema/ChildPair $ -> Dynamic
                             :key pair
                           old-index $ keyed-index old-keys
                           new-index $ keyed-index new-keys
@@ -4831,8 +4365,7 @@
                             anchor $ if (> suffix 0)
                               Option :some $ count retained-keys
                               Option :none
-                          hint-fn $ {} (:return 'Unit)
-                            :args $ [] (:: 'List 'Number) (:: 'calcit.core/Option 'Number)
+                          hint-fn $ Fn (List Number) (calcit.core/Option Number) (-> Unit)
                           match (destruct-list remaining)
                             (:none) &unit
                             (:some source rest-sources)
@@ -4874,9 +4407,9 @@
                             :node new-pair
                       loop
                           remaining $ reverse sources
-                          anchor $ assert-type (Option :none) (:: 'Option 'Number)
-                        hint-fn $ {} (:return 'Unit)
-                          :args $ [] (:: 'List 'Number) (:: 'calcit.core/Option 'Number)
+                          anchor $ assert-type (Option :none)
+                            quote $ Option Number
+                        hint-fn $ Fn (List Number) (calcit.core/Option Number) (-> Unit)
                         match (destruct-list remaining)
                           (:none) &unit
                           (:some source rest-sources)
@@ -4887,23 +4420,19 @@
                               recur rest-sources $ Option :some source
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
-              :: 'Fn $ {} (:return 'Unit)
-                :args $ [] 'respo.schema/DomPatch
-              :: 'List 'Dynamic
-              :: 'List 'Number
-              , 'Number (:: 'List 'respo.schema/ChildPair) (:: 'List 'respo.schema/ChildPair)
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn
+            Fn respo.schema/DomPatch $ -> Unit
+            List Dynamic
+            List Number
+            , Number (List respo.schema/ChildPair) (List respo.schema/ChildPair) (-> Unit) (:features :js-ffi)
           :tests $ []
             %{} 'TestEntry (:name |accepts-list-map-representation-transitions)
               :code $ quote $ let
                   child $ respo.schema/Element :name :div :coord (Option :none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref nil
-                  effects $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
+                  effects $ ref $ assert-type ([])
+                    quote $ List respo.schema/DomPatch
                   collect! $ fn (effect)
-                    hint-fn $ {}
-                      :args $ [] 'respo.schema/DomPatch
-                      :return 'Unit
+                    hint-fn $ Fn respo.schema/DomPatch $ -> Unit
                     respo.core/append-dynamic! effects effect
                   child-list $ [] $ respo.util.detect/make-child-pair :a child
                   same-child-list $ [] $ respo.util.detect/make-child-pair :a child
@@ -4912,7 +4441,8 @@
               :tags $ #{} :unit
             %{} 'TestEntry (:name |keeps-dom-coordinates-dense-through-none)
               :code $ quote $ let
-                  ops $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
+                  ops $ ref $ assert-type ([])
+                    quote $ List respo.schema/DomPatch
                   leaf $ respo.core/span $ {}
                   old-children $ [] (respo.util.detect/make-child-pair :empty nil) (respo.util.detect/make-child-pair :live leaf)
                   new-children $ [] (respo.util.detect/make-child-pair :empty leaf) (respo.util.detect/make-child-pair :live nil)
@@ -4942,36 +4472,28 @@
               true $ js/console.warn "|Diffing unknown params" old-tree new-tree
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
-              :: 'Fn $ {} (:return 'Unit)
-                :args $ [] 'respo.schema/DomPatch
-              :: 'List 'Dynamic
-              :: 'List 'Number
-              , 'Dynamic 'Dynamic
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn
+            Fn respo.schema/DomPatch $ -> Unit
+            List Dynamic
+            List Number
+            , Dynamic Dynamic (-> Unit) (:features :js-ffi)
           :tests $ []
             %{} 'TestEntry (:name |clears-old-ref-before-setting-new-ref)
               :code $ quote $ let
                   log $ ref $ assert-type ([])
-                    :: 'List $ :: 'List 'Dynamic
-                  ops $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
+                    quote $ List $ List Dynamic
+                  ops $ ref $ assert-type ([])
+                    quote $ List respo.schema/DomPatch
                   old-ref! $ fn (target)
-                    hint-fn $ {}
-                      :args $ [] $ :: 'JsNullish 'respo.dom/DomElement
-                      :return 'Unit
+                    hint-fn $ Fn (JsNullish respo.dom/DomElement) (-> Unit)
                     respo.core/append-dynamic! log $ [] :old target
                   new-ref! $ fn (target)
-                    hint-fn $ {}
-                      :args $ [] $ :: 'JsNullish 'respo.dom/DomElement
-                      :return 'Unit
+                    hint-fn $ Fn (JsNullish respo.dom/DomElement) (-> Unit)
                     respo.core/append-dynamic! log $ [] :new target
                   old-element $ respo.schema/Element :name :div :coord (Option :none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref old-ref!
                   new-element $ respo.schema/Element :name :div :coord (Option :none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref new-ref!
                   collect! $ fn (op)
-                    hint-fn $ {}
-                      :args $ [] 'respo.schema/DomPatch
-                      :return 'Unit
+                    hint-fn $ Fn respo.schema/DomPatch $ -> Unit
                     respo.core/append-dynamic! ops op
                 find-element-diffs collect! ([]) ([]) old-element new-element
                 respo.core/run-effect-ops! @ops :dom-node
@@ -4981,12 +4503,11 @@
             %{} 'TestEntry (:name |handles-component-element-boundaries-once)
               :code $ quote $ let
                   log $ ref $ assert-type ([])
-                    :: 'List $ :: 'List 'Dynamic
-                  ops $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
+                    quote $ List $ List Dynamic
+                  ops $ ref $ assert-type ([])
+                    quote $ List respo.schema/DomPatch
                   collect! $ fn (op)
-                    hint-fn $ {}
-                      :args $ [] 'respo.schema/DomPatch
-                      :return 'Unit
+                    hint-fn $ Fn respo.schema/DomPatch $ -> Unit
                     respo.core/append-dynamic! ops op
                   plain $ respo.schema/Element :name :div :coord (Option :none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref nil
                   inner $ .assoc plain :ref $ fn (target)
@@ -5009,11 +4530,10 @@
               :tags $ #{} :unit
             %{} 'TestEntry (:name |handles-none-component-tree-transitions)
               :code $ quote $ let
-                  ops $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
+                  ops $ ref $ assert-type ([])
+                    quote $ List respo.schema/DomPatch
                   collect! $ fn (op)
-                    hint-fn $ {}
-                      :args $ [] 'respo.schema/DomPatch
-                      :return 'Unit
+                    hint-fn $ Fn respo.schema/DomPatch $ -> Unit
                     respo.core/append-dynamic! ops op
                   inner $ respo.schema/Element :name :span :coord (Option :none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref nil
                   plain $ .assoc inner :name :div
@@ -5030,11 +4550,10 @@
               :tags $ #{} :unit
             %{} 'TestEntry (:name |identical-tree-produces-no-patches)
               :code $ quote $ let
-                  ops $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
+                  ops $ ref $ assert-type ([])
+                    quote $ List respo.schema/DomPatch
                   collect! $ fn (op)
-                    hint-fn $ {}
-                      :args $ [] 'respo.schema/DomPatch
-                      :return 'Unit
+                    hint-fn $ Fn respo.schema/DomPatch $ -> Unit
                     respo.core/append-dynamic! ops op
                   tree $ respo.schema/Element :name :div :coord (Option :none) :attrs
                     [] $ [] :inner-text |same
@@ -5089,21 +4608,19 @@
                       _logged $ eprintln |[Respo]-unknown-compare-result-for-props-keys
                       , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
-              :: 'Fn $ {} (:return 'Unit)
-                :args $ [] 'respo.schema/DomPatch
-              :: 'List 'Dynamic
-              :: 'List 'Number
-              :: 'List $ :: 'List 'Dynamic
-              :: 'List $ :: 'List 'Dynamic
+          :schema $ quote $ Fn
+            Fn respo.schema/DomPatch $ -> Unit
+            List Dynamic
+            List Number
+            List $ List Dynamic
+            List $ List Dynamic
+            -> Unit
           :tests $ [] $ %{} 'TestEntry (:name |reports-property-changes)
             :code $ quote $ let
-                effects $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
+                effects $ ref $ assert-type ([])
+                  quote $ List respo.schema/DomPatch
                 collect! $ fn (effect)
-                  hint-fn $ {}
-                    :args $ [] 'respo.schema/DomPatch
-                    :return 'Unit
+                  hint-fn $ Fn respo.schema/DomPatch $ -> Unit
                   respo.core/append-dynamic! effects effect
               find-props-diffs collect! ([]) ([])
                 [] $ [] :class-name |old
@@ -5180,18 +4697,14 @@
                                         let
                                             checked-old-ref old-ref-option
                                           collect! $ DomPatch :effect-before-update coord n-coord $ fn (_target)
-                                            hint-fn $ {}
-                                              :args $ [] 'respo.dom/DomElement
-                                              :return 'Unit
+                                            hint-fn $ Fn respo.dom/DomElement $ -> Unit
                                             checked-old-ref legacy-nil
                                             , &unit
                                       when (js-present? new-ref-option)
                                         let
                                             checked-new-ref new-ref-option
                                           collect! $ DomPatch :effect-update coord n-coord $ fn (target)
-                                            hint-fn $ {}
-                                              :args $ [] 'respo.dom/DomElement
-                                              :return 'Unit
+                                            hint-fn $ Fn respo.dom/DomElement $ -> Unit
                                             checked-new-ref target
                                             , &unit
                                   let
@@ -5215,24 +4728,21 @@
                                     if
                                       and dev? $ detect-keys-dup $ map new-children
                                         fn (entry)
-                                          hint-fn $ {}
-                                            :args $ [] 'respo.schema/ChildPair
-                                            :return 'Dynamic
+                                          hint-fn $ Fn respo.schema/ChildPair $ -> Dynamic
                                           :key entry
                                       js/console.error "|Parent that has dups" new-tree
                                     find-children-diffs collect! coord n-coord 0 old-children new-children
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
-              :: 'Fn $ {} (:return 'Unit)
-                :args $ [] 'respo.schema/DomPatch
-              :: 'List 'CoordKey
-              :: 'List 'Number
-              :: 'Option 'respo.schema/RenderNode
-              :: 'Option 'respo.schema/RenderNode
-            :features $ #{} :js-ffi
-            :generics $ [] 'CoordKey
+          :schema $ quote $ Fn
+            Fn respo.schema/DomPatch $ -> Unit
+            List CoordKey
+            List Number
+            Option respo.schema/RenderNode
+            Option respo.schema/RenderNode
+            -> Unit
+            :generics CoordKey
+            :features :js-ffi
         'find-style-diffs $ %{} 'CodeEntry
           :doc "|Compares two style maps and collects effects for additions, removals, or updates."
           :code $ quote $ defn find-style-diffs (collect! c-coord coord old-style new-style)
@@ -5282,14 +4792,13 @@
                       _logged $ eprintln |[Respo]-unknown-compare-result-for-style-keys
                       , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
-              :: 'Fn $ {} (:return 'Unit)
-                :args $ [] 'respo.schema/DomPatch
-              :: 'List 'Dynamic
-              :: 'List 'Number
-              :: 'List $ :: 'List 'Dynamic
-              :: 'List $ :: 'List 'Dynamic
+          :schema $ quote $ Fn
+            Fn respo.schema/DomPatch $ -> Unit
+            List Dynamic
+            List Number
+            List $ List Dynamic
+            List $ List Dynamic
+            -> Unit
         'first-duplicate-key $ %{} 'CodeEntry
           :doc "|Find the first original key which occurs more than once, retaining deep Calcit equality and warning selection. Native evaluation uses hash sets; JavaScript uses hash-indexed buckets backed by native Map, with equality checks for collisions. Expected linear work in the number of keys, excluding key hashing/comparison costs and adversarial collisions."
           :code $ quote $ defn first-duplicate-key (child-keys)
@@ -5298,11 +4807,10 @@
               first-duplicate-key-js child-keys
               first-duplicate-key-native child-keys
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] $ :: 'List 'K
-            :features $ #{} :js-ffi
-            :generics $ [] 'K
-            :return $ :: 'Option 'K
+          :schema $ quote $ Fn (List K)
+            -> $ Option K
+            :generics K
+            :features :js-ffi
           :tags $ #{} :internal
           :tests $ [] $ %{} 'TestEntry (:name |preserves-warning-order-and-deep-equality)
             :code $ quote $ do
@@ -5332,10 +4840,11 @@
                 size $ count child-keys
               loop
                   cursor 0
-                  duplicate-position $ assert-type (Option :none) (:: 'Option 'Number)
+                  duplicate-position $ assert-type (Option :none)
+                    quote $ Option Number
                 let
                     index $ assert-type cursor Number
-                    first-position $ assert-type duplicate-position $ :: 'Option 'Number
+                    first-position $ assert-type duplicate-position $ quote (Option Number)
                   if (= index size)
                     match first-position
                       (:none) (Option :none)
@@ -5363,22 +4872,22 @@
                         (:none) (append-key-bucket! buckets key-hash index)
                       recur (inc index) next-position
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] $ :: 'List 'K
-            :features $ #{} :js-ffi
-            :generics $ [] 'K
-            :return $ :: 'Option 'K
+          :schema $ quote $ Fn (List K)
+            -> $ Option K
+            :generics K
+            :features :js-ffi
           :tags $ #{} :internal
         'first-duplicate-key-native $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn first-duplicate-key-native (child-keys)
             let
                 repeated $ loop
                     remaining child-keys
-                    seen $ assert-type (#{}) (:: 'Set 'K)
-                    duplicates $ assert-type (#{}) (:: 'Set 'K)
-                  hint-fn $ {}
-                    :args $ [] (:: 'List 'K) (:: 'Set 'K) (:: 'Set 'K)
-                    :return $ :: 'Set 'K
+                    seen $ assert-type (#{})
+                      quote $ Set K
+                    duplicates $ assert-type (#{})
+                      quote $ Set K
+                  hint-fn $ Fn (List K) (Set K) (Set K)
+                    -> $ Set K
                   if (empty? remaining) duplicates $ let
                       key $ &list:nth remaining 0
                     recur (&list:rest remaining) (include seen key)
@@ -5386,18 +4895,16 @@
               if (empty? repeated) (Option :none)
                 loop
                     remaining child-keys
-                  hint-fn $ {}
-                    :args $ [] $ :: 'List 'K
-                    :return $ :: 'Option 'K
+                  hint-fn $ Fn (List K)
+                    -> $ Option K
                   let
                       key $ &list:nth remaining 0
                     if (contains? repeated key) (Option :some key)
                       recur $ &list:rest remaining
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] $ :: 'List 'K
-            :generics $ [] 'K
-            :return $ :: 'Option 'K
+          :schema $ quote $ Fn (List K)
+            -> $ Option K
+            :generics K
           :tags $ #{} :internal
           :tests $ []
             %{} 'TestEntry (:name |empty-and-distinct-keys)
@@ -5416,9 +4923,8 @@
           :code $ quote $ defn index-of-equal-key (child-keys positions key)
             loop
                 remaining positions
-              hint-fn $ {}
-                :args $ [] $ :: 'List 'Number
-                :return $ :: 'Option 'Number
+              hint-fn $ Fn (List Number)
+                -> $ Option Number
               if (empty? remaining) (Option :none)
                 let
                     index $ &list:nth remaining 0
@@ -5427,10 +4933,9 @@
                     Option :some index
                     recur $ &list:rest remaining
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] (:: 'List 'K) (:: 'List 'Number) 'K
-            :generics $ [] 'K
-            :return $ :: 'Option 'Number
+          :schema $ quote $ Fn (List K) (List Number) K
+            -> $ Option Number
+            :generics K
           :tags $ #{} :internal
           :tests $ [] $ %{} 'TestEntry (:name |equal-key-index-keeps-bucket-order)
             :code $ quote $ do
@@ -5445,10 +4950,9 @@
           :examples $ []
           :ffi $ {} (:target :browser)
             :js $ {} $ :inline "|(buckets, keyHash) => buckets.get(keyHash)"
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'JsObject 'Number
-            :features $ #{} :js-ffi
-            :return $ :: 'JsNullish 'JsObject
+          :schema $ quote $ Fn JsObject Number
+            -> $ JsNullish JsObject
+            :features :js-ffi
           :tags $ #{} :internal
         'keyed-boundaries $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn keyed-boundaries (old-keys new-keys)
@@ -5475,28 +4979,25 @@
                       recur $ inc suffix
                       [] prefix suffix
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] (:: 'List 'K) (:: 'List 'K)
-            :generics $ [] 'K
-            :return $ :: 'List 'Number
+          :schema $ quote $ Fn (List K) (List K)
+            -> $ List Number
+            :generics K
         'keyed-index $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn keyed-index (input-keys)
             loop
                 remaining input-keys
                 index 0
                 result $ {}
-              hint-fn $ {}
-                :args $ [] (:: 'List 'K) 'Number $ :: 'Map 'K 'Number
-                :return $ :: 'Map 'K 'Number
+              hint-fn $ Fn (List K) Number (Map K Number)
+                -> $ Map K Number
               match (destruct-list remaining)
                 (:none) result
                 (:some key rest-keys)
                   recur rest-keys (inc index) (&map:assoc result key index)
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] $ :: 'List 'K
-            :generics $ [] 'K
-            :return $ :: 'Map 'K 'Number
+          :schema $ quote $ Fn (List K)
+            -> $ Map K Number
+            :generics K
         'keyed-rotation $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn keyed-rotation (old-keys new-keys)
             if
@@ -5513,10 +5014,9 @@
                     Option :some offset
                     Option :none
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] (:: 'List 'K) (:: 'List 'K)
-            :generics $ [] 'K
-            :return $ :: 'Option 'Number
+          :schema $ quote $ Fn (List K) (List K)
+            -> $ Option Number
+            :generics K
         'lis-lower-bound $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn lis-lower-bound (tails value)
             loop
@@ -5534,16 +5034,15 @@
                     recur lo mid
                 , lo
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Number)
-            :args $ [] (:: 'List 'Number) 'Number
+          :schema $ quote $ Fn (List Number) Number (-> Number)
         'lis-reconstruct $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn lis-reconstruct (values previous cursor)
             loop
                 position cursor
-                kept $ assert-type (#{}) (:: 'Set 'Number)
-              hint-fn $ {}
-                :return $ :: 'Set 'Number
-                :args $ [] 'Number $ :: 'Set 'Number
+                kept $ assert-type (#{})
+                  quote $ Set Number
+              hint-fn $ Fn Number (Set Number)
+                -> $ Set Number
               if (< position 0) kept $ recur
                   nth previous position
                   , .unwrap
@@ -5551,20 +5050,21 @@
                   nth values position
                   , .unwrap
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] (:: 'List 'Number) (:: 'List 'Number) 'Number
-            :return $ :: 'Set 'Number
+          :schema $ quote $ Fn (List Number) (List Number) Number
+            -> $ Set Number
         'lis-values $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn lis-values (values)
             loop
                 remaining values
                 index 0
-                tails $ assert-type ([]) (:: 'List 'Number)
-                positions $ assert-type ([]) (:: 'List 'Number)
-                previous $ assert-type ([]) (:: 'List 'Number)
-              hint-fn $ {}
-                :return $ :: 'Set 'Number
-                :args $ [] (:: 'List 'Number) 'Number (:: 'List 'Number) (:: 'List 'Number) (:: 'List 'Number)
+                tails $ assert-type ([])
+                  quote $ List Number
+                positions $ assert-type ([])
+                  quote $ List Number
+                previous $ assert-type ([])
+                  quote $ List Number
+              hint-fn $ Fn (List Number) Number (List Number) (List Number) (List Number)
+                -> $ Set Number
               match (destruct-list remaining)
                 (:none)
                   lis-reconstruct values previous $ if (empty? positions) -1 $
@@ -5586,9 +5086,8 @@
                         .assoc positions slot index
                     recur rest-values (inc index) new-tails new-positions $ append previous predecessor
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] $ :: 'List 'Number
-            :return $ :: 'Set 'Number
+          :schema $ quote $ Fn (List Number)
+            -> $ Set Number
           :tests $ [] $ %{} 'TestEntry (:name |increasing-and-reversed)
             :code $ quote $ do
               assert= (#{} 0 1 2)
@@ -5609,10 +5108,9 @@
                   :: 'List $ :: 'List 'Dynamic
                 []
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic
-            :features $ #{} :js-ffi
-            :return $ :: 'List $ :: 'List 'Dynamic
+          :schema $ quote $ Fn Dynamic
+            -> $ List $ List Dynamic
+            :features :js-ffi
           :tests $ [] $ %{} 'TestEntry (:name |checks-open-props-list-shape)
             :code $ quote $ do
               assert=
@@ -5642,14 +5140,10 @@
             assert |coord-is-required $ calcit.core/non-nil? coord
             make-render-node-element (respo.util.detect/as-render-node virtual-element) listener-builder coord $ if (empty? svg-context) false $ &list:nth svg-context 0
           :examples $ []
-          :schema $ :: 'Fn $ {} (:rest 'Bool) (:return 'respo.dom/DomElement)
-            :args $ [] 'Struct
-              :: 'Fn $ {}
-                :args $ [] 'Tag
-                :return $ :: 'Fn $ {} (:return 'Unit)
-                  :args $ [] 'respo.dom/DomEvent $ :: 'List 'Dynamic
-              :: 'List 'Dynamic
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn Struct
+            Fn Tag $ -> $ Fn respo.dom/DomEvent (List Dynamic) (-> Unit)
+            List Dynamic
+            , & Bool (-> respo.dom/DomElement) (:features :js-ffi)
         'make-render-node-element $ %{} 'CodeEntry
           :doc "|根据 RenderNode 变体递归创建 DOM，保留组件坐标、SVG 上下文、事件和子节点创建顺序。"
           :code $ quote $ defn make-render-node-element (node listener-builder coord svg-context)
@@ -5673,14 +5167,10 @@
                     element $ narrow-element $ if svg? (browser/create-element-ns |http://www.w3.org/2000/svg tag-name) (browser/create-element tag-name)
                     child-elements $ map
                       filter children $ fn (pair)
-                        hint-fn $ {}
-                          :args $ [] 'respo.schema/ChildPair
-                          :return 'Bool
+                        hint-fn $ Fn respo.schema/ChildPair $ -> Bool
                         (:node pair) .some?
                       fn (pair)
-                        hint-fn $ {}
-                          :args $ [] 'respo.schema/ChildPair
-                          :return 'respo.dom/DomElement
+                        hint-fn $ Fn respo.schema/ChildPair $ -> respo.dom/DomElement
                         let
                             k $ :key pair
                             child $
@@ -5689,9 +5179,7 @@
                           when (nil? k) (js/console.warn |nil-key-is-bad-for-Respo)
                           make-render-node-element child listener-builder (append coord k) child-svg?
                   each attrs $ fn (entry)
-                    hint-fn $ {}
-                      :args $ [] $ :: 'List 'Dynamic
-                      :return 'Dynamic
+                    hint-fn $ Fn (List Dynamic) (-> Dynamic)
                     let
                         prop-str $ respo.util.list/pair-key-text entry
                         v $ respo.util.list/pair-value entry
@@ -5711,9 +5199,7 @@
                               k $ dashed->camel prop-str
                             if (calcit.core/non-nil? v) (aset element k v)
                   each style $ fn (entry)
-                    hint-fn $ {}
-                      :args $ [] $ :: 'List 'Dynamic
-                      :return 'Dynamic
+                    hint-fn $ Fn (List Dynamic) (-> Dynamic)
                     let
                         style-name $ respo.util.list/pair-key-text entry
                         k $ dashed->camel style-name
@@ -5731,15 +5217,10 @@
                       browser/append-child! (host-element element) (host-element child-element)
                   , element
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.dom/DomElement)
-            :args $ [] 'respo.schema/RenderNode
-              :: 'Fn $ {}
-                :args $ [] 'Tag
-                :return $ :: 'Fn $ {} (:return 'Unit)
-                  :args $ [] 'respo.dom/DomEvent $ :: 'List 'Dynamic
-              :: 'List 'Dynamic
-              , 'Bool
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn respo.schema/RenderNode
+            Fn Tag $ -> $ Fn respo.dom/DomEvent (List Dynamic) (-> Unit)
+            List Dynamic
+            , Bool (-> respo.dom/DomElement) (:features :js-ffi)
         'style->string $ %{} 'CodeEntry
           :doc "|this functions is used inside DOM operations, inserting styles into a `<style>` element. to render to HTML, use `style->html` instead"
           :code $ quote $ defn style->string (styles)
@@ -5760,8 +5241,9 @@
                       v $ get-style-value (respo.util.list/pair-value entry) style-name
                     recur (str acc style-name |: v |;) (&list:rest xs)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'String)
-            :args $ [] $ :: 'List (:: 'List 'Dynamic)
+          :schema $ quote $ Fn
+            List $ List Dynamic
+            -> String
           :tests $ [] $ %{} 'TestEntry (:name |formats-typed-keys-and-rejects-invalid-key)
             :code $ quote $ do
               assert= |color:red; $ style->string $ [] ([] :color :red)
@@ -5790,29 +5272,24 @@
                 _warned $ js/console.warn |Unknown-entry-for-mounting: tree
                 , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
-              :: 'Fn $ {} (:return 'Unit)
-                :args $ [] 'respo.schema/DomPatch
-              :: 'List 'Dynamic
-              :: 'List 'Number
-              , 'Struct 'Bool
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn
+            Fn respo.schema/DomPatch $ -> Unit
+            List Dynamic
+            List Number
+            , Struct Bool (-> Unit) (:features :js-ffi)
           :tests $ []
             %{} 'TestEntry (:name |runs-ref-mount-and-unmount-lifecycle)
               :code $ quote $ let
-                  log $ ref $ assert-type ([]) (:: 'List 'Dynamic)
-                  ops $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
+                  log $ ref $ assert-type ([])
+                    quote $ List Dynamic
+                  ops $ ref $ assert-type ([])
+                    quote $ List respo.schema/DomPatch
                   ref! $ fn (target)
-                    hint-fn $ {}
-                      :args $ [] $ :: 'JsNullish 'respo.dom/DomElement
-                      :return 'Unit
+                    hint-fn $ Fn (JsNullish respo.dom/DomElement) (-> Unit)
                     respo.core/append-dynamic! log target
                   element $ respo.schema/Element :name :div :coord (Option :none) :attrs ([]) :style ([]) :event ({}) :children ([]) :ref ref!
                   collect! $ fn (op)
-                    hint-fn $ {}
-                      :args $ [] 'respo.schema/DomPatch
-                      :return 'Unit
+                    hint-fn $ Fn respo.schema/DomPatch $ -> Unit
                     respo.core/append-dynamic! ops op
                 collect-mounting collect! ([]) ([]) element false
                 collect-unmounting collect! ([]) ([]) element false
@@ -5822,15 +5299,15 @@
               :tags $ #{} :unit
             %{} 'TestEntry (:name |keeps-own-effects-for-none-component-tree)
               :code $ quote $ let
-                  actions $ ref $ assert-type ([]) (:: 'List 'Dynamic)
-                  ops $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
+                  actions $ ref $ assert-type ([])
+                    quote $ List Dynamic
+                  ops $ ref $ assert-type ([])
+                    quote $ List respo.schema/DomPatch
                   effect $ respo.schema/Effect :name :watch :coord ([]) :args ([]) :method $ fn (_args params)
                     respo.core/append-dynamic! actions $ &list:nth params 0
                   component $ respo.schema/Component :name :empty :effects ([] effect) :listeners ([]) :tree $ Option :none
                   collect! $ fn (op)
-                    hint-fn $ {}
-                      :args $ [] 'respo.schema/DomPatch
-                      :return 'Unit
+                    hint-fn $ Fn respo.schema/DomPatch $ -> Unit
                     respo.core/append-dynamic! ops op
                 collect-mounting collect! ([]) ([]) component true
                 collect-unmounting collect! ([]) ([]) component true
@@ -5839,11 +5316,10 @@
               :tags $ #{} :unit
             %{} 'TestEntry (:name |keeps-dom-indices-dense-through-empty-children)
               :code $ quote $ let
-                  ops $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
+                  ops $ ref $ assert-type ([])
+                    quote $ List respo.schema/DomPatch
                   ref! $ fn (_target)
-                    hint-fn $ {}
-                      :args $ [] $ :: 'JsNullish 'respo.dom/DomElement
-                      :return 'Unit
+                    hint-fn $ Fn (JsNullish respo.dom/DomElement) (-> Unit)
                     , &unit
                   leaf $ &struct:assoc
                     respo.core/span $ {}
@@ -5852,9 +5328,7 @@
                     respo.core/div $ {}
                     , :children $ [] (respo.util.detect/make-child-pair :empty nil) (respo.util.detect/make-child-pair |leaf leaf)
                   collect! $ fn (op)
-                    hint-fn $ {}
-                      :args $ [] 'respo.schema/DomPatch
-                      :return 'Unit
+                    hint-fn $ Fn respo.schema/DomPatch $ -> Unit
                     respo.core/append-dynamic! ops op
                 collect-mounting collect! ([]) ([]) parent false
                 collect-unmounting collect! ([]) ([]) parent false
@@ -5873,16 +5347,16 @@
                   _ $ raise |expected-unmount
             %{} 'TestEntry (:name |keeps-root-at-place-flag-after-descending)
               :code $ quote $ let
-                  flags $ ref $ assert-type ([]) (:: 'List 'Dynamic)
-                  ops $ ref $ assert-type ([]) (:: 'List 'respo.schema/DomPatch)
+                  flags $ ref $ assert-type ([])
+                    quote $ List Dynamic
+                  ops $ ref $ assert-type ([])
+                    quote $ List respo.schema/DomPatch
                   effect $ respo.schema/Effect :name :watch :coord ([]) :args ([]) :method $ fn (_args params)
                     respo.core/append-dynamic! flags $ &list:nth params 2
                   component $ respo.schema/Component :name :root :effects ([] effect) :listeners ([]) :tree $ Option :some
                     respo.util.detect/as-render-node $ respo.core/div $ {}
                   collect! $ fn (op)
-                    hint-fn $ {}
-                      :args $ [] 'respo.schema/DomPatch
-                      :return 'Unit
+                    hint-fn $ Fn respo.schema/DomPatch $ -> Unit
                     respo.core/append-dynamic! ops op
                 collect-mounting collect! ([]) ([]) component true
                 respo.core/run-effect-ops! @ops :dom-node
@@ -5901,9 +5375,7 @@
                           typed-effect effect
                           method $ :method typed-effect
                         collect! $ DomPatch :effect-mount next-coord n-coord $ fn (target)
-                          hint-fn $ {}
-                            :args $ [] 'respo.dom/DomElement
-                            :return 'Unit
+                          hint-fn $ Fn respo.dom/DomElement $ -> Unit
                           method (:args typed-effect) ([] :mount target at-place?)
                   match (:tree component-value)
                     (:none) &unit
@@ -5915,17 +5387,13 @@
                     (:none) &unit
                     (:some ref!)
                       collect! $ DomPatch :effect-mount coord n-coord $ fn (target)
-                        hint-fn $ {}
-                          :args $ [] 'respo.dom/DomElement
-                          :return 'Unit
+                        hint-fn $ Fn respo.dom/DomElement $ -> Unit
                         ref! target
                         , &unit
                   loop
                       children $ :children tree
                       idx 0
-                    hint-fn $ {}
-                      :args $ [] (:: 'List 'respo.schema/ChildPair) 'Number
-                      :return 'Unit
+                    hint-fn $ Fn (List respo.schema/ChildPair) Number $ -> Unit
                     if (empty? children) &unit $ let
                         pair $ &list:nth children 0
                         k $ :key pair
@@ -5936,15 +5404,11 @@
                         if (child .some?) (inc idx) idx
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
-              :: 'Fn $ {} (:return 'Unit)
-                :args $ [] 'respo.schema/DomPatch
-              :: 'List 'CoordKey
-              :: 'List 'Number
-              , 'respo.schema/RenderNode 'Bool
-            :features $ #{} :js-ffi
-            :generics $ [] 'CoordKey
+          :schema $ quote $ Fn
+            Fn respo.schema/DomPatch $ -> Unit
+            List CoordKey
+            List Number
+            , respo.schema/RenderNode Bool (-> Unit) (:generics CoordKey) (:features :js-ffi)
         'collect-own-mounting $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn collect-own-mounting (collect! coord n-coord tree at-place?)
             when
@@ -5957,18 +5421,14 @@
                 let
                     method $ :method effect
                   collect! $ DomPatch :effect-mount next-coord n-coord $ fn (target)
-                    hint-fn $ {}
-                      :args $ [] 'respo.dom/DomElement
-                      :return 'Unit
+                    hint-fn $ Fn respo.dom/DomElement $ -> Unit
                     method (effect-args effect) ([] :mount target at-place?)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
-              :: 'Fn $ {} (:return 'Unit)
-                :args $ [] 'respo.schema/DomPatch
-              :: 'List 'Dynamic
-              :: 'List 'Number
-              , 'respo.schema/Component 'Bool
+          :schema $ quote $ Fn
+            Fn respo.schema/DomPatch $ -> Unit
+            List Dynamic
+            List Number
+            , respo.schema/Component Bool (-> Unit)
           :tags $ #{} :internal
         'collect-own-unmounting $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn collect-own-unmounting (collect! coord n-coord tree at-place?)
@@ -5982,18 +5442,14 @@
                 let
                     method $ :method effect
                   collect! $ DomPatch :effect-unmount next-coord n-coord $ fn (target)
-                    hint-fn $ {}
-                      :args $ [] 'respo.dom/DomElement
-                      :return 'Unit
+                    hint-fn $ Fn respo.dom/DomElement $ -> Unit
                     method (effect-args effect) ([] :unmount target at-place?)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
-              :: 'Fn $ {} (:return 'Unit)
-                :args $ [] 'respo.schema/DomPatch
-              :: 'List 'Dynamic
-              :: 'List 'Number
-              , 'respo.schema/Component 'Bool
+          :schema $ quote $ Fn
+            Fn respo.schema/DomPatch $ -> Unit
+            List Dynamic
+            List Number
+            , respo.schema/Component Bool (-> Unit)
           :tags $ #{} :internal
         'collect-unmounting $ %{} 'CodeEntry
           :doc "|internal function to collect unmounting effects from component tree. recursively traverses the virtual DOM and collects effect:unmount callbacks."
@@ -6004,14 +5460,11 @@
               js/console.warn |Unknown-entry-for-unmounting: tree
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
-              :: 'Fn $ {} (:return 'Unit)
-                :args $ [] 'respo.schema/DomPatch
-              :: 'List 'Dynamic
-              :: 'List 'Number
-              , 'Struct 'Bool
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn
+            Fn respo.schema/DomPatch $ -> Unit
+            List Dynamic
+            List Number
+            , Struct Bool (-> Unit) (:features :js-ffi)
         'collect-unmounting-node $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn collect-unmounting-node (collect! coord n-coord node at-place?)
             match node
@@ -6029,18 +5482,14 @@
                           typed-effect effect
                           method $ :method typed-effect
                         collect! $ DomPatch :effect-unmount new-coord n-coord $ fn (target)
-                          hint-fn $ {}
-                            :args $ [] 'respo.dom/DomElement
-                            :return 'Unit
+                          hint-fn $ Fn respo.dom/DomElement $ -> Unit
                           method (:args typed-effect) ([] :unmount target at-place?)
               (:element tree)
                 do
                   loop
                       children $ :children tree
                       idx 0
-                    hint-fn $ {}
-                      :args $ [] (:: 'List 'respo.schema/ChildPair) 'Number
-                      :return 'Unit
+                    hint-fn $ Fn (List respo.schema/ChildPair) Number $ -> Unit
                     if (empty? children) &unit $ let
                         pair $ &list:nth children 0
                         k $ :key pair
@@ -6054,22 +5503,16 @@
                     (:none) &unit
                     (:some ref!)
                       collect! $ DomPatch :effect-unmount coord n-coord $ fn (_target)
-                        hint-fn $ {}
-                          :args $ [] 'respo.dom/DomElement
-                          :return 'Unit
+                        hint-fn $ Fn respo.dom/DomElement $ -> Unit
                         ref! nil
                         , &unit
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
-              :: 'Fn $ {} (:return 'Unit)
-                :args $ [] 'respo.schema/DomPatch
-              :: 'List 'CoordKey
-              :: 'List 'Number
-              , 'respo.schema/RenderNode 'Bool
-            :features $ #{} :js-ffi
-            :generics $ [] 'CoordKey
+          :schema $ quote $ Fn
+            Fn respo.schema/DomPatch $ -> Unit
+            List CoordKey
+            List Number
+            , respo.schema/RenderNode Bool (-> Unit) (:generics CoordKey) (:features :js-ffi)
         'collect-updating $ %{} 'CodeEntry
           :doc "|Compares effects between component updates and collects effect actions if arguments change."
           :code $ quote $ defn collect-updating (collect! action coord n-coord old-tree new-tree)
@@ -6101,14 +5544,10 @@
                                   method $ :method effect
                                 collect! $ if (= :update action)
                                   DomPatch :effect-update next-coord n-coord $ fn (target)
-                                    hint-fn $ {}
-                                      :args $ [] 'respo.dom/DomElement
-                                      :return 'Unit
+                                    hint-fn $ Fn respo.dom/DomElement $ -> Unit
                                     method (effect-args effect) ([] action target false)
                                   DomPatch :effect-before-update next-coord n-coord $ fn (target)
-                                    hint-fn $ {}
-                                      :args $ [] 'respo.dom/DomElement
-                                      :return 'Unit
+                                    hint-fn $ Fn respo.dom/DomElement $ -> Unit
                                     method (effect-args effect) ([] action target false)
                             let
                                 effect $ if (= action :before-update) old-effect new-effect
@@ -6116,14 +5555,10 @@
                                 lifecycle-action $ if (= action :before-update) :unmount :mount
                               collect! $ if (= :update action)
                                 DomPatch :effect-update next-coord n-coord $ fn (target)
-                                  hint-fn $ {}
-                                    :args $ [] 'respo.dom/DomElement
-                                    :return 'Unit
+                                  hint-fn $ Fn respo.dom/DomElement $ -> Unit
                                   method (effect-args effect) ([] lifecycle-action target false)
                                 DomPatch :effect-before-update next-coord n-coord $ fn (target)
-                                  hint-fn $ {}
-                                    :args $ [] 'respo.dom/DomElement
-                                    :return 'Unit
+                                  hint-fn $ Fn respo.dom/DomElement $ -> Unit
                                   method (effect-args effect) ([] lifecycle-action target false)
                           , &unit
                         do
@@ -6131,9 +5566,7 @@
                             let
                                 method $ :method old-effect
                               collect! $ DomPatch :effect-before-update next-coord n-coord $ fn (target)
-                                hint-fn $ {}
-                                  :args $ [] 'respo.dom/DomElement
-                                  :return 'Unit
+                                hint-fn $ Fn respo.dom/DomElement $ -> Unit
                                 method (effect-args old-effect) ([] :unmount target false)
                           , &unit
                       , &unit
@@ -6143,17 +5576,13 @@
                           let
                               method $ :method new-effect
                             collect! $ DomPatch :effect-update next-coord n-coord $ fn (target)
-                              hint-fn $ {}
-                                :args $ [] 'respo.dom/DomElement
-                                :return 'Unit
+                              hint-fn $ Fn respo.dom/DomElement $ -> Unit
                               method (effect-args new-effect) ([] :mount target false)
                       , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
-              :: 'Fn $ {} (:return 'Unit)
-                :args $ [] 'respo.schema/DomPatch
-              , 'Tag (:: 'List 'Dynamic) (:: 'List 'Number) 'respo.schema/Component 'respo.schema/Component
+          :schema $ quote $ Fn
+            Fn respo.schema/DomPatch $ -> Unit
+            , Tag (List Dynamic) (List Number) respo.schema/Component respo.schema/Component (-> Unit)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.render.effect
           :require (respo.schema.op :as op)
@@ -6165,22 +5594,20 @@
         '*event-config $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defref *event-config default-config
           :examples $ []
-          :schema $ :: 'Ref 'respo.schema/EventConfig
+          :schema $ quote $ Ref respo.schema/EventConfig
           :tags $ #{} :internal
         'default-config $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def default-config
             EventConfig :stop-propagation? true :listener-mode $ ListenerMode :property
           :examples $ []
-          :schema $ :: 'respo.schema/EventConfig
+          :schema $ quote respo.schema/EventConfig
         'install-listener! $ %{} 'CodeEntry
           :doc "|Internal event installer shared by initial DOM creation and event patches. Captures the immutable mount configuration; independent mode replaces only the callback recorded on the node."
           :code $ quote $ defn install-listener! (target event-name listener-builder coord)
             let
                 config @*event-config
                 handler $ fn (event)
-                  hint-fn $ {}
-                    :args $ [] 'respo.dom/DomEvent
-                    :return 'Unit
+                  hint-fn $ Fn respo.dom/DomEvent $ -> Unit
                   (listener-builder event-name) event coord
                   when (:stop-propagation? config) (.stop-propagation! event)
                   , &unit
@@ -6197,15 +5624,12 @@
                       .add-event-listener! target (calcit.core/to-string event-name) handler
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'respo.dom/DomElement 'Tag
-              :: 'Fn $ {}
-                :args $ [] 'Tag
-                :return $ :: 'Fn $ {} (:return 'Unit)
-                  :args $ [] 'respo.dom/DomEvent $ :: 'List 'K
-              :: 'List 'K
-            :features $ #{} :js-ffi
-            :generics $ [] 'K
+          :schema $ quote $ Fn respo.dom/DomElement Tag
+            Fn Tag $ -> $ Fn respo.dom/DomEvent (List K) (-> Unit)
+            List K
+            -> Unit
+            :generics K
+            :features :js-ffi
           :tags $ #{} :internal
         'remove-listener! $ %{} 'CodeEntry
           :doc "|Remove only the recorded independent Respo callback. Release the internal node field after its last callback is removed; user on* properties and other native listeners are untouched."
@@ -6223,9 +5647,7 @@
                         if (empty? remaining) (js-delete target |__respo_calcit_event_listeners) (set! target.:owned-event-listeners remaining)
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'respo.dom/DomElement 'Tag
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn respo.dom/DomElement Tag (-> Unit) (:features :js-ffi)
           :tags $ #{} :internal
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.render.events
@@ -6243,9 +5665,7 @@
         'coerce-pairs $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn coerce-pairs (value) value
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Value)
-            :args $ [] 'Value
-            :generics $ [] 'Value
+          :schema $ quote $ Fn Value (-> Value) (:generics Value)
           :tests $ [] $ %{} 'TestEntry (:name |preserves-mixed-and-empty-pair-lists)
             :code $ quote $ let
                 callback $ fn (value) value
@@ -6265,9 +5685,7 @@
                 styles $ element :style
                 children $ map (element :children)
                   fn (entry)
-                    hint-fn $ {}
-                      :args $ [] 'respo.schema/ChildPair
-                      :return 'String
+                    hint-fn $ Fn respo.schema/ChildPair $ -> String
                     match (:node entry)
                       (:none) |
                       (:some node)
@@ -6284,8 +5702,7 @@
                 str |< tag-name opening-props (char-from-code 32) |>
                 str |< tag-name opening-props |> text-inside |</ tag-name |>
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'String)
-            :args $ [] 'respo.schema/Element
+          :schema $ quote $ Fn respo.schema/Element (-> String)
           :tests $ []
             %{} 'TestEntry (:name |serializes-elements-and-escapes-values)
               :code $ quote $ do
@@ -6334,9 +5751,7 @@
                       if (calcit.core/non-nil? text) (text->html text) (calcit.core/join-string children |)
                     (:err _) (calcit.core/join-string children |)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'String)
-            :args $ [] 'Tag (:: 'Map 'AttrKey 'Dynamic) (:: 'List 'String)
-            :generics $ [] 'AttrKey
+          :schema $ quote $ Fn Tag (Map AttrKey Dynamic) (List String) (-> String) (:generics AttrKey)
           :tests $ []
             %{} 'TestEntry (:name |absence-migration-html-values)
               :code $ quote $ do
@@ -6390,8 +5805,7 @@
                 prop->attr $ if (tag? k) (to-string k) (str k)
                 , |= $ &str:escape value-text
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'String)
-            :args $ [] $ :: 'List 'Dynamic
+          :schema $ quote $ Fn (List Dynamic) (-> String)
         'escape-html $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn escape-html (text)
             &str:replace
@@ -6402,8 +5816,7 @@
                 , |> |&gt;
               , &newline |&#13;&#10;
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'String)
-            :args $ [] 'String
+          :schema $ quote $ Fn String (-> String)
           :tests $ [] $ %{} 'TestEntry (:name |preserves-literal-entities)
             :code $ quote $ assert= |&amp;&amp;amp;&lt;&gt;&quot; (escape-html "|&&amp;<>\"")
             :tags $ #{} :unit
@@ -6412,20 +5825,16 @@
           :code $ quote $ defn make-string (element)
             element->string $ respo.util.format/coerce-element $ respo.util.detect/as-element (purify-element element)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'String)
-            :args $ [] 'Dynamic
+          :schema $ quote $ Fn Dynamic (-> String)
           :tests $ []
             %{} 'TestEntry
               :name |serializes-component-root-after-muting-option-tree
               :code $ quote $ let
                   element $ respo.schema/Element :name :div :coord (Option :none) :attrs ([]) :style ([]) :event
                     {} $ :click $ fn (_event _dispatch!)
-                      hint-fn $ {}
-                        :args $ [] (:: 'Map 'Tag 'Dynamic)
-                          :: 'Fn $ {}
-                            :args $ [] 'Dynamic
-                            :return 'Unit
-                        :return 'Unit
+                      hint-fn $ Fn (Map Tag Dynamic)
+                        Fn Dynamic $ -> Unit
+                        -> Unit
                       , &unit
                     , :children ([]) :ref nil
                   component $ respo.schema/Component :name :root :effects ([]) :listeners ([]) :tree $ Option :some (respo.util.detect/as-render-node element)
@@ -6443,9 +5852,7 @@
             let
                 pairs $ &map:to-list props
                 visible $ filter pairs $ fn (pair)
-                  hint-fn $ {}
-                    :args $ [] $ :: 'List 'Dynamic
-                    :return 'Bool
+                  hint-fn $ Fn (List Dynamic) (-> Bool)
                   let
                       k $ respo.util.list/pair-key pair
                       v $ respo.util.list/pair-value pair
@@ -6458,9 +5865,7 @@
                 sorted $ &list:sort-by visible respo.util.list/pair-key
               calcit.core/join-string (map sorted entry->html) "| "
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'String)
-            :args $ [] $ :: 'Map 'AttrKey 'Dynamic
-            :generics $ [] 'AttrKey
+          :schema $ quote $ Fn (Map AttrKey Dynamic) (-> String) (:generics AttrKey)
           :tests $ [] $ %{} 'TestEntry (:name |preserves-original-key-formatting)
             :code $ quote $ do
               assert= "|1=\"one\"" $ props->html $ {} (1 |one)
@@ -6476,23 +5881,22 @@
           :code $ quote $ def self-closing
             #{} |area |base |br |col |embed |hr |img |input |link |meta |param |source |track |wbr
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ quote Dynamic
         'style->html $ %{} 'CodeEntry
           :doc "|this function is intended for HTML rendering since it escaped characters."
           :code $ quote $ defn style->html (styles)
             calcit.core/join-string
               map styles $ fn (entry)
-                hint-fn $ {}
-                  :args $ [] $ :: 'List 'Dynamic
-                  :return 'String
+                hint-fn $ Fn (List Dynamic) (-> String)
                 let
                     style-name $ respo.util.list/pair-key-text entry
                     v $ get-style-value (respo.util.list/pair-value entry) (dashed->camel style-name)
                   str style-name |: (escape-html v) |;
               , |
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'String)
-            :args $ [] $ :: 'List (:: 'List 'Dynamic)
+          :schema $ quote $ Fn
+            List $ List Dynamic
+            -> String
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.render.html
           :require
@@ -6503,7 +5907,7 @@
         'MoveScrollState $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct MoveScrollState (:node 'respo.dom/DomElement) (:top 'Number) (:left 'Number)
           :examples $ []
-          :schema $ :: 'StructDef
+          :schema $ quote StructDef
         'add-element $ %{} 'CodeEntry
           :doc "|Inserts a new DOM element before a target element."
           :code $ quote $ defn add-element (target op listener-builder coord)
@@ -6512,25 +5916,19 @@
               insert-before-target! target new-element
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'respo.dom/DomElement 'Struct
-              :: 'Fn $ {}
-                :args $ [] 'Tag
-                :return $ :: 'Fn $ {} (:return 'Unit)
-                  :args $ [] 'respo.dom/DomEvent $ :: 'List 'Dynamic
-              :: 'List 'Dynamic
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn respo.dom/DomElement Struct
+            Fn Tag $ -> $ Fn respo.dom/DomEvent (List Dynamic) (-> Unit)
+            List Dynamic
+            -> Unit
+            :features :js-ffi
         'add-event $ %{} 'CodeEntry (:doc "|Attaches an event listener to a DOM element.")
           :code $ quote $ defn add-event (target event-name listener-builder coord) (install-listener! target event-name listener-builder coord)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'respo.dom/DomElement 'Tag
-              :: 'Fn $ {}
-                :args $ [] 'Tag
-                :return $ :: 'Fn $ {} (:return 'Unit)
-                  :args $ [] 'respo.dom/DomEvent $ :: 'List 'Dynamic
-              :: 'List 'Dynamic
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn respo.dom/DomElement Tag
+            Fn Tag $ -> $ Fn respo.dom/DomEvent (List Dynamic) (-> Unit)
+            List Dynamic
+            -> Unit
+            :features :js-ffi
         'add-prop $ %{} 'CodeEntry
           :doc "|Adds or updates a property on a DOM element. Handles data attributes and style strings."
           :code $ quote $ defn add-prop (target p prop-value)
@@ -6551,9 +5949,7 @@
                       _ $ js-set target prop-name prop-value
               , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'respo.dom/DomElement 'Tag 'Dynamic
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn respo.dom/DomElement Tag Dynamic (-> Unit) (:features :js-ffi)
         'add-style $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn add-style (target p v)
             let
@@ -6562,9 +5958,7 @@
               aset (.-style target) style-name style-value
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'respo.dom/DomElement 'Tag 'Dynamic
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn respo.dom/DomElement Tag Dynamic (-> Unit) (:features :js-ffi)
         'append-element $ %{} 'CodeEntry
           :doc "|Appends a new DOM element to the target container."
           :code $ quote $ defn append-element (target op listener-builder coord)
@@ -6573,36 +5967,30 @@
               .append-child! target new-element
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'respo.dom/DomElement 'Struct
-              :: 'Fn $ {}
-                :args $ [] 'Tag
-                :return $ :: 'Fn $ {} (:return 'Unit)
-                  :args $ [] 'respo.dom/DomEvent $ :: 'List 'Dynamic
-              :: 'List 'Dynamic
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn respo.dom/DomElement Struct
+            Fn Tag $ -> $ Fn respo.dom/DomEvent (List Dynamic) (-> Unit)
+            List Dynamic
+            -> Unit
+            :features :js-ffi
         'apply-dom-changes $ %{} 'CodeEntry
           :doc "|Internal DOM patch executor.\n\nIt walks collected diff operations, finds the target node by DOM coordinate, and applies prop, style, event, element, and effect changes in order."
           :code $ quote $ defn apply-dom-changes (changes mount-point listener-builder)
             let
                 target-cache $ ref $ assert-type ({})
-                  :: 'Map (:: 'List 'Number) 'respo.dom/DomElement
+                  quote $ Map (List Number) respo.dom/DomElement
                 find-target-at $ fn (n-coord)
-                  hint-fn $ {}
-                    :return $ :: 'Option 'respo.dom/DomElement
-                    :args $ [] $ :: 'List 'Number
+                  hint-fn $ Fn (List Number)
+                    -> $ Option respo.dom/DomElement
                   match
                     js-nullish->option $ mount-point.:first-element-child
                     (:none) (Option :none)
                     (:some root) (find-target-cached root n-coord target-cache)
                 child-snapshots $ ref $ assert-type ({})
-                  :: 'Map (:: 'List 'Number) (:: 'List 'respo.dom/DomElement)
+                  quote $ Map (List Number) (List respo.dom/DomElement)
                 scroll-snapshot $ ref $ assert-type ({})
-                  :: 'Map (:: 'List 'Number) (:: 'List 'respo.render.patch/MoveScrollState)
+                  quote $ Map (List Number) (List respo.render.patch/MoveScrollState)
                 flush-scroll! $ fn ()
-                  hint-fn $ {} (:return 'Unit)
-                    :args $ []
-                    :features $ #{} :js-ffi
+                  hint-fn $ Fn (-> Unit) (:features :js-ffi)
                   &doseq
                     pair $ &map:to-list @scroll-snapshot
                     &doseq
@@ -6615,8 +6003,7 @@
                   reset! child-snapshots $ {}
                   , &unit
                 invalidate-at! $ fn (n-coord)
-                  hint-fn $ {} (:return 'Unit)
-                    :args $ [] $ :: 'List 'Number
+                  hint-fn $ Fn (List Number) (-> Unit)
                   if (empty? n-coord)
                     reset! target-cache $ {}
                     invalidate-target-children! target-cache $ slice n-coord 0 $ Option :some
@@ -6711,10 +6098,10 @@
                           match (get @child-snapshots n-coord)
                             (:none) (snapshot-children parent)
                             (:some cached) cached
-                          :: 'List 'respo.dom/DomElement
+                          quote $ List respo.dom/DomElement
                       swap! child-snapshots
                         fn (container key value) (.assoc container key value)
-                        , n-coord $ assert-type nodes $ :: 'List 'respo.dom/DomElement
+                        , n-coord $ assert-type nodes $ quote (List respo.dom/DomElement)
                       when
                         not $ contains? @scroll-snapshot n-coord
                         swap! scroll-snapshot
@@ -6749,35 +6136,31 @@
               flush-scroll!
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] (:: 'List 'respo.schema/DomPatch) 'respo.dom/DomElement $ :: 'Fn
-              {}
-                :args $ [] 'Tag
-                :return $ :: 'Fn $ {} (:return 'Unit)
-                  :args $ [] 'respo.dom/DomEvent $ :: 'List 'Dynamic
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (List respo.schema/DomPatch) respo.dom/DomElement
+            Fn Tag $ -> $ Fn respo.dom/DomEvent (List Dynamic) (-> Unit)
+            -> Unit
+            :features :js-ffi
         'as-move-scroll-state $ %{} 'CodeEntry (:doc "|按 Struct 来源校验滚动快照。")
           :code $ quote $ defn as-move-scroll-state (value)
             if (struct? value)
               if (&struct:matches? value MoveScrollState) value $ raise "|[Respo] expected a MoveScrollState snapshot"
               raise "|[Respo] expected a MoveScrollState snapshot"
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.render.patch/MoveScrollState)
-            :args $ [] 'Dynamic
+          :schema $ quote $ Fn Dynamic (-> respo.render.patch/MoveScrollState)
         'collect-scroll-states $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn collect-scroll-states (node)
             let
                 own $ if
                   and (= node.:scroll-top 0) (= node.:scroll-left 0)
-                  assert-type ([]) (:: 'List 'respo.render.patch/MoveScrollState)
+                  assert-type ([])
+                    quote $ List respo.render.patch/MoveScrollState
                   [] $ MoveScrollState :node node :top node.:scroll-top :left node.:scroll-left
                 children $ snapshot-children node
               concat own $ mapcat children collect-scroll-states
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'respo.dom/DomElement
-            :features $ #{} :js-ffi
-            :return $ :: 'List 'respo.render.patch/MoveScrollState
+          :schema $ quote $ Fn respo.dom/DomElement
+            -> $ List respo.render.patch/MoveScrollState
+            :features :js-ffi
         'find-target $ %{} 'CodeEntry
           :doc "|Locates a DOM node by traversing children using a coordinate path."
           :code $ quote $ defn find-target (root coord)
@@ -6791,10 +6174,9 @@
                     (:none) nil
                     (:some child) (find-target child xss)
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'respo.dom/DomElement $ :: 'List 'Number
-            :features $ #{} :js-ffi
-            :return $ :: 'JsNullish 'respo.dom/DomElement
+          :schema $ quote $ Fn respo.dom/DomElement (List Number)
+            -> $ JsNullish respo.dom/DomElement
+            :features :js-ffi
         'find-target-cached $ %{} 'CodeEntry
           :doc "|Locate a DOM target with prefix reuse inside one patch application. Cache only successful lookups. Structural patches retain unchanged ancestors; content properties discard descendants, and lifecycle callbacks clear all targets."
           :code $ quote $ defn find-target-cached (root coord cache)
@@ -6824,11 +6206,10 @@
                                 , coord child
                               Option :some child
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'respo.dom/DomElement (:: 'List 'Number)
-              :: 'Ref $ :: 'Map (:: 'List 'Number) 'respo.dom/DomElement
-            :features $ #{} :js-ffi
-            :return $ :: 'Option 'respo.dom/DomElement
+          :schema $ quote $ Fn respo.dom/DomElement (List Number)
+            Ref $ Map (List Number) respo.dom/DomElement
+            -> $ Option respo.dom/DomElement
+            :features :js-ffi
           :tags $ #{} :internal
         'insert-before-target! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn insert-before-target! (target new-element)
@@ -6842,18 +6223,16 @@
                   .insert-before! parent-element new-element target
                   , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'respo.dom/DomElement 'respo.dom/DomElement
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn respo.dom/DomElement respo.dom/DomElement (-> Unit) (:features :js-ffi)
         'invalidate-target-children! $ %{} 'CodeEntry
           :doc "|Conservatively discard cached targets after child structure changes, retaining only the unchanged parent and its ancestors. Work depends on coordinate depth rather than total cached targets, avoiding scans of unrelated cached branches on each move."
           :code $ quote $ defn invalidate-target-children! (cache parent-coord)
             loop
                 remaining parent-coord
                 retained $ {}
-              hint-fn $ {} (:return 'Unit)
-                :args $ [] (:: 'List 'Number)
-                  :: 'Map (:: 'List 'Number) 'respo.dom/DomElement
+              hint-fn $ Fn (List Number)
+                Map (List Number) respo.dom/DomElement
+                -> Unit
               let
                   path remaining
                   entries retained
@@ -6866,15 +6245,15 @@
                     slice path 0 $ Option :some $ dec (count path)
                     , next
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
-              :: 'Ref $ :: 'Map (:: 'List 'Number) 'respo.dom/DomElement
-              :: 'List 'Number
+          :schema $ quote $ Fn
+            Ref $ Map (List Number) respo.dom/DomElement
+            List Number
+            -> Unit
           :tags $ #{} :internal
           :tests $ [] $ %{} 'TestEntry (:name |unit-empty-target-cache)
             :code $ quote $ let
                 cache $ ref $ assert-type ({})
-                  :: 'Map (:: 'List 'Number) 'respo.dom/DomElement
+                  quote $ Map (List Number) respo.dom/DomElement
               assert= &unit $ invalidate-target-children! cache $ [] 1 2
               assert= ({}) @cache
               assert= &unit $ invalidate-target-children! cache $ []
@@ -6914,15 +6293,11 @@
                     .focus-preserving-scroll! active $ js-object $ :preventScroll true
               , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'respo.dom/DomElement (:: 'List 'respo.dom/DomElement) 'Number $ :: 'Option 'Number
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn respo.dom/DomElement (List respo.dom/DomElement) Number (Option Number) (-> Unit) (:features :js-ffi)
         'remove-target! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn remove-target! (target) (.remove! target) &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'respo.dom/DomElement
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn respo.dom/DomElement (-> Unit) (:features :js-ffi)
         'replace-element $ %{} 'CodeEntry
           :doc "|Replaces a DOM element with a new one created from an operation."
           :code $ quote $ defn replace-element (target op listener-builder coord)
@@ -6932,14 +6307,11 @@
               remove-target! target
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'respo.dom/DomElement 'Struct
-              :: 'Fn $ {}
-                :args $ [] 'Tag
-                :return $ :: 'Fn $ {} (:return 'Unit)
-                  :args $ [] 'respo.dom/DomEvent $ :: 'List 'Dynamic
-              :: 'List 'Dynamic
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn respo.dom/DomElement Struct
+            Fn Tag $ -> $ Fn respo.dom/DomEvent (List Dynamic) (-> Unit)
+            List Dynamic
+            -> Unit
+            :features :js-ffi
         'replace-prop $ %{} 'CodeEntry
           :doc "|Updates a property on a DOM element. Handles data attributes and special cases like 'value'."
           :code $ quote $ defn replace-prop (target p prop-value)
@@ -6967,9 +6339,7 @@
                       js-set target prop-name prop-value
               , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'respo.dom/DomElement 'Tag 'Dynamic
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn respo.dom/DomElement Tag Dynamic (-> Unit) (:features :js-ffi)
         'replace-style $ %{} 'CodeEntry
           :doc "|Updates a single style property on a DOM element."
           :code $ quote $ defn replace-style (target p v)
@@ -6978,9 +6348,7 @@
               aset (.-style target) style-name $ get-style-value v style-name
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'respo.dom/DomElement 'Tag 'Dynamic
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn respo.dom/DomElement Tag Dynamic (-> Unit) (:features :js-ffi)
         'rm-element $ %{} 'CodeEntry (:doc "|Removes the DOM element from the document.")
           :code $ quote $ defn rm-element (target)
             match target
@@ -6989,9 +6357,7 @@
                 js/console.warn |Respo:-Element-already-removed!-Probably-by-:inner-text.
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] $ :: 'calcit.core/Option 'respo.dom/DomElement
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (calcit.core/Option respo.dom/DomElement) (-> Unit) (:features :js-ffi)
         'rm-event $ %{} 'CodeEntry
           :doc "|Remove an event according to the mount policy. Property mode clears its on* property as before; independent mode removes only the callback owned by Respo."
           :code $ quote $ defn rm-event (target event-name)
@@ -7001,9 +6367,7 @@
               (:add-event-listener) (remove-listener! target event-name)
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'respo.dom/DomElement 'Tag
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn respo.dom/DomElement Tag (-> Unit) (:features :js-ffi)
         'rm-prop $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn rm-prop (target op)
             if (svg-target? target)
@@ -7023,9 +6387,7 @@
                       target .remove-attribute! $ respo.util.format/prop->attr prop-str
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'respo.dom/DomElement 'Tag
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn respo.dom/DomElement Tag (-> Unit) (:features :js-ffi)
         'rm-style $ %{} 'CodeEntry (:doc "|Removes a style property from a DOM element.")
           :code $ quote $ defn rm-style (target op)
             &let
@@ -7034,21 +6396,18 @@
                 -> (.-style target) (js-set style-name nil)
                 , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'Dynamic 'Tag
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn Dynamic Tag (-> Unit) (:features :js-ffi)
         'run-effect $ %{} 'CodeEntry
           :doc "|Runs side effect functions.\n\nParameters:\n  target - Target DOM element or component instance, nil if target not found\n  method - Method function to execute on the target\n  coord - Coordinate information for identifying location in console warnings\n\nFunctionality:\n  If target exists, calls method function on target; if target is nil, outputs warning to console.\n  Mainly used to execute various side effects during rendering patch process, such as event listening, DOM operations, etc."
           :code $ quote $ defn run-effect (target method coord)
             if (js-present? target) (method target) (js/console.warn "|Unknown effects target:" coord)
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] (:: 'JsNullish 'respo.dom/DomElement)
-              :: 'Fn $ {} (:return 'Unit)
-                :args $ [] 'respo.dom/DomElement
-              :: 'List 'Number
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (JsNullish respo.dom/DomElement)
+            Fn respo.dom/DomElement $ -> Unit
+            List Number
+            -> Unit
+            :features :js-ffi
         'set-svg-prop! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn set-svg-prop! (target p value)
             let
@@ -7059,8 +6418,7 @@
                 (:none)
                   browser/element-remove-attribute! (host-element target) attr
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'respo.dom/DomElement 'Tag $ :: 'Option 'String
+          :schema $ quote $ Fn respo.dom/DomElement Tag (Option String) (-> Unit)
         'snapshot-children $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn snapshot-children (parent)
             let
@@ -7068,41 +6426,33 @@
               loop
                   index 0
                   nodes $ []
-                hint-fn $ {}
-                  :args $ [] 'Number $ :: 'List 'respo.dom/DomElement
-                  :return $ :: 'List 'respo.dom/DomElement
+                hint-fn $ Fn Number (List respo.dom/DomElement)
+                  -> $ List respo.dom/DomElement
                 match
                   js-nullish->option $ .item children index
                   (:none) nodes
                   (:some node)
                     recur (inc index) (append nodes node)
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'respo.dom/DomElement
-            :features $ #{} :js-ffi
-            :return $ :: 'List 'respo.dom/DomElement
+          :schema $ quote $ Fn respo.dom/DomElement
+            -> $ List respo.dom/DomElement
+            :features :js-ffi
         'svg-children? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn svg-children? (target)
             and (svg-target? target) (not= target.:tag-name |foreignObject)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Bool)
-            :args $ [] 'respo.dom/DomElement
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn respo.dom/DomElement (-> Bool) (:features :js-ffi)
         'svg-parent? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn svg-parent? (target)
             match (js-nullish->option target.:parent-element)
               (:some parent) (svg-children? parent)
               (:none) false
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Bool)
-            :args $ [] 'respo.dom/DomElement
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn respo.dom/DomElement (-> Bool) (:features :js-ffi)
         'svg-target? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn svg-target? (target) (= target.:namespace-uri |http://www.w3.org/2000/svg)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Bool)
-            :args $ [] 'respo.dom/DomElement
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn respo.dom/DomElement (-> Bool) (:features :js-ffi)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.render.patch
           :require
@@ -7119,21 +6469,21 @@
         '*resource-id $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defref *resource-id 0
           :examples $ []
-          :schema $ :: 'Ref 'Number
+          :schema $ quote $ Ref Number
         'ResourceAction $ %{} 'CodeEntry
           :doc "|Immutable request lifecycle enum: :started carries request-id; :ready carries request-id and data; :failed carries request-id and error."
           :code $ quote $ defenum ResourceAction (:started 'Number) (:ready 'Number 'Dynamic) (:failed 'Number 'Dynamic)
           :examples $ []
-          :schema $ :: 'EnumDef
+          :schema $ quote EnumDef
           :tags $ #{} :data
         'ResourceState $ %{} 'CodeEntry
           :doc "|Immutable resource state record. :data and :error are application payload boundaries; :status and :request-id drive deterministic reducer transitions."
           :code $ quote $ defstruct ResourceState (:status 'Tag)
-            :request-id $ :: 'Option 'Number
+            :request-id $ quote $ Option Number
             :data 'Dynamic
             :error 'Dynamic
           :examples $ []
-          :schema $ :: 'StructDef
+          :schema $ quote StructDef
           :tags $ #{} :data
         'load-resource! $ %{} 'CodeEntry
           :doc "|Invokes a zero-argument fetcher once, normalizes its value or Promise, and emits immutable :started then :ready or :failed ResourceAction values. Synchronous fetch errors and Promise-chain errors become :failed. Returns the numeric request id; it does not mutate application state."
@@ -7148,27 +6498,21 @@
                     value $ fetch-resource
                   shared/promise-observe! value
                     fn (ready-value)
-                      hint-fn $ {}
-                        :args $ [] 'Dynamic
-                        :return 'Unit
+                      hint-fn $ Fn Dynamic $ -> Unit
                       emit-action! $ resource-ready request-id ready-value
                     fn (error)
-                      hint-fn $ {}
-                        :args $ [] 'Dynamic
-                        :return 'Unit
+                      hint-fn $ Fn Dynamic $ -> Unit
                       emit-action! $ resource-failed request-id error
                 fn (error)
                   emit-action! $ resource-failed request-id error
               , request-id
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Number)
-            :args $ []
-              :: 'Fn $ {} (:return 'T)
-                :args $ []
-              :: 'Fn $ {} (:return 'Unit)
-                :args $ [] 'respo.resource/ResourceAction
-            :features $ #{} :js-ffi
-            :generics $ [] 'T
+          :schema $ quote $ Fn
+            Fn $ -> T
+            Fn respo.resource/ResourceAction $ -> Unit
+            -> Number
+            :generics T
+            :features :js-ffi
         'next-resource-id! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn next-resource-id! ()
             let
@@ -7194,8 +6538,7 @@
                 (:some calcit-absence-definition) (= calcit-absence-definition ResourceAction)
                 (:none) false
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Bool)
-            :args $ [] 'Dynamic
+          :schema $ quote $ Fn Dynamic (-> Bool)
           :tags $ #{} :internal
           :tests $ [] $ %{} 'TestEntry (:name |absence-migration-nominal-identity)
             :code $ quote $ do
@@ -7216,8 +6559,7 @@
               raise "|[Respo/resource-failed] expected a numeric request id"
             ResourceAction :failed request-id error
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.resource/ResourceAction)
-            :args $ [] 'Number 'Dynamic
+          :schema $ quote $ Fn Number Dynamic (-> respo.resource/ResourceAction)
         'resource-idle $ %{} 'CodeEntry
           :doc "|Creates an immutable idle ResourceState with optional initial data."
           :code $ quote $ defn resource-idle (initial-data-option)
@@ -7226,8 +6568,7 @@
             quote $ resource-idle $ Option :none
             quote $ resource-idle $ Option :some
               {} $ :items $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.resource/ResourceState)
-            :args $ [] $ :: 'calcit.core/Option 'Dynamic
+          :schema $ quote $ Fn (calcit.core/Option Dynamic) (-> respo.resource/ResourceState)
           :tests $ [] $ %{} 'TestEntry (:name |preserves-option-initial-data)
             :code $ quote $ let
                 payload $ {} $ :items ([])
@@ -7251,8 +6592,7 @@
               or (= status :pending) (= status :refreshing)
           :examples $ [] $ quote
             resource-loading? $ resource-reducer (resource-idle) (resource-started 1)
-          :schema $ :: 'Fn $ {} (:return 'Bool)
-            :args $ [] 'respo.resource/ResourceState
+          :schema $ quote $ Fn respo.resource/ResourceState (-> Bool)
         'resource-ready $ %{} 'CodeEntry
           :doc "|Creates a :ready ResourceAction carrying resolved immutable data."
           :code $ quote $ defn resource-ready (request-id data)
@@ -7261,8 +6601,7 @@
               raise "|[Respo/resource-ready] expected a numeric request id"
             ResourceAction :ready request-id data
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.resource/ResourceAction)
-            :args $ [] 'Number 'Dynamic
+          :schema $ quote $ Fn Number Dynamic (-> respo.resource/ResourceAction)
         'resource-reducer $ %{} 'CodeEntry
           :doc "|Purely applies a ResourceAction to ResourceState. Ready and failed actions with stale request ids return the identical current state; refreshes retain previous data."
           :code $ quote $ defn resource-reducer (state action)
@@ -7301,8 +6640,7 @@
                 pending $ resource-reducer idle $ resource-started 1
               resource-reducer pending $ resource-ready 1 $ {}
                 :items $ [] :a :b
-          :schema $ :: 'Fn $ {} (:return 'respo.resource/ResourceState)
-            :args $ [] 'respo.resource/ResourceState 'respo.resource/ResourceAction
+          :schema $ quote $ Fn respo.resource/ResourceState respo.resource/ResourceAction (-> respo.resource/ResourceState)
           :tests $ []
             %{} 'TestEntry (:name |handles-refresh-stale-and-error-results)
               :code $ quote $ let
@@ -7350,8 +6688,7 @@
               raise "|[Respo/resource-started] expected a numeric request id"
             ResourceAction :started request-id
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.resource/ResourceAction)
-            :args $ [] 'Number
+          :schema $ quote $ Fn Number (-> respo.resource/ResourceAction)
         'resource-state? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn resource-state? (x)
             and (struct? x)
@@ -7359,8 +6696,7 @@
                 (:some calcit-absence-definition) (= calcit-absence-definition ResourceState)
                 (:none) false
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Bool)
-            :args $ [] 'Dynamic
+          :schema $ quote $ Fn Dynamic (-> Bool)
           :tags $ #{} :internal
           :tests $ [] $ %{} 'TestEntry (:name |absence-migration-nominal-identity)
             :code $ quote $ do
@@ -7384,49 +6720,90 @@
         '*dispatch-op $ %{} 'CodeEntry (:doc |)
           :code $ quote $ deftype-slot :dispatch-op
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ quote Dynamic
         'ChildPair $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct ChildPair (:key 'Dynamic)
-            :node $ :: 'Option 'respo.schema/RenderNode
+            :node $ quote $ Option respo.schema/RenderNode
           :examples $ []
-          :schema $ :: 'StructDef
+          :schema $ quote StructDef
         'Component $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Component (:name 'Tag)
-            :effects $ :: 'List 'respo.schema/Effect
-            :listeners $ :: 'List 'respo.schema/RespoListener
-            :tree $ :: 'Option 'respo.schema/RenderNode
+            :effects $ quote $ List respo.schema/Effect
+            :listeners $ quote $ List respo.schema/RespoListener
+            :tree $ quote $ Option respo.schema/RenderNode
           :examples $ []
-          :schema $ :: 'StructDef
+          :schema $ quote StructDef
         'DomPatch $ %{} 'CodeEntry
           :doc "|Nominal internal command protocol shared by Respo's virtual-tree diff producers and sole DOM patch consumer."
           :code $ quote $ defenum DomPatch
-            :replace-prop (:: 'List 'Dynamic) (:: 'List 'Number) 'Tag 'Dynamic
-            :add-prop (:: 'List 'Dynamic) (:: 'List 'Number) 'Tag 'Dynamic
-            :rm-prop (:: 'List 'Dynamic) (:: 'List 'Number) 'Tag
-            :add-style (:: 'List 'Dynamic) (:: 'List 'Number) 'Tag 'Dynamic
-            :replace-style (:: 'List 'Dynamic) (:: 'List 'Number) 'Tag 'Dynamic
-            :rm-style (:: 'List 'Dynamic) (:: 'List 'Number) 'Tag
-            :set-event (:: 'List 'Dynamic) (:: 'List 'Number) 'Tag
-            :rm-event (:: 'List 'Dynamic) (:: 'List 'Number) 'Tag
-            :add-element (:: 'List 'Dynamic) (:: 'List 'Number) 'Struct
-            :rm-element (:: 'List 'Dynamic) (:: 'List 'Number)
-            :replace-element (:: 'List 'Dynamic) (:: 'List 'Number) 'Struct
-            :append-element (:: 'List 'Dynamic) (:: 'List 'Number) 'Struct
-            :move-element (:: 'List 'Number) 'Number $ :: 'Option 'Number
-            :effect-mount (:: 'List 'Dynamic) (:: 'List 'Number)
-              :: 'Fn $ {} (:return 'Unit)
-                :args $ [] 'respo.dom/DomElement
-            :effect-unmount (:: 'List 'Dynamic) (:: 'List 'Number)
-              :: 'Fn $ {} (:return 'Unit)
-                :args $ [] 'respo.dom/DomElement
-            :effect-update (:: 'List 'Dynamic) (:: 'List 'Number)
-              :: 'Fn $ {} (:return 'Unit)
-                :args $ [] 'respo.dom/DomElement
-            :effect-before-update (:: 'List 'Dynamic) (:: 'List 'Number)
-              :: 'Fn $ {} (:return 'Unit)
-                :args $ [] 'respo.dom/DomElement
+            :replace-prop
+              quote $ List Dynamic
+              quote $ List Number
+              , 'Tag 'Dynamic
+            :add-prop
+              quote $ List Dynamic
+              quote $ List Number
+              , 'Tag 'Dynamic
+            :rm-prop
+              quote $ List Dynamic
+              quote $ List Number
+              , 'Tag
+            :add-style
+              quote $ List Dynamic
+              quote $ List Number
+              , 'Tag 'Dynamic
+            :replace-style
+              quote $ List Dynamic
+              quote $ List Number
+              , 'Tag 'Dynamic
+            :rm-style
+              quote $ List Dynamic
+              quote $ List Number
+              , 'Tag
+            :set-event
+              quote $ List Dynamic
+              quote $ List Number
+              , 'Tag
+            :rm-event
+              quote $ List Dynamic
+              quote $ List Number
+              , 'Tag
+            :add-element
+              quote $ List Dynamic
+              quote $ List Number
+              , 'Struct
+            :rm-element
+              quote $ List Dynamic
+              quote $ List Number
+            :replace-element
+              quote $ List Dynamic
+              quote $ List Number
+              , 'Struct
+            :append-element
+              quote $ List Dynamic
+              quote $ List Number
+              , 'Struct
+            :move-element
+              quote $ List Number
+              , 'Number $ quote $ Option Number
+            :effect-mount
+              quote $ List Dynamic
+              quote $ List Number
+              quote $ Fn respo.dom/DomElement $ -> Unit
+            :effect-unmount
+              quote $ List Dynamic
+              quote $ List Number
+              quote $ Fn respo.dom/DomElement $ -> Unit
+            :effect-update
+              quote $ List Dynamic
+              quote $ List Number
+              quote $ Fn respo.dom/DomElement $ -> Unit
+            :effect-before-update
+              quote $ List Dynamic
+              quote $ List Number
+              quote $ Fn respo.dom/DomElement $ -> Unit
           :examples $ []
-          :schema $ :: 'EnumDef
+          :schema $ quote EnumDef
           :tests $ []
             %{} 'TestEntry
               :name |constructs-and-exhaustively-matches-all-variants
@@ -7453,128 +6830,126 @@
               :tags $ #{} :unit
         'DomProps $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct DomProps
-            :class-name $ :: 'JsNullish 'String
-            :style $ :: 'JsNullish 'Map
-            :value $ :: 'JsNullish 'Dynamic
-            :inner-text $ :: 'JsNullish 'Dynamic
-            :id $ :: 'JsNullish 'String
-            :type $ :: 'JsNullish 'String
-            :href $ :: 'JsNullish 'String
-            :src $ :: 'JsNullish 'String
-            :placeholder $ :: 'JsNullish 'String
-            :name $ :: 'JsNullish 'String
-            :title $ :: 'JsNullish 'String
-            :disabled $ :: 'JsNullish 'Bool
-            :checked $ :: 'JsNullish 'Bool
-            :spell-check $ :: 'JsNullish 'Bool
-            :spellcheck $ :: 'JsNullish 'Bool
-            :autofocus $ :: 'JsNullish 'Bool
-            :tab-index $ :: 'JsNullish 'Number
-            :read-only $ :: 'JsNullish 'Bool
-            :data-name $ :: 'JsNullish 'String
-            :data-comp $ :: 'JsNullish 'String
-            :role $ :: 'JsNullish 'String
-            :aria-label $ :: 'JsNullish 'String
-            :aria-labelledby $ :: 'JsNullish 'String
-            :aria-describedby $ :: 'JsNullish 'String
-            :aria-hidden $ :: 'JsNullish 'Bool
-            :selected $ :: 'JsNullish 'Bool
-            :target $ :: 'JsNullish 'String
-            :on-click $ :: 'JsNullish 'respo.schema/EventHandler
-            :on-input $ :: 'JsNullish 'respo.schema/EventHandler
-            :on-focus $ :: 'JsNullish 'respo.schema/EventHandler
-            :on-blur $ :: 'JsNullish 'respo.schema/EventHandler
-            :on-keydown $ :: 'JsNullish 'respo.schema/EventHandler
-            :on-keyup $ :: 'JsNullish 'respo.schema/EventHandler
-            :on-change $ :: 'JsNullish 'respo.schema/EventHandler
-            :on-mousedown $ :: 'JsNullish 'respo.schema/EventHandler
-            :on-paste $ :: 'JsNullish 'respo.schema/EventHandler
-            :on-mouseup $ :: 'JsNullish 'respo.schema/EventHandler
-            :innerHTML $ :: 'JsNullish 'String
-            :rel $ :: 'JsNullish 'String
-            :defer $ :: 'JsNullish 'Bool
-            :on $ :: 'JsNullish 'Map
-            :alt $ :: 'JsNullish 'String
-            :draggable $ :: 'JsNullish 'Bool
-            :content $ :: 'JsNullish 'String
-            :charset $ :: 'JsNullish 'String
-            :multiple $ :: 'JsNullish 'Bool
-            :accept $ :: 'JsNullish 'String
-            :ref $ :: 'JsNullish 'Fn
+            :class-name $ quote $ JsNullish String
+            :style $ quote $ JsNullish Map
+            :value $ quote $ JsNullish Dynamic
+            :inner-text $ quote $ JsNullish Dynamic
+            :id $ quote $ JsNullish String
+            :type $ quote $ JsNullish String
+            :href $ quote $ JsNullish String
+            :src $ quote $ JsNullish String
+            :placeholder $ quote $ JsNullish String
+            :name $ quote $ JsNullish String
+            :title $ quote $ JsNullish String
+            :disabled $ quote $ JsNullish Bool
+            :checked $ quote $ JsNullish Bool
+            :spell-check $ quote $ JsNullish Bool
+            :spellcheck $ quote $ JsNullish Bool
+            :autofocus $ quote $ JsNullish Bool
+            :tab-index $ quote $ JsNullish Number
+            :read-only $ quote $ JsNullish Bool
+            :data-name $ quote $ JsNullish String
+            :data-comp $ quote $ JsNullish String
+            :role $ quote $ JsNullish String
+            :aria-label $ quote $ JsNullish String
+            :aria-labelledby $ quote $ JsNullish String
+            :aria-describedby $ quote $ JsNullish String
+            :aria-hidden $ quote $ JsNullish Bool
+            :selected $ quote $ JsNullish Bool
+            :target $ quote $ JsNullish String
+            :on-click $ quote $ JsNullish respo.schema/EventHandler
+            :on-input $ quote $ JsNullish respo.schema/EventHandler
+            :on-focus $ quote $ JsNullish respo.schema/EventHandler
+            :on-blur $ quote $ JsNullish respo.schema/EventHandler
+            :on-keydown $ quote $ JsNullish respo.schema/EventHandler
+            :on-keyup $ quote $ JsNullish respo.schema/EventHandler
+            :on-change $ quote $ JsNullish respo.schema/EventHandler
+            :on-mousedown $ quote $ JsNullish respo.schema/EventHandler
+            :on-paste $ quote $ JsNullish respo.schema/EventHandler
+            :on-mouseup $ quote $ JsNullish respo.schema/EventHandler
+            :innerHTML $ quote $ JsNullish String
+            :rel $ quote $ JsNullish String
+            :defer $ quote $ JsNullish Bool
+            :on $ quote $ JsNullish Map
+            :alt $ quote $ JsNullish String
+            :draggable $ quote $ JsNullish Bool
+            :content $ quote $ JsNullish String
+            :charset $ quote $ JsNullish String
+            :multiple $ quote $ JsNullish Bool
+            :accept $ quote $ JsNullish String
+            :ref $ quote $ JsNullish Fn
           :examples $ []
-          :schema $ :: 'StructDef
+          :schema $ quote StructDef
         'Effect $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Effect (:name 'Tag)
-            :coord $ :: 'List 'Dynamic
-            :args $ :: 'List 'Dynamic
-            :method $ :: 'Fn $ {} (:return 'Unit)
-              :args $ [] (:: 'List 'Dynamic) (:: 'List 'Dynamic)
+            :coord $ quote $ List Dynamic
+            :args $ quote $ List Dynamic
+            :method $ quote $ Fn (List Dynamic) (List Dynamic) (-> Unit)
           :examples $ []
-          :schema $ :: 'StructDef
+          :schema $ quote StructDef
         'Element $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Element (:name 'Tag)
-            :coord $ :: 'Option $ :: 'List 'Dynamic
-            :attrs $ :: 'List $ :: 'List 'Dynamic
-            :style $ :: 'List $ :: 'List 'Dynamic
-            :event $ :: 'Map 'Tag $ :: 'JsNullish 'Fn
-            :children $ :: 'List 'respo.schema/ChildPair
-            :ref $ :: 'JsNullish 'Fn
+            :coord $ quote $ Option (List Dynamic)
+            :attrs $ quote $ List (List Dynamic)
+            :style $ quote $ List (List Dynamic)
+            :event $ quote $ Map Tag (JsNullish Fn)
+            :children $ quote $ List respo.schema/ChildPair
+            :ref $ quote $ JsNullish Fn
           :examples $ []
-          :schema $ :: 'StructDef
+          :schema $ quote StructDef
         'EventConfig $ %{} 'CodeEntry
           :doc "|Mount-time event policy: whether Respo stops propagation, and whether handlers use on* properties or independent native listeners."
           :code $ quote $ defstruct EventConfig (:stop-propagation? 'Bool) (:listener-mode 'respo.schema/ListenerMode)
           :examples $ []
-          :schema $ :: 'StructDef
+          :schema $ quote StructDef
         'EventHandler $ %{} 'CodeEntry
           :doc "|Event callback signature. Respo delivers an immutable map produced by event->edn together with the application dispatch function, which accepts exactly one value of the entry's :dispatch-op type. The exported value is a no-op callback, matching the declared callable type rather than a Unit placeholder."
           :code $ quote $ def EventHandler
             fn (_event _dispatch!) &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] (:: 'Map 'Tag 'Dynamic)
-              :: 'Fn $ {} (:return 'Unit)
-                :args $ [] '*dispatch-op
+          :schema $ quote $ Fn (Map Tag Dynamic)
+            Fn *dispatch-op $ -> Unit
+            -> Unit
         'KeyboardInfo $ %{} 'CodeEntry
           :doc "|Keyboard fields of a :keydown, :keyup or :keypress event, read with respo.core/keyboard-info."
           :code $ quote $ defstruct KeyboardInfo (:key 'String) (:code 'String) (:ctrl? 'Bool) (:meta? 'Bool) (:alt? 'Bool) (:shift? 'Bool)
           :examples $ []
-          :schema $ :: 'StructDef
+          :schema $ quote StructDef
         'ListenerMode $ %{} 'CodeEntry
           :doc "|Event installation policy. :property preserves the existing on* property behavior; :add-event-listener preserves external property handlers and registers independent Respo callbacks."
           :code $ quote $ defenum ListenerMode (:property) (:add-event-listener)
           :examples $ []
-          :schema $ :: 'EnumDef
+          :schema $ quote EnumDef
         'RenderNode $ %{} 'CodeEntry (:doc "|渲染节点的具名并集；每个变体保留具体 Element 或 Component payload。")
           :code $ quote $ defenum RenderNode (:element 'respo.schema/Element) (:component 'respo.schema/Component)
           :examples $ []
-          :schema $ :: 'EnumDef
+          :schema $ quote EnumDef
         'RespoEvent $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct RespoEvent (:type 'Tag)
-            :value $ :: 'JsNullish 'Dynamic
-            :checked $ :: 'JsNullish 'Bool
+            :value $ quote $ JsNullish Dynamic
+            :checked $ quote $ JsNullish Bool
             :original-event 'Dynamic
             :event 'Dynamic
-            :key $ :: 'JsNullish 'String
-            :code $ :: 'JsNullish 'String
-            :key-code $ :: 'JsNullish 'Number
-            :keycode $ :: 'JsNullish 'Number
-            :ctrl? $ :: 'JsNullish 'Bool
-            :meta? $ :: 'JsNullish 'Bool
-            :alt? $ :: 'JsNullish 'Bool
-            :shift? $ :: 'JsNullish 'Bool
-            :msg $ :: 'JsNullish 'String
+            :key $ quote $ JsNullish String
+            :code $ quote $ JsNullish String
+            :key-code $ quote $ JsNullish Number
+            :keycode $ quote $ JsNullish Number
+            :ctrl? $ quote $ JsNullish Bool
+            :meta? $ quote $ JsNullish Bool
+            :alt? $ quote $ JsNullish Bool
+            :shift? $ quote $ JsNullish Bool
+            :msg $ quote $ JsNullish String
           :examples $ []
-          :schema $ :: 'StructDef
+          :schema $ quote StructDef
         'RespoListener $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct RespoListener (:name 'Tag) (:handler 'Fn)
           :examples $ []
-          :schema $ :: 'StructDef
+          :schema $ quote StructDef
         'cache-info $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def cache-info
             {} (:value nil) (:initial-loop nil) (:last-hit nil) (:hit-times 0)
           :examples $ []
-          :schema $ :: 'Map
+          :schema $ quote Map
         'dev? $ %{} 'CodeEntry
           :doc "|Boolean flag indicating if the application is running in development mode."
           :code $ quote $ def dev?
@@ -7582,7 +6957,7 @@
               get-env |mode
               , .unwrap-or |release
           :examples $ []
-          :schema $ :: 'Bool
+          :schema $ quote Bool
         'effect $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def effect
             {} (:name nil) (:respo-node :effect)
@@ -7591,7 +6966,7 @@
               :method $ fn (props args)
                 ; args $ [] action parent at-place?
           :examples $ []
-          :schema $ :: 'Map
+          :schema $ quote Map
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.schema
     'respo.schema.listener $ %{} 'FileEntry
@@ -7604,13 +6979,11 @@
           :doc "|Typed test boundary used by compile-negative checks to prove application operations cannot be passed as DOM patches."
           :code $ quote $ defn accept-dom-patches (patches) &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] $ :: 'List 'respo.schema/DomPatch
+          :schema $ quote $ Fn (List respo.schema/DomPatch) (-> Unit)
         'comp-event-shell $ %{} 'CodeEntry (:doc |)
           :code $ quote $ respo.core/defcomp comp-event-shell (tree) tree
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] 'respo.schema/Element
+          :schema $ quote $ Fn respo.schema/Element (-> respo.schema/Component)
         'fixture-entry! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn fixture-entry! ()
             with-fixture-events
@@ -7620,8 +6993,7 @@
               {} $ :click $ fn () &unit
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
+          :schema $ quote $ Fn (-> Unit)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! (root-host html-host)
             assert |typed-DOM-host-traverses-nested-child $ = &unit $ compare-to-dom!
@@ -7639,9 +7011,7 @@
             assert= true $ option:none? $ dom-ffi/query-selector |#respo-query-missing
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'js-ffi.browser/DomElementHost 'js-ffi.browser/DomElementHost
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn js-ffi.browser/DomElementHost js-ffi.browser/DomElementHost (-> Unit) (:features :js-ffi)
         'svg-host-smoke! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn svg-host-smoke! ()
             let
@@ -7677,18 +7047,15 @@
                   []
                 , host
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.dom/DomElement)
-            :args $ []
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (-> respo.dom/DomElement) (:features :js-ffi)
         'verify-component-event-coords! $ %{} 'CodeEntry
           :doc "|DOM regression for component to element and element to component switches, including an identical nested defcomp child. Root and descendant clicks must resolve the current handlers; removed focus handlers must stay removed."
           :code $ quote $ defn verify-component-event-coords! (mount root child click!)
             let
-                dispatched $ ref $ assert-type ([]) (:: 'List *dispatch-op)
+                dispatched $ ref $ assert-type ([])
+                  quote $ List *dispatch-op
                 dispatch! $ fn (op)
-                  hint-fn $ {}
-                    :args $ [] *dispatch-op
-                    :return 'Unit
+                  hint-fn $ Fn *dispatch-op $ -> Unit
                   respo.core/append-dynamic! dispatched op
                 child-tree $ comp-event-shell $ span
                   {} $ :on-click $ fn (_event d!)
@@ -7708,9 +7075,7 @@
                     d! $ :: :rewrapped-root
                   , child-tree
                 make-app $ fn (tree)
-                  hint-fn $ {}
-                    :args $ [] 'Struct
-                    :return 'respo.schema/Component
+                  hint-fn $ Fn Struct $ -> respo.schema/Component
                   respo.schema/Component :name :coord-fixture :effects ([]) :listeners ([]) :tree $ Option :some $ respo.util.detect/as-render-node tree
               respo.core/realize-ssr! mount (make-app wrapped) dispatch!
               click! root
@@ -7732,51 +7097,43 @@
                 , @dispatched
               , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'respo.dom/DomElement 'respo.dom/DomElement 'respo.dom/DomElement $ :: 'Fn
-              {} (:return 'Unit)
-                :args $ [] 'respo.dom/DomElement
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn respo.dom/DomElement respo.dom/DomElement respo.dom/DomElement
+            Fn respo.dom/DomElement $ -> Unit
+            -> Unit
+            :features :js-ffi
         'verify-dom-regressions! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn verify-dom-regressions! (mount root child click!) (verify-realize-ssr-ref! mount root child click!) (verify-component-event-coords! mount root child click!)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'respo.dom/DomElement 'respo.dom/DomElement 'respo.dom/DomElement $ :: 'Fn
-              {} (:return 'Unit)
-                :args $ [] 'respo.dom/DomElement
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn respo.dom/DomElement respo.dom/DomElement respo.dom/DomElement
+            Fn respo.dom/DomElement $ -> Unit
+            -> Unit
+            :features :js-ffi
         'verify-realize-ssr-ref! $ %{} 'CodeEntry
           :doc "|SSR adoption regression: preserve root and descendant DOM nodes, attach click handlers immediately, update shared dispatch and handlers on later renders, and run the ref and mount effect exactly once."
           :code $ quote $ defn verify-realize-ssr-ref! (mount root child click!)
             let
-                refs $ ref $ assert-type ([]) (:: 'List 'respo.dom/DomElement)
-                mounts $ ref $ assert-type ([]) (:: 'List 'respo.dom/DomElement)
-                dispatched $ ref $ assert-type ([]) (:: 'List *dispatch-op)
-                later-dispatched $ ref $ assert-type ([]) (:: 'List *dispatch-op)
+                refs $ ref $ assert-type ([])
+                  quote $ List respo.dom/DomElement
+                mounts $ ref $ assert-type ([])
+                  quote $ List respo.dom/DomElement
+                dispatched $ ref $ assert-type ([])
+                  quote $ List *dispatch-op
+                later-dispatched $ ref $ assert-type ([])
+                  quote $ List *dispatch-op
                 dispatch! $ fn (op)
-                  hint-fn $ {}
-                    :args $ [] *dispatch-op
-                    :return 'Unit
+                  hint-fn $ Fn *dispatch-op $ -> Unit
                   respo.core/append-dynamic! dispatched op
                 later-dispatch! $ fn (op)
-                  hint-fn $ {}
-                    :args $ [] *dispatch-op
-                    :return 'Unit
+                  hint-fn $ Fn *dispatch-op $ -> Unit
                   respo.core/append-dynamic! later-dispatched op
                 ref! $ fn (target)
-                  hint-fn $ {}
-                    :args $ [] 'respo.dom/DomElement
-                    :return 'Unit
+                  hint-fn $ Fn respo.dom/DomElement $ -> Unit
                   respo.core/append-dynamic! refs target
                 mount-effect $ respo.core/effect-on-mount $ fn (target)
-                  hint-fn $ {}
-                    :args $ [] 'respo.dom/DomElement
-                    :return 'Unit
+                  hint-fn $ Fn respo.dom/DomElement $ -> Unit
                   respo.core/append-dynamic! mounts target
                 make-component $ fn (op)
-                  hint-fn $ {}
-                    :args $ [] 'Tag
-                    :return 'respo.schema/Component
+                  hint-fn $ Fn Tag $ -> respo.schema/Component
                   let
                       handler $ fn (_event d!)
                         d! $ :: op
@@ -7814,17 +7171,15 @@
               assert |SSR-effect-is-not-remounted $ &= ([] root) @mounts
               , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'respo.dom/DomElement 'respo.dom/DomElement 'respo.dom/DomElement $ :: 'Fn
-              {} (:return 'Unit)
-                :args $ [] 'respo.dom/DomElement
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn respo.dom/DomElement respo.dom/DomElement respo.dom/DomElement
+            Fn respo.dom/DomElement $ -> Unit
+            -> Unit
+            :features :js-ffi
         'with-fixture-children $ %{} 'CodeEntry
           :doc "|测试专用：通过静态 Element/ChildPair 合同构造合法 fixture，不是开放输入的 decoder。"
           :code $ quote $ defn with-fixture-children (element children) (element.assoc :children children)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Element)
-            :args $ [] 'respo.schema/Element $ :: 'List 'respo.schema/ChildPair
+          :schema $ quote $ Fn respo.schema/Element (List respo.schema/ChildPair) (-> respo.schema/Element)
           :tests $ [] $ %{} 'TestEntry (:name |preserves-order-and-input)
             :code $ quote $ let
                 element $ respo.core/div $ {}
@@ -7839,8 +7194,9 @@
         'with-fixture-events $ %{} 'CodeEntry (:doc "|测试专用：保留合法 Tag/nullable Fn 事件表，不是开放输入的 decoder。")
           :code $ quote $ defn with-fixture-events (element events) (element.assoc :event events)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Element)
-            :args $ [] 'respo.schema/Element $ :: 'Map 'Tag (:: 'JsNullish 'Fn)
+          :schema $ quote $ Fn respo.schema/Element
+            Map Tag $ JsNullish Fn
+            -> respo.schema/Element
           :tests $ [] $ %{} 'TestEntry (:name |preserves-callback-and-null)
             :code $ quote $ let
                 element $ respo.core/span $ {}
@@ -7866,15 +7222,14 @@
         '*async-checks $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defref *async-checks 0
           :examples $ []
-          :schema $ :: 'Ref 'Number
+          :schema $ quote $ Ref Number
         'effect-list-body-component $ %{} 'CodeEntry (:doc |)
           :code $ quote $ respo.core/defcomp effect-list-body-component ()
             []
               respo.core/effect-on-mount $ fn (_target) &unit
               respo.core/span $ {} $ :inner-text |ready
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ []
+          :schema $ quote $ Fn (-> respo.schema/Component)
           :tests $ [] $ %{} 'TestEntry (:name |extracts-effects-and-keeps-struct-tree)
             :code $ quote $ let
                 component $ effect-list-body-component
@@ -7907,7 +7262,8 @@
                 assert |default-JS-scheduler-coalesces-microtasks $ = 1 @render-count
             let
                 calls $ ref 0
-                actions $ ref $ assert-type ([]) (:: 'List 'respo.resource/ResourceAction)
+                actions $ ref $ assert-type ([])
+                  quote $ List respo.resource/ResourceAction
                 request-id $ load-resource!
                   fn () (swap! calls inc) |ready
                   fn (action) (swap! actions conj action) &unit
@@ -7922,7 +7278,8 @@
                     option:unwrap $ get @actions 1
                     , 'respo.resource/ResourceAction
             let
-                actions $ ref $ assert-type ([]) (:: 'List 'respo.resource/ResourceAction)
+                actions $ ref $ assert-type ([])
+                  quote $ List respo.resource/ResourceAction
                 request-id $ load-resource!
                   fn () $ raise |offline
                   fn (action) (swap! actions conj action) &unit
@@ -7936,7 +7293,8 @@
                     assert |sync-failure-keeps-error-message $ = |offline $ :message (shared/normalize-error error)
                 _ $ assert |expected-failed-resource-action false
             let
-                actions $ ref $ assert-type ([]) (:: 'List 'respo.resource/ResourceAction)
+                actions $ ref $ assert-type ([])
+                  quote $ List respo.resource/ResourceAction
                 request-id $ load-resource!
                   fn () |ready
                   fn (action) (swap! actions conj action)
@@ -7958,16 +7316,14 @@
               , 0
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
+          :schema $ quote $ Fn (-> Unit)
         'nil-body-component $ %{} 'CodeEntry (:doc |)
           :code $ quote $ respo.core/defcomp nil-body-component ()
             .unwrap-or
               calcit.core/get ({}) :missing
               , nil
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ []
+          :schema $ quote $ Fn (-> respo.schema/Component)
           :tests $ [] $ %{} 'TestEntry (:name |normalizes-nil-body-to-renderable-span)
             :code $ quote $ let
                 component $ nil-body-component
@@ -7980,8 +7336,7 @@
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! () (println |reload.) &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
+          :schema $ quote $ Fn (-> Unit)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.test.main
           :require
@@ -8006,8 +7361,7 @@
                   recur (&list:rest xs) (&list:rest ys)
                 true false
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Bool)
-            :args $ [] (:: 'List 'Dynamic) (:: 'List 'Dynamic)
+          :schema $ quote $ Fn (List Dynamic) (List Dynamic) (-> Bool)
           :tests $ [] $ %{} 'TestEntry (:name |absence-migration-values)
             :code $ quote $ do
               assert= true $ respo.util.detect/=seq ([]) ([])
@@ -8022,32 +7376,28 @@
               if (&struct:matches? value respo.schema/Component) value $ raise $ str "|as-component expected a Component, but received: " (type-of value)
               raise $ str "|as-component expected a Component, but received: " $ type-of value
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] 'Dynamic
+          :schema $ quote $ Fn Dynamic (-> respo.schema/Component)
         'as-effect $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn as-effect (value)
             if (struct? value)
               if (&struct:matches? value respo.schema/Effect) value $ raise $ str "|as-effect expected a Effect, but received: " (type-of value)
               raise $ str "|as-effect expected a Effect, but received: " $ type-of value
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Effect)
-            :args $ [] 'Dynamic
+          :schema $ quote $ Fn Dynamic (-> respo.schema/Effect)
         'as-element $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn as-element (value)
             if (struct? value)
               if (&struct:matches? value respo.schema/Element) value $ raise $ str "|as-element expected an Element, but received: " (type-of value)
               raise $ str "|as-element expected an Element, but received: " $ type-of value
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Element)
-            :args $ [] 'Dynamic
+          :schema $ quote $ Fn Dynamic (-> respo.schema/Element)
         'as-listener $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn as-listener (value)
             if (struct? value)
               if (&struct:matches? value respo.schema/RespoListener) value $ raise $ str "|as-listener expected a RespoListener, but received: " (type-of value)
               raise $ str "|as-listener expected a RespoListener, but received: " $ type-of value
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/RespoListener)
-            :args $ [] 'Dynamic
+          :schema $ quote $ Fn Dynamic (-> respo.schema/RespoListener)
         'as-render-node $ %{} 'CodeEntry
           :doc "|在创建边界标记 Element 或 Component，保留 payload 的身份；非法节点报告组件树错误。"
           :code $ quote $ defn as-render-node (value)
@@ -8058,9 +7408,7 @@
                 respo.schema/RenderNode :component $ as-component value
               true $ raise |invalid-component-tree
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/RenderNode)
-            :args $ [] 'NodeInput
-            :generics $ [] 'NodeInput
+          :schema $ quote $ Fn NodeInput (-> respo.schema/RenderNode) (:generics NodeInput)
           :tests $ []
             %{} 'TestEntry (:name |preserves-element-payload)
               :code $ quote $ let
@@ -8097,43 +7445,38 @@
               :node pair
               , .unwrap
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Struct)
-            :args $ [] 'respo.schema/ChildPair
+          :schema $ quote $ Fn respo.schema/ChildPair (-> Struct)
         'component-effects $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn component-effects (value)
             let
                 component $ assert-type value 'respo.schema/Component
               :effects component
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'respo.schema/Component
-            :return $ :: 'List 'respo.schema/Effect
+          :schema $ quote $ Fn respo.schema/Component
+            -> $ List respo.schema/Effect
         'component-listeners $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn component-listeners (value)
             let
                 component $ assert-type value 'respo.schema/Component
               :listeners component
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'respo.schema/Component
-            :return $ :: 'List 'respo.schema/RespoListener
+          :schema $ quote $ Fn respo.schema/Component
+            -> $ List respo.schema/RespoListener
         'component-name $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn component-name (value)
             let
                 component $ assert-type value 'respo.schema/Component
               :name component
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Tag)
-            :args $ [] 'respo.schema/Component
+          :schema $ quote $ Fn respo.schema/Component (-> Tag)
         'component-tree $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn component-tree (value)
             let
                 component $ assert-type value 'respo.schema/Component
               option:map (:tree component) respo.util.detect/render-node-value
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'respo.schema/Component
-            :return $ :: 'calcit.core/Option 'Struct
+          :schema $ quote $ Fn respo.schema/Component
+            -> $ calcit.core/Option Struct
         'component? $ %{} 'CodeEntry
           :doc "|check if value is a Respo component. returns true for component records, false otherwise."
           :code $ quote $ defn component? (x)
@@ -8148,8 +7491,7 @@
               comp-demo
             quote $ component? $ respo.core/div ({})
             quote $ component? nil
-          :schema $ :: 'Fn $ {} (:return 'Bool)
-            :args $ [] 'Dynamic
+          :schema $ quote $ Fn Dynamic (-> Bool)
           :tests $ [] $ %{} 'TestEntry (:name |absence-migration-nominal-identity)
             :code $ quote $ do
               assert= true $ respo.util.detect/component? $ respo.schema/Component :name :probe :effects ([]) :listeners ([])
@@ -8167,25 +7509,22 @@
                 effect $ assert-type value 'respo.schema/Effect
               :args effect
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'respo.schema/Effect
-            :return $ :: 'List 'Dynamic
+          :schema $ quote $ Fn respo.schema/Effect
+            -> $ List Dynamic
         'effect-method $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn effect-method (value)
             let
                 effect $ assert-type value 'respo.schema/Effect
               :method effect
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Fn)
-            :args $ [] 'respo.schema/Effect
+          :schema $ quote $ Fn respo.schema/Effect (-> Fn)
         'effect-name $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn effect-name (value)
             let
                 effect $ assert-type value 'respo.schema/Effect
               :name effect
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Tag)
-            :args $ [] 'respo.schema/Effect
+          :schema $ quote $ Fn respo.schema/Effect (-> Tag)
         'effect? $ %{} 'CodeEntry
           :doc "|Checks if the given value is a Respo Effect record."
           :code $ quote $ defn effect? (x)
@@ -8194,15 +7533,12 @@
                 (:some calcit-absence-definition) (= calcit-absence-definition schema/Effect)
                 (:none) false
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Bool)
-            :args $ [] 'Dynamic
+          :schema $ quote $ Fn Dynamic (-> Bool)
           :tests $ [] $ %{} 'TestEntry (:name |absence-migration-nominal-identity)
             :code $ quote $ do
               assert= true $ respo.util.detect/effect? $ respo.schema/Effect :name :probe :coord ([]) :args ([]) :method
                 fn (coord args)
-                  hint-fn $ {}
-                    :args $ [] (:: 'List 'Dynamic) (:: 'List 'Dynamic)
-                    :return 'Unit
+                  hint-fn $ Fn (List Dynamic) (List Dynamic) (-> Unit)
                   , &unit
               assert= false $ respo.util.detect/effect? $ respo.schema/Component :name :probe :effects ([]) :listeners ([])
               assert= false $ respo.util.detect/effect? nil
@@ -8218,16 +7554,14 @@
                 element $ assert-type value 'respo.schema/Element
               :attrs element
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'respo.schema/Element
-            :return $ :: 'List $ :: 'List 'Dynamic
+          :schema $ quote $ Fn respo.schema/Element
+            -> $ List $ List Dynamic
         'element-children $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn element-children (value)
             :children $ as-element value
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic
-            :return $ :: 'List 'respo.schema/ChildPair
+          :schema $ quote $ Fn Dynamic
+            -> $ List respo.schema/ChildPair
         'element-event $ %{} 'CodeEntry
           :doc "|返回元素事件表，保留已有 nil/undefined handler 的语义；消费者在调用前排除 nullish 值。"
           :code $ quote $ defn element-event (value)
@@ -8235,35 +7569,31 @@
                 element $ assert-type value 'respo.schema/Element
               :event element
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'respo.schema/Element
-            :return $ :: 'Map 'Tag $ :: 'JsNullish 'Fn
+          :schema $ quote $ Fn respo.schema/Element
+            -> $ Map Tag $ JsNullish Fn
         'element-name $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn element-name (value)
             let
                 element value
               :name element
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Tag)
-            :args $ [] 'respo.schema/Element
+          :schema $ quote $ Fn respo.schema/Element (-> Tag)
         'element-ref $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn element-ref (value)
             let
                 element value
               :ref element
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'respo.schema/Element
-            :return $ :: 'JsNullish 'Fn
+          :schema $ quote $ Fn respo.schema/Element
+            -> $ JsNullish Fn
         'element-style $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn element-style (value)
             let
                 element $ assert-type value 'respo.schema/Element
               :style element
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'respo.schema/Element
-            :return $ :: 'List $ :: 'List 'Dynamic
+          :schema $ quote $ Fn respo.schema/Element
+            -> $ List $ List Dynamic
         'element? $ %{} 'CodeEntry
           :doc "|check if value is a Respo element. returns true for element records, false otherwise."
           :code $ quote $ defn element? (x)
@@ -8277,8 +7607,7 @@
             quote $ element? $ respo.core/span
               {} $ :inner-text |text
             quote $ element? nil
-          :schema $ :: 'Fn $ {} (:return 'Bool)
-            :args $ [] 'Dynamic
+          :schema $ quote $ Fn Dynamic (-> Bool)
           :tests $ [] $ %{} 'TestEntry (:name |absence-migration-nominal-identity)
             :code $ quote $ do
               assert= true $ respo.util.detect/element? $ respo.schema/Element :name :div :attrs ([]) :style ([]) :event (&{}) :children ([]) :ref nil
@@ -8300,17 +7629,13 @@
                 raise message
               , original
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Callback)
-            :args $ [] 'Callback 'String
-            :generics $ [] 'Callback
+          :schema $ quote $ Fn Callback String (-> Callback) (:generics Callback)
           :tags $ #{} :internal
           :tests $ []
             %{} 'TestEntry (:name |preserves-concrete-callback)
               :code $ quote $ let
                   callback $ fn (n)
-                    hint-fn $ {}
-                      :args $ [] 'Number
-                      :return 'Number
+                    hint-fn $ Fn Number $ -> Number
                     inc n
                   checked $ expect-function callback |expected-function
                 assert |callback-identity-preserved $ identical? callback checked
@@ -8329,31 +7654,26 @@
                 listener $ assert-type value 'respo.schema/RespoListener
               :handler listener
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Fn)
-            :args $ [] 'respo.schema/RespoListener
+          :schema $ quote $ Fn respo.schema/RespoListener (-> Fn)
         'listener? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn listener? (item)
             and (struct? item)
               = :RespoListener $ &struct:get-name item
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Bool)
-            :args $ [] 'Dynamic
+          :schema $ quote $ Fn Dynamic (-> Bool)
         'make-child-pair $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn make-child-pair (key node)
             respo.schema/ChildPair :key key :node $ if (nil? node) (Option :none)
               Option :some $ as-render-node node
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/ChildPair)
-            :args $ [] 'KeyInput 'NodeInput
-            :generics $ [] 'KeyInput 'NodeInput
+          :schema $ quote $ Fn KeyInput NodeInput (-> respo.schema/ChildPair) (:generics KeyInput NodeInput)
         'render-node-value $ %{} 'CodeEntry (:doc "|通过具名变体读取原始节点；用于保留既有 component-tree 读取合同。")
           :code $ quote $ defn render-node-value (node)
             match node
               (:element element) element
               (:component component) component
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Struct)
-            :args $ [] 'respo.schema/RenderNode
+          :schema $ quote $ Fn respo.schema/RenderNode (-> Struct)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.util.detect
           :require $ respo.schema :as schema
@@ -8405,9 +7725,7 @@
                     recur (inc acc) (&list:rest other-children)
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'respo.schema/Element 'js-ffi.browser/DomElementHost
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn respo.schema/Element js-ffi.browser/DomElementHost (-> Unit) (:features :js-ffi)
         'create-shared-canvas-context $ %{} 'CodeEntry
           :doc "|Creates the shared Canvas context behind an explicit JavaScript FFI boundary."
           :code $ quote $ defn create-shared-canvas-context ()
@@ -8416,15 +7734,14 @@
                 , .get-context |2d
               , nil
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ []
-            :features $ #{} :js-ffi
-            :return $ :: 'JsNullish 'respo.dom/DomCanvasContext
+          :schema $ quote $ Fn
+            -> $ JsNullish respo.dom/DomCanvasContext
+            :features :js-ffi
         'shared-canvas-context $ %{} 'CodeEntry
           :doc "|Shared Canvas 2D context for measuring text width or other canvas operations."
           :code $ quote $ def shared-canvas-context (create-shared-canvas-context)
           :examples $ []
-          :schema $ :: 'JsNullish 'respo.dom/DomCanvasContext
+          :schema $ quote $ JsNullish respo.dom/DomCanvasContext
         'text-width $ %{} 'CodeEntry
           :doc "|Measures text with a shared Canvas 2D context. Returns 0 when Canvas is unavailable, including server-side rendering and Node.js tests."
           :code $ quote $ defn text-width (content font-size font-family)
@@ -8437,9 +7754,7 @@
                       metrics $ context .measure-text content
                     metrics.:width
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Number)
-            :args $ [] 'String 'Number 'String
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn String Number String (-> Number) (:features :js-ffi)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.util.dom
           :require
@@ -8452,20 +7767,16 @@
         'coerce-component $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn coerce-component (markup) markup
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] 'respo.schema/Component
+          :schema $ quote $ Fn respo.schema/Component (-> respo.schema/Component)
         'coerce-element $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn coerce-element (markup) markup
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Element)
-            :args $ [] 'respo.schema/Element
+          :schema $ quote $ Fn respo.schema/Element (-> respo.schema/Element)
         'create-dashed-letter-pattern $ %{} 'CodeEntry
           :doc "|Creates the JavaScript RegExp behind an explicit FFI function so dashed-letter-pattern remains a value."
           :code $ quote $ defn create-dashed-letter-pattern () (new js/RegExp |-[a-z] |g)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ []
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (-> Dynamic) (:features :js-ffi)
         'dashed->camel $ %{} 'CodeEntry
           :doc "|convert dashed-case CSS property names to camelCase. e.g. \"background-color\" -> \"backgroundColor\". JavaScript only (uses `.!replace`); check its examples with `--js`."
           :code $ quote $ defn dashed->camel (x)
@@ -8476,14 +7787,12 @@
             quote $ dashed->camel |background-color
             quote $ dashed->camel |font-size
             quote $ dashed->camel |margin-top
-          :schema $ :: 'Fn $ {} (:return 'String)
-            :args $ [] 'String
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn String (-> String) (:features :js-ffi)
         'dashed-letter-pattern $ %{} 'CodeEntry
           :doc "|Regex pattern for finding dashed-case letters (e.g. -a) to convert to camelCase."
           :code $ quote $ def dashed-letter-pattern (create-dashed-letter-pattern)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ quote Dynamic
         'event->edn $ %{} 'CodeEntry
           :doc "|Converts a native DOM event into a Respo EDN event structure."
           :code $ quote $ defn event->edn (event)
@@ -8492,25 +7801,21 @@
                 keyboard-event $ unsafe-coerce event 'respo.dom/DomKeyboardEvent
               -> (event-base-edn event event-type keyboard-event) (.assoc :original-event event) (.assoc :event event)
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'respo.dom/DomEvent
-            :features $ #{} :js-ffi
-            :return $ :: 'Map 'Tag 'Dynamic
+          :schema $ quote $ Fn respo.dom/DomEvent
+            -> $ Map Tag Dynamic
+            :features :js-ffi
         'event->prop $ %{} 'CodeEntry
           :doc "|Converts an event keyword (e.g. :click) to a prop name string (e.g. 'onclick')."
           :code $ quote $ defn event->prop (x)
             str |on $ to-string x
           :examples $ [] $ quote (event->prop :click)
-          :schema $ :: 'Fn $ {} (:return 'String)
-            :args $ [] 'Tag
+          :schema $ quote $ Fn Tag (-> String)
         'event->string $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn event->string (x)
             &str:slice (calcit.core/to-string x) 3
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'String)
-            :args $ [] 'T
-            :generics $ [] 'T
-            :where $ {} $ 'T 'ToString
+          :schema $ quote $ Fn T (-> String) (:generics T)
+            :where $ T ToString
           :tests $ [] $ %{} 'TestEntry (:name |keeps-tag-and-string-event-names)
             :code $ quote $ do
               assert= |click $ respo.util.format/event->string :on-click
@@ -8535,10 +7840,9 @@
               _ $ {} (:type event-type)
                 :msg $ str "|Unhandled event: " event-type
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'respo.dom/DomEvent 'String 'respo.dom/DomKeyboardEvent
-            :features $ #{} :js-ffi
-            :return $ :: 'Map 'Tag 'Dynamic
+          :schema $ quote $ Fn respo.dom/DomEvent String respo.dom/DomKeyboardEvent
+            -> $ Map Tag Dynamic
+            :features :js-ffi
         'get-style-value $ %{} 'CodeEntry
           :doc "|Formats a style value for a given property. Adds px to numeric values when the property expects units, and returns an empty string for nil so DOM updates and SSR output can clear the declaration safely."
           :code $ quote $ defn get-style-value (x prop)
@@ -8557,8 +7861,7 @@
             quote $ assert= |10px $ get-style-value 10 |width
             quote $ assert= |1 $ get-style-value 1 |opacity
             quote $ assert= | $ get-style-value nil |width
-          :schema $ :: 'Fn $ {} (:return 'String)
-            :args $ [] 'Dynamic 'String
+          :schema $ quote $ Fn Dynamic String (-> String)
           :tests $ []
             %{} 'TestEntry (:name |formats-style-values)
               :code $ quote $ do
@@ -8584,8 +7887,7 @@
           :examples $ []
             quote $ hsl 200 80 50
             quote $ hsl 0 100 50 0.5
-          :schema $ :: 'Fn $ {} (:rest 'Number) (:return 'String)
-            :args $ [] 'Number 'Number 'Number
+          :schema $ quote $ Fn Number Number Number & Number (-> String)
         'input-event-checked? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn input-event-checked? (event)
             let
@@ -8596,9 +7898,7 @@
                   raise |[Respo/input-event-checked?]-event-has-no-target
                 (:some target) (target.:checked)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Bool)
-            :args $ [] 'respo.dom/DomEvent
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn respo.dom/DomEvent (-> Bool) (:features :js-ffi)
         'input-event-value $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn input-event-value (event)
             let
@@ -8608,9 +7908,7 @@
                 (:none) (raise |[Respo/input-event-value]-event-has-no-target)
                 (:some target) (target.:value)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ [] 'respo.dom/DomEvent
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn respo.dom/DomEvent (-> Dynamic) (:features :js-ffi)
         'map-keyboard-event $ %{} 'CodeEntry
           :doc "|Extracts key information from a JavaScript KeyboardEvent."
           :code $ quote $ defn map-keyboard-event (event)
@@ -8622,38 +7920,30 @@
               :alt? $ event.:alt-key
               :shift? $ event.:shift-key
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'respo.dom/DomKeyboardEvent
-            :features $ #{} :js-ffi
-            :return $ :: 'Map 'Tag 'Dynamic
+          :schema $ quote $ Fn respo.dom/DomKeyboardEvent
+            -> $ Map Tag Dynamic
+            :features :js-ffi
         'mute-element $ %{} 'CodeEntry
           :doc "|Recursively remove event handlers from a component or element tree.\n\nThis is used in SSR-related flows where the initial HTML should not carry live client event functions."
           :code $ quote $ defn mute-element (element)
             respo.util.detect/render-node-value $ mute-render-node $ respo.util.detect/as-render-node element
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Struct)
-            :args $ [] 'Struct
+          :schema $ quote $ Fn Struct (-> Struct)
           :tests $ [] $ %{} 'TestEntry (:name |clears-events-through-component-tree)
             :code $ quote $ let
                 leaf $ respo.schema/Element :name :span :coord (Option :none) :attrs ([]) :style ([]) :children ([]) :ref nil :event $ {}
                   :click $ fn (_event _dispatch!)
-                    hint-fn $ {}
-                      :args $ [] (:: 'Map 'Tag 'Dynamic)
-                        :: 'Fn $ {}
-                          :args $ [] 'Dynamic
-                          :return 'Unit
-                      :return 'Unit
+                    hint-fn $ Fn (Map Tag Dynamic)
+                      Fn Dynamic $ -> Unit
+                      -> Unit
                     , &unit
                 root $ respo.schema/Element :name :div :coord (Option :none) :attrs ([]) :style ([]) :children
                   [] (respo.util.detect/make-child-pair :child leaf) (respo.util.detect/make-child-pair :empty nil)
                   , :ref nil :event $ {}
                     :click $ fn (_event _dispatch!)
-                      hint-fn $ {}
-                        :args $ [] (:: 'Map 'Tag 'Dynamic)
-                          :: 'Fn $ {}
-                            :args $ [] 'Dynamic
-                            :return 'Unit
-                        :return 'Unit
+                      hint-fn $ Fn (Map Tag Dynamic)
+                        Fn Dynamic $ -> Unit
+                        -> Unit
                       , &unit
                 component $ respo.schema/Component :name :root :effects ([]) :listeners ([]) :tree $ Option :some (respo.util.detect/as-render-node root)
                 muted $ assert-type (mute-element component) 'respo.schema/Component
@@ -8681,20 +7971,16 @@
                   .assoc :event $ {}
                   .assoc :children $ map (:children element)
                     fn (pair)
-                      hint-fn $ {}
-                        :args $ [] 'respo.schema/ChildPair
-                        :return 'respo.schema/ChildPair
+                      hint-fn $ Fn respo.schema/ChildPair $ -> respo.schema/ChildPair
                       &struct:assoc pair :node $ option:map (:node pair) mute-render-node
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/RenderNode)
-            :args $ [] 'respo.schema/RenderNode
+          :schema $ quote $ Fn respo.schema/RenderNode (-> respo.schema/RenderNode)
         'prop->attr $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn prop->attr (x)
             when (includes? x |?) (println "|[Respo] warning: property includes `?` in" x)
             match x (|class-name |class) (|tab-index |tabindex) (|read-only |readonly) (|spell-check |spellcheck) (_ x)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'String)
-            :args $ [] 'String
+          :schema $ quote $ Fn String (-> String)
         'purify-element $ %{} 'CodeEntry
           :doc "|Recursively normalize a component or element tree into serializable data.\n\nEvent handlers are purified, component wrappers are unwrapped to their rendered tree, and children are processed recursively. This is useful before HTML serialization or DOM comparison."
           :code $ quote $ defn purify-element (markup)
@@ -8707,9 +7993,7 @@
                 purify-element-node $ respo.util.detect/as-element markup
               true $ do (js/console.warn |Unknown-markup-during-purify: markup) nil
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ [] 'Dynamic
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn Dynamic (-> Dynamic) (:features :js-ffi)
           :tests $ []
             %{} 'TestEntry (:name |removes-live-refs-recursively)
               :code $ quote $ let
@@ -8735,8 +8019,7 @@
           :code $ quote $ defn purify-element-node (markup)
             purify-render-node $ respo.schema/RenderNode :element markup
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Element)
-            :args $ [] 'respo.schema/Element
+          :schema $ quote $ Fn respo.schema/Element (-> respo.schema/Element)
         'purify-events $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn purify-events (events)
             -> (&map:to-list events)
@@ -8744,9 +8027,8 @@
                 calcit.core/non-nil? $ respo.util.list/pair-value pair
               map respo.util.list/pair-tag-key
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] $ :: 'Map 'Tag 'Dynamic
-            :return $ :: 'List 'Tag
+          :schema $ quote $ Fn (Map Tag Dynamic)
+            -> $ List Tag
           :tests $ [] $ %{} 'TestEntry (:name |keeps-live-tag-keys)
             :code $ quote $ let
                 events $ {}
@@ -8770,19 +8052,13 @@
                   .assoc :event $ {}
                   .assoc :children $ map (:children element)
                     fn (pair)
-                      hint-fn $ {}
-                        :args $ [] 'respo.schema/ChildPair
-                        :return 'respo.schema/ChildPair
+                      hint-fn $ Fn respo.schema/ChildPair $ -> respo.schema/ChildPair
                       &struct:assoc pair :node $ option:map (:node pair)
                         fn (child)
-                          hint-fn $ {}
-                            :args $ [] 'respo.schema/RenderNode
-                            :return 'respo.schema/RenderNode
+                          hint-fn $ Fn respo.schema/RenderNode $ -> respo.schema/RenderNode
                           respo.schema/RenderNode :element $ purify-render-node child
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'respo.schema/Element)
-            :args $ [] 'respo.schema/RenderNode
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn respo.schema/RenderNode (-> respo.schema/Element) (:features :js-ffi)
           :tests $ [] $ %{} 'TestEntry (:name |preserves-nested-components-and-empty-child)
             :code $ quote $ let
                 leaf $ respo.schema/Element :name :span :coord (Option :none) :attrs
@@ -8814,8 +8090,7 @@
               (bool? x) (to-string x)
               true $ raise "|Attribute value must be a scalar"
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'String)
-            :args $ [] 'Dynamic
+          :schema $ quote $ Fn Dynamic (-> String)
           :tests $ []
             %{} 'TestEntry (:name |accepts-supported-scalars)
               :code $ quote $ do
@@ -8834,8 +8109,7 @@
           :code $ quote $ defn svg-attr-name (x)
             match x (|strokeWidth |stroke-width) (|strokeLinecap |stroke-linecap) (|strokeLinejoin |stroke-linejoin) (|strokeDasharray |stroke-dasharray) (|strokeDashoffset |stroke-dashoffset) (|fillRule |fill-rule) (|fillOpacity |fill-opacity) (|clipPath |clip-path) (|stopColor |stop-color) (|stopOpacity |stop-opacity) (|class-name |class) (_ x)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'String)
-            :args $ [] 'String
+          :schema $ quote $ Fn String (-> String)
           :tests $ []
             %{} 'TestEntry (:name |svg-attribute-cases)
               :code $ quote $ do
@@ -8852,8 +8126,7 @@
                 , |> |&gt;
               , |< |&lt;
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'String)
-            :args $ [] 'Dynamic
+          :schema $ quote $ Fn Dynamic (-> String)
           :tests $ []
             %{} 'TestEntry (:name |preserves-literal-entities)
               :code $ quote $ assert= |&amp;&amp;amp;&lt;&gt; (text->html |&&amp;<>)
@@ -8889,15 +8162,14 @@
           :code $ quote $ def unitless-props
             {} (|animationDelay true) (|animationDuration true) (|animationIterationCount true) (|aspectRatio true) (|borderImageOutset true) (|borderImageSlice true) (|borderImageWidth true) (|boxFlex true) (|boxFlexGroup true) (|boxOrdinalGroup true) (|columnCount true) (|columns true) (|fillOpacity true) (|flex true) (|flexGrow true) (|flexNegative true) (|flexPositive true) (|flexShrink true) (|floodOpacity true) (|fontSizeAdjust true) (|fontWeight true) (|gridArea true) (|gridColumn true) (|gridColumnEnd true) (|gridColumnSpan true) (|gridColumnStart true) (|gridRow true) (|gridRowEnd true) (|gridRowSpan true) (|gridRowStart true) (|lineClamp true) (|lineHeight true) (|opacity true) (|order true) (|orphans true) (|stopOpacity true) (|strokeDasharray true) (|strokeDashoffset true) (|strokeMiterlimit true) (|strokeOpacity true) (|strokeWidth true) (|tabSize true) (|transitionDelay true) (|transitionDuration true) (|widows true) (|zIndex true) (|zoom true)
           :examples $ []
-          :schema $ :: 'Map
+          :schema $ quote Map
         'uppercase-dashed-match $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn uppercase-dashed-match (matched _position _source)
             char-from-code $ -
               get-char-code $ &str:slice matched 1
               , 32
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'String)
-            :args $ [] 'String 'Number 'String
+          :schema $ quote $ Fn String Number String (-> String)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.util.format
           :require
@@ -8910,18 +8182,16 @@
             if (list? value)
               foldl value ([])
                 defn %checked-pair (acc item)
-                  hint-fn $ {}
-                    :args $ []
-                      :: 'List $ :: 'List 'Dynamic
-                      , 'Dynamic
-                    :return $ :: 'List $ :: 'List 'Dynamic
+                  hint-fn $ Fn
+                    List $ List Dynamic
+                    , Dynamic $ ->
+                      List $ List Dynamic
                   if (list? item) (append acc item)
                     raise $ str "|[Respo] expected a key/value pair, got: " $ type-of item
               raise $ str "|[Respo] expected a list of pairs, got: " $ type-of value
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic
-            :return $ :: 'List $ :: 'List 'Dynamic
+          :schema $ quote $ Fn Dynamic
+            -> $ List $ List Dynamic
         'first-pair $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn first-pair (entries)
             match (calcit.core/first entries)
@@ -8929,9 +8199,9 @@
                 if (nil? pair) (raise "|first-pair expected a non-empty list of pairs") pair
               (:none) (raise "|first-pair expected a non-empty list of pairs")
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] $ :: 'List (:: 'List 'Dynamic)
-            :return $ :: 'List 'Dynamic
+          :schema $ quote $ Fn
+            List $ List Dynamic
+            -> $ List Dynamic
           :tests $ [] $ %{} 'TestEntry (:name |absence-migration-values)
             :code $ quote $ do
               assert= ([] :a 1)
@@ -8941,9 +8211,7 @@
                   respo.util.list/first-pair $ []
                   , |unexpected-success
                 fn (message)
-                  hint-fn $ {}
-                    :args $ [] 'String
-                    :return 'String
+                  hint-fn $ Fn String $ -> String
                   , message
             :tags $ #{} :regression :unit
         'index-of-dynamic $ %{} 'CodeEntry (:doc |)
@@ -8959,9 +8227,8 @@
                   Option :some idx
                   recur (&list:rest rest-xs) (inc idx)
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] (:: 'List 'Dynamic) 'Dynamic
-            :return $ :: 'calcit.core/Option 'Number
+          :schema $ quote $ Fn (List Dynamic) Dynamic
+            -> $ calcit.core/Option Number
           :tests $ [] $ %{} 'TestEntry (:name |absence-migration-values)
             :code $ quote $ do
               assert= (Option :none)
@@ -8984,66 +8251,52 @@
             map-indexed xs $ fn (idx x)
               [] idx $ f x
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] (:: 'List 'A)
-              :: 'Fn $ {} (:return 'B)
-                :args $ [] 'A
-            :generics $ [] 'A 'B
-            :return $ :: 'List $ :: 'List 'Dynamic
+          :schema $ quote $ Fn (List A)
+            Fn A $ -> B
+            -> $ List $ List Dynamic
+            :generics A B
         'pair-first $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn pair-first (pair) (&list:nth pair 0)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'T)
-            :args $ [] $ :: 'List 'T
-            :generics $ [] 'T
+          :schema $ quote $ Fn (List T) (-> T) (:generics T)
         'pair-key $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn pair-key (pair) (&list:nth pair 0)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ [] $ :: 'List 'Dynamic
+          :schema $ quote $ Fn (List Dynamic) (-> Dynamic)
         'pair-key-text $ %{} 'CodeEntry (:doc "|把键值对的键转成文本：Tag 去掉冒号，其他值按显示文本。")
           :code $ quote $ defn pair-key-text (pair)
             &let
               k $ &list:nth pair 0
               if (tag? k) (to-string k) (str k)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'String)
-            :args $ [] $ :: 'List 'Dynamic
+          :schema $ quote $ Fn (List Dynamic) (-> String)
         'pair-tag-key $ %{} 'CodeEntry (:doc "|读取键值对的 Tag 键并在运行时校验，用于事件名等必须为 Tag 的位置。")
           :code $ quote $ defn pair-tag-key (pair)
             &let
               k $ &list:nth pair 0
               if (tag? k) k $ raise $ str "|[Respo] expected a Tag key, got: " k
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Tag)
-            :args $ [] $ :: 'List 'Dynamic
+          :schema $ quote $ Fn (List Dynamic) (-> Tag)
         'pair-value $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn pair-value (pair) (&list:nth pair 1)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'T)
-            :args $ [] $ :: 'List 'T
-            :generics $ [] 'T
+          :schema $ quote $ Fn (List T) (-> T) (:generics T)
         'pick-attrs $ %{} 'CodeEntry
           :doc "|Extracts HTML attributes from a properties map, filtering out internal keys like :on, :event, :style."
           :code $ quote $ defn pick-attrs (props)
             if (nil? props) ([])
               -> props (&map:dissoc :on) (&map:dissoc :style) (&map:dissoc :ref)
                 &map:filter-kv $ fn (k v)
-                  hint-fn $ {}
-                    :args $ [] 'Tag 'Dynamic
-                    :return 'Bool
+                  hint-fn $ Fn Tag Dynamic $ -> Bool
                   and (calcit.core/non-nil? v)
                     not $ starts-with? (to-string k) |on-
                 &map:to-list
                 sort $ fn (x y)
-                  hint-fn $ {}
-                    :args $ [] (:: 'List 'Dynamic) (:: 'List 'Dynamic)
-                    :return 'Number
+                  hint-fn $ Fn (List Dynamic) (List Dynamic) (-> Number)
                   &compare (&list:nth x 0) (&list:nth y 0)
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] $ :: 'Map 'Tag 'Dynamic
-            :return $ :: 'List $ :: 'List 'Dynamic
+          :schema $ quote $ Fn (Map Tag Dynamic)
+            -> $ List $ List Dynamic
           :tests $ []
             %{} 'TestEntry (:name |filters-internal-and-empty-properties)
               :code $ quote $ let
@@ -9072,9 +8325,7 @@
                   (:some raw-on) (pick-on-events raw-on)
                   (:none) ({})
                 property-events $ filter-map-kv props $ fn (k v)
-                  hint-fn $ {}
-                    :args $ [] 'Tag 'Dynamic
-                    :return $ :: 'MapEntryDecision 'Tag 'Fn
+                  hint-fn $ Fn Tag Dynamic $ -> (MapEntryDecision Tag Fn)
                   if
                     starts-with? (to-string k) |on-
                     if (fn? v)
@@ -9086,10 +8337,9 @@
                     MapEntryDecision :drop
               &merge base-events property-events
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] $ :: 'Map 'Tag 'Dynamic
-            :features $ #{} :js-ffi
-            :return $ :: 'Map 'Tag 'Fn
+          :schema $ quote $ Fn (Map Tag Dynamic)
+            -> $ Map Tag Fn
+            :features :js-ffi
           :tests $ [] $ %{} 'TestEntry (:name |extracts-event-properties)
             :code $ quote $ let
                 click! $ fn () &unit
@@ -9104,9 +8354,7 @@
           :code $ quote $ defn pick-on-events (raw-on)
             if (map? raw-on)
               filter-map-kv raw-on $ fn (k v)
-                hint-fn $ {}
-                  :args $ [] 'Dynamic 'Dynamic
-                  :return $ :: 'MapEntryDecision 'Tag 'Fn
+                hint-fn $ Fn Dynamic Dynamic $ -> (MapEntryDecision Tag Fn)
                 if (tag? k)
                   if (fn? v) (MapEntryDecision :keep k v)
                     if (nil? v) (MapEntryDecision :drop)
@@ -9115,9 +8363,8 @@
               if (nil? raw-on) ({})
                 raise $ str "|[Respo] expected :on to be a map, got: " $ type-of raw-on
           :examples $ []
-          :schema $ :: 'Fn $ {}
-            :args $ [] 'Dynamic
-            :return $ :: 'Map 'Tag 'Fn
+          :schema $ quote $ Fn Dynamic
+            -> $ Map Tag Fn
         'val-exists? $ %{} 'CodeEntry
           :doc "|Predicate to check if a key-value pair has a non-nil value."
           :code $ quote $ defn val-exists? (pair)
@@ -9126,16 +8373,16 @@
                 not $ nil? value
               (:none) false
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Bool)
-            :args $ [] 'Dynamic
+          :schema $ quote $ Fn Dynamic (-> Bool)
         'val-of-first $ %{} 'CodeEntry
           :doc "|Extracts the value (second item) from the first entry of a list."
           :code $ quote $ defn val-of-first (x)
             respo.util.list/pair-value $ respo.util.list/first-pair x
           :examples $ [] $ quote
             val-of-first $ [] ([] :a 1) ([] :b 2)
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ [] $ :: 'List (:: 'List 'Dynamic)
+          :schema $ quote $ Fn
+            List $ List Dynamic
+            -> Dynamic
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.util.list
           :require $ respo.util.detect :refer $ component? element?
