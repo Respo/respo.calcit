@@ -298,3 +298,11 @@ test('keyed-element rejects a Component node', () => {
   assert.notEqual(result.status, 0, 'Component must use keyed-component');
   assert.match(result.output, /respo\.schema\/Element/);
 });
+
+for (const name of ['space-x', 'space-y']) {
+  test(`${name} rejects a non-Number size`, () => {
+    const result = evaluate(`respo.comp.space/${name} |8px`);
+    assert.notEqual(result.status, 0, 'String sizes must use comp-space');
+    assert.match(result.output, /W_FN_ARG_TYPE_MISMATCH|E_CALL_ARGUMENT_MISMATCH/);
+  });
+}

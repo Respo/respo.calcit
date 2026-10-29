@@ -819,6 +819,20 @@
             quote $ comp-space 10 nil
             quote $ comp-space nil 16
           :schema $ quote $ Fn Dynamic Dynamic (-> respo.schema/Component)
+        'space-x $ %{} 'CodeEntry
+          :doc "|Horizontal gap of `w` pixels, renders the same element as `=< w nil`. Takes a Number so the direction and size are checked; use `comp-space` for other CSS length values."
+          :code $ quote $ defcomp space-x (w)
+            div $ {} (:class-name style-space)
+              :style $ &{} :width w
+          :examples $ [] $ quote (space-x 8)
+          :schema $ quote $ Fn Number (-> respo.schema/Component)
+        'space-y $ %{} 'CodeEntry
+          :doc "|Vertical gap of `h` pixels, renders the same element as `=< nil h`. Takes a Number so the direction and size are checked; use `comp-space` for other CSS length values."
+          :code $ quote $ defcomp space-y (h)
+            div $ {} (:class-name style-space)
+              :style $ &{} :height h
+          :examples $ [] $ quote (space-y 16)
+          :schema $ quote $ Fn Number (-> respo.schema/Component)
         'style-space $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-space
             {} $ :& $ {} (:height 1) (:width 1) (:display :inline-block)
