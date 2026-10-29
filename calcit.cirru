@@ -35,7 +35,7 @@
           :code $ quote $ def style-states
             {} $ :padding 8
           :examples $ []
-          :schema $ quote Map
+          :schema $ quote $ Map Tag Number
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.app.comp.container
           :require
@@ -5664,6 +5664,7 @@
           :code $ quote $ def boolean-attrs
             #{} |allowfullscreen |async |autofocus |autoplay |checked |controls |default |defer |disabled |formnovalidate |hidden |inert |ismap |itemscope |loop |multiple |muted |nomodule |novalidate |open |playsinline |readonly |required |reversed |selected
           :examples $ []
+          :schema $ quote $ Set String
         'coerce-pairs $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn coerce-pairs (value) value
           :examples $ []
@@ -7778,7 +7779,7 @@
           :doc "|Creates the JavaScript RegExp behind an explicit FFI function so dashed-letter-pattern remains a value."
           :code $ quote $ defn create-dashed-letter-pattern () (new js/RegExp |-[a-z] |g)
           :examples $ []
-          :schema $ quote $ Fn (-> Dynamic) (:features :js-ffi)
+          :schema $ quote $ Fn (-> JsObject) (:features :js-ffi)
         'dashed->camel $ %{} 'CodeEntry
           :doc "|convert dashed-case CSS property names to camelCase. e.g. \"background-color\" -> \"backgroundColor\". JavaScript only (uses `.!replace`); check its examples with `--js`."
           :code $ quote $ defn dashed->camel (x)
@@ -8160,11 +8161,12 @@
           :code $ quote $ def unitless-dashed-props
             #{} |animation-delay |animation-duration |animation-iteration-count |aspect-ratio |border-image-outset |border-image-slice |border-image-width |box-flex |box-flex-group |box-ordinal-group |column-count |columns |fill-opacity |flex |flex-grow |flex-negative |flex-positive |flex-shrink |flood-opacity |font-size-adjust |font-weight |grid-area |grid-column |grid-column-end |grid-column-span |grid-column-start |grid-row |grid-row-end |grid-row-span |grid-row-start |line-clamp |line-height |opacity |order |orphans |stop-opacity |stroke-dasharray |stroke-dashoffset |stroke-miterlimit |stroke-opacity |stroke-width |tab-size |transition-delay |transition-duration |widows |z-index |zoom
           :examples $ []
+          :schema $ quote $ Set String
         'unitless-props $ %{} 'CodeEntry (:doc "|gemini suggested from popular libs\n")
           :code $ quote $ def unitless-props
             {} (|animationDelay true) (|animationDuration true) (|animationIterationCount true) (|aspectRatio true) (|borderImageOutset true) (|borderImageSlice true) (|borderImageWidth true) (|boxFlex true) (|boxFlexGroup true) (|boxOrdinalGroup true) (|columnCount true) (|columns true) (|fillOpacity true) (|flex true) (|flexGrow true) (|flexNegative true) (|flexPositive true) (|flexShrink true) (|floodOpacity true) (|fontSizeAdjust true) (|fontWeight true) (|gridArea true) (|gridColumn true) (|gridColumnEnd true) (|gridColumnSpan true) (|gridColumnStart true) (|gridRow true) (|gridRowEnd true) (|gridRowSpan true) (|gridRowStart true) (|lineClamp true) (|lineHeight true) (|opacity true) (|order true) (|orphans true) (|stopOpacity true) (|strokeDasharray true) (|strokeDashoffset true) (|strokeMiterlimit true) (|strokeOpacity true) (|strokeWidth true) (|tabSize true) (|transitionDelay true) (|transitionDuration true) (|widows true) (|zIndex true) (|zoom true)
           :examples $ []
-          :schema $ quote Map
+          :schema $ quote $ Map String Bool
         'uppercase-dashed-match $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn uppercase-dashed-match (matched _position _source)
             char-from-code $ -
