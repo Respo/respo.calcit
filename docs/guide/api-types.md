@@ -52,6 +52,7 @@ Respo 里剩下的 `Dynamic` 大多不是“还没来得及写”，而是当前
 | `create-element` | `Fn Tag PropsInput & Dynamic (-> Element)` | 同上，第一个参数是标签名 |
 | `<>` | `Fn String & Dynamic (-> Element)` | 第一个参数是文本；可选第二个参数是 class-name 字符串或 style map |
 | `list->` | `Fn PropsInput (List (List Dynamic)) (-> Element)` | 子节点是 `[key child]` 对，key 为 Tag、String 或 Number |
+| `keyed` / `keyed->` | `Fn K NodeInput (-> ChildPair)` / `Fn PropsInput (List ChildPair) (-> Element)` | `[key child]` 对的具名写法，子节点列表是 `List ChildPair` |
 | `for-keyed` | `Fn (List T) (Fn T (-> K)) (Fn T Number (-> Dynamic)) (-> (List (List Dynamic)))`，`:generics T K` | items 和 key-fn 是精确泛型；渲染结果仍是开放的子节点 |
 | `defcomp` | 宏，生成 `Fn … (-> Component)` | 组件参数的类型写在组件定义的 schema 上 |
 | `comp-space` / `=<` | `Fn Dynamic Dynamic (-> Component)` | 宽、高传 Number 或 `nil`；不用的一侧传 `nil`，不要传 `&unit` |

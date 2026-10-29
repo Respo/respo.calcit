@@ -56,6 +56,7 @@ The type contract of each public API (which positions are precise and which stay
 |                      | `clear-cache!`    |
 |                      | `realize-ssr!`    |
 |                      | `list->`          |
+|                      | `keyed` `keyed->` |
 |                      | `for-keyed`       |
 |                      | `show`            |
 |                      | `effect-on-mount` |

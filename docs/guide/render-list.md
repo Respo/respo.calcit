@@ -76,6 +76,19 @@ list->
 
 回调契约和错误处理见[常用原语](./common-primitives.md#conditional-and-keyed-rendering)。
 
+### 具名 ChildPair：`keyed` 与 `keyed->`
+
+`[key child]` 对的类型只能写成 `List Dynamic`。如果想让类型检查看到每一项的形状，可以用 `keyed` 构造具名的 `respo.schema/ChildPair`，再交给 `keyed->`（标签为 `:div`）或 `create-keyed-element`（指定标签）：
+
+```cirru.no-check
+keyed->
+  {} (:class-name |task-list)
+  map tasks $ fn (task)
+    keyed (:id task) (task-component task)
+```
+
+`keyed` 的校验规则和 `list->` 一样：key 不能为 nil，子节点必须是 Element、Component 或 nil，nil 子节点会被省略。两种写法生成的元素相同，diff 行为也相同，可以在同一个应用里混用。`[key child]` 写法继续保留。Calcit 引入 `Tuple` 之后，它的类型会变成元组；`ChildPair` 则是对应的具名 Struct 写法。
+
 <a id="memoizing-components"></a>
 
 ## 组件缓存

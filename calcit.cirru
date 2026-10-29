@@ -1466,15 +1466,15 @@
               {} $ :href |/home
               <> |Home
           :schema $ quote $ Fn Tag PropsInput & Dynamic (-> respo.schema/Element) (:generics PropsInput)
-        'create-list-element $ %{} 'CodeEntry
-          :doc "|Creates an element for ordered keyed children. Validates each [key child] pair before omitting nil-valued children, matching ordinary element children. Keys must be non-nil, including for omitted children."
-          :code $ quote $ defn create-list-element (tag-name props child-pairs)
+        'create-keyed-element $ %{} 'CodeEntry
+          :doc "|用给定标签创建带 key 的元素，子节点是 List ChildPair。:node 为 none 的项会被省略，和 create-list-element 省略 nil 子节点一致。create-list-element 先把 [key child] 对校验并转成 ChildPair，再交给这里。Creates a keyed element from a list of ChildPair; pairs without a node are omitted."
+          :code $ quote $ defn create-keyed-element (tag-name props child-pairs)
             when
               not $ list? child-pairs
-              raise "|[Respo/create-list-element] expected keyed child pairs as a list or map"
+              raise "|[Respo/create-keyed-element] expected keyed children as a list of ChildPair"
             let
                 props-map $ normalize-dom-props props
-                ref! $ normalize-ref (calcit.core/get props-map :ref) "|[Respo/create-list-element] expected :ref to be a function or nil"
+                ref! $ normalize-ref (calcit.core/get props-map :ref) "|[Respo/create-keyed-element] expected :ref to be a function or nil"
                 attrs $ pick-attrs props-map
                 styles $ sort
                   assert-type
@@ -1486,14 +1486,24 @@
                       .unwrap $ calcit.core/first y
                 event $ pick-event props-map
               schema/Element :name tag-name :coord (Option :none) :attrs attrs :style styles :event event :children
-                map
-                  filter (map child-pairs confirm-child-pair)
-                    fn (pair)
-                      calcit.core/non-nil? $ respo.util.list/pair-value pair
-                  fn (pair)
-                    hint-fn $ Fn (List Dynamic) (-> respo.schema/ChildPair)
-                    respo.util.detect/make-child-pair (respo.util.list/pair-key pair) (respo.util.list/pair-value pair)
+                filter child-pairs $ fn (pair)
+                  hint-fn $ Fn respo.schema/ChildPair $ -> Bool
+                  match (:node pair)
+                    (:some _node) true
+                    (:none) false
                 , :ref ref!
+          :examples $ []
+          :schema $ quote $ Fn Tag PropsInput (List respo.schema/ChildPair) (-> respo.schema/Element) (:generics PropsInput)
+        'create-list-element $ %{} 'CodeEntry
+          :doc "|Creates an element for ordered keyed children. Validates each [key child] pair before omitting nil-valued children, matching ordinary element children. Keys must be non-nil, including for omitted children."
+          :code $ quote $ defn create-list-element (tag-name props child-pairs)
+            when
+              not $ list? child-pairs
+              raise "|[Respo/create-list-element] expected keyed child pairs as a list or map"
+            create-keyed-element tag-name props $ map (map child-pairs confirm-child-pair)
+              fn (pair)
+                hint-fn $ Fn (List Dynamic) (-> respo.schema/ChildPair)
+                respo.util.detect/make-child-pair (respo.util.list/pair-key pair) (respo.util.list/pair-value pair)
           :examples $ [] $ quote
             create-list-element :div
               {} $ :class-name |list
@@ -2296,6 +2306,48 @@
                     hint-fn $ Fn String $ -> String
                     , message
                 , "|[Respo] event has no :key"
+        'keyed $ %{} 'CodeEntry
+          :doc "|把 key 和子节点组成具名的 respo.schema/ChildPair，交给 keyed-> 或 create-keyed-element。key 不能为 nil；子节点必须是 Element、Component 或 nil（nil 子节点会被省略）。这是 `[key child]` 对的具名写法，类型检查能看到每一项都是 ChildPair。Builds a named ChildPair from a non-nil key and a child (Element, Component, or nil) for keyed->."
+          :code $ quote $ defn keyed (key child)
+            when (nil? key)
+              raise "|[Respo/keyed] keyed child requires a non-nil key"
+            assert "|Invalid data in elements tree: " $ or (nil? child) (element? child) (component? child)
+            respo.util.detect/make-child-pair key child
+          :examples $ [] $ quote
+            keyed :item-1 $ span $ {}
+          :schema $ quote $ Fn K NodeInput (-> respo.schema/ChildPair) (:generics K NodeInput)
+          :tests $ [] $ %{} 'TestEntry (:name |rejects-nil-key-and-invalid-child)
+            :code $ quote $ let
+                caught-key? $ ref false
+                caught-child? $ ref false
+              try (keyed nil nil)
+                fn (_error) (reset! caught-key? true)
+              try (keyed :bad false)
+                fn (_error) (reset! caught-child? true)
+              assert |nil-key-is-rejected @caught-key?
+              assert |invalid-child-is-rejected @caught-child?
+            :tags $ #{} :unit
+        'keyed-> $ %{} 'CodeEntry
+          :doc "|在 <div> 里渲染一组具名 ChildPair（用 keyed 构造），与 list-> 的 diff 行为相同，但子节点列表的类型是 List ChildPair 而不是 List (List Dynamic)。Renders keyed ChildPair children inside a <div>; the typed counterpart of list->."
+          :code $ quote $ defn keyed-> (props children) (create-keyed-element :div props children)
+          :examples $ [] $ quote
+            keyed-> ({})
+              map ([] |a |b)
+                fn (x)
+                  keyed x $ span $ {} (:inner-text x)
+          :schema $ quote $ Fn PropsInput (List respo.schema/ChildPair) (-> respo.schema/Element) (:generics PropsInput)
+          :tests $ [] $ %{} 'TestEntry (:name |matches-list-pairs)
+            :code $ quote $ let
+                child $ span $ {}
+                by-pairs $ list-> ({})
+                  [] ([] :a child) ([] :gone nil) ([] 2 child)
+                by-keyed $ keyed-> ({})
+                  [] (keyed :a child) (keyed :gone nil) (keyed 2 child)
+              assert= by-pairs by-keyed
+              assert=
+                [] (respo.util.detect/make-child-pair :a child) (respo.util.detect/make-child-pair 2 child)
+                respo.util.detect/element-children by-keyed
+            :tags $ #{} :regression :unit
         'li $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn li (props & children) (create-element :li props & children)
           :examples $ []
