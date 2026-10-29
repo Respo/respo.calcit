@@ -66,7 +66,7 @@ The Respo project is a virtual DOM library written in Calcit-js, containing:
 
 - `respo.util.dom` - DOM utilities
 - `respo.util.format` - Element formatting (purify-element, mute-element)
-- `respo.util.list` - List utilities (map-val, map-with-idx)
+- `respo.util.list` - List utilities (map-with-idx)
 - `respo.util.detect` - Type detection (component?, element?, effect?)
 - `respo.css` - CSS utilities
 - `respo.cursor` - Cursor management for nested states

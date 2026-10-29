@@ -311,6 +311,7 @@ This index helps LLM tools automatically fetch and reference documentation using
 | DOM Properties    | [docs/guide/dom-properties.md](docs/guide/dom-properties.md)       | DOM property binding                                       |
 | DOM Events        | [docs/guide/dom-events.md](docs/guide/dom-events.md)               | Event handling in Respo                                    |
 | Typed Dispatch    | [docs/guide/type-slots.md](docs/guide/type-slots.md)               | Entry-level `Op` binding and checks                        |
+| API Types         | [docs/guide/api-types.md](docs/guide/api-types.md)                 | Schemas of public APIs and where they stay open            |
 | Styles            | [docs/guide/styles.md](docs/guide/styles.md)                       | CSS and styling approach                                   |
 | Render Lists      | [docs/guide/render-list.md](docs/guide/render-list.md)             | Efficient list rendering                                   |
 | Renderer Upgrades | [docs/guide/upgrade.md](docs/guide/upgrade.md)                     | Internal patch protocol changes                            |
