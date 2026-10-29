@@ -4761,8 +4761,7 @@
                                 let
                                     old-children $ :children old-tree
                                     new-children $ :children new-tree
-                                    children-first? $ and (empty? new-children)
-                                      owns-inner-content? $ :attrs new-tree
+                                    children-first? $ and (empty? new-children) (owns-inner-content? new-tree)
                                   if
                                     and dev? $ detect-keys-dup $ map new-children
                                       fn (entry)
@@ -5173,23 +5172,26 @@
                 lis-values $ []
             :tags $ #{} :unit
         'owns-inner-content? $ %{} 'CodeEntry
-          :doc "|判断属性列表是否设置了非 nil 的 :innerHTML 或 :inner-text。这类属性会清空元素原有 DOM 子节点，diff 需要先移除旧子节点再写入内容。"
-          :code $ quote $ defn owns-inner-content? (attrs)
-            any? attrs $ fn (pair)
-              hint-fn $ Fn (List Dynamic) (-> Bool)
-              and
-                contains? (#{} :innerHTML :inner-text) (respo.util.list/pair-tag-key pair)
-                non-nil? $ respo.util.list/pair-value pair
+          :doc "|判断元素是否设置了非 nil 的 :innerHTML 或 :inner-text。这类属性会清空元素原有 DOM 子节点，diff 需要先移除旧子节点再写入内容。"
+          :code $ quote $ defn owns-inner-content? (element)
+            any? (:attrs element)
+              fn (pair)
+                hint-fn $ Fn (List Dynamic) (-> Bool)
+                and
+                  contains? (#{} :innerHTML :inner-text) (respo.util.list/pair-tag-key pair)
+                  non-nil? $ respo.util.list/pair-value pair
           :examples $ []
-          :schema $ quote $ Fn
-            List $ List Dynamic
-            -> Bool
+          :schema $ quote $ Fn respo.schema/Element (-> Bool)
           :tests $ [] $ %{} 'TestEntry (:name |detects-content-props)
             :code $ quote $ do
-              assert= true $ owns-inner-content? $ [] ([] :class-name |a) ([] :innerHTML |<b>x</b>)
-              assert= true $ owns-inner-content? $ [] ([] :inner-text |)
-              assert= false $ owns-inner-content? $ [] ([] :inner-text nil)
-              assert= false $ owns-inner-content? $ [] ([] :title |t)
+              assert= true $ owns-inner-content? $ respo.core/div
+                {} (:class-name |a) (:innerHTML |<b>x</b>)
+              assert= true $ owns-inner-content? $ respo.core/div
+                {} $ :inner-text |
+              assert= false $ owns-inner-content? $ respo.core/div
+                {} $ :inner-text nil
+              assert= false $ owns-inner-content? $ respo.core/div
+                {} $ :title |t
             :tags $ #{} :unit
         'props-as-list $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn props-as-list (props)
