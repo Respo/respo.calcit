@@ -328,7 +328,7 @@
           :code $ quote $ defcomp comp-wrap (x)
             div ({}) x
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> respo.schema/Component)
+          :schema $ quote $ Fn respo.schema/Component (-> respo.schema/Component)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.app.comp.wrap
           :require $ respo.core :refer $ defcomp div
@@ -755,10 +755,9 @@
           :doc "|Development helper for visualizing data in the UI.\n\nIt renders a labeled preview of arbitrary data and logs the original value when clicked. This is useful for debugging component props or local state and is usually disabled or removed in production."
           :code $ quote $ defcomp comp-inspect (tip data style)
             let
-                class-name $ if (string? style) style
-                style-map $ if (map? style) style
-              pre $ {}
-                :class-name $ str-spaced style-data class-name
+                class-name $ if (string? style) (str-spaced style-data style) style-data
+                style-map $ if (map? style) style $ {}
+              pre $ {} (:class-name class-name)
                 :inner-text $ str tip "|: " $ grab-info data
                 :style style-map
                 :on-click $ fn (e d!)
@@ -1146,7 +1145,7 @@
               match (calcit.core/get event field)
                 (:some value) value
                 (:none)
-                  raise $ str "|[Respo] event has no " field "|, got type: " $ .unwrap-or (calcit.core/get event :type) nil
+                  raise $ str "|[Respo] event has no " field "|, got type: " $ .unwrap-or (calcit.core/get event :type) |unknown
           :examples $ []
           :schema $ quote $ Fn Dynamic Tag (-> Dynamic)
         '&state-plain $ %{} 'CodeEntry
@@ -2021,7 +2020,7 @@
         'element-type $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def element-type (resolve-element-constructor)
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote $ JsNullish JsObject
         'empty-effects $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn empty-effects () ([])
           :examples $ []
@@ -2663,7 +2662,9 @@
           :code $ quote $ defn resolve-element-constructor ()
             if (exists? js/globalThis.Element) js/globalThis.Element js/Error
           :examples $ []
-          :schema $ quote $ Fn (-> Dynamic) (:features :js-ffi)
+          :schema $ quote $ Fn
+            -> $ JsNullish JsObject
+            :features :js-ffi
         'run-effect-ops! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn run-effect-ops! (items target)
             &doseq (op items)
@@ -7797,7 +7798,7 @@
           :doc "|Regex pattern for finding dashed-case letters (e.g. -a) to convert to camelCase."
           :code $ quote $ def dashed-letter-pattern (create-dashed-letter-pattern)
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote JsObject
         'event->edn $ %{} 'CodeEntry
           :doc "|Converts a native DOM event into a Respo EDN event structure."
           :code $ quote $ defn event->edn (event)
@@ -8233,8 +8234,9 @@
                   Option :some idx
                   recur (&list:rest rest-xs) (inc idx)
           :examples $ []
-          :schema $ quote $ Fn (List Dynamic) Dynamic
-            -> $ calcit.core/Option Number
+          :schema $ quote $ Fn (List T) T
+            -> $ Option Number
+            :generics T
           :tests $ [] $ %{} 'TestEntry (:name |absence-migration-values)
             :code $ quote $ do
               assert= (Option :none)
