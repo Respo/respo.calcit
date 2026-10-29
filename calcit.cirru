@@ -5881,7 +5881,7 @@
           :code $ quote $ def self-closing
             #{} |area |base |br |col |embed |hr |img |input |link |meta |param |source |track |wbr
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote $ Set String
         'style->html $ %{} 'CodeEntry
           :doc "|this function is intended for HTML rendering since it escaped characters."
           :code $ quote $ defn style->html (styles)
