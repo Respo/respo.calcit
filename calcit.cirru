@@ -453,7 +453,7 @@
         'Store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Store
             :tasks $ quote $ List respo.app.schema/Task
-            :states 'Dynamic
+            :states 'respo.schema/States
             :cursor $ quote $ List Dynamic
           :examples $ []
           :schema $ quote StructDef
@@ -629,11 +629,11 @@
           :code $ quote $ defn updater (store op op-id)
             match op
               (:states cursor s)
-                .assoc store :states $ update-state-tree (:states store) cursor s
+                .assoc store :states $ respo.core/as-states-map $ update-state-tree (:states store) cursor s
               (:states-kv cursor k v)
-                .assoc store :states $ update-state-tree-kv (:states store) cursor k v
+                .assoc store :states $ respo.core/as-states-map $ update-state-tree-kv (:states store) cursor k v
               (:states-merge cursor s o)
-                .assoc store :states $ update-state-tree-merge (:states store) cursor s o
+                .assoc store :states $ respo.core/as-states-map $ update-state-tree-merge (:states store) cursor s o
               (:add text)
                 .assoc store :tasks $ conj (:tasks store) (respo.app.schema/Task :text text :id op-id :done? false)
               (:remove task-id)
@@ -1238,9 +1238,7 @@
               &map:assoc branch :cursor $ append parent-cursor k
           :examples $ [] $ quote
             >> ({}) :task-a
-          :schema $ quote $ Fn Dynamic Dynamic
-            -> $ Map Dynamic Dynamic
-            :features :js-ffi
+          :schema $ quote $ Fn Dynamic Dynamic (-> respo.schema/States) (:features :js-ffi)
           :tests $ []
             %{} 'TestEntry (:name |mixed-state-keys)
               :code $ quote $ let
@@ -1349,8 +1347,7 @@
             if (nil? value) ({})
               if (map? value) value $ raise $ str "|[Respo] expected states as a map, got: " (type-of value)
           :examples $ []
-          :schema $ quote $ Fn Dynamic
-            -> $ Map Dynamic Dynamic
+          :schema $ quote $ Fn Dynamic (-> respo.schema/States)
         'blockquote $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn blockquote (props & children) (create-element :blockquote props & children)
           :examples $ []
@@ -7044,6 +7041,11 @@
           :code $ quote $ defstruct RespoListener (:name 'Tag) (:handler 'Fn)
           :examples $ []
           :schema $ quote StructDef
+        'States $ %{} 'CodeEntry
+          :doc "|组件 states 树的类型名，运行时是普通 Map（`Map Dynamic Dynamic`）。`:cursor` 存当前分支的路径，`:data` 存组件自己的状态，其余键是子分支。`>>` 和 `as-states-map` 返回这个类型；它是别名，不会校验内部结构。"
+          :code $ quote $ def States ({})
+          :examples $ []
+          :schema $ quote $ Map Dynamic Dynamic
         'cache-info $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def cache-info
             {} (:value nil) (:initial-loop nil) (:last-hit nil) (:hit-times 0)

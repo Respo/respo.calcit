@@ -63,12 +63,17 @@ props 最好用 `respo.schema/DomProps` 记录或字面量 `{}`。`DomProps` 的
 
 | API | schema | 说明 |
 | --- | --- | --- |
-| `>>` | `Fn Dynamic Dynamic (-> (Map Dynamic Dynamic))` | 从父 states 取出子分支，并把 key 追加到 `:cursor` |
+| `>>` | `Fn Dynamic Dynamic (-> respo.schema/States)` | 从父 states 取出子分支，并把 key 追加到 `:cursor` |
+| `as-states-map` | `Fn Dynamic (-> respo.schema/States)` | 在开放边界校验 states：nil 视为空 map，不是 map 时报错 |
 | `state-cursor` | `Fn Dynamic (-> (List Dynamic))` | 读取 cursor；缺失或 nil 时返回空列表 |
 | `pick-state` | 宏，`pick-state states TypeExpr default` | 返回值的类型就是 `TypeExpr`，这是把组件状态接回精确类型的位置 |
 
+`respo.schema/States` 是 `Map Dynamic Dynamic` 的类型名，可以用在 store 的字段上，
+例如 `:states 'respo.schema/States`。它只是别名，不校验内部结构。`update-state-tree` 系列为了兼容
+非 map 的旧状态仍返回 `Dynamic`，写回这样的字段前用 `as-states-map` 收窄。
+
 组件的 `states` 参数本身保持 `Dynamic`：states 树把 `:cursor` 和各个子分支放在同一个
-map 里，是异构的。读取自己的状态时用 `pick-state` 并给出 Struct 类型：
+map 里，是异构的，而且检查器不允许把 Dynamic 值直接传给 `States` 参数。读取自己的状态时用 `pick-state` 并给出 Struct 类型：
 
 ```cirru.no-check
 defcomp comp-task (states task)
