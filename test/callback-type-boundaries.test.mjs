@@ -264,6 +264,11 @@ for (const [field, wrap] of [
     assert.equal(result.status, 0, result.output);
   });
 
+  test(`DomProps ${field} accepts a nil listener, which Respo drops`, () => {
+    const result = evaluate(domPropsWith(field, wrap('nil')));
+    assert.equal(result.status, 0, result.output);
+  });
+
   test(`DomProps ${field} rejects a RespoEvent-typed listener`, () => {
     const result = evaluate(domPropsWith(field, wrap(listener('respo.schema/RespoEvent'))));
     assert.notEqual(result.status, 0, 'listeners receive a Map, not a RespoEvent Struct');

@@ -6873,7 +6873,8 @@
             :innerHTML $ quote $ JsNullish String
             :rel $ quote $ JsNullish String
             :defer $ quote $ JsNullish Bool
-            :on $ quote $ JsNullish (Map Tag respo.schema/EventHandler)
+            :on $ quote $ JsNullish
+              Map Tag $ JsNullish respo.schema/EventHandler
             :alt $ quote $ JsNullish String
             :draggable $ quote $ JsNullish Bool
             :content $ quote $ JsNullish String
