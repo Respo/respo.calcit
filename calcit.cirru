@@ -4688,7 +4688,18 @@
                                 do (respo.render.effect/collect-unmounting-node collect! coord n-coord old-node true)
                                   collect! $ DomPatch :replace-element coord n-coord new-tree
                                   respo.render.effect/collect-mounting-node collect! coord n-coord new-node true
-                                do
+                                let
+                                    old-children $ :children old-tree
+                                    new-children $ :children new-tree
+                                    children-first? $ and (empty? new-children)
+                                      owns-inner-content? $ :attrs new-tree
+                                  if
+                                    and dev? $ detect-keys-dup $ map new-children
+                                      fn (entry)
+                                        hint-fn $ Fn respo.schema/ChildPair $ -> Dynamic
+                                        :key entry
+                                    js/console.error "|Parent that has dups" new-tree
+                                  when children-first? $ find-children-diffs collect! coord n-coord 0 old-children new-children
                                   find-props-diffs collect! coord n-coord (:attrs old-tree) (:attrs new-tree)
                                   let
                                       old-ref-option $ :ref old-tree
@@ -4723,16 +4734,7 @@
                                           collect! $ DomPatch :set-event coord n-coord event-name
                                         &doseq (event-name removed-events)
                                           collect! $ DomPatch :rm-event coord n-coord event-name
-                                  let
-                                      old-children $ :children old-tree
-                                      new-children $ :children new-tree
-                                    if
-                                      and dev? $ detect-keys-dup $ map new-children
-                                        fn (entry)
-                                          hint-fn $ Fn respo.schema/ChildPair $ -> Dynamic
-                                          :key entry
-                                      js/console.error "|Parent that has dups" new-tree
-                                    find-children-diffs collect! coord n-coord 0 old-children new-children
+                                  when (not children-first?) (find-children-diffs collect! coord n-coord 0 old-children new-children)
             , &unit
           :examples $ []
           :schema $ quote $ Fn
@@ -5099,6 +5101,25 @@
                 lis-values $ [] 3 0 1 2
               assert= (#{})
                 lis-values $ []
+            :tags $ #{} :unit
+        'owns-inner-content? $ %{} 'CodeEntry
+          :doc "|判断属性列表是否设置了非 nil 的 :innerHTML 或 :inner-text。这类属性会清空元素原有 DOM 子节点，diff 需要先移除旧子节点再写入内容。"
+          :code $ quote $ defn owns-inner-content? (attrs)
+            any? attrs $ fn (pair)
+              hint-fn $ Fn (List Dynamic) (-> Bool)
+              and
+                contains? (#{} :innerHTML :inner-text) (respo.util.list/pair-tag-key pair)
+                non-nil? $ respo.util.list/pair-value pair
+          :examples $ []
+          :schema $ quote $ Fn
+            List $ List Dynamic
+            -> Bool
+          :tests $ [] $ %{} 'TestEntry (:name |detects-content-props)
+            :code $ quote $ do
+              assert= true $ owns-inner-content? $ [] ([] :class-name |a) ([] :innerHTML |<b>x</b>)
+              assert= true $ owns-inner-content? $ [] ([] :inner-text |)
+              assert= false $ owns-inner-content? $ [] ([] :inner-text nil)
+              assert= false $ owns-inner-content? $ [] ([] :title |t)
             :tags $ #{} :unit
         'props-as-list $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn props-as-list (props)

@@ -105,6 +105,9 @@ jobs:
       - name: Test DOM prop removal
         run: node --test test/remove-props.test.mjs
 
+      - name: Test inner content patches
+        run: node --test test/inner-content-patches.test.mjs
+
       - name: Test event configuration
         run: yarn test-event-config
 
