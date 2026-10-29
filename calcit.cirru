@@ -5248,6 +5248,8 @@
             :code $ quote $ do
               assert= |color:red; $ style->string $ [] ([] :color :red)
               assert= |display:block; $ style->string $ [] ([] |display :block)
+              assert= |line-height:4; $ style->string $ [] ([] :line-height 4)
+              assert= |margin-top:4px; $ style->string $ [] ([] :margin-top 4)
               assert= "|style->string expected a tag or string key" $ try
                 style->string $ [] $ [] 1 :red
                 fn (error) error
