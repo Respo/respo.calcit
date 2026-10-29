@@ -171,7 +171,7 @@ send the new value with `(d! (:: :states cursor new-state))`.
 The last step is to update global states. A nominal application `Store` should
 keep its Struct field access typed and pass only the intentionally deep state
 tree to `respo.cursor/update-state-tree`:
-The entry's `Op` declares `:states (:: 'List 'Dynamic) 'Dynamic` for this.
+The entry's `Op` declares `:states (quote (List Dynamic)) 'Dynamic` for this.
 Define a Store-specific typed helper, then call it from the `:states` branch of
 your `(store op op-id)` updater after matching `(:states cursor new-state)`:
 
@@ -182,10 +182,7 @@ ns app.demo $ :require
 defstruct Store (:states 'Map)
 
 defn update-component-state (store cursor new-state)
-  hint-fn $ {}
-    :args $ [] 'app.demo/Store 'List 'S
-    :return 'app.demo/Store
-    :generics $ [] 'S
+  hint-fn $ Fn app.demo/Store List S (-> app.demo/Store) (:generics S)
   assoc store :states $ update-state-tree (:states store) cursor new-state
 ```
 

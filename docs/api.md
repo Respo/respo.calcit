@@ -124,13 +124,12 @@ captures callbacks to test batching without a browser:
 let
     *renders $ ref 0
     *tasks $ ref $ assert-type ([])
-      :: 'List $ :: 'Fn $ {} (:args ([])) (:return 'Unit)
+      quote $ List (Fn (-> Unit))
     request! $ respo.core/make-render-scheduler
       fn () (swap! *renders inc)
         , &unit
       Option :some $ fn (task)
-        hint-fn $ {} (:return 'Unit)
-          :args $ [] $ :: 'Fn $ {} (:args ([])) (:return 'Unit)
+        hint-fn $ Fn (Fn (-> Unit)) (-> Unit)
         swap! *tasks append task
         , &unit
   request!

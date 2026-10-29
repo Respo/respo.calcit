@@ -23,7 +23,7 @@ for (const [name, value, diagnostic] of [
 ]) {
   test(`generic append ${name}`, () => {
     const result = evaluate(`let
-    values $ ref $ assert-type ([]) $ :: 'List 'Number
+    values $ ref $ assert-type ([]) $ quote $ List Number
   respo.core/append-dynamic! values ${value}`);
     assert.notEqual(result.status, 0, 'incompatible elements must fail preprocessing');
     assert.match(result.output, diagnostic);
@@ -42,7 +42,7 @@ const renderBoundary = (type, result, body) => `let
       respo.core/render-with! nil
         fn () $ respo.schema/Component :name :fixture :effects ([]) :listeners ([]) :tree (Option :none)
         fn (op)
-          hint-fn $ {} (:args ([] '${type})) (:return '${result})
+          hint-fn $ Fn ${type} (-> ${result})
           , ${body}
   , &unit`;
 
@@ -54,7 +54,7 @@ test('render-with! retains the existing open Unit dispatch contract', () => {
 test('demo SSR accepts the declared DomElement target without executing DOM work', () => {
   const result = evaluate(`let
     adopt! $ fn (target)
-      hint-fn $ {} (:args ([] 'respo.dom/DomElement)) (:return 'Unit)
+      hint-fn $ Fn respo.dom/DomElement (-> Unit)
       respo.app.core/handle-ssr! target
   , &unit`);
   assert.equal(result.status, 0, result.output);
@@ -132,7 +132,7 @@ for (const [name, source] of [
 for (const helper of ['pair-first', 'pair-value']) {
   const selectedCallback = call => `let
     callback $ fn (value)
-      hint-fn $ {} (:args ([] 'Number)) (:return 'Number)
+      hint-fn $ Fn Number (-> Number)
       + value 1
     selected $ respo.util.list/${helper} $ [] callback callback
   ${call}`;
@@ -156,7 +156,7 @@ for (const helper of ['pair-first', 'pair-value']) {
 
 const guarded = call => `let
     callback $ fn (value)
-      hint-fn $ {} (:args ([] 'Number)) (:return 'Number)
+      hint-fn $ Fn Number (-> Number)
       + value 1
     checked $ respo.util.detect/expect-function callback |expected-fn
   ${call}`;
@@ -164,7 +164,7 @@ const guarded = call => `let
 test('style updates accept the declared DomElement capability', () => {
   const result = evaluate(`let
     update! $ fn (target)
-      hint-fn $ {} (:args ([] 'respo.dom/DomElement)) (:return 'Unit)
+      hint-fn $ Fn respo.dom/DomElement (-> Unit)
       respo.render.patch/add-style target :padding 4
       respo.render.patch/replace-style target :opacity 0.5
   , &unit`);
@@ -183,17 +183,17 @@ for (const helper of ['add-style', 'replace-style']) {
 
 const effect = (args, types, result, body) => `respo.core/build-effect :test ([])
   fn (${args})
-    hint-fn $ {} (:args ([] ${types})) (:return '${result})
+    hint-fn $ Fn ${types} (-> ${result})
     , ${body}`;
-const lists = "(:: 'List 'Dynamic) (:: 'List 'Dynamic)";
+const lists = "(List Dynamic) (List Dynamic)";
 const patchEffect = (variant, args, types, result, body) => `respo.schema/DomPatch :${variant} ([]) ([])
   fn (${args})
-    hint-fn $ {} (:args ([] ${types})) (:return '${result})
+    hint-fn $ Fn ${types} (-> ${result})
     , ${body}`;
 
 for (const variant of ['effect-mount', 'effect-unmount', 'effect-update', 'effect-before-update']) {
   test(`${variant} retains a one-DOM-target Unit callback`, () => {
-    const result = evaluate(patchEffect(variant, 'target', "'respo.dom/DomElement", 'Unit', '&unit'));
+    const result = evaluate(patchEffect(variant, 'target', "respo.dom/DomElement", 'Unit', '&unit'));
     assert.equal(result.status, 0, result.output);
   });
 }
@@ -214,19 +214,19 @@ for (const [name, source] of [
 for (const [name, source, diagnostics] of [
   ['guard rejects String passed to the retained Number callback', guarded('checked |wrong'),
     [/W_LOCAL_FN_ARG_TYPE_MISMATCH/, /calling `checked` arg 1/, /expects type `:number`, but got `:string`/]],
-  ['effect rejects one-argument callback', effect('value', "'Number", 'Unit', '&unit'),
+  ['effect rejects one-argument callback', effect('value', "Number", 'Unit', '&unit'),
     [/W_FN_ARG_TYPE_MISMATCH/, /Function `respo.core\/build-effect` arg 3/, /but got `fn\(:number\) -> :unit`/]],
-  ['effect rejects wrong callback parameter types', effect('args params', "'Number 'Number", 'Unit', '&unit'),
+  ['effect rejects wrong callback parameter types', effect('args params', "Number Number", 'Unit', '&unit'),
     [/W_FN_ARG_TYPE_MISMATCH/, /Function `respo.core\/build-effect` arg 3/, /but got `fn\(:number, :number\) -> :unit`/]],
   ['effect rejects a non-Unit callback result', effect('args params', lists, 'Number', '42'),
     [/W_FN_ARG_TYPE_MISMATCH/, /Function `respo.core\/build-effect` arg 3/, /but got `fn\(list<dynamic>, list<dynamic>\) -> :number`/]],
-  ['mount patch rejects Number as callback target', patchEffect('effect-mount', 'target', "'Number", 'Unit', '&unit'),
+  ['mount patch rejects Number as callback target', patchEffect('effect-mount', 'target', "Number", 'Unit', '&unit'),
     [/Enum `DomPatch::effect-mount` payload 3 expects type/, /but got `fn\(:number\) -> :unit`/]],
-  ['unmount patch rejects two callback parameters', patchEffect('effect-unmount', 'a b', "'respo.dom/DomElement 'respo.dom/DomElement", 'Unit', '&unit'),
+  ['unmount patch rejects two callback parameters', patchEffect('effect-unmount', 'a b', "respo.dom/DomElement respo.dom/DomElement", 'Unit', '&unit'),
     [/Enum `DomPatch::effect-unmount` payload 3 expects type/, /but got `fn\([^)]*,[^)]*\) -> :unit`/]],
-  ['update patch rejects non-Unit result', patchEffect('effect-update', 'target', "'respo.dom/DomElement", 'Number', '42'),
+  ['update patch rejects non-Unit result', patchEffect('effect-update', 'target', "respo.dom/DomElement", 'Number', '42'),
     [/Enum `DomPatch::effect-update` payload 3 expects type/, /but got `fn\([^)]*\) -> :number`/]],
-  ['before-update patch rejects Number as callback target', patchEffect('effect-before-update', 'target', "'Number", 'Unit', '&unit'),
+  ['before-update patch rejects Number as callback target', patchEffect('effect-before-update', 'target', "Number", 'Unit', '&unit'),
     [/Enum `DomPatch::effect-before-update` payload 3 expects type/, /but got `fn\(:number\) -> :unit`/]],
 ]) {
   test(name, () => {

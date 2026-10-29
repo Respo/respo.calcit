@@ -296,9 +296,7 @@ let
       :padding "|10px"
       :background-color "|#f0f0f0"
     style-for-state $ fn (state)
-      hint-fn $ {}
-        :args $ [] 'Tag
-        :return $ :: 'Map 'Tag 'String
+      hint-fn $ Fn Tag (-> (Map Tag String))
       if (= state :active)
         assoc style-container :background-color "|#3388ff"
         , style-container
