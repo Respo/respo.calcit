@@ -2417,11 +2417,8 @@
               (map? props)
                 foldl props ({})
                   defn %normalize-dom-prop (acc pair)
-                    hint-fn $ {}
-                      :args $ []
-                        :: (quote Map) (quote Tag) (quote Dynamic)
-                        :: (quote List) (quote Dynamic)
-                      :return $ :: (quote Map) (quote Tag) (quote Dynamic)
+                    hint-fn $ Fn (Map Tag Dynamic) (List Dynamic)
+                      -> $ Map Tag Dynamic
                     &let
                       k $ &list:nth pair 0
                       if (tag? k)
@@ -7064,10 +7061,7 @@
                   host $ make-element root
                     fn (_name)
                       fn (_event _coord)
-                        hint-fn $ {}
-                          :args $ [] (quote respo.dom/DomEvent)
-                            :: (quote List) (quote Dynamic)
-                          :return $ quote Unit
+                        hint-fn $ Fn respo.dom/DomEvent (List Dynamic) (-> Unit)
                         , &unit
                     []
                 append-element host
@@ -7076,10 +7070,7 @@
                     {} $ :r $ to-string 5
                   fn (_name)
                     fn (_event _coord)
-                      hint-fn $ {}
-                        :args $ [] (quote respo.dom/DomEvent)
-                          :: (quote List) (quote Dynamic)
-                        :return $ quote Unit
+                      hint-fn $ Fn respo.dom/DomEvent (List Dynamic) (-> Unit)
                       , &unit
                   []
                 , host
