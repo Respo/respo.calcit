@@ -6873,7 +6873,7 @@
             :innerHTML $ quote $ JsNullish String
             :rel $ quote $ JsNullish String
             :defer $ quote $ JsNullish Bool
-            :on $ quote $ JsNullish Map
+            :on $ quote $ JsNullish (Map Tag respo.schema/EventHandler)
             :alt $ quote $ JsNullish String
             :draggable $ quote $ JsNullish Bool
             :content $ quote $ JsNullish String
@@ -6927,7 +6927,8 @@
           :code $ quote $ defenum RenderNode (:element 'respo.schema/Element) (:component 'respo.schema/Component)
           :examples $ []
           :schema $ quote EnumDef
-        'RespoEvent $ %{} 'CodeEntry (:doc |)
+        'RespoEvent $ %{} 'CodeEntry
+          :doc "|Struct view of DOM event fields. It is not the value passed to event listeners: Respo calls listeners with the immutable Map<Tag, Dynamic> produced by event->edn (see EventHandler). Do not annotate callback events with RespoEvent; read fields from the Map with get and check their types."
           :code $ quote $ defstruct RespoEvent (:type 'Tag)
             :value $ quote $ JsNullish Dynamic
             :checked $ quote $ JsNullish Bool
@@ -8354,7 +8355,8 @@
               assert |click-event-is-kept $ identical? click! $ .unwrap (calcit.core/get events :click)
               assert |input-event-is-merged $ identical? input! $ .unwrap (calcit.core/get events :input)
             :tags $ #{} :unit
-        'pick-on-events $ %{} 'CodeEntry (:doc "|校验 :on 事件 map，并把监听函数适配为 EventHandler。")
+        'pick-on-events $ %{} 'CodeEntry
+          :doc "|校验 :on 事件 map：键必须是 Tag，值必须是函数（nil 值被丢弃），原函数原样返回，不做 EventHandler 适配或签名转换。静态的 EventHandler 合同只在 DomProps 的 :on 与 :on-* 字段上检查。"
           :code $ quote $ defn pick-on-events (raw-on)
             if (map? raw-on)
               filter-map-kv raw-on $ fn (k v)

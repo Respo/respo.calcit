@@ -31,6 +31,17 @@ input $ {}
 `e` 是不可变 Map，包含事件类型、表单字段和原生事件。输入事件的
 `:type` 是 Tag `:input`；未单独识别的事件（例如 paste）保留原生类型字符串。
 
+### 回调类型
+
+回调合同是 `respo.schema/EventHandler`：第一个参数为 `Map Tag Dynamic`，
+第二个参数为 dispatch 函数。不要把事件参数标成 `respo.schema/RespoEvent`：
+它是 Struct，监听器收到的不是它，运行时会出现 `e.nthAt is not a function`
+一类错误。用 `get` 或下面的读取函数取字段。
+
+`DomProps` 的 `:on-*` 字段与 `:on` Map 的值都按 `EventHandler` 检查，类型错误
+的回调会在预处理阶段被拒绝。普通 props Map（`{} (:on-input …)`）的值是
+`Dynamic`，Respo 只在运行时检查它是否为函数，不检查签名。
+
 ### 读取常用字段
 
 `respo.core` 提供三个读取函数，返回有类型的值，字段缺失或类型不符时直接报错，
