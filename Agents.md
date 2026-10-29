@@ -21,8 +21,8 @@ calcit docs agents --full
 
 类型标注建议（schema-first）:
 
-- 优先使用 `calcit edit schema <ns/def>` 维护函数签名，类型头使用 quoted symbol（`:: 'Fn`），不再使用旧 `:: :fn`；`quote` 是 CLI 传入一个 AST 节点时必需的代码数据边界，不会存入 schema payload。
-- 仅在确有必要时使用 `hint-fn`，并优先采用 schema map 形式；避免旧 clause 写法。
+- 优先使用 `calcit edit schema <ns/def>` 维护函数签名，使用当前 0.32.0 的紧凑类型语法（例如 `quote $ Fn Number (-> Unit)`）；具体输入结构先查当前 CLI 指南，不使用旧 `:: 'Fn` 或 schema map 形式。
+- 仅在确有必要时使用 `hint-fn`，使用 `hint-fn $ Fn Number (-> Unit)` 等紧凑语法，不再使用旧 schema map 形式。
 - 修改签名后，优先用 `calcit js` 验证，确保不会因类型告警阻断编译。
 
 Typed dispatch / type slot:

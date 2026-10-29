@@ -1,13 +1,10 @@
 ## Respo: A virtual DOM library in Calcit-js
 
-### 当前候选：0.17.0-alpha.5 / 正式 Calcit 0.32.1
+### 当前候选：0.17.1 / 正式 Calcit 0.32.1
 
-Respo 0.17 系列配对 Calcit CLI / `@calcit/procs` `0.32.1` 与 JS-FFI `0.2.9`，目前通过 alpha 版本验证下游迁移。应用需同步工具链、重新生成 JS，并迁移下文说明的 typed dispatch 等累计变化。
+Respo 0.17 系列配对 Calcit CLI / `@calcit/procs` `0.32.1` 与正式 JS-FFI `0.2.9`。应用需同步工具链、重新生成 JS，并迁移下文说明的 typed dispatch 等累计变化。候选尚未发布，须完成原 CI、实际消费者和浏览器验收后再使用正式 tag。
 
-本候选相对 alpha.3 只修正发布图：旧 JS-FFI 0.2.6 tag 配对 0.30.1，采用新的
-0.2.7 配对 0.31；不改写旧 tag，也不以根项目的 toolchain 检查替代依赖 tag 的实际声明。
-Snapshot、宿主接口、原测试、预算及原类型门禁保持，详见 [发布配对问题](https://github.com/calcit-lang/js-ffi/issues/195)。
-JS-FFI 0.2.7 已发布；本候选仍须通过原 CI、实际消费者验收及自身 tag 发布，不把本地字段当成已发布。
+本次使用官方 `edit format` 迁移类型标注，测试夹具与文档同步改用 `quote $ Fn …` / `hint-fn $ Fn …`。已知签名的回调现在检查参数数量；旧的双参数派发会在检查时直接拒绝。`identical?` 在 native 与 JS 中都按容器引用判断身份，比较内容应使用 `=`。类型合同和原门禁保持，不改写历史 tag。
 
 PR 保存的原 `dist/` 产物改用相对资源 base，避免本地验收去读取生产 CDN；main
 仍使用原 COS URL、上传校验和 rsync 目录，不增加重复验证脚本。见 [#307](https://github.com/Respo/respo.calcit/issues/307)。
@@ -22,7 +19,7 @@ Respo 的开发版本以 `deps.cirru` 固定 Calcit 与 js-ffi 依赖，通过�
 
 升级时同时固定 `deps.cirru :calcit-version` 和 `package.json` 的 `@calcit/procs` 为同一精确版本，并执行 `yarn install --immutable`。只更新 CLI 而沿用旧 JS runtime，可能在运行时缺失新的 trait 实现；编译成功不能代替 DOM/SSR 测试。核心 API 迁移先用当前 CLI 的 `--check-only` 诊断和 `analyze weak-types` 只读视图定位，再根据真实类型契约和调用点，通过 `query`、`tree`、`edit` 按需改写。不要长期依赖旧版本的固定迁移 preset；开放输入和 macro 能力仍需审阅，并运行原有测试。
 
-使用者影响：本分支计划作为 Respo `0.17.0` 发布，配对 Calcit CLI / `@calcit/procs` `0.32.1` 和正式 JS-FFI `0.2.9`。这是破坏性改动：`d!` 只接受一个参数，类型是当前 entry 用 `:dispatch-op` 类型槽绑定的应用 `Op`；`wrap-dispatch` 已删除，旧的 `d! cursor state`、`d! :tag payload` 写法改为 `d! $ :: :states cursor state`、`d! $ :: :tag payload`。`render!`、`render-with!`、`realize-ssr!` 直接接收应用的 `dispatch!`，demo 不再需要运行时解码。迁移步骤见[类型槽指南](docs/guide/type-slots.md)。升级应用时需一起选择请求同一 Respo / JS-FFI 版本的 Router、UI 等正式模块；不能只改根依赖并放宽 Caps。仍使用旧派发 API 的应用应留在 `maintenance/0.16` 的正式维护版本。旧正式 tag 保持原依赖，不改写历史版本。候选需通过原门禁并正式发版后才可消费。
+使用者影响：本分支计划作为 Respo `0.17.1` 发布，配对 Calcit CLI / `@calcit/procs` `0.32.1` 和正式 JS-FFI `0.2.9`。这是破坏性改动：`d!` 只接受一个参数，类型是当前 entry 用 `:dispatch-op` 类型槽绑定的应用 `Op`；`wrap-dispatch` 已删除，旧的 `d! cursor state`、`d! :tag payload` 写法改为 `d! $ :: :states cursor state`、`d! $ :: :tag payload`。`render!`、`render-with!`、`realize-ssr!` 直接接收应用的 `dispatch!`，demo 不再需要运行时解码。迁移步骤见[类型槽指南](docs/guide/type-slots.md)。升级应用时需一起选择请求同一 Respo / JS-FFI 版本的 Router、UI 等正式模块；不能只改根依赖并放宽 Caps。仍使用旧派发 API 的应用应留在 `maintenance/0.16` 的正式维护版本。旧正式 tag 保持原依赖，不改写历史版本。候选需通过原门禁并正式发版后才可消费。
 
 当前源码逐步使用已有 `.assoc` / `.dissoc` 方法，显式 `slice` 终点传 `Option :some`，省略终点仍表示到末尾。SSR 内容查询直接匹配 `get-in` 的 `Result :ok / :err`，保留缺失属性、混合键及内容优先级。兼容 helper `append-dynamic!` 保留名字，但以同一个泛型关联 `Ref<List<T>>` 与写入值；初始化空 Ref 时声明实际元素类型，不把可变引用扩宽为任意元素类型。
 
@@ -181,9 +178,7 @@ App initialization:
 let
     *store $ ref $ {} (:point 0) (:states {})
     updater $ fn (store op)
-      hint-fn $ {}
-        :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic
-        :return $ :: 'Map 'Tag 'Dynamic
+      hint-fn $ Fn (Map Tag Dynamic) Dynamic (-> (Map Tag Dynamic))
       match op
         (:TODO a b) store
         _ store
