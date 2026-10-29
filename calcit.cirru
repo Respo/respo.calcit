@@ -328,7 +328,7 @@
           :code $ quote $ defcomp comp-wrap (x)
             div ({}) x
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> respo.schema/Component)
+          :schema $ quote $ Fn respo.schema/Component (-> respo.schema/Component)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.app.comp.wrap
           :require $ respo.core :refer $ defcomp div
@@ -755,10 +755,9 @@
           :doc "|Development helper for visualizing data in the UI.\n\nIt renders a labeled preview of arbitrary data and logs the original value when clicked. This is useful for debugging component props or local state and is usually disabled or removed in production."
           :code $ quote $ defcomp comp-inspect (tip data style)
             let
-                class-name $ if (string? style) style
-                style-map $ if (map? style) style
-              pre $ {}
-                :class-name $ str-spaced style-data class-name
+                class-name $ if (string? style) (str-spaced style-data style) style-data
+                style-map $ if (map? style) style $ {}
+              pre $ {} (:class-name class-name)
                 :inner-text $ str tip "|: " $ grab-info data
                 :style style-map
                 :on-click $ fn (e d!)
@@ -1146,7 +1145,7 @@
               match (calcit.core/get event field)
                 (:some value) value
                 (:none)
-                  raise $ str "|[Respo] event has no " field "|, got type: " $ .unwrap-or (calcit.core/get event :type) nil
+                  raise $ str "|[Respo] event has no " field "|, got type: " $ .unwrap-or (calcit.core/get event :type) |unknown
           :examples $ []
           :schema $ quote $ Fn Dynamic Tag (-> Dynamic)
         '&state-plain $ %{} 'CodeEntry
@@ -2021,7 +2020,7 @@
         'element-type $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def element-type (resolve-element-constructor)
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote $ JsNullish JsObject
         'empty-effects $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn empty-effects () ([])
           :examples $ []
@@ -2660,7 +2659,9 @@
           :code $ quote $ defn resolve-element-constructor ()
             if (exists? js/globalThis.Element) js/globalThis.Element js/Error
           :examples $ []
-          :schema $ quote $ Fn (-> Dynamic) (:features :js-ffi)
+          :schema $ quote $ Fn
+            -> $ JsNullish JsObject
+            :features :js-ffi
         'run-effect-ops! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn run-effect-ops! (items target)
             &doseq (op items)
@@ -3136,27 +3137,34 @@
               assert= 5 @caught
             :tags $ #{} :unit
         'get-state-at $ %{} 'CodeEntry
-          :doc "|按 path 读取状态树。路径上任一中间分支缺失（或为 nil）时返回 nil，与读取不存在的 key 一致。Reads the state tree along path; returns nil when any intermediate branch is missing."
+          :doc "|按 path 读取状态树。路径上任一中间分支缺失（或为 nil）时返回 `Option :none`，否则返回 `Option :some value`。Reads the state tree along path; returns `Option :none` when the value or any intermediate branch is missing or nil."
           :code $ quote $ defn get-state-at (states path)
             loop
                 current states
                 xs path
-              hint-fn $ Fn Dynamic (List KeyInput) (-> Dynamic) (:generics KeyInput)
-              if
-                or (empty? xs) (nil? current)
-                , current $ match
-                  get current $ &list:nth xs 0
-                  (:none) nil
-                  (:some value)
-                    recur value $ &list:rest xs
+              hint-fn $ Fn Dynamic (List KeyInput)
+                -> $ Option Dynamic
+                :generics KeyInput
+              if (nil? current) (Option :none)
+                if (empty? xs) (Option :some current)
+                  match
+                    get current $ &list:nth xs 0
+                    (:none) (Option :none)
+                    (:some value)
+                      recur value $ &list:rest xs
           :examples $ []
-          :schema $ quote $ Fn Dynamic (List KeyInput) (-> Dynamic) (:generics KeyInput) (:features :js-ffi)
-          :tests $ [] $ %{} 'TestEntry (:name |missing-intermediate-returns-nil)
+          :schema $ quote $ Fn Dynamic (List KeyInput)
+            -> $ Option Dynamic
+            :generics KeyInput
+            :features :js-ffi
+          :tests $ [] $ %{} 'TestEntry (:name |missing-intermediate-returns-none)
             :code $ quote $ do
-              assert= nil $ get-state-at ({}) ([] :child :data)
-              assert= nil $ get-state-at
-                {} $ :panel $ {}
-                [] :panel |task-1 :data
+              assert= (Option :none)
+                get-state-at ({}) ([] :child :data)
+              assert= (Option :none)
+                get-state-at
+                  {} $ :panel $ {}
+                  [] :panel |task-1 :data
             :tags $ #{} :regression :unit
         'update-state-tree $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn update-state-tree (states cursor new-state)
@@ -3181,7 +3189,7 @@
             %{} 'TestEntry (:name |updates-root-state)
               :code $ quote $ let
                   states1 $ update-state-tree ({}) ([]) :ready
-                  value $ get-state-at states1 $ [] :data
+                  value $ .unwrap $ get-state-at states1 ([] :data)
                 assert |root-state-is-updated $ &= :ready value
               :tags $ #{} :regression :unit
             %{} 'TestEntry (:name |preserves-mixed-tag-string-path)
@@ -3191,7 +3199,7 @@
                   {} $ :panel $ {}
                     |task-1 $ {} $ :data :ready
                   , states
-                assert= :ready $ get-state-at states $ [] :panel |task-1 :data
+                assert= :ready $ .unwrap $ get-state-at states ([] :panel |task-1 :data)
               :tags $ #{} :regression :unit
             %{} 'TestEntry (:name |preserves-existing-number-key)
               :code $ quote $ let
@@ -3199,7 +3207,7 @@
                 assert=
                   {} $ 1 $ {} (:data :ready)
                   , states
-                assert= :ready $ get-state-at states $ [] 1 :data
+                assert= :ready $ .unwrap $ get-state-at states ([] 1 :data)
               :tags $ #{} :regression :unit
             %{} 'TestEntry (:name |absence-migration-state-branches)
               :code $ quote $ do
@@ -3227,16 +3235,18 @@
           :code $ quote $ defn update-state-tree-kv (states cursor k v)
             let
                 path $ concat cursor $ [] :data
-                state $ get-state-at states path
-              if (calcit.core/non-nil? state)
-                if (map? state)
-                  let
-                      state-map state
-                    update-state-tree states cursor $ &map:assoc state-map k v
-                  if (struct? state)
-                    update-state-tree states cursor $ struct-with state $ k v
-                    do (eprintln |:states-kv-invalid-state state) states
-                do (eprintln |:states-kv-missing-state) states
+                state-option $ get-state-at states path
+              match state-option
+                (:some state)
+                  if (map? state)
+                    let
+                        state-map state
+                      update-state-tree states cursor $ &map:assoc state-map k v
+                    if (struct? state)
+                      update-state-tree states cursor $ struct-with state $ k v
+                      do (eprintln |:states-kv-invalid-state state) states
+                (:none)
+                  do (eprintln |:states-kv-missing-state) states
           :examples $ []
           :schema $ quote $ Fn Dynamic (List Dynamic) Dynamic Dynamic (-> Dynamic) (:features :js-ffi)
           :tests $ []
@@ -3247,10 +3257,10 @@
                   updated $ update-state-tree-kv states ([] :panel |task-1) :draft |new
                 assert=
                   {} $ :draft |new
-                  get-state-at updated $ [] :panel |task-1 :data
+                  .unwrap $ get-state-at updated $ [] :panel |task-1 :data
                 assert=
                   {} $ :draft |old
-                  get-state-at states $ [] :panel |task-1 :data
+                  .unwrap $ get-state-at states $ [] :panel |task-1 :data
               :tags $ #{} :regression :unit
             %{} 'TestEntry (:name |updates-existing-numeric-map-key)
               :code $ quote $ let
@@ -3259,10 +3269,10 @@
                   updated $ update-state-tree-kv states ([] :panel 7) 4 |new
                 assert=
                   {} $ 4 |new
-                  get-state-at updated $ [] :panel 7 :data
+                  .unwrap $ get-state-at updated $ [] :panel 7 :data
                 assert=
                   {} $ 4 |old
-                  get-state-at states $ [] :panel 7 :data
+                  .unwrap $ get-state-at states $ [] :panel 7 :data
               :tags $ #{} :regression :unit
             %{} 'TestEntry (:name |updates-struct-state-after-shape-guard)
               :code $ quote $ let
@@ -3270,8 +3280,8 @@
                   states $ update-state-tree ({}) ([] :panel |task-1) initial
                   updated $ update-state-tree-kv states ([] :panel |task-1) :draft |new
                 assert= (.assoc initial :draft |new)
-                  get-state-at updated $ [] :panel |task-1 :data
-                assert= initial $ get-state-at states $ [] :panel |task-1 :data
+                  .unwrap $ get-state-at updated $ [] :panel |task-1 :data
+                assert= initial $ .unwrap $ get-state-at states ([] :panel |task-1 :data)
               :tags $ #{} :regression :unit
             %{} 'TestEntry
               :name |invalid-struct-key-keeps-existing-runtime-rejection
@@ -3284,14 +3294,14 @@
                       , false
                     fn (error) true
                 assert= true rejected
-                assert= initial $ get-state-at states $ [] :panel :data
+                assert= initial $ .unwrap $ get-state-at states ([] :panel :data)
               :tags $ #{} :regression :unit
         'update-state-tree-merge $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn update-state-tree-merge (states cursor state0 changes)
             let
                 path $ concat cursor $ [] :data
                 current-state $ get-state-at states path
-                state $ either current-state state0
+                state $ .unwrap-or current-state state0
               if (map? changes)
                 let
                     changes-map changes
@@ -3329,10 +3339,10 @@
                     {} $ :draft |new
                 assert=
                   {} (:draft |new) (:locked? false)
-                  get-state-at updated $ [] :panel |task-1 :data
+                  .unwrap $ get-state-at updated $ [] :panel |task-1 :data
                 assert=
                   {} (:draft |old) (:locked? false)
-                  get-state-at states $ [] :panel |task-1 :data
+                  .unwrap $ get-state-at states $ [] :panel |task-1 :data
               :tags $ #{} :regression :unit
             %{} 'TestEntry (:name |merges-struct-base-without-mutating-original)
               :code $ quote $ let
@@ -3340,7 +3350,7 @@
                   updated $ update-state-tree-merge ({}) ([]) original $ {} (:stop-propagation? false)
                 assert=
                   respo.schema/EventConfig :stop-propagation? false :listener-mode $ respo.schema/ListenerMode :property
-                  get-state-at updated $ [] :data
+                  .unwrap $ get-state-at updated $ [] :data
                 assert= original $ respo.schema/EventConfig :stop-propagation? true :listener-mode $ respo.schema/ListenerMode :property
               :tags $ #{} :regression :unit
             %{} 'TestEntry (:name |keeps-tree-for-non-map-changes)
@@ -3393,7 +3403,8 @@
                   state0 $ CursorTestState :draft |a :locked? false :message |ready
                   store1 $ update-states-merge ({}) ([]) state0 $ {} (:draft |b)
                   store2 $ update-states-merge store1 ([]) state0 $ {} (:draft |c)
-                  state2 $ coerce-cursor-test-state $ get-state-at store2 ([] :states :data)
+                  state2 $ coerce-cursor-test-state $ .unwrap
+                    get-state-at store2 $ [] :states :data
                 assert |state-remains-a-struct $ struct? state2
                 assert |draft-is-updated $ &= |c $ :draft state2
                 assert |other-field-is-preserved $ &= |ready $ :message state2
@@ -7788,7 +7799,7 @@
           :doc "|Regex pattern for finding dashed-case letters (e.g. -a) to convert to camelCase."
           :code $ quote $ def dashed-letter-pattern (create-dashed-letter-pattern)
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote JsObject
         'event->edn $ %{} 'CodeEntry
           :doc "|Converts a native DOM event into a Respo EDN event structure."
           :code $ quote $ defn event->edn (event)
@@ -8224,8 +8235,9 @@
                   Option :some idx
                   recur (&list:rest rest-xs) (inc idx)
           :examples $ []
-          :schema $ quote $ Fn (List Dynamic) Dynamic
-            -> $ calcit.core/Option Number
+          :schema $ quote $ Fn (List T) T
+            -> $ Option Number
+            :generics T
           :tests $ [] $ %{} 'TestEntry (:name |absence-migration-values)
             :code $ quote $ do
               assert= (Option :none)

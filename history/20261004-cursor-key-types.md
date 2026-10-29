@@ -27,7 +27,7 @@
 let
     states $ respo.cursor/update-state-tree ({}) ([] :panel |task-1) :ready
   assert= ({} (:panel ({} (|task-1 ({} (:data :ready)))))) states
-  assert= :ready $ respo.cursor/get-state-at states ([] :panel |task-1 :data)
+  assert= (Option :some :ready) $ respo.cursor/get-state-at states ([] :panel |task-1 :data)
 ```
 
 ## 验证
