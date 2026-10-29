@@ -1466,34 +1466,43 @@
               {} $ :href |/home
               <> |Home
           :schema $ quote $ Fn Tag PropsInput & Dynamic (-> respo.schema/Element) (:generics PropsInput)
+        'create-keyed-element $ %{} 'CodeEntry
+          :doc "|Typed counterpart of create-list-element. Takes ChildPair values, usually built with keyed-element or keyed-component, instead of [key child] lists. Keys must be non-nil; pairs whose :node is Option :none are omitted, like nil children in create-list-element. Keys, order and diffing behave the same as list->."
+          :code $ quote $ defn create-keyed-element (tag-name props pairs)
+            make-keyed-element |create-keyed-element tag-name props $ filter pairs $ fn (pair)
+              hint-fn $ Fn respo.schema/ChildPair $ -> Bool
+              assert "|[Respo] keyed child requires a non-nil key" $ calcit.core/non-nil? $ :key pair
+              match (:node pair)
+                (:some _node) true
+                (:none) false
+          :examples $ [] $ quote
+            create-keyed-element :ul
+              {} $ :class-name |list
+              [] $ keyed-element :item-1 $ span ({})
+          :schema $ quote $ Fn Tag PropsInput (List respo.schema/ChildPair) (-> respo.schema/Element) (:generics PropsInput)
+          :tests $ [] $ %{} 'TestEntry (:name |matches-list-element)
+            :code $ quote $ let
+                child $ span $ {}
+              assert=
+                list-> ({})
+                  [] ([] :a child) ([] :gone nil)
+                keyed-> ({})
+                  [] (keyed-element :a child)
+                    respo.schema/ChildPair :key :gone :node $ Option :none
+            :tags $ #{} :unit
         'create-list-element $ %{} 'CodeEntry
           :doc "|Creates an element for ordered keyed children. Validates each [key child] pair before omitting nil-valued children, matching ordinary element children. Keys must be non-nil, including for omitted children."
           :code $ quote $ defn create-list-element (tag-name props child-pairs)
             when
               not $ list? child-pairs
               raise "|[Respo/create-list-element] expected keyed child pairs as a list or map"
-            let
-                props-map $ normalize-dom-props props
-                ref! $ normalize-ref (calcit.core/get props-map :ref) "|[Respo/create-list-element] expected :ref to be a function or nil"
-                attrs $ pick-attrs props-map
-                styles $ sort
-                  assert-type
-                    &map:to-list $ props-style-map $ calcit.core/get props-map :style
-                    quote $ List $ List Dynamic
-                  fn (x y)
-                    &compare
-                      .unwrap $ calcit.core/first x
-                      .unwrap $ calcit.core/first y
-                event $ pick-event props-map
-              schema/Element :name tag-name :coord (Option :none) :attrs attrs :style styles :event event :children
-                map
-                  filter (map child-pairs confirm-child-pair)
-                    fn (pair)
-                      calcit.core/non-nil? $ respo.util.list/pair-value pair
-                  fn (pair)
-                    hint-fn $ Fn (List Dynamic) (-> respo.schema/ChildPair)
-                    respo.util.detect/make-child-pair (respo.util.list/pair-key pair) (respo.util.list/pair-value pair)
-                , :ref ref!
+            make-keyed-element |create-list-element tag-name props $ map
+              filter (map child-pairs confirm-child-pair)
+                fn (pair)
+                  calcit.core/non-nil? $ respo.util.list/pair-value pair
+              fn (pair)
+                hint-fn $ Fn (List Dynamic) (-> respo.schema/ChildPair)
+                respo.util.detect/make-child-pair (respo.util.list/pair-key pair) (respo.util.list/pair-value pair)
           :examples $ [] $ quote
             create-list-element :div
               {} $ :class-name |list
@@ -2296,6 +2305,27 @@
                     hint-fn $ Fn String $ -> String
                     , message
                 , "|[Respo] event has no :key"
+        'keyed-> $ %{} 'CodeEntry
+          :doc "|Render typed keyed children inside a `<div>`. Same as list-> but takes a List of ChildPair, so the checker can verify each child is an Element or Component."
+          :code $ quote $ defn keyed-> (props pairs) (create-keyed-element :div props pairs)
+          :examples $ [] $ quote
+            keyed-> ({})
+              [] $ keyed-element :a $ div ({})
+          :schema $ quote $ Fn PropsInput (List respo.schema/ChildPair) (-> respo.schema/Element) (:generics PropsInput)
+        'keyed-component $ %{} 'CodeEntry
+          :doc "|Build a ChildPair for keyed-> from a key and a Component."
+          :code $ quote $ defn keyed-component (key component)
+            assert "|[Respo] keyed child requires a non-nil key" $ calcit.core/non-nil? key
+            respo.schema/ChildPair :key key :node $ Option :some $ respo.schema/RenderNode :component component
+          :examples $ []
+          :schema $ quote $ Fn K respo.schema/Component (-> respo.schema/ChildPair) (:generics K)
+        'keyed-element $ %{} 'CodeEntry
+          :doc "|Build a ChildPair for keyed-> from a key and an Element."
+          :code $ quote $ defn keyed-element (key element)
+            assert "|[Respo] keyed child requires a non-nil key" $ calcit.core/non-nil? key
+            respo.schema/ChildPair :key key :node $ Option :some $ respo.schema/RenderNode :element element
+          :examples $ []
+          :schema $ quote $ Fn K respo.schema/Element (-> respo.schema/ChildPair) (:generics K)
         'li $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn li (props & children) (create-element :li props & children)
           :examples $ []
@@ -2314,6 +2344,25 @@
             List $ List Dynamic
             -> respo.schema/Element
             :generics PropsInput
+        'make-keyed-element $ %{} 'CodeEntry
+          :doc "|Shared builder for create-list-element and create-keyed-element: normalizes props, sorts styles and attaches already validated ChildPair children. label names the caller in error messages."
+          :code $ quote $ defn make-keyed-element (label tag-name props children)
+            let
+                props-map $ normalize-dom-props props
+                ref! $ normalize-ref (calcit.core/get props-map :ref) (str |[Respo/ label "|] expected :ref to be a function or nil")
+                attrs $ pick-attrs props-map
+                styles $ sort
+                  assert-type
+                    &map:to-list $ props-style-map $ calcit.core/get props-map :style
+                    quote $ List $ List Dynamic
+                  fn (x y)
+                    &compare
+                      .unwrap $ calcit.core/first x
+                      .unwrap $ calcit.core/first y
+                event $ pick-event props-map
+              schema/Element :name tag-name :coord (Option :none) :attrs attrs :style styles :event event :children children :ref ref!
+          :examples $ []
+          :schema $ quote $ Fn String Tag PropsInput (List respo.schema/ChildPair) (-> respo.schema/Element) (:generics PropsInput)
         'make-render-scheduler $ %{} 'CodeEntry
           :doc "|Returns a zero-argument scheduler. Pass Option:none (or omit the trailing Option argument) to coalesce requests via queueMicrotask, or Option:some enqueue! to supply custom timing. The callback reads the latest application state when it runs; only queued metadata is stored. render! and render-with! themselves remain synchronous. Reuse one scheduler per store watch; resetting its queued flag before rendering allows later requests to schedule another callback."
           :code $ quote $ defn make-render-scheduler (render! enqueue-option)

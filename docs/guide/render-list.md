@@ -76,6 +76,23 @@ list->
 
 回调契约和错误处理见[常用原语](./common-primitives.md#conditional-and-keyed-rendering)。
 
+### 有类型的 keyed 子节点
+
+`list->` 的子节点合同是 `List (List Dynamic)`，类型检查无法确认每项的 child 是 Element 还是 Component。需要受检的列表时，改用 `keyed->`（`create-keyed-element` 的 `:div` 版本），它接收 `List respo.schema/ChildPair`：
+
+```cirru.no-check
+keyed->
+  {} (:class-name |task-list)
+  map tasks $ fn (task)
+    keyed-component (:id task) (comp-task task)
+```
+
+- `keyed-element key element` 包装 Element，`keyed-component key component` 包装 Component，参数类型不符会在预处理阶段报错。
+- 需要可选子节点时，直接构造 `respo.schema/ChildPair :key k :node (Option :none)`；`:node` 为 `Option :none` 的项会被过滤，与 `list->` 过滤 nil child 一致。
+- key 仍须非 nil；key、顺序、diff 与 patch 行为与 `list->` 相同。
+
+`list->` 和 `create-list-element` 保持不变。从 `[] key child` 迁移时，把每项换成 `keyed-element key child` 或 `keyed-component key child`，再把 `list->` 换成 `keyed->`。
+
 <a id="memoizing-components"></a>
 
 ## 组件缓存

@@ -277,3 +277,24 @@ for (const [field, wrap] of [
     assert.doesNotMatch(result.output, /took [\d.]+ms:/, 'the invalid props must not run');
   });
 }
+
+const component = `respo.schema/Component :name :row :effects ([]) :listeners ([]) :tree (Option :none)`;
+
+test('keyed-> accepts typed ChildPair entries', () => {
+  const result = evaluate(`respo.core/keyed-> ({})
+  [] (respo.core/keyed-element :a $ respo.core/span ({})) (respo.core/keyed-component :b $ ${component})`);
+  assert.equal(result.status, 0, result.output);
+});
+
+test('keyed-> rejects untyped [key child] lists', () => {
+  const result = evaluate(`respo.core/keyed-> ({})
+  [] $ [] :a $ respo.core/span ({})`);
+  assert.notEqual(result.status, 0, 'untyped pairs must fail preprocessing');
+  assert.match(result.output, /ChildPair/);
+});
+
+test('keyed-element rejects a Component node', () => {
+  const result = evaluate(`respo.core/keyed-element :a $ ${component}`);
+  assert.notEqual(result.status, 0, 'Component must use keyed-component');
+  assert.match(result.output, /respo\.schema\/Element/);
+});
