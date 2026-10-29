@@ -236,3 +236,44 @@ for (const [name, source, diagnostics] of [
     assert.doesNotMatch(result.output, /took [\d.]+ms:/, 'invalid callback must not run');
   });
 }
+
+const domPropsFields = (() => {
+  const result = spawnSync(bin, ['calcit.cirru', 'query', 'def', 'respo.schema/DomProps'], {
+    cwd: root, encoding: 'utf8', timeout: 30_000,
+  });
+  assert.ifError(result.error);
+  const source = result.stdout.slice(result.stdout.indexOf('defstruct DomProps'));
+  const fields = [...source.matchAll(/^\s*\(?(:[A-Za-z?-]+) \$ quote/gm)].map(match => match[1]);
+  assert.ok(fields.includes(':on') && fields.includes(':on-input'), 'DomProps field list must be readable');
+  return fields;
+})();
+
+const domPropsWith = (field, value) => `let
+    props $ %{} respo.schema/DomProps ${domPropsFields
+      .map(name => `(${name} ${name === field ? value : 'nil'})`).join(' ')}
+  , &unit`;
+
+const listener = eventType => `(fn (e d!) (hint-fn $ Fn ${eventType} Fn (-> Unit)) &unit)`;
+
+for (const [field, wrap] of [
+  [':on-input', callback => callback],
+  [':on', callback => `({} (:input ${callback}))`],
+]) {
+  test(`DomProps ${field} accepts the Map event delivered by event->edn`, () => {
+    const result = evaluate(domPropsWith(field, wrap(listener('(Map Tag Dynamic)'))));
+    assert.equal(result.status, 0, result.output);
+  });
+
+  test(`DomProps ${field} accepts a nil listener, which Respo drops`, () => {
+    const result = evaluate(domPropsWith(field, wrap('nil')));
+    assert.equal(result.status, 0, result.output);
+  });
+
+  test(`DomProps ${field} rejects a RespoEvent-typed listener`, () => {
+    const result = evaluate(domPropsWith(field, wrap(listener('respo.schema/RespoEvent'))));
+    assert.notEqual(result.status, 0, 'listeners receive a Map, not a RespoEvent Struct');
+    assert.match(result.output, new RegExp(`field \`${field}\` expects type`));
+    assert.match(result.output, /respo\.schema\/RespoEvent/);
+    assert.doesNotMatch(result.output, /took [\d.]+ms:/, 'the invalid props must not run');
+  });
+}
