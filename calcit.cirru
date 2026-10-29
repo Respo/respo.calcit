@@ -8262,7 +8262,8 @@
               assert= (Option :none)
                 respo.util.list/index-of-dynamic ([] nil false 0 |) :absent
             :tags $ #{} :regression :unit
-        'map-with-idx $ %{} 'CodeEntry (:doc |)
+        'map-with-idx $ %{} 'CodeEntry
+          :doc "|按顺序对每个元素调用 f，返回 [idx (f x)] 对的列表。Maps xs with f and pairs each result with its index: ([] idx (f x))."
           :code $ quote $ defn map-with-idx (xs f)
             assert (fn? f) "|expects function"
             assert (list? xs) "|expects list"

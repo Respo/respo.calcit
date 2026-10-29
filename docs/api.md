@@ -36,6 +36,8 @@ calcit query def respo.render.html/make-string
 
 `calcit query examples <ns/def>` is also useful when an API has runnable examples.
 
+The type contract of each public API (which positions are precise and which stay open on purpose) is collected in [公共 API 的类型契约](guide/api-types.md).
+
 ### User APIs
 
 | Namespace            | Function          |
@@ -80,8 +82,7 @@ Normally you do not need these lower level APIs for everyday component work, but
 | ------------------------- | -------------------- |
 | `respo.util.format`       | `purify-element`     |
 |                           | `mute-element`       |
-| `respo.util.list`         | `map-val`            |
-|                           | `map-with-idx`       |
+| `respo.util.list`         | `map-with-idx`       |
 | `respo.render.diff`       | `find-element-diffs` |
 | `respo.render.patch`      | `apply-dom-changes`  |
 | `respo.controller.client` | `activate-instance!` |
@@ -150,6 +151,6 @@ its microtask before inspecting the DOM, or inject and explicitly flush a test q
 ##### map-with-idx
 
 ```cirru.no-check
-respo.util.list/map-with-idx identity ([] :a :b)
+respo.util.list/map-with-idx ([] :a :b) identity
 ; [] ([] 0 :a) ([] 1 :b)
 ```
