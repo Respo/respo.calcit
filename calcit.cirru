@@ -453,7 +453,7 @@
         'Store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Store
             :tasks $ quote $ List respo.app.schema/Task
-            :states 'Dynamic
+            :states 'respo.schema/States
             :cursor $ quote $ List Dynamic
           :examples $ []
           :schema $ quote StructDef
@@ -1238,9 +1238,7 @@
               &map:assoc branch :cursor $ append parent-cursor k
           :examples $ [] $ quote
             >> ({}) :task-a
-          :schema $ quote $ Fn Dynamic Dynamic
-            -> $ Map Dynamic Dynamic
-            :features :js-ffi
+          :schema $ quote $ Fn Dynamic Dynamic (-> respo.schema/States) (:features :js-ffi)
           :tests $ []
             %{} 'TestEntry (:name |mixed-state-keys)
               :code $ quote $ let
@@ -1349,8 +1347,7 @@
             if (nil? value) ({})
               if (map? value) value $ raise $ str "|[Respo] expected states as a map, got: " (type-of value)
           :examples $ []
-          :schema $ quote $ Fn Dynamic
-            -> $ Map Dynamic Dynamic
+          :schema $ quote $ Fn Dynamic (-> respo.schema/States)
         'blockquote $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn blockquote (props & children) (create-element :blockquote props & children)
           :examples $ []
@@ -3229,25 +3226,22 @@
                   {} $ :panel $ {}
                   [] :panel |task-1 :data
             :tags $ #{} :regression :unit
-        'update-state-tree $ %{} 'CodeEntry (:doc |)
+        'update-state-tree $ %{} 'CodeEntry
+          :doc "|把 `new-state` 写到 `cursor` 指向的分支的 `:data`，返回新的 `respo.schema/States`。`states` 为 nil 时当作空 map，不是 map 时报错。"
           :code $ quote $ defn update-state-tree (states cursor new-state)
-            if (nil? states)
-              update-state-tree ({}) cursor new-state
-              if (map? states)
-                if (empty? cursor) (&map:assoc states :data new-state)
-                  let
-                      key $ &list:nth cursor 0
-                    &map:assoc states key $ update-state-tree
-                      match (calcit.core/get states key)
-                        (:some branch-value) branch-value
-                        (:none) ({})
-                      &list:rest cursor
-                      , new-state
-                assoc-in states
-                  concat cursor $ [] :data
-                  , new-state
+            let
+                base $ respo.core/as-states-map states
+              if (empty? cursor) (&map:assoc base :data new-state)
+                let
+                    key $ &list:nth cursor 0
+                  &map:assoc base key $ update-state-tree
+                    match (calcit.core/get base key)
+                      (:some branch-value) branch-value
+                      (:none) ({})
+                    &list:rest cursor
+                    , new-state
           :examples $ []
-          :schema $ quote $ Fn Dynamic (List Dynamic) Dynamic (-> Dynamic) (:features :js-ffi)
+          :schema $ quote $ Fn Dynamic (List Dynamic) Dynamic (-> respo.schema/States) (:features :js-ffi)
           :tests $ []
             %{} 'TestEntry (:name |updates-root-state)
               :code $ quote $ let
@@ -3294,6 +3288,15 @@
                     &{} :child $ &{} :data false :kept 0
                     , original
               :tags $ #{} :regression :unit
+            %{} 'TestEntry (:name |rejects-non-map-states)
+              :code $ quote $ let
+                  rejected $ try
+                    do
+                      update-state-tree ([] 1) ([] :child) :ready
+                      , false
+                    fn (error) true
+                assert |non-map-states-are-rejected rejected
+              :tags $ #{} :regression :unit
         'update-state-tree-kv $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn update-state-tree-kv (states cursor k v)
             let
@@ -3307,11 +3310,11 @@
                       update-state-tree states cursor $ &map:assoc state-map k v
                     if (struct? state)
                       update-state-tree states cursor $ struct-with state $ k v
-                      do (eprintln |:states-kv-invalid-state state) states
+                      do (eprintln |:states-kv-invalid-state state) (respo.core/as-states-map states)
                 (:none)
-                  do (eprintln |:states-kv-missing-state) states
+                  do (eprintln |:states-kv-missing-state) (respo.core/as-states-map states)
           :examples $ []
-          :schema $ quote $ Fn Dynamic (List Dynamic) Dynamic Dynamic (-> Dynamic) (:features :js-ffi)
+          :schema $ quote $ Fn Dynamic (List Dynamic) Dynamic Dynamic (-> respo.schema/States) (:features :js-ffi)
           :tests $ []
             %{} 'TestEntry (:name |updates-mixed-key-map-without-rewriting-path)
               :code $ quote $ let
@@ -3382,9 +3385,9 @@
                               struct-with updated $ k v
                               raise $ str-spaced |unknown-state-to-merge updated
                         recur next-state $ &list:rest xs
-                do (eprintln |unknown-changes-to-merge changes) states
+                do (eprintln |unknown-changes-to-merge changes) (respo.core/as-states-map states)
           :examples $ []
-          :schema $ quote $ Fn Dynamic (List Dynamic) Dynamic Dynamic (-> Dynamic) (:features :js-ffi)
+          :schema $ quote $ Fn Dynamic (List Dynamic) Dynamic Dynamic (-> respo.schema/States) (:features :js-ffi)
           :tests $ []
             %{} 'TestEntry (:name |preserves-tree-on-invalid-base)
               :code $ quote $ let
@@ -7044,6 +7047,11 @@
           :code $ quote $ defstruct RespoListener (:name 'Tag) (:handler 'Fn)
           :examples $ []
           :schema $ quote StructDef
+        'States $ %{} 'CodeEntry
+          :doc "|组件 states 树的类型名，运行时是普通 Map（`Map Dynamic Dynamic`）。`:cursor` 存当前分支的路径，`:data` 存组件自己的状态，其余键是子分支。`>>`、`as-states-map` 和 `update-state-tree` 系列都返回这个类型；它是别名，不会校验内部结构。"
+          :code $ quote $ def States ({})
+          :examples $ []
+          :schema $ quote $ Map Dynamic Dynamic
         'cache-info $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def cache-info
             {} (:value nil) (:initial-loop nil) (:last-hit nil) (:hit-times 0)
