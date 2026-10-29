@@ -53,6 +53,21 @@ jobs:
           calcit calcit.cirru --check-only
           calcit calcit.cirru fix --workflow strict --verify --format edn
 
+      - name: Keep unresolved weak types from growing
+        env:
+          UNRESOLVED_LIMIT: "222"
+        run: |
+          set -euo pipefail
+          actual="$(calcit calcit.cirru analyze weak-types --summary-only --format json | jq -e '.data.summary.intents.unresolved')"
+          echo "unresolved weak types: ${actual} (limit ${UNRESOLVED_LIMIT})"
+          if (( actual > UNRESOLVED_LIMIT )); then
+            echo "::error title=Unresolved weak types grew::${actual} > ${UNRESOLVED_LIMIT}. Type the new positions with concrete types, or keep real host values inside :js-ffi adapters."
+            exit 1
+          fi
+          if (( actual < UNRESOLVED_LIMIT )); then
+            echo "::notice title=Unresolved weak types dropped::Lower UNRESOLVED_LIMIT to ${actual} in this workflow."
+          fi
+
       - name: "test"
         run: |
           calcit calcit.cirru test --require-match --summary-only --format json
