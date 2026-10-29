@@ -1,6 +1,8 @@
 ## Respo: A virtual DOM library in Calcit-js
 
-### 当前候选：0.17.1 / 正式 Calcit 0.32.1
+### 当前版本：0.17.2 / 正式 Calcit 0.32.1
+
+0.17.2 在 0.17.1 之上收紧 `DomProps :on` 的类型为 `Map Tag (JsNullish EventHandler)`：`:on` 中把事件标成 `RespoEvent` 的回调会在预处理阶段被拒绝，`nil` 监听器仍被丢弃。见[DOM events 指南](docs/guide/dom-events.md)与 [#315](https://github.com/Respo/respo.calcit/pull/315)。
 
 Respo 0.17 系列配对 Calcit CLI / `@calcit/procs` `0.32.1` 与正式 JS-FFI `0.2.9`。应用需同步工具链、重新生成 JS，并迁移下文说明的 typed dispatch 等累计变化。候选尚未发布，须完成原 CI、实际消费者和浏览器验收后再使用正式 tag。
 
