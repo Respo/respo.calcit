@@ -108,6 +108,9 @@ jobs:
       - name: Test inner content patches
         run: node --test test/inner-content-patches.test.mjs
 
+      - name: Test spacing helpers
+        run: node --test test/space.test.mjs
+
       - name: Test event configuration
         run: yarn test-event-config
 

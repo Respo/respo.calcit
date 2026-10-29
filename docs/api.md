@@ -71,7 +71,7 @@ The type contract of each public API (which positions are precise and which stay
 |                      | `pick-state` `state-cursor` |
 |                      | `event-value` `event-checked?` `keyboard-info` |
 | `respo.resource`     | `resource-idle` `resource-reducer` `load-resource!` |
-| `respo.comp.space`   | `comp-space` `=<` |
+| `respo.comp.space`   | `comp-space` `=<` `space-x` `space-y` |
 | `respo.comp.inspect` | `comp-inspect`    |
 | `respo.render.html`  | `make-string`     |
 | `respo.ffi.browser`  | `query-selector`：查询并返回 `Option<respo.dom/DomElement>` |

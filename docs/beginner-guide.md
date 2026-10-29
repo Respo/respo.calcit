@@ -133,6 +133,17 @@ Being a multiple arity macro, it also supports:
 ; (comp-space 8 nil)
 ```
 
+For pixel gaps, `space-x` and `space-y` from `respo.comp.space` take a single Number, so the direction is explicit and the size is type checked. They render the same element as `=<`, as their own components:
+
+```cirru.no-check
+space-x 8
+; (=< 8 nil)
+space-y 16
+; (=< nil 16)
+```
+
+Keep `=<` or `comp-space` for other CSS length values such as strings.
+
 ### States
 
 A component can also be created with states, it also need a `cursor` for updating states:
