@@ -29,6 +29,17 @@ test('open keyed children validate nested lists before constructing an Element',
   assert.equal(tree.name.value, 'Element');
   const children = tree.values[tree.fields.findIndex(field => field.value === 'children')];
   assert.equal(c.count(children), 1);
+  const optionTags = c.init_tags(['some', 'none']);
+  const none = c._PCT__$o__$o_(c.Option, optionTags.none);
+  const some = value => c._PCT__$o__$o_(c.Option, optionTags.some, value);
+  const optionalTree = create_list_element_open(tags.div, c._$n__$M_(),
+    c.arrayToList([c.arrayToList([tags.omitted, none]), c.arrayToList([tags.live, some(child)])]));
+  const optionalChildren = optionalTree.values[optionalTree.fields.findIndex(field => field.value === 'children')];
+  assert.ok(c._$e_(children, optionalChildren), 'Option children preserve the original keyed children');
+  for (const pair of [[null, none], [tags.live, some(false)]]) {
+    assert.throws(() => create_list_element_open(tags.div, c._$n__$M_(),
+      c.arrayToList([c.arrayToList(pair)])));
+  }
   for (const invalid of [null, 42, c._$n__$M_(), c.arrayToList([42]),
     c.arrayToList([c.arrayToList([tags.live])]), c.arrayToList([c.arrayToList([null, child])])]) {
     assert.throws(() => create_list_element_open(tags.div, c._$n__$M_(), invalid));

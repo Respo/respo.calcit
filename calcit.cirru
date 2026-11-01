@@ -1435,9 +1435,11 @@
             assert "|expected pair" $ and (list? pair)
               &= 2 $ count pair
             assert "|[Respo] keyed child requires a non-nil key" $ calcit.core/non-nil? $ .unwrap (calcit.core/first pair)
-            &let
-              x $ &list:nth pair 1
-              assert "|Invalid data in elements tree: " $ or (nil? x) (element? x) (component? x)
+            match
+              resolve-prop-value $ &list:nth pair 1
+              (:some child)
+                do (confirm-child child) &unit
+              (:none) &unit
             , pair
           :examples $ []
           :schema $ quote $ Fn (List Dynamic)
@@ -1513,18 +1515,20 @@
                     respo.schema/ChildPair :key :gone :node $ Option :none
             :tags $ #{} :unit
         'create-list-element $ %{} 'CodeEntry
-          :doc "|Creates an element for ordered keyed children. Validates each [key child] pair before omitting nil-valued children, matching ordinary element children. Keys must be non-nil, including for omitted children."
+          :doc "|Creates an element for ordered keyed children. Validates each [key child] pair and non-nil key before omitting absent children. Child values can be Option: some keeps the original key and child; none is omitted directly without erasing it to nil. Bare nil children remain omitted."
           :code $ quote $ defn create-list-element (tag-name props child-pairs)
             when
               not $ list? child-pairs
               raise "|[Respo/create-list-element] expected keyed child pairs as a list or map"
-            make-keyed-element |create-list-element tag-name props $ map
-              filter (map child-pairs confirm-child-pair)
-                fn (pair)
-                  calcit.core/non-nil? $ respo.util.list/pair-value pair
-              fn (pair)
-                hint-fn $ Fn (List Dynamic) (-> respo.schema/ChildPair)
-                respo.util.detect/make-child-pair (respo.util.list/pair-key pair) (respo.util.list/pair-value pair)
+            make-keyed-element |create-list-element tag-name props $ foldl (map child-pairs confirm-child-pair) ([])
+              fn (acc pair)
+                hint-fn $ Fn (List respo.schema/ChildPair) (List Dynamic)
+                  -> $ List respo.schema/ChildPair
+                match
+                  resolve-prop-value $ respo.util.list/pair-value pair
+                  (:some child)
+                    append acc $ respo.util.detect/make-child-pair (respo.util.list/pair-key pair) child
+                  (:none) acc
           :examples $ [] $ quote
             create-list-element :div
               {} $ :class-name |list
@@ -1599,6 +1603,30 @@
                   fn (_error) (reset! caught-child? true)
                 assert |nil-key-is-rejected-before-filtering @caught-key?
                 assert |invalid-child-is-not-filtered @caught-child?
+              :tags $ #{} :unit
+            %{} 'TestEntry (:name |normalizes-option-keyed-children)
+              :code $ quote $ let
+                  child $ span $ {}
+                  none $ Option :none
+                  plain $ list-> ({})
+                    [] $ [] :kept child
+                  optional $ list-> ({})
+                    [] ([] :before none)
+                      [] :kept $ Option :some child
+                      [] :after nil
+                  caught-key? $ ref false
+                  caught-child? $ ref false
+                assert= (respo.util.detect/element-children plain) (respo.util.detect/element-children optional)
+                try
+                  list-> ({})
+                    [] $ [] nil none
+                  fn (_error) (reset! caught-key? true)
+                try
+                  list-> ({})
+                    [] $ [] :invalid $ Option :some false
+                  fn (_error) (reset! caught-child? true)
+                assert |nil-key-is-checked-before-omitting-none @caught-key?
+                assert |some-does-not-hide-invalid-child @caught-child?
               :tags $ #{} :unit
         'create-list-element-open $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn create-list-element-open (name attrs children)
