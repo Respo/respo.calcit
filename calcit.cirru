@@ -1028,7 +1028,7 @@
                   elements $ filter component-result $ fn (x)
                     not $ listener? x
                 {} (:listeners listeners)
-                  :element $ option:unwrap-or (first elements) nil
+                  :element $ first elements
               {}
                 :listeners $ []
                 :element component-result
@@ -6344,10 +6344,9 @@
               (:some index xss)
                 let
                     children $ root.:children
-                  match
-                    js-nullish->option $ children .item index
-                    (:none) nil
-                    (:some child) (find-target child xss)
+                  let
+                      child $ children .item index
+                    if (js-present? child) (find-target child xss) child
           :examples $ []
           :schema $ quote $ Fn respo.dom/DomElement (List Number)
             -> $ JsNullish respo.dom/DomElement
@@ -6652,11 +6651,11 @@
           :schema $ quote EnumDef
           :tags $ #{} :data
         'ResourceState $ %{} 'CodeEntry
-          :doc "|Immutable resource state record. :data and :error are application payload boundaries; :status and :request-id drive deterministic reducer transitions."
+          :doc "|Immutable resource state record. :data and :error are Options around application payloads, none until a request delivers one; :status and :request-id drive deterministic reducer transitions."
           :code $ quote $ defstruct ResourceState (:status 'Tag)
             :request-id $ quote $ Option Number
-            :data 'Dynamic
-            :error 'Dynamic
+            :data $ quote $ Option Dynamic
+            :error $ quote $ Option Dynamic
           :examples $ []
           :schema $ quote StructDef
           :tags $ #{} :data
@@ -6738,7 +6737,7 @@
         'resource-idle $ %{} 'CodeEntry
           :doc "|Creates an immutable idle ResourceState with optional initial data."
           :code $ quote $ defn resource-idle (initial-data-option)
-            ResourceState :status :idle :request-id (Option :none) :data (option:unwrap-or initial-data-option nil) :error nil
+            ResourceState :status :idle :request-id (Option :none) :data initial-data-option :error $ Option :none
           :examples $ []
             quote $ resource-idle $ Option :none
             quote $ resource-idle $ Option :some
@@ -6752,9 +6751,9 @@
                 nil-payload $ resource-idle $ Option :some nil
               assert= :idle $ :status supplied
               assert |idle-has-no-request $ .none? $ :request-id supplied
-              assert |payload-identity $ identical? payload $ :data supplied
-              assert |absent-data-is-nil $ nil? $ :data absent
-              assert |some-nil-keeps-nil $ nil? $ :data nil-payload
+              assert |payload-identity $ identical? payload $ option:unwrap (:data supplied)
+              assert |absent-data-is-none $ option:none? $ :data absent
+              assert |some-nil-is-kept $ = (Option :some nil) (:data nil-payload)
             :tags $ #{} :regression :unit
         'resource-loading? $ %{} 'CodeEntry
           :doc "|Returns true for :pending and :refreshing ResourceState values."
@@ -6794,20 +6793,20 @@
                     if
                       or (= :ready status) (= :refreshing status)
                       , :refreshing :pending
-                  , :request-id (Option :some request-id) :data (:data state) :error nil
+                  , :request-id (Option :some request-id) :data (:data state) :error $ Option :none
               (:ready request-id data)
                 if
                   match (:request-id state)
                     (:some current-id) (= current-id request-id)
                     (:none) false
-                  ResourceState :status :ready :request-id (Option :some request-id) :data data :error nil
+                  ResourceState :status :ready :request-id (Option :some request-id) :data (Option :some data) :error $ Option :none
                   , state
               (:failed request-id error)
                 if
                   match (:request-id state)
                     (:some current-id) (= current-id request-id)
                     (:none) false
-                  ResourceState :status :error :request-id (Option :some request-id) :data (:data state) :error error
+                  ResourceState :status :error :request-id (Option :some request-id) :data (:data state) :error $ Option :some error
                   , state
           :examples $ [] $ quote
             let
@@ -6831,12 +6830,12 @@
                 assert |pending-resource-is-loading $ resource-loading? pending
                 assert |matching-result-is-ready $ &= :ready $ &struct:nth ready 3 :status
                 assert |refresh-keeps-existing-data $ &=
-                  {} $ :value |first
+                  Option :some $ {} $ :value |first
                   &struct:nth refreshing 0 :data
                 assert |ready-resource-enters-refreshing $ &= :refreshing $ &struct:nth refreshing 3 :status
                 assert |stale-result-is-ignored $ identical? refreshing stale
                 assert |matching-failure-is-recorded $ &= :error $ &struct:nth failed 3 :status
-                assert |failure-message-is-kept $ &= |offline $ &struct:nth failed 1 :error
+                assert |failure-message-is-kept $ &= (Option :some |offline) (&struct:nth failed 1 :error)
               :tags $ #{} :unit
             %{} 'TestEntry (:name |stores-request-id-as-option)
               :code $ quote $ let
@@ -7871,24 +7870,31 @@
                 count $ respo.util.detect/element-children vdom
                 element :child-element-count
               let
-                  maybe-html $ .unwrap-or
+                  maybe-html $ match
                     calcit.core/get
                       pairs-map $ :attrs vdom
                       , :innerHTML
-                    , nil
-                if (calcit.core/non-nil? maybe-html)
-                  when
-                    not= (respo.util.format/scalar-attribute-text maybe-html) (element :inner-html)
-                    js/console.warn "|SSR checking: noticed dom containing innerHTML:" element
-                  do (js/console.error "|SSR checking: children sizes do not match!")
-                    js/console.log |virtual: $ -> (respo.util.detect/element-children vdom)
-                      map $ fn (pair)
-                        match
-                          .unwrap $ :node pair
-                          (:element child) (:name child)
-                          (:component child) (:name child)
-                      , to-lispy-string
-                    js/console.log |real: $ element :children
+                    (:some html)
+                      if (calcit.core/nil? html) (Option :none) (Option :some html)
+                    (:none) (Option :none)
+                match maybe-html
+                  (:some html)
+                    do
+                      when
+                        not= (respo.util.format/scalar-attribute-text html) (element :inner-html)
+                        js/console.warn "|SSR checking: noticed dom containing innerHTML:" element
+                      , &unit
+                  (:none)
+                    do (js/console.error "|SSR checking: children sizes do not match!")
+                      js/console.log |virtual: $ -> (respo.util.detect/element-children vdom)
+                        map $ fn (pair)
+                          match
+                            .unwrap $ :node pair
+                            (:element child) (:name child)
+                            (:component child) (:name child)
+                        , to-lispy-string
+                      js/console.log |real: $ element :children
+                      , &unit
               let
                   real-children $ element :children
                 loop
