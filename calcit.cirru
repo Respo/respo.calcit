@@ -6651,7 +6651,7 @@
           :schema $ quote EnumDef
           :tags $ #{} :data
         'ResourceState $ %{} 'CodeEntry
-          :doc "|Immutable resource state record. :data and :error are Options around application payloads, none until a request delivers one; :status and :request-id drive deterministic reducer transitions."
+          :doc "|Immutable resource state record. :data and :error are Options around application payloads: :data holds the initial data given to resource-idle or the last :ready payload, :error the last failure; :status and :request-id drive deterministic reducer transitions."
           :code $ quote $ defstruct ResourceState (:status 'Tag)
             :request-id $ quote $ Option Number
             :data $ quote $ Option Dynamic
@@ -6836,6 +6836,17 @@
                 assert |stale-result-is-ignored $ identical? refreshing stale
                 assert |matching-failure-is-recorded $ &= :error $ &struct:nth failed 3 :status
                 assert |failure-message-is-kept $ &= (Option :some |offline) (&struct:nth failed 1 :error)
+              :tags $ #{} :unit
+            %{} 'TestEntry (:name |ready-nil-payload-is-present)
+              :code $ quote $ let
+                  pending $ resource-reducer
+                    resource-idle $ Option :none
+                    resource-started 3
+                  ready $ resource-reducer pending $ resource-ready 3 nil
+                assert= :ready $ :status ready
+                assert= (Option :some nil) (:data ready)
+                assert= (Option :none) (:error ready)
+                assert= :refreshing $ :status $ resource-reducer ready (resource-started 4)
               :tags $ #{} :unit
             %{} 'TestEntry (:name |stores-request-id-as-option)
               :code $ quote $ let
