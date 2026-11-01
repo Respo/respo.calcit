@@ -163,13 +163,13 @@
                         let
                             task-id $ :id task
                           [] task-id $ memo-comp-by task-id comp-task (>> states task-id) task
-                  if
+                  nil->option $ if
                     > (count tasks) 0
                     div
                       {} (:spell-check true) (:class-name style-toolbar)
                       div
                         {} (:class-name widget/style-button)
-                          :on-click $ if (not locked?)
+                          :on-click $ nil->option $ if (not locked?)
                             fn (e d!)
                               d! $ Op :clear
                         <> |Clear2
@@ -435,34 +435,34 @@
           :code $ quote $ defenum Op
             :states
               quote $ List Dynamic
-              , 'Dynamic
+              , Dynamic
             :states-kv
               quote $ List Dynamic
-              , 'Dynamic 'Dynamic
+              , Dynamic Dynamic
             :states-merge
               quote $ List Dynamic
-              , 'respo.app.schema/TodoState 'Dynamic
-            :add 'String
-            :remove 'String
+              , respo.app.schema/TodoState Dynamic
+            :add String
+            :remove String
             :clear
-            :update 'String 'String
-            :hit-first 'String
-            :toggle 'String
+            :update String String
+            :hit-first String
+            :toggle String
           :examples $ []
           :schema $ quote EnumDef
         'Store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Store
             :tasks $ quote $ List respo.app.schema/Task
-            :states 'respo.schema/States
+            :states respo.schema/States
             :cursor $ quote $ List Dynamic
           :examples $ []
           :schema $ quote StructDef
         'Task $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct Task (:id 'String) (:text 'String) (:done? 'Bool)
+          :code $ quote $ defstruct Task (:id String) (:text String) (:done? Bool)
           :examples $ []
           :schema $ quote StructDef
         'TodoState $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct TodoState (:draft 'String) (:locked? 'Bool) (:message 'String)
+          :code $ quote $ defstruct TodoState (:draft String) (:locked? Bool) (:message String)
           :examples $ []
           :schema $ quote StructDef
         'store $ %{} 'CodeEntry
@@ -2864,10 +2864,11 @@
                 raise |[Respo/show]-expected-a-child-and-an-optional-fallback
               let
                   child $ .unwrap $ calcit.core/first branches
-                  fallback $ if (= branch-count 2)
-                    .unwrap $ calcit.core/last branches
-                    , nil
-                quasiquote $ if ~condition ~child ~fallback
+                if (= branch-count 2)
+                  let
+                      fallback $ .unwrap $ calcit.core/last branches
+                    quasiquote $ if ~condition ~child ~fallback
+                  quasiquote $ if ~condition ~child nil
           :examples $ [] $ quote
             show true
               div ({}) (<> |Ready)
@@ -3027,7 +3028,7 @@
           :examples $ []
           :schema $ quote $ Ref (List String)
         'StyleCacheEntry $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct StyleCacheEntry (:rules 'Dynamic)
+          :code $ quote $ defstruct StyleCacheEntry (:rules Dynamic)
             :el $ quote $ JsNullish respo.css/StyleElement
           :examples $ []
           :schema $ quote StructDef
@@ -3253,7 +3254,7 @@
     'respo.cursor $ %{} 'FileEntry
       :defs $ {}
         'CursorTestState $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct CursorTestState (:draft 'String) (:locked? 'Bool) (:message 'String)
+          :code $ quote $ defstruct CursorTestState (:draft String) (:locked? Bool) (:message String)
           :examples $ []
           :schema $ quote StructDef
         'coerce-cursor-test-state $ %{} 'CodeEntry (:doc |)
@@ -3874,13 +3875,13 @@
           :examples $ []
           :schema $ quote $ Ref Bool
         'MemoCacheKey $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct MemoCacheKey (:callback 'Fn) (:key 'Dynamic)
+          :code $ quote $ defstruct MemoCacheKey (:callback Fn) (:key Dynamic)
           :examples $ []
           :schema $ quote StructDef
         'MemoEntry $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct MemoEntry
             :args $ quote $ List Dynamic
-            :value 'Dynamic
+            :value Dynamic
             :children $ quote $ Set respo.memo/MemoCacheKey
           :examples $ []
           :schema $ quote StructDef
@@ -6080,7 +6081,7 @@
     'respo.render.patch $ %{} 'FileEntry
       :defs $ {}
         'MoveScrollState $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct MoveScrollState (:node 'respo.dom/DomElement) (:top 'Number) (:left 'Number)
+          :code $ quote $ defstruct MoveScrollState (:node respo.dom/DomElement) (:top Number) (:left Number)
           :examples $ []
           :schema $ quote StructDef
         'add-element $ %{} 'CodeEntry
@@ -6646,13 +6647,13 @@
           :schema $ quote $ Ref Number
         'ResourceAction $ %{} 'CodeEntry
           :doc "|Immutable request lifecycle enum: :started carries request-id; :ready carries request-id and data; :failed carries request-id and error."
-          :code $ quote $ defenum ResourceAction (:started 'Number) (:ready 'Number 'Dynamic) (:failed 'Number 'Dynamic)
+          :code $ quote $ defenum ResourceAction (:started Number) (:ready Number Dynamic) (:failed Number Dynamic)
           :examples $ []
           :schema $ quote EnumDef
           :tags $ #{} :data
         'ResourceState $ %{} 'CodeEntry
           :doc "|Immutable resource state record. :data and :error are Options around application payloads: :data holds the initial data given to resource-idle or the last :ready payload, :error the last failure; :status and :request-id drive deterministic reducer transitions."
-          :code $ quote $ defstruct ResourceState (:status 'Tag)
+          :code $ quote $ defstruct ResourceState (:status Tag)
             :request-id $ quote $ Option Number
             :data $ quote $ Option Dynamic
             :error $ quote $ Option Dynamic
@@ -6907,12 +6908,12 @@
           :examples $ []
           :schema $ quote Dynamic
         'ChildPair $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct ChildPair (:key 'Dynamic)
+          :code $ quote $ defstruct ChildPair (:key Dynamic)
             :node $ quote $ Option respo.schema/RenderNode
           :examples $ []
           :schema $ quote StructDef
         'Component $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct Component (:name 'Tag)
+          :code $ quote $ defstruct Component (:name Tag)
             :effects $ quote $ List respo.schema/Effect
             :listeners $ quote $ List respo.schema/RespoListener
             :tree $ quote $ Option respo.schema/RenderNode
@@ -6924,53 +6925,53 @@
             :replace-prop
               quote $ List Dynamic
               quote $ List Number
-              , 'Tag 'Dynamic
+              , Tag Dynamic
             :add-prop
               quote $ List Dynamic
               quote $ List Number
-              , 'Tag 'Dynamic
+              , Tag Dynamic
             :rm-prop
               quote $ List Dynamic
               quote $ List Number
-              , 'Tag
+              , Tag
             :add-style
               quote $ List Dynamic
               quote $ List Number
-              , 'Tag 'Dynamic
+              , Tag Dynamic
             :replace-style
               quote $ List Dynamic
               quote $ List Number
-              , 'Tag 'Dynamic
+              , Tag Dynamic
             :rm-style
               quote $ List Dynamic
               quote $ List Number
-              , 'Tag
+              , Tag
             :set-event
               quote $ List Dynamic
               quote $ List Number
-              , 'Tag
+              , Tag
             :rm-event
               quote $ List Dynamic
               quote $ List Number
-              , 'Tag
+              , Tag
             :add-element
               quote $ List Dynamic
               quote $ List Number
-              , 'Struct
+              , Struct
             :rm-element
               quote $ List Dynamic
               quote $ List Number
             :replace-element
               quote $ List Dynamic
               quote $ List Number
-              , 'Struct
+              , Struct
             :append-element
               quote $ List Dynamic
               quote $ List Number
-              , 'Struct
+              , Struct
             :move-element
               quote $ List Number
-              , 'Number $ quote $ Option Number
+              , Number $ quote $ Option Number
             :effect-mount
               quote $ List Dynamic
               quote $ List Number
@@ -7068,14 +7069,14 @@
           :examples $ []
           :schema $ quote StructDef
         'Effect $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct Effect (:name 'Tag)
+          :code $ quote $ defstruct Effect (:name Tag)
             :coord $ quote $ List Dynamic
             :args $ quote $ List Dynamic
             :method $ quote $ Fn (List Dynamic) (List Dynamic) (-> Unit)
           :examples $ []
           :schema $ quote StructDef
         'Element $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct Element (:name 'Tag)
+          :code $ quote $ defstruct Element (:name Tag)
             :coord $ quote $ Option (List Dynamic)
             :attrs $ quote $ List (List Dynamic)
             :style $ quote $ List (List Dynamic)
@@ -7086,7 +7087,7 @@
           :schema $ quote StructDef
         'EventConfig $ %{} 'CodeEntry
           :doc "|Mount-time event policy: whether Respo stops propagation, and whether handlers use on* properties or independent native listeners."
-          :code $ quote $ defstruct EventConfig (:stop-propagation? 'Bool) (:listener-mode 'respo.schema/ListenerMode)
+          :code $ quote $ defstruct EventConfig (:stop-propagation? Bool) (:listener-mode respo.schema/ListenerMode)
           :examples $ []
           :schema $ quote StructDef
         'EventHandler $ %{} 'CodeEntry
@@ -7099,7 +7100,7 @@
             -> Unit
         'KeyboardInfo $ %{} 'CodeEntry
           :doc "|Keyboard fields of a :keydown, :keyup or :keypress event, read with respo.core/keyboard-info."
-          :code $ quote $ defstruct KeyboardInfo (:key 'String) (:code 'String) (:ctrl? 'Bool) (:meta? 'Bool) (:alt? 'Bool) (:shift? 'Bool)
+          :code $ quote $ defstruct KeyboardInfo (:key String) (:code String) (:ctrl? Bool) (:meta? Bool) (:alt? Bool) (:shift? Bool)
           :examples $ []
           :schema $ quote StructDef
         'ListenerMode $ %{} 'CodeEntry
@@ -7108,16 +7109,16 @@
           :examples $ []
           :schema $ quote EnumDef
         'RenderNode $ %{} 'CodeEntry (:doc "|渲染节点的具名并集；每个变体保留具体 Element 或 Component payload。")
-          :code $ quote $ defenum RenderNode (:element 'respo.schema/Element) (:component 'respo.schema/Component)
+          :code $ quote $ defenum RenderNode (:element respo.schema/Element) (:component respo.schema/Component)
           :examples $ []
           :schema $ quote EnumDef
         'RespoEvent $ %{} 'CodeEntry
           :doc "|Struct view of DOM event fields. It is not the value passed to event listeners: Respo calls listeners with the immutable Map<Tag, Dynamic> produced by event->edn (see EventHandler). Do not annotate callback events with RespoEvent; read fields from the Map with get and check their types."
-          :code $ quote $ defstruct RespoEvent (:type 'Tag)
+          :code $ quote $ defstruct RespoEvent (:type Tag)
             :value $ quote $ JsNullish Dynamic
             :checked $ quote $ JsNullish Bool
-            :original-event 'Dynamic
-            :event 'Dynamic
+            :original-event Dynamic
+            :event Dynamic
             :key $ quote $ JsNullish String
             :code $ quote $ JsNullish String
             :key-code $ quote $ JsNullish Number
@@ -7130,7 +7131,7 @@
           :examples $ []
           :schema $ quote StructDef
         'RespoListener $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct RespoListener (:name 'Tag) (:handler 'Fn)
+          :code $ quote $ defstruct RespoListener (:name Tag) (:handler Fn)
           :examples $ []
           :schema $ quote StructDef
         'States $ %{} 'CodeEntry
