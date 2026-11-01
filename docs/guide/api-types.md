@@ -156,8 +156,10 @@ defcomp comp-task (states task)
 | `load-resource!` | `Fn (Fn (-> T)) (Fn ResourceAction (-> Unit)) (-> Number)`，`:generics T` | 返回请求 id |
 
 `ResourceState` 的 `:status` 是 Tag，`:request-id` 是 `Option Number`；`:data` 和
-`:error` 是应用负载，类型是 `Dynamic`。读取时在应用里用 `try-decode-map-as` 解码成
-自己的类型。
+`:error` 是 `Option Dynamic`。`:data` 初始为传给 `resource-idle` 的 Option（给了初始数据就是
+some，否则为 none），`:ready` 后为 `Option :some payload`（payload 可以是 nil）；`:error` 初始为
+none，`:failed` 后为 `Option :some error`。
+取出负载后在应用里用 `try-decode-map-as` 解码成自己的类型。
 
 ## 查看和检查
 
