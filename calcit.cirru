@@ -751,12 +751,22 @@
             js-ffi.contract :as contract
     'respo.comp.inspect $ %{} 'FileEntry
       :defs $ {}
+        'InspectStyle $ %{} 'CodeEntry
+          :doc "|comp-inspect 的第三个参数：额外的 class-name 字符串，或覆盖位置等样式的 Map。不需要额外样式时传 `{}`。"
+          :code $ quote $ defunion InspectStyle String
+            quote $ Map Tag respo.schema/CssValue
+          :examples $ []
+          :schema $ quote UnionDef
         'comp-inspect $ %{} 'CodeEntry
           :doc "|Development helper for visualizing data in the UI.\n\nIt renders a labeled preview of arbitrary data and logs the original value when clicked. This is useful for debugging component props or local state and is usually disabled or removed in production."
           :code $ quote $ defcomp comp-inspect (tip data style)
             let
-                class-name $ if (string? style) (str-spaced style-data style) style-data
-                style-map $ if (map? style) style $ {}
+                class-name $ match style
+                  (String extra) (str-spaced style-data extra)
+                  _ style-data
+                style-map $ match style
+                  (Map m) m
+                  _ $ {}
               pre $ {} (:class-name class-name)
                 :inner-text $ str tip "|: " $ grab-info data
                 :style style-map
@@ -765,7 +775,7 @@
                     js/console.log $ to-js-data data
                   , &unit
           :examples $ []
-          :schema $ quote $ Fn Dynamic Dynamic Dynamic (-> respo.schema/Component) (:features :js-ffi)
+          :schema $ quote $ Fn Dynamic Dynamic respo.comp.inspect/InspectStyle (-> respo.schema/Component) (:features :js-ffi)
         'grab-info $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn grab-info (data)
             cond
@@ -1125,9 +1135,9 @@
                               hint-fn $ Fn respo.schema/ChildPair $ -> Dynamic
                               :key pair
           :examples $ []
-          :schema $ quote $ Fn respo.schema/RenderNode (List CoordKey)
+          :schema $ quote $ Fn respo.schema/RenderNode (List K)
             -> $ Option respo.schema/RenderNode
-            :generics CoordKey
+            :generics K
           :tests $ [] $ %{} 'TestEntry (:name |preserves-component-segments-and-mixed-keys)
             :code $ quote $ let
                 leaf $ respo.core/span $ {}
@@ -1238,7 +1248,7 @@
               &map:assoc branch :cursor $ append parent-cursor k
           :examples $ [] $ quote
             >> ({}) :task-a
-          :schema $ quote $ Fn Dynamic Dynamic (-> respo.schema/States) (:features :js-ffi)
+          :schema $ quote $ Fn Dynamic respo.schema/CoordKey (-> respo.schema/States) (:features :js-ffi)
           :tests $ []
             %{} 'TestEntry (:name |mixed-state-keys)
               :code $ quote $ let
@@ -1527,7 +1537,9 @@
                 match
                   resolve-prop-value $ respo.util.list/pair-value pair
                   (:some child)
-                    append acc $ respo.util.detect/make-child-pair (respo.util.list/pair-key pair) child
+                    append acc $ respo.util.detect/make-child-pair
+                      respo.util.list/read-coord-key $ respo.util.list/pair-key pair
+                      , child
                   (:none) acc
           :examples $ [] $ quote
             create-list-element :div
@@ -2369,14 +2381,14 @@
             assert "|[Respo] keyed child requires a non-nil key" $ calcit.core/non-nil? key
             respo.schema/ChildPair :key key :node $ Option :some $ respo.schema/RenderNode :component component
           :examples $ []
-          :schema $ quote $ Fn K respo.schema/Component (-> respo.schema/ChildPair) (:generics K)
+          :schema $ quote $ Fn respo.schema/CoordKey respo.schema/Component (-> respo.schema/ChildPair)
         'keyed-element $ %{} 'CodeEntry
           :doc "|Build a ChildPair for keyed-> from a key and an Element."
           :code $ quote $ defn keyed-element (key element)
             assert "|[Respo] keyed child requires a non-nil key" $ calcit.core/non-nil? key
             respo.schema/ChildPair :key key :node $ Option :some $ respo.schema/RenderNode :element element
           :examples $ []
-          :schema $ quote $ Fn K respo.schema/Element (-> respo.schema/ChildPair) (:generics K)
+          :schema $ quote $ Fn respo.schema/CoordKey respo.schema/Element (-> respo.schema/ChildPair)
         'li $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn li (props & children) (create-element :li props & children)
           :examples $ []
@@ -5349,7 +5361,6 @@
                             child $
                               :node pair
                               , .unwrap
-                          when (nil? k) (js/console.warn |nil-key-is-bad-for-Respo)
                           make-render-node-element child listener-builder (append coord k) child-svg?
                   each attrs $ fn (entry)
                     hint-fn $ Fn (List Dynamic) (-> Dynamic)
@@ -5379,7 +5390,7 @@
                         v $ respo.util.list/pair-value entry
                       aset
                         browser/element-style $ host-element element
-                        , k $ get-style-value v k
+                        , k $ style-value-text v k
                   &doseq (entry events)
                     let
                         event-handler $ respo.util.list/pair-value entry
@@ -5411,7 +5422,7 @@
                           calcit.core/to-string k
                         (string? k) k
                         true $ raise "|style->string expected a tag or string key"
-                      v $ get-style-value (respo.util.list/pair-value entry) style-name
+                      v $ style-value-text (respo.util.list/pair-value entry) style-name
                     recur (str acc style-name |: v |;) (&list:rest xs)
           :examples $ []
           :schema $ quote $ Fn
@@ -5430,7 +5441,7 @@
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.render.dom
           :require
-            respo.util.format :refer $ dashed->camel event->prop get-style-value svg-attr-name
+            respo.util.format :refer $ dashed->camel event->prop style-value-text svg-attr-name
             respo.util.detect :refer $ component? component-tree component-name element-name element-attrs element-style element-event element-children
             js-ffi.browser :as browser
             respo.ffi.browser :refer $ narrow-element host-element
@@ -6066,7 +6077,7 @@
                 hint-fn $ Fn (List Dynamic) (-> String)
                 let
                     style-name $ respo.util.list/pair-key-text entry
-                    v $ get-style-value (respo.util.list/pair-value entry) (dashed->camel style-name)
+                    v $ style-value-text (respo.util.list/pair-value entry) (dashed->camel style-name)
                   str style-name |: (escape-html v) |;
               , |
           :examples $ []
@@ -6076,7 +6087,7 @@
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.render.html
           :require
-            respo.util.format :refer $ prop->attr purify-element mute-element text->html get-style-value dashed->camel
+            respo.util.format :refer $ prop->attr purify-element mute-element text->html style-value-text dashed->camel
             respo.util.detect :refer $ component? element?
     'respo.render.patch $ %{} 'FileEntry
       :defs $ {}
@@ -6130,7 +6141,7 @@
           :code $ quote $ defn add-style (target p v)
             let
                 style-name $ dashed->camel $ calcit.core/to-string p
-                style-value $ get-style-value v style-name
+                style-value $ style-value-text v style-name
               aset (.-style target) style-name style-value
             , &unit
           :examples $ []
@@ -6520,7 +6531,7 @@
           :code $ quote $ defn replace-style (target p v)
             let
                 style-name $ dashed->camel $ calcit.core/to-string p
-              aset (.-style target) style-name $ get-style-value v style-name
+              aset (.-style target) style-name $ style-value-text v style-name
             , &unit
           :examples $ []
           :schema $ quote $ Fn respo.dom/DomElement Tag Dynamic (-> Unit) (:features :js-ffi)
@@ -6631,7 +6642,7 @@
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.render.patch
           :require
-            respo.util.format :refer $ dashed->camel event->prop get-style-value prop->attr svg-attr-name
+            respo.util.format :refer $ dashed->camel event->prop style-value-text prop->attr svg-attr-name
             respo.render.dom :refer $ make-element style->string
             respo.schema.op :as op
             respo.dom :refer $ DomElement
@@ -6908,7 +6919,7 @@
           :examples $ []
           :schema $ quote Dynamic
         'ChildPair $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct ChildPair (:key Dynamic)
+          :code $ quote $ defstruct ChildPair (:key CoordKey)
             :node $ quote $ Option respo.schema/RenderNode
           :examples $ []
           :schema $ quote StructDef
@@ -6919,6 +6930,16 @@
             :tree $ quote $ Option respo.schema/RenderNode
           :examples $ []
           :schema $ quote StructDef
+        'CoordKey $ %{} 'CodeEntry
+          :doc "|子节点 key 与 states cursor 的单个路径元素：Tag、String 或 Number。list-> 在 props 边界校验 key 并转换成这个类型。"
+          :code $ quote $ defunion CoordKey Tag String Number
+          :examples $ []
+          :schema $ quote UnionDef
+        'CssValue $ %{} 'CodeEntry
+          :doc "|CSS 声明值：字符串、数字或 Tag。数字按属性决定是否补 px，Tag 去掉冒号。缺省值写在 union 外面（nil 或 Option :none 的项在 props 边界被去掉）。"
+          :code $ quote $ defunion CssValue String Number Tag
+          :examples $ []
+          :schema $ quote UnionDef
         'DomPatch $ %{} 'CodeEntry
           :doc "|Nominal internal command protocol shared by Respo's virtual-tree diff producers and sole DOM patch consumer."
           :code $ quote $ defenum DomPatch
@@ -7854,7 +7875,7 @@
             respo.schema/ChildPair :key key :node $ if (nil? node) (Option :none)
               Option :some $ as-render-node node
           :examples $ []
-          :schema $ quote $ Fn KeyInput NodeInput (-> respo.schema/ChildPair) (:generics KeyInput NodeInput)
+          :schema $ quote $ Fn respo.schema/CoordKey NodeInput (-> respo.schema/ChildPair) (:generics NodeInput)
         'render-node-value $ %{} 'CodeEntry (:doc "|通过具名变体读取原始节点；用于保留既有 component-tree 读取合同。")
           :code $ quote $ defn render-node-value (node)
             match node
@@ -8039,24 +8060,20 @@
             -> $ Map Tag Dynamic
             :features :js-ffi
         'get-style-value $ %{} 'CodeEntry
-          :doc "|Formats a style value for a given property. Adds px to numeric values when the property expects units, and returns an empty string for nil so DOM updates and SSR output can clear the declaration safely."
+          :doc "|Formats a typed style value for a given property. Adds px to numeric values when the property expects units and drops the colon from tags. Values from props or style maps are Dynamic; format them with `style-value-text`, which checks the value and turns nil into an empty string."
           :code $ quote $ defn get-style-value (x prop)
-            cond
-                string? x
-                , x
-              (tag? x) (to-string x)
-              (number? x)
+            match x
+              (String s) s
+              (Tag t) (to-string t)
+              (Number n)
                 if
                   or (contains? unitless-props prop) (includes? unitless-dashed-props prop)
-                  str x
-                  str x |px
-              (nil? x) |
-              true $ str x
+                  str n
+                  str n |px
           :examples $ []
             quote $ assert= |10px $ get-style-value 10 |width
             quote $ assert= |1 $ get-style-value 1 |opacity
-            quote $ assert= | $ get-style-value nil |width
-          :schema $ quote $ Fn Dynamic String (-> String)
+          :schema $ quote $ Fn respo.schema/CssValue String (-> String)
           :tests $ []
             %{} 'TestEntry (:name |formats-style-values)
               :code $ quote $ do
@@ -8064,7 +8081,6 @@
                 assert |tag-is-stringified $ = |block $ get-style-value :block |display
                 assert |length-numbers-use-pixels $ = |12px $ get-style-value 12 |width
                 assert |unitless-numbers-stay-unitless $ = |0.5 $ get-style-value 0.5 |opacity
-                assert |nil-clears-the-value $ = | $ get-style-value nil |width
               :tags $ #{} :unit
             %{} 'TestEntry (:name |keeps-dashed-unitless-props)
               :code $ quote $ do
@@ -8300,6 +8316,32 @@
                   scalar-attribute-text $ [] 1 2
                   fn (error) error
               :tags $ #{} :unit
+        'style-value-text $ %{} 'CodeEntry
+          :doc "|Formats a style value read from an open style map. nil gives an empty string so DOM updates and SSR output can clear the declaration; String, Number and Tag are passed to `get-style-value` as `respo.schema/CssValue`; any other value raises instead of being stringified."
+          :code $ quote $ defn style-value-text (x prop)
+            cond
+                nil? x
+                , |
+              (string? x) (get-style-value x prop)
+              (number? x) (get-style-value x prop)
+              (tag? x) (get-style-value x prop)
+              true $ raise $ str "|[Respo] expected a style value as String, Number, Tag or nil, got: " (type-of x) "| " (to-lispy-string x)
+          :examples $ []
+          :schema $ quote $ Fn Dynamic String (-> String)
+          :tests $ [] $ %{} 'TestEntry (:name |reads-open-style-values)
+            :code $ quote $ do
+              assert= | $ style-value-text nil |width
+              assert= |12px $ style-value-text 12 |width
+              assert= |block $ style-value-text :block |display
+              assert= |red $ style-value-text |red |color
+              assert |rejects-bool $ string? $ try (style-value-text true |display)
+                fn (error) (str error)
+              assert |rejects-map $ string? $ try
+                style-value-text
+                  {} $ :a 1
+                  , |display
+                fn (error) (str error)
+            :tags $ #{} :unit
         'svg-attr-name $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn svg-attr-name (x)
             match x (|strokeWidth |stroke-width) (|strokeLinecap |stroke-linecap) (|strokeLinejoin |stroke-linejoin) (|strokeDasharray |stroke-dasharray) (|strokeDashoffset |stroke-dashoffset) (|fillRule |fill-rule) (|fillOpacity |fill-opacity) (|clipPath |clip-path) (|stopColor |stop-color) (|stopOpacity |stop-opacity) (|class-name |class) (_ x)
@@ -8564,6 +8606,29 @@
           :examples $ []
           :schema $ quote $ Fn Dynamic
             -> $ Map Tag Fn
+        'read-coord-key $ %{} 'CodeEntry
+          :doc "|Checks a child key read from an open `[key child]` pair and returns it as `respo.schema/CoordKey`. Raises for nil, Bool, collections and other values."
+          :code $ quote $ defn read-coord-key (k)
+            cond
+                tag? k
+                , k
+              (string? k) k
+              (number? k) k
+              true $ raise $ str "|[Respo] expected a child key as Tag, String or Number, got: " (type-of k) "| " (to-lispy-string k)
+          :examples $ []
+          :schema $ quote $ Fn Dynamic (-> respo.schema/CoordKey)
+          :tests $ [] $ %{} 'TestEntry (:name |reads-supported-keys)
+            :code $ quote $ do
+              assert= :a $ read-coord-key :a
+              assert= |a $ read-coord-key |a
+              assert= 1 $ read-coord-key 1
+              assert= |raised $ try
+                do (read-coord-key nil) |not-raised
+                fn (error) |raised
+              assert= |raised $ try
+                do (read-coord-key true) |not-raised
+                fn (error) |raised
+            :tags $ #{} :unit
         'val-exists? $ %{} 'CodeEntry
           :doc "|Predicate to check if a key-value pair has a non-nil value."
           :code $ quote $ defn val-exists? (pair)
