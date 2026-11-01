@@ -1534,13 +1534,13 @@
               fn (acc pair)
                 hint-fn $ Fn (List respo.schema/ChildPair) (List Dynamic)
                   -> $ List respo.schema/ChildPair
-                match
-                  resolve-prop-value $ respo.util.list/pair-value pair
-                  (:some child)
-                    append acc $ respo.util.detect/make-child-pair
-                      respo.util.list/read-coord-key $ respo.util.list/pair-key pair
-                      , child
-                  (:none) acc
+                &let
+                  k $ respo.util.list/read-coord-key $ respo.util.list/pair-key pair
+                  match
+                    resolve-prop-value $ respo.util.list/pair-value pair
+                    (:some child)
+                      append acc $ respo.util.detect/make-child-pair k child
+                    (:none) acc
           :examples $ [] $ quote
             create-list-element :div
               {} $ :class-name |list
@@ -1602,6 +1602,7 @@
                     [] ([] :nil-before nil) ([] :live child) ([] :nil-after nil)
                   caught-key? $ ref false
                   caught-child? $ ref false
+                  caught-bool-key? $ ref false
                 assert=
                   [] $ respo.util.detect/make-child-pair :live child
                   respo.util.detect/element-children tree
@@ -1613,7 +1614,12 @@
                   list-> ({})
                     [] $ [] :invalid false
                   fn (_error) (reset! caught-child? true)
+                try
+                  list-> ({})
+                    [] $ [] true nil
+                  fn (_error) (reset! caught-bool-key? true)
                 assert |nil-key-is-rejected-before-filtering @caught-key?
+                assert |bool-key-is-rejected-before-filtering @caught-bool-key?
                 assert |invalid-child-is-not-filtered @caught-child?
               :tags $ #{} :unit
             %{} 'TestEntry (:name |normalizes-option-keyed-children)

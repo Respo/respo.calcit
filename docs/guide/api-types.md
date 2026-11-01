@@ -77,7 +77,7 @@ props Map 和 `:style` Map 的值同样可以是 `Option`：`Option :some v` 取
 
 | API | schema | 说明 |
 | --- | --- | --- |
-| `>>` | `Fn Dynamic Dynamic (-> respo.schema/States)` | 从父 states 取出子分支，并把 key 追加到 `:cursor` |
+| `>>` | `Fn Dynamic respo.schema/CoordKey (-> respo.schema/States)` | 从父 states 取出子分支，并把 key 追加到 `:cursor` |
 | `as-states-map` | `Fn Dynamic (-> respo.schema/States)` | 在开放边界校验 states：nil 视为空 map，不是 map 时报错 |
 | `state-cursor` | `Fn Dynamic (-> (List Dynamic))` | 读取 cursor；缺失或 nil 时返回空列表 |
 | `pick-state` | 宏，`pick-state states TypeExpr default` | 返回值的类型就是 `TypeExpr`，这是把组件状态接回精确类型的位置 |
