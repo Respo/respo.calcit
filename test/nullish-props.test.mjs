@@ -30,6 +30,18 @@ test('normalization drops null and undefined but preserves falsey values', () =>
   assert.equal(read(tags.ref), missing);
 });
 
+test('a plain props map drops raw null and undefined values', () => {
+  const tags = c.init_tags(['placeholder', 'title', 'id', 'checked']);
+  const normalized = normalize_dom_props(c._$n__$M_(
+    tags.placeholder, null, tags.title, undefined, tags.id, 'box', tags.checked, false));
+  const missing = Symbol('missing');
+  const read = key => c.option_$o_unwrap_or(c.get(normalized, key), missing);
+  assert.equal(read(tags.placeholder), missing);
+  assert.equal(read(tags.title), missing);
+  assert.equal(read(tags.id), 'box');
+  assert.equal(read(tags.checked), false);
+});
+
 test('explicit empty placeholder stays present', () => {
   assert.match(make_string(input(props({ placeholder: '' }))), /placeholder=""/);
 });
