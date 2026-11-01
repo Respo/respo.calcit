@@ -1443,7 +1443,7 @@
           :schema $ quote $ Fn (List Dynamic)
             -> $ List Dynamic
         'create-element $ %{} 'CodeEntry
-          :doc "|Low-level helper for creating a virtual DOM element.\n\nPass a tag name, an optional props map, and child nodes. Public helpers such as `div`, `span`, `button`, and `input` are thin wrappers around this function."
+          :doc "|Low-level helper for creating a virtual DOM element.\n\nPass a tag name, an optional props map, and child nodes; a child can also be an Option, and none is left out like nil. Public helpers such as `div`, `span`, `button`, and `input` are thin wrappers around this function."
           :code $ quote $ defn create-element (tag-name props & children)
             let
                 props-map $ normalize-dom-props props
@@ -1460,15 +1460,16 @@
                     xs children
                     idx 0
                   hint-fn $ Fn (List respo.schema/ChildPair) (List Dynamic) Number $ -> (List respo.schema/ChildPair)
-                  if (empty? xs) acc $ let
-                      item $ .unwrap $ calcit.core/first xs
-                    confirm-child item
-                    recur
-                      if (calcit.core/non-nil? item)
-                        append acc $ respo.util.detect/make-child-pair idx item
-                        , acc
-                      &list:rest xs
-                      inc idx
+                  if (empty? xs) acc $ match
+                    resolve-prop-value $ .unwrap $ calcit.core/first xs
+                    (:some item)
+                      do (confirm-child item)
+                        recur
+                          append acc $ respo.util.detect/make-child-pair idx item
+                          &list:rest xs
+                          inc idx
+                    (:none)
+                      recur acc (&list:rest xs) (inc idx)
               schema/Element :name tag-name :coord (Option :none) :attrs attrs :style styles :event event :children children-nodes :ref ref!
           :examples $ []
             quote $ create-element :div $ {}
@@ -1477,6 +1478,16 @@
               {} $ :href |/home
               <> |Home
           :schema $ quote $ Fn Tag PropsInput & Dynamic (-> respo.schema/Element) (:generics PropsInput)
+          :tests $ [] $ %{} 'TestEntry (:name |option-children)
+            :code $ quote $ assert=
+              create-element :div ({})
+                span $ {}
+                , nil $ span $ {} (:class-name |b)
+              create-element :div ({})
+                Option :some $ span $ {}
+                Option :none
+                Option :some $ span $ {} (:class-name |b)
+            :tags $ #{} :unit
         'create-keyed-element $ %{} 'CodeEntry
           :doc "|Typed counterpart of create-list-element. Takes ChildPair values, usually built with keyed-element or keyed-component, instead of [key child] lists. Keys must be non-nil; pairs whose :node is Option :none are omitted, like nil children in create-list-element. Keys, order and diffing behave the same as list->."
           :code $ quote $ defn create-keyed-element (tag-name props pairs)
