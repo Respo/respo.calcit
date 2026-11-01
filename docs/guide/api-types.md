@@ -59,6 +59,16 @@ Respo 里剩下的 `Dynamic` 大多不是“还没来得及写”，而是当前
 props 最好用 `respo.schema/DomProps` 记录或字面量 `{}`。`DomProps` 的事件字段按
 `EventHandler` 检查，类型写错会在预处理阶段报出来，见 [DOM Events](./dom-events.md)。
 
+`DomProps` 的每个字段都是 `Option`，构造时只写要设置的字段，其余自动填入 `Option :none`；
+`none` 表示不写这个属性：
+
+```cirru
+respo.core/input $ respo.schema/DomProps :value (Option :some |Alice) :placeholder (Option :some |Name)
+```
+
+props Map 和 `:style` Map 的值同样可以是 `Option`：`Option :some v` 取 `v`，`Option :none`
+不写该属性或样式。普通值照旧表示有值，`nil` 也照旧被丢弃，所以已有写法不用改。
+
 ## 状态
 
 | API | schema | 说明 |

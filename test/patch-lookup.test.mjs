@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { ElementHost } from './dom-host.mjs';
+import { optionStruct } from './dom-props.mjs';
 globalThis.Element = ElementHost;
 globalThis.document = { createElement: name => new ElementHost(name) };
 const c = await import('../js-out/calcit.core.mjs');
@@ -11,7 +12,7 @@ const { div } = await import('../js-out/respo.core.mjs');
 const list = c.arrayToList;
 const patch = (tag, coord, ...args) => c._PCT__$o__$o_(DomPatch, c.turn_tag(tag), list([]), list(coord), ...args);
 const prop = (coord, value) => patch('replace-prop', coord, c.turn_tag('title'), value);
-const element = id => div(c._$n__PCT__$M_(DomProps, ...DomProps.fields.flatMap(field =>
+const element = id => div(optionStruct(c._$n__PCT__$M_, DomProps, ...DomProps.fields.flatMap(field =>
   [field, field.value === 'id' ? id : undefined])));
 const apply = (mount, changes) => {
   // Calcit Unit lowers to undefined on the JavaScript target.

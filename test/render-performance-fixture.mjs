@@ -1,4 +1,5 @@
 import { ElementHost } from './dom-host.mjs';
+import { optionStruct } from './dom-props.mjs';
 
 /** Build equivalent workloads around either compiled revision. Setup is outside timing. */
 export async function createPerformanceFixture(baseURL = new URL('../', import.meta.url), simulated = false) {
@@ -16,7 +17,7 @@ export async function createPerformanceFixture(baseURL = new URL('../', import.m
   const detect = await load('respo.util.detect');
   const list = c.arrayToList;
   const tag = c.turn_tag;
-  const props = c._$n__PCT__$M_(schema.DomProps, ...schema.DomProps.fields.flatMap(field => [field, undefined]));
+  const props = optionStruct(c._$n__PCT__$M_, schema.DomProps, ...schema.DomProps.fields.flatMap(field => [field, undefined]));
   const patch = (coord, title) => c._PCT__$o__$o_(schema.DomPatch, tag('replace-prop'), list([]), list(coord), tag('title'), title);
   const domWorkload = (depth, children) => {
     const mount = document.createElement('main');

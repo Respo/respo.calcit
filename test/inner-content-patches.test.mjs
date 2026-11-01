@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { ElementHost } from './dom-host.mjs';
+import { optionStruct } from './dom-props.mjs';
 globalThis.Element = ElementHost;
 globalThis.document = { createElement: name => new ElementHost(name) };
 const c = await import('../js-out/calcit.core.mjs');
@@ -11,7 +12,7 @@ const { make_element } = await import('../js-out/respo.render.dom.mjs');
 const { find_element_diffs } = await import('../js-out/respo.render.diff.mjs');
 const { apply_dom_changes } = await import('../js-out/respo.render.patch.mjs');
 
-const props = (overrides = {}) => c._$n__PCT__$M_(DomProps, ...DomProps.fields.flatMap(field =>
+const props = (overrides = {}) => optionStruct(c._$n__PCT__$M_, DomProps, ...DomProps.fields.flatMap(field =>
   [field, overrides[field.value]]));
 const paragraph = () => div(props(), span(props({ 'inner-text': 'a' })), span(props({ 'inner-text': 'b' })));
 

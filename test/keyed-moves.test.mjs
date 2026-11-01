@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { ElementHost } from './dom-host.mjs';
+import { optionStruct } from './dom-props.mjs';
 globalThis.Element = ElementHost;
 globalThis.document = { createElement: name => new ElementHost(name) };
 const c = await import('../js-out/calcit.core.mjs');
@@ -127,7 +128,7 @@ test('mixed additions, removals and movements preserve surviving nodes', () => {
 
 test('nested reorders and prop updates use the correct node coordinates', () => {
   const rows = createRows(Array.from({ length: 9 }, (_, i) => i));
-  const props = id => c._$n__PCT__$M_(DomProps, ...DomProps.fields.flatMap(field =>
+  const props = id => optionStruct(c._$n__PCT__$M_, DomProps, ...DomProps.fields.flatMap(field =>
     [field, field.value === 'id' ? id : undefined]));
   const list = c.arrayToList;
   const group = (id, keys) => list__GT_(props(id), list(keys.map(key => list([key, rows.get(key)]))));
@@ -202,7 +203,7 @@ test('新增子节点的 ref 在重排完成后读取最终位置，包含公共
   const newKeys = [0, 9, 2, 1, 3];
   const rows = createRows(oldKeys);
   const observations = [];
-  const props = c._$n__PCT__$M_(DomProps, ...DomProps.fields.flatMap(field => [field,
+  const props = optionStruct(c._$n__PCT__$M_, DomProps, ...DomProps.fields.flatMap(field => [field,
     field.value === 'id' ? 'row-9' : field.value === 'ref' ? target => {
       if (target) observations.push({ id: target.id, index: target.parentElement.nodes.indexOf(target),
         order: target.parentElement.nodes.map(node => Number(node.id.slice(4))) });
@@ -224,7 +225,7 @@ test('移除和追加节点之后的新 move 批次重新捕获子节点快照',
   const coord = c.arrayToList([]);
   const patch = (tag, ...args) => c._PCT__$o__$o_(DomPatch, c.turn_tag(tag), ...args);
   const some = index => c._PCT__$o__$o_(c.Option, c.turn_tag('some'), index);
-  const props = c._$n__PCT__$M_(DomProps, ...DomProps.fields.flatMap(field =>
+  const props = optionStruct(c._$n__PCT__$M_, DomProps, ...DomProps.fields.flatMap(field =>
     [field, field.value === 'id' ? 'new-child' : undefined]));
   apply_dom_changes(c.arrayToList([
     patch('move-element', coord, 1, some(0)),
@@ -237,7 +238,7 @@ test('移除和追加节点之后的新 move 批次重新捕获子节点快照',
 
 test('public keyed-list construction omits nil children before movement coordinates', () => {
   const rows = createRows([0, 1, 2]);
-  const props = c._$n__PCT__$M_(DomProps, ...DomProps.fields.flatMap(field => [field, undefined]));
+  const props = optionStruct(c._$n__PCT__$M_, DomProps, ...DomProps.fields.flatMap(field => [field, undefined]));
   const tree = pairs => list__GT_(props, c.arrayToList(pairs.map(pair => c.arrayToList(pair))));
   const oldTree = tree([[0, rows.get(0)], [1, null], [2, rows.get(2)]]);
   const newTree = tree([[2, rows.get(2)], [1, rows.get(1)], [0, null]]);

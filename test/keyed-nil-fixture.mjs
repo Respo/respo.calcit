@@ -3,8 +3,9 @@ import * as c from '../js-out/calcit.core.mjs';
 import { DomProps } from '../js-out/respo.schema.mjs';
 import { create_list_element, span, render_$x_ } from '../js-out/respo.core.mjs';
 import { comp_event_shell } from '../js-out/respo.test.dom.mjs';
+import { optionStruct } from './dom-props.mjs';
 
-const props = overrides => c._$n__PCT__$M_(DomProps,
+const props = overrides => optionStruct(c._$n__PCT__$M_, DomProps,
   ...DomProps.fields.flatMap(field => [field, overrides?.[field.value]]));
 const list = values => new CalcitSliceList(values);
 

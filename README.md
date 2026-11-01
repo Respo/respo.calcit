@@ -1,6 +1,8 @@
 ## Respo: A virtual DOM library in Calcit-js
 
-### 当前版本：0.17.2 / 正式 Calcit 0.32.1
+### 当前版本：0.18.0 / 正式 Calcit 0.32.1
+
+0.18.0 起 props 用 `Option` 表示缺省：`respo.schema/DomProps` 的字段从 `JsNullish` 改为 `Option`，构造时省略的字段自动填入 `Option :none`；props Map 与 `:style` Map 的值也可以是 `Option`，`none` 表示不写该属性。普通值和 `nil` 的行为不变。逐个字段写 `nil` 构造 `DomProps` 的代码需要改成只写用到的字段，并用 `Option :some` 包装取值。
 
 0.17.2 在 0.17.1 之上收紧 `DomProps :on` 的类型为 `Map Tag (JsNullish EventHandler)`：`:on` 中把事件标成 `RespoEvent` 的回调会在预处理阶段被拒绝，`nil` 监听器仍被丢弃。见[DOM events 指南](docs/guide/dom-events.md)与 [#315](https://github.com/Respo/respo.calcit/pull/315)。
 

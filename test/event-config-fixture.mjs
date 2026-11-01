@@ -7,13 +7,14 @@ import { Component, DomProps, EventConfig, ListenerMode } from '../js-out/respo.
 import { make_string } from '../js-out/respo.render.html.mjs';
 import { default_config } from '../js-out/respo.render.events.mjs';
 import { as_render_node } from '../js-out/respo.util.detect.mjs';
+import { optionStruct } from './dom-props.mjs';
 
 const tags = c.init_tags(['listener-mode', 'stop-propagation?', 'property', 'add-event-listener', 'root', 'name', 'tree', 'effects', 'listeners']);
 const list = c.arrayToList([]);
 const makeConfig = (stop, mode) => c._$n__PCT__$M_(EventConfig,
   tags['stop-propagation?'], stop, tags['listener-mode'], c._PCT__$o__$o_(ListenerMode, tags[mode]));
 function tree(handler) {
-  const props = c._$n__PCT__$M_(DomProps, ...DomProps.fields.flatMap(field => [field,
+  const props = optionStruct(c._$n__PCT__$M_, DomProps, ...DomProps.fields.flatMap(field => [field,
     field.value === 'on-click' ? handler : field.value === 'inner-text' ? 'event button' : null]));
   return c._$n__PCT__$M_(Component, tags.name, tags.root,
     tags.effects, list, tags.listeners, list, tags.tree, optionSome(as_render_node(button(props))));
