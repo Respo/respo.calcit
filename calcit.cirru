@@ -217,7 +217,7 @@
               match event $
                 :keydown info
                 let
-                    info $ decode-map-as info $ :: 'Map 'Tag 'Dynamic
+                    info $ decode-map-as info $ quote (Map Tag Dynamic)
                   when
                     and
                       &= |m $ .unwrap-or (calcit.core/get info :key) |
@@ -610,7 +610,7 @@
               :code $ quote $ let
                   task $ Task :id |persisted :text |reload :done? false
                   raw $ parse-cirru-edn $ format-cirru-edn ([] task)
-                  items $ decode-map-as raw $ :: 'List 'Dynamic
+                  items $ decode-map-as raw $ quote (List Dynamic)
                   restored $ restore-tasks respo.app.schema/store $ normalize-tasks items
                 match
                   get (:tasks restored) 0
@@ -708,7 +708,7 @@
                 let
                     disabled-commands $ let
                         raw-disabled $ option:unwrap-or (get options :disabled-commands) (#{} |p |s)
-                      decode-map-as raw-disabled $ :: 'Set 'String
+                      decode-map-as raw-disabled $ quote $ Set String
                     handler $ fn (event)
                       hint-fn $ Fn js-ffi.browser/EventHost $ -> Unit
                       let
@@ -1155,7 +1155,7 @@
           :doc "|Read one field from an event map; raises when the field is missing. Internal helper for event-value, event-checked? and keyboard-info."
           :code $ quote $ defn &event-field (e field)
             let
-                event $ decode-map-as e $ :: 'Map 'Tag 'Dynamic
+                event $ decode-map-as e $ quote (Map Tag Dynamic)
               match (calcit.core/get event field)
                 (:some value) value
                 (:none)
@@ -1435,15 +1435,17 @@
             assert "|expected pair" $ and (list? pair)
               &= 2 $ count pair
             assert "|[Respo] keyed child requires a non-nil key" $ calcit.core/non-nil? $ .unwrap (calcit.core/first pair)
-            &let
-              x $ &list:nth pair 1
-              assert "|Invalid data in elements tree: " $ or (nil? x) (element? x) (component? x)
+            match
+              resolve-prop-value $ &list:nth pair 1
+              (:some child)
+                do (confirm-child child) &unit
+              (:none) &unit
             , pair
           :examples $ []
           :schema $ quote $ Fn (List Dynamic)
             -> $ List Dynamic
         'create-element $ %{} 'CodeEntry
-          :doc "|Low-level helper for creating a virtual DOM element.\n\nPass a tag name, an optional props map, and child nodes. Public helpers such as `div`, `span`, `button`, and `input` are thin wrappers around this function."
+          :doc "|Low-level helper for creating a virtual DOM element.\n\nPass a tag name, an optional props map, and child nodes; a child can also be an Option, and none is left out like nil. Public helpers such as `div`, `span`, `button`, and `input` are thin wrappers around this function."
           :code $ quote $ defn create-element (tag-name props & children)
             let
                 props-map $ normalize-dom-props props
@@ -1460,15 +1462,16 @@
                     xs children
                     idx 0
                   hint-fn $ Fn (List respo.schema/ChildPair) (List Dynamic) Number $ -> (List respo.schema/ChildPair)
-                  if (empty? xs) acc $ let
-                      item $ .unwrap $ calcit.core/first xs
-                    confirm-child item
-                    recur
-                      if (calcit.core/non-nil? item)
-                        append acc $ respo.util.detect/make-child-pair idx item
-                        , acc
-                      &list:rest xs
-                      inc idx
+                  if (empty? xs) acc $ match
+                    resolve-prop-value $ .unwrap $ calcit.core/first xs
+                    (:some item)
+                      do (confirm-child item)
+                        recur
+                          append acc $ respo.util.detect/make-child-pair idx item
+                          &list:rest xs
+                          inc idx
+                    (:none)
+                      recur acc (&list:rest xs) (inc idx)
               schema/Element :name tag-name :coord (Option :none) :attrs attrs :style styles :event event :children children-nodes :ref ref!
           :examples $ []
             quote $ create-element :div $ {}
@@ -1477,6 +1480,16 @@
               {} $ :href |/home
               <> |Home
           :schema $ quote $ Fn Tag PropsInput & Dynamic (-> respo.schema/Element) (:generics PropsInput)
+          :tests $ [] $ %{} 'TestEntry (:name |option-children)
+            :code $ quote $ assert=
+              create-element :div ({})
+                span $ {}
+                , nil $ span $ {} (:class-name |b)
+              create-element :div ({})
+                Option :some $ span $ {}
+                Option :none
+                Option :some $ span $ {} (:class-name |b)
+            :tags $ #{} :unit
         'create-keyed-element $ %{} 'CodeEntry
           :doc "|Typed counterpart of create-list-element. Takes ChildPair values, usually built with keyed-element or keyed-component, instead of [key child] lists. Keys must be non-nil; pairs whose :node is Option :none are omitted, like nil children in create-list-element. Keys, order and diffing behave the same as list->."
           :code $ quote $ defn create-keyed-element (tag-name props pairs)
@@ -1502,18 +1515,20 @@
                     respo.schema/ChildPair :key :gone :node $ Option :none
             :tags $ #{} :unit
         'create-list-element $ %{} 'CodeEntry
-          :doc "|Creates an element for ordered keyed children. Validates each [key child] pair before omitting nil-valued children, matching ordinary element children. Keys must be non-nil, including for omitted children."
+          :doc "|Creates an element for ordered keyed children. Validates each [key child] pair and non-nil key before omitting absent children. Child values can be Option: some keeps the original key and child; none is omitted directly without erasing it to nil. Bare nil children remain omitted."
           :code $ quote $ defn create-list-element (tag-name props child-pairs)
             when
               not $ list? child-pairs
               raise "|[Respo/create-list-element] expected keyed child pairs as a list or map"
-            make-keyed-element |create-list-element tag-name props $ map
-              filter (map child-pairs confirm-child-pair)
-                fn (pair)
-                  calcit.core/non-nil? $ respo.util.list/pair-value pair
-              fn (pair)
-                hint-fn $ Fn (List Dynamic) (-> respo.schema/ChildPair)
-                respo.util.detect/make-child-pair (respo.util.list/pair-key pair) (respo.util.list/pair-value pair)
+            make-keyed-element |create-list-element tag-name props $ foldl (map child-pairs confirm-child-pair) ([])
+              fn (acc pair)
+                hint-fn $ Fn (List respo.schema/ChildPair) (List Dynamic)
+                  -> $ List respo.schema/ChildPair
+                match
+                  resolve-prop-value $ respo.util.list/pair-value pair
+                  (:some child)
+                    append acc $ respo.util.detect/make-child-pair (respo.util.list/pair-key pair) child
+                  (:none) acc
           :examples $ [] $ quote
             create-list-element :div
               {} $ :class-name |list
@@ -1589,9 +1604,34 @@
                 assert |nil-key-is-rejected-before-filtering @caught-key?
                 assert |invalid-child-is-not-filtered @caught-child?
               :tags $ #{} :unit
+            %{} 'TestEntry (:name |normalizes-option-keyed-children)
+              :code $ quote $ let
+                  child $ span $ {}
+                  none $ Option :none
+                  plain $ list-> ({})
+                    [] $ [] :kept child
+                  optional $ list-> ({})
+                    [] ([] :before none)
+                      [] :kept $ Option :some child
+                      [] :after nil
+                  caught-key? $ ref false
+                  caught-child? $ ref false
+                assert= (respo.util.detect/element-children plain) (respo.util.detect/element-children optional)
+                try
+                  list-> ({})
+                    [] $ [] nil none
+                  fn (_error) (reset! caught-key? true)
+                try
+                  list-> ({})
+                    [] $ [] :invalid $ Option :some false
+                  fn (_error) (reset! caught-child? true)
+                assert |nil-key-is-checked-before-omitting-none @caught-key?
+                assert |some-does-not-hide-invalid-child @caught-child?
+              :tags $ #{} :unit
         'create-list-element-open $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn create-list-element-open (name attrs children)
-            create-list-element name attrs $ decode-map-as children $ :: 'List (:: 'List 'Dynamic)
+            create-list-element name attrs $ decode-map-as children $ quote
+              List $ List Dynamic
           :examples $ []
           :schema $ quote $ Fn Tag (Map Tag Dynamic) Dynamic (-> respo.schema/Element) (:features :js-ffi)
         'decorate-defcomp $ %{} 'CodeEntry
@@ -2459,47 +2499,59 @@
           :schema $ quote $ Fn
             -> $ calcit.core/Option Struct
         'normalize-dom-props $ %{} 'CodeEntry
-          :doc "|Normalize nil, map, or DomProps record input into a map. This isolates the intentionally dynamic public props boundary before typed DOM processing."
+          :doc "|Normalize nil, map, or DomProps record input into a map. Option values are unwrapped and none drops the prop, so a DomProps record can omit its Option fields; nil and undefined are dropped too. This isolates the intentionally dynamic public props boundary before typed DOM processing."
           :code $ quote $ defn normalize-dom-props (props)
-            cond
-                nil? props
-                {}
-              (struct? props)
-                let
-                    filter-present $ assert-type &map:filter-kv $ quote
-                      Fn (Map Tag Dynamic)
-                        Fn Tag Dynamic $ -> Bool
-                        -> $ Map Tag Dynamic
-                  filter-present (&struct:to-map props)
-                    fn (_k v)
-                      hint-fn $ Fn Tag Dynamic $ -> Bool
-                      and (calcit.core/non-nil? v) (not= v js/undefined)
-              (map? props)
-                foldl props ({})
-                  defn %normalize-dom-prop (acc pair)
-                    hint-fn $ Fn (Map Tag Dynamic) (List Dynamic)
-                      -> $ Map Tag Dynamic
-                    &let
-                      k $ &list:nth pair 0
-                      if (tag? k)
-                        &map:assoc acc k $ &list:nth pair 1
-                        raise $ str "|Expected DOM prop keys to be tags, got: " k
-              true $ raise $ str |Expected_DOM_props_map_or_record,_got: (type-of props)
+            let
+                keep-present $ fn (acc pair)
+                  hint-fn $ Fn (Map Tag Dynamic) (List Dynamic)
+                    -> $ Map Tag Dynamic
+                  &let
+                    k $ &list:nth pair 0
+                    if (tag? k)
+                      match
+                        resolve-prop-value $ &list:nth pair 1
+                        (:some value) (&map:assoc acc k value)
+                        (:none) acc
+                      raise $ str "|Expected DOM prop keys to be tags, got: " k
+              cond
+                  nil? props
+                  {}
+                (struct? props)
+                  foldl (&struct:to-map props) ({}) keep-present
+                (map? props)
+                  foldl props ({}) keep-present
+                true $ raise $ str |Expected_DOM_props_map_or_record,_got: (type-of props)
           :examples $ []
           :schema $ quote $ Fn PropsInput
             -> $ Map Tag Dynamic
             :generics PropsInput
             :features :js-ffi
-          :tests $ [] $ %{} 'TestEntry (:name |rejects-invalid-props-input)
-            :code $ quote $ each
-              [] 0 false $ []
-              fn (value)
-                let
-                    rejected? $ ref false
-                  try (normalize-dom-props value)
-                    fn (error) (reset! rejected? true)
-                  assert |invalid-props-rejected $ deref rejected?
-            :tags $ #{} :regression :unit
+          :tests $ []
+            %{} 'TestEntry (:name |rejects-invalid-props-input)
+              :code $ quote $ each
+                [] 0 false $ []
+                fn (value)
+                  let
+                      rejected? $ ref false
+                    try (normalize-dom-props value)
+                      fn (error) (reset! rejected? true)
+                    assert |invalid-props-rejected $ deref rejected?
+              :tags $ #{} :regression :unit
+            %{} 'TestEntry (:name |unwraps-option-props)
+              :code $ quote $ assert=
+                {} (:class-name |box) (:title |) (:disabled false)
+                normalize-dom-props $ {}
+                  :class-name $ Option :some |box
+                  :title $ Option :some |
+                  :disabled $ Option :some false
+                  :id $ Option :none
+                  :href nil
+              :tags $ #{} :unit
+            %{} 'TestEntry (:name |dom-props-omits-option-fields)
+              :code $ quote $ assert=
+                {} (:class-name |box) (:checked false)
+                normalize-dom-props $ respo.schema/DomProps :class-name (Option :some |box) :checked $ Option :some false
+              :tags $ #{} :unit
         'normalize-ref $ %{} 'CodeEntry
           :doc "|在 props 的开放数据边界验证 ref，返回明确的 nullable DOM 回调；nil 保留，非法函数沿用调用方消息。"
           :code $ quote $ defn normalize-ref (value-option message)
@@ -2618,13 +2670,24 @@
               {} $ :style $ {} (:color :red)
               <> "|Code block"
           :schema $ quote $ Fn PropsInput & Dynamic (-> respo.schema/Element) (:generics PropsInput)
-        'props-style-map $ %{} 'CodeEntry (:doc "|在 props 开放数据边界检查 :style，nil 视为空 map。")
+        'props-style-map $ %{} 'CodeEntry
+          :doc "|在 props 开放数据边界检查 :style，nil 视为空 map；样式值可以是 Option，none 和 nil 的项被去掉。"
           :code $ quote $ defn props-style-map (value-option)
             match value-option
               (:none) ({})
               (:some value)
                 if (nil? value) ({})
-                  if (map? value) value $ raise $ str "|[Respo] expected :style to be a map, got: " (type-of value)
+                  if (map? value)
+                    foldl value ({})
+                      fn (acc pair)
+                        hint-fn $ Fn (Map Dynamic Dynamic) (List Dynamic)
+                          -> $ Map Dynamic Dynamic
+                        match
+                          resolve-prop-value $ &list:nth pair 1
+                          (:some style-value)
+                            &map:assoc acc (&list:nth pair 0) style-value
+                          (:none) acc
+                    raise $ str "|[Respo] expected :style to be a map, got: " $ type-of value
           :examples $ []
           :schema $ quote $ Fn (Option Dynamic)
             -> $ Map Dynamic Dynamic
@@ -2721,6 +2784,23 @@
           :examples $ []
           :schema $ quote $ Fn
             -> $ JsNullish JsObject
+            :features :js-ffi
+        'resolve-prop-value $ %{} 'CodeEntry
+          :doc "|A prop or style value as an Option: an Option stays as it is, nil and undefined become none, any other value is present. Absent values leave the attribute out."
+          :code $ quote $ defn resolve-prop-value (value)
+            cond
+                nil? value
+                Option :none
+              (= value js/undefined) (Option :none)
+              (and (enum? value) (= (&enum:definition value) (Option :some Option)))
+                if
+                  = :some $ &enum:nth value 0
+                  Option :some $ &enum:nth value 1
+                  Option :none
+              true $ Option :some value
+          :examples $ []
+          :schema $ quote $ Fn Dynamic
+            -> $ Option Dynamic
             :features :js-ffi
         'run-effect-ops! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn run-effect-ops! (items target)
@@ -3704,7 +3784,7 @@
                     not $ list? decoded
                     raise |[Respo/main!]-expected-saved-tasks-as-a-list
                   let
-                      tasks $ decode-map-as decoded $ :: 'List 'Dynamic
+                      tasks $ decode-map-as decoded $ quote (List Dynamic)
                       restored $ respo.app.task/normalize-tasks tasks
                     reset! *store $ respo.app.task/restore-tasks @*store restored
             render-app! mount-target
@@ -4925,7 +5005,8 @@
                         previous $ let
                             value $ key-bucket-positions buckets key-hash
                           if (js-nullish? value) (Option :none)
-                            Option :some $ decode-map-as (to-calcit-data value) (:: 'List 'Number)
+                            Option :some $ decode-map-as (to-calcit-data value)
+                              quote $ List Number
                         matched $ match previous
                           (:none) (Option :none)
                           (:some positions) (index-of-equal-key child-keys positions key)
@@ -5193,10 +5274,10 @@
         'props-as-list $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn props-as-list (props)
             if (list? props)
-              decode-map-as props $ :: 'List $ :: 'List 'Dynamic
+              decode-map-as props $ quote $ List (List Dynamic)
               if (map? props)
                 decode-map-as (&map:to-list props)
-                  :: 'List $ :: 'List 'Dynamic
+                  quote $ List $ List Dynamic
                 []
           :examples $ []
           :schema $ quote $ Fn Dynamic
@@ -6922,57 +7003,58 @@
                   op $ DomPatch :move-element ([] 2) 3 $ Option :some 1
                 assert= op $ parse-cirru-edn $ format-cirru-edn op
               :tags $ #{} :unit
-        'DomProps $ %{} 'CodeEntry (:doc |)
+        'DomProps $ %{} 'CodeEntry
+          :doc "|Typed DOM props. Every field is an Option, so a constructor lists only the props it sets and the rest are filled with none; none leaves the attribute out."
           :code $ quote $ defstruct DomProps
-            :class-name $ quote $ JsNullish String
-            :style $ quote $ JsNullish Map
-            :value $ quote $ JsNullish Dynamic
-            :inner-text $ quote $ JsNullish Dynamic
-            :id $ quote $ JsNullish String
-            :type $ quote $ JsNullish String
-            :href $ quote $ JsNullish String
-            :src $ quote $ JsNullish String
-            :placeholder $ quote $ JsNullish String
-            :name $ quote $ JsNullish String
-            :title $ quote $ JsNullish String
-            :disabled $ quote $ JsNullish Bool
-            :checked $ quote $ JsNullish Bool
-            :spell-check $ quote $ JsNullish Bool
-            :spellcheck $ quote $ JsNullish Bool
-            :autofocus $ quote $ JsNullish Bool
-            :tab-index $ quote $ JsNullish Number
-            :read-only $ quote $ JsNullish Bool
-            :data-name $ quote $ JsNullish String
-            :data-comp $ quote $ JsNullish String
-            :role $ quote $ JsNullish String
-            :aria-label $ quote $ JsNullish String
-            :aria-labelledby $ quote $ JsNullish String
-            :aria-describedby $ quote $ JsNullish String
-            :aria-hidden $ quote $ JsNullish Bool
-            :selected $ quote $ JsNullish Bool
-            :target $ quote $ JsNullish String
-            :on-click $ quote $ JsNullish respo.schema/EventHandler
-            :on-input $ quote $ JsNullish respo.schema/EventHandler
-            :on-focus $ quote $ JsNullish respo.schema/EventHandler
-            :on-blur $ quote $ JsNullish respo.schema/EventHandler
-            :on-keydown $ quote $ JsNullish respo.schema/EventHandler
-            :on-keyup $ quote $ JsNullish respo.schema/EventHandler
-            :on-change $ quote $ JsNullish respo.schema/EventHandler
-            :on-mousedown $ quote $ JsNullish respo.schema/EventHandler
-            :on-paste $ quote $ JsNullish respo.schema/EventHandler
-            :on-mouseup $ quote $ JsNullish respo.schema/EventHandler
-            :innerHTML $ quote $ JsNullish String
-            :rel $ quote $ JsNullish String
-            :defer $ quote $ JsNullish Bool
-            :on $ quote $ JsNullish
+            :class-name $ quote $ Option String
+            :style $ quote $ Option Map
+            :value $ quote $ Option Dynamic
+            :inner-text $ quote $ Option Dynamic
+            :id $ quote $ Option String
+            :type $ quote $ Option String
+            :href $ quote $ Option String
+            :src $ quote $ Option String
+            :placeholder $ quote $ Option String
+            :name $ quote $ Option String
+            :title $ quote $ Option String
+            :disabled $ quote $ Option Bool
+            :checked $ quote $ Option Bool
+            :spell-check $ quote $ Option Bool
+            :spellcheck $ quote $ Option Bool
+            :autofocus $ quote $ Option Bool
+            :tab-index $ quote $ Option Number
+            :read-only $ quote $ Option Bool
+            :data-name $ quote $ Option String
+            :data-comp $ quote $ Option String
+            :role $ quote $ Option String
+            :aria-label $ quote $ Option String
+            :aria-labelledby $ quote $ Option String
+            :aria-describedby $ quote $ Option String
+            :aria-hidden $ quote $ Option Bool
+            :selected $ quote $ Option Bool
+            :target $ quote $ Option String
+            :on-click $ quote $ Option respo.schema/EventHandler
+            :on-input $ quote $ Option respo.schema/EventHandler
+            :on-focus $ quote $ Option respo.schema/EventHandler
+            :on-blur $ quote $ Option respo.schema/EventHandler
+            :on-keydown $ quote $ Option respo.schema/EventHandler
+            :on-keyup $ quote $ Option respo.schema/EventHandler
+            :on-change $ quote $ Option respo.schema/EventHandler
+            :on-mousedown $ quote $ Option respo.schema/EventHandler
+            :on-paste $ quote $ Option respo.schema/EventHandler
+            :on-mouseup $ quote $ Option respo.schema/EventHandler
+            :innerHTML $ quote $ Option String
+            :rel $ quote $ Option String
+            :defer $ quote $ Option Bool
+            :on $ quote $ Option
               Map Tag $ JsNullish respo.schema/EventHandler
-            :alt $ quote $ JsNullish String
-            :draggable $ quote $ JsNullish Bool
-            :content $ quote $ JsNullish String
-            :charset $ quote $ JsNullish String
-            :multiple $ quote $ JsNullish Bool
-            :accept $ quote $ JsNullish String
-            :ref $ quote $ JsNullish Fn
+            :alt $ quote $ Option String
+            :draggable $ quote $ Option Bool
+            :content $ quote $ Option String
+            :charset $ quote $ Option String
+            :multiple $ quote $ Option Bool
+            :accept $ quote $ Option String
+            :ref $ quote $ Option Fn
           :examples $ []
           :schema $ quote StructDef
         'Effect $ %{} 'CodeEntry (:doc |)

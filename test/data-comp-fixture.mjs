@@ -3,8 +3,9 @@ import * as c from '../js-out/calcit.core.mjs';
 import { a, span, realize_ssr_$x_, render_$x_ } from '../js-out/respo.core.mjs';
 import { comp_event_shell } from '../js-out/respo.test.dom.mjs';
 import { make_string } from '../js-out/respo.render.html.mjs';
+import { optionStruct } from './dom-props.mjs';
 
-const props = (overrides = {}) => c._$n__PCT__$M_(DomProps,
+const props = (overrides = {}) => optionStruct(c._$n__PCT__$M_, DomProps,
   ...DomProps.fields.flatMap(field => [field,
     Object.hasOwn(overrides, field.value) ? overrides[field.value] : undefined]));
 

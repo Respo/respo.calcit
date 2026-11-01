@@ -38,7 +38,7 @@ input $ {}
 它是 Struct，监听器收到的不是它，运行时会出现 `e.nthAt is not a function`
 一类错误。用 `get` 或下面的读取函数取字段。
 
-`DomProps` 的 `:on-*` 字段与 `:on` Map 的值都按 `EventHandler` 检查，类型错误
+`DomProps` 的 `:on-*` 字段（`Option EventHandler`）与 `:on` Map 的值都按 `EventHandler` 检查，类型错误
 的回调会在预处理阶段被拒绝。普通 props Map（`{} (:on-input …)`）的值是
 `Dynamic`，Respo 只在运行时检查它是否为函数，不检查签名。
 
@@ -134,7 +134,7 @@ document 级的外部点击检测等集成可使用 `:stop-propagation? false`�
 热更新保留初始配置：应在启动时、首次渲染前配置，不要放入 reload 回调。
 处理单个事件时仍可对 `:original-event` 调用 `preventDefault` 或 `stopPropagation`。
 
-`DomProps` 的 `:on-paste` 与其他事件字段一样，使用可空 `EventHandler`：
+`DomProps` 的 `:on-paste` 与其他事件字段一样，类型是 `Option EventHandler`；普通 props Map 里直接写回调：
 
 ```cirru
 respo.core/textarea $ {}

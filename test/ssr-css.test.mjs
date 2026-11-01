@@ -6,6 +6,7 @@ import { div } from '../js-out/respo.core.mjs';
 import { element_content, make_string } from '../js-out/respo.render.html.mjs';
 import { text__GT_html } from '../js-out/respo.util.format.mjs';
 import { create_style_$x_, render_css_block, warn_style_literals, _$s_style_list_in_nodejs, _$s_style_indices_in_nodejs, nodejs_$q_, present_element } from '../js-out/respo.css.mjs';
+import { optionStruct } from './dom-props.mjs';
 
 test('stylesheet cast requires only id and innerHTML and preserves host identity', () => {
   const element = { id: 'style-fixture', innerHTML: '' };
@@ -44,7 +45,7 @@ test('Style source validation reports extra tokens inside nested List forms', ()
 
 test('SSR preserves literal ampersands in text and attributes', () => {
   const value = '& &amp; < > "';
-  const props = c._$n__PCT__$M_(DomProps, ...DomProps.fields.flatMap(field => [field,
+  const props = optionStruct(c._$n__PCT__$M_, DomProps, ...DomProps.fields.flatMap(field => [field,
     ['title', 'inner-text'].includes(field.value) ? value : undefined]));
   assert.equal(make_string(div(props)),
     '<div title="&amp; &amp;amp; &lt; &gt; &quot;">&amp; &amp;amp; &lt; &gt; "</div>');

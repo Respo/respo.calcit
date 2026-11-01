@@ -237,35 +237,25 @@ for (const [name, source, diagnostics] of [
   });
 }
 
-const domPropsFields = (() => {
-  const result = spawnSync(bin, ['calcit.cirru', 'query', 'def', 'respo.schema/DomProps'], {
-    cwd: root, encoding: 'utf8', timeout: 30_000,
-  });
-  assert.ifError(result.error);
-  const source = result.stdout.slice(result.stdout.indexOf('defstruct DomProps'));
-  const fields = [...source.matchAll(/^\s*\(?(:[A-Za-z?-]+) \$ quote/gm)].map(match => match[1]);
-  assert.ok(fields.includes(':on') && fields.includes(':on-input'), 'DomProps field list must be readable');
-  return fields;
-})();
-
+// DomProps fields are Options; a constructor lists only the field under test and
+// the others are filled with `Option :none`.
 const domPropsWith = (field, value) => `let
-    props $ %{} respo.schema/DomProps ${domPropsFields
-      .map(name => `(${name} ${name === field ? value : 'nil'})`).join(' ')}
+    props $ respo.schema/DomProps ${field} ${value}
   , &unit`;
 
 const listener = eventType => `(fn (e d!) (hint-fn $ Fn ${eventType} Fn (-> Unit)) &unit)`;
 
-for (const [field, wrap] of [
-  [':on-input', callback => callback],
-  [':on', callback => `({} (:input ${callback}))`],
+for (const [field, wrap, absent] of [
+  [':on-input', callback => `(Option :some ${callback})`, '(Option :none)'],
+  [':on', callback => `(Option :some ({} (:input ${callback})))`, '(Option :some ({} (:input nil)))'],
 ]) {
   test(`DomProps ${field} accepts the Map event delivered by event->edn`, () => {
     const result = evaluate(domPropsWith(field, wrap(listener('(Map Tag Dynamic)'))));
     assert.equal(result.status, 0, result.output);
   });
 
-  test(`DomProps ${field} accepts a nil listener, which Respo drops`, () => {
-    const result = evaluate(domPropsWith(field, wrap('nil')));
+  test(`DomProps ${field} accepts an absent listener, which Respo drops`, () => {
+    const result = evaluate(domPropsWith(field, absent));
     assert.equal(result.status, 0, result.output);
   });
 

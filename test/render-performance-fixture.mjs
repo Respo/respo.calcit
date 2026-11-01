@@ -16,7 +16,8 @@ export async function createPerformanceFixture(baseURL = new URL('../', import.m
   const detect = await load('respo.util.detect');
   const list = c.arrayToList;
   const tag = c.turn_tag;
-  const props = c._$n__PCT__$M_(schema.DomProps, ...schema.DomProps.fields.flatMap(field => [field, undefined]));
+  // An empty props map, which both the baseline and the candidate normalizer accept.
+  const props = c._$n__$M_();
   const patch = (coord, title) => c._PCT__$o__$o_(schema.DomPatch, tag('replace-prop'), list([]), list(coord), tag('title'), title);
   const domWorkload = (depth, children) => {
     const mount = document.createElement('main');

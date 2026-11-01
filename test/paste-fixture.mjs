@@ -4,9 +4,10 @@ import { Op } from '../js-out/respo.app.schema.mjs';
 import { textarea, realize_ssr_$x_, render_$x_ } from '../js-out/respo.core.mjs';
 import { comp_event_shell } from '../js-out/respo.test.dom.mjs';
 import { make_string } from '../js-out/respo.render.html.mjs';
+import { optionStruct } from './dom-props.mjs';
 
 const tags = c.init_tags(['type', 'original-event', 'event', 'clear']);
-const props = handler => c._$n__PCT__$M_(DomProps, ...DomProps.fields.flatMap(field =>
+const props = handler => optionStruct(c._$n__PCT__$M_, DomProps, ...DomProps.fields.flatMap(field =>
   [field, field.value === 'on-paste' ? handler : undefined]));
 
 export function verifyPasteEvents(mount, prepareSSR, firePaste) {

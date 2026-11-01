@@ -3,10 +3,11 @@ import { Component, DomProps } from '../js-out/respo.schema.mjs';
 import { div, input, list__GT_, effect_on_mount, effect_on_unmount, render_$x_ } from '../js-out/respo.core.mjs';
 import { find_children_diffs } from '../js-out/respo.render.diff.mjs';
 import { as_render_node, make_child_pair } from '../js-out/respo.util.detect.mjs';
+import { optionStruct } from './dom-props.mjs';
 
 const tags = c.init_tags(['name', 'tree', 'effects', 'listeners', 'some', 'keyed-row']);
 const list = values => c.arrayToList(values);
-const props = overrides => c._$n__PCT__$M_(DomProps, ...DomProps.fields.flatMap(field =>
+const props = overrides => optionStruct(c._$n__PCT__$M_, DomProps, ...DomProps.fields.flatMap(field =>
   [field, overrides[field.value]]));
 export const childPairs = (keys, rows) => list(keys.map(key => list([key, rows.get(key)])));
 /** Build stable component instances with observable mount and unmount effects. */
