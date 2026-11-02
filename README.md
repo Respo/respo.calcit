@@ -1,12 +1,18 @@
 ## Respo: A virtual DOM library in Calcit-js
 
-### 当前版本：0.18.0 / 正式 Calcit 0.32.1
+### 0.18.1 / Calcit 0.34.2 兼容候选
+
+使用既有 0.18 事件、坐标和样式接口的应用可同步到正式 Calcit 0.34.2，JS-FFI 保持 0.2.9；本候选没有引入 0.19 的事件 Struct 或坐标/CSS union。手动构造 `Element` 的 `:attrs` 时，键值对须符合 `List (Tuple Tag Dynamic)`。常规 props、属性顺序及滚动恢复沿用原行为。`show` 省略 fallback 时改为返回 `Option`，作为可选子节点照常使用；需要直接消费宏结果时应匹配 `some` / `none`。
+
+当前候选配对 Calcit CLI / `@calcit/procs` 0.34.2。已完成本地原类型门禁、测试与 Demo 验收；正式 tag 尚待远端 CI 与评审通过。
+
+### 原 0.18.0 / Calcit 0.32.1
 
 0.18.0 起 props 用 `Option` 表示缺省：`respo.schema/DomProps` 的字段从 `JsNullish` 改为 `Option`，构造时省略的字段自动填入 `Option :none`；props Map 与 `:style` Map 的值也可以是 `Option`，`none` 表示不写该属性；子节点同样可以是 `Option`，`none` 与 `nil` 一样被跳过。普通值和 `nil` 的行为不变。逐个字段写 `nil` 构造 `DomProps` 的代码需要改成只写用到的字段，并用 `Option :some` 包装取值。
 
 0.17.2 在 0.17.1 之上收紧 `DomProps :on` 的类型为 `Map Tag (JsNullish EventHandler)`：`:on` 中把事件标成 `RespoEvent` 的回调会在预处理阶段被拒绝，`nil` 监听器仍被丢弃。见[DOM events 指南](docs/guide/dom-events.md)与 [#315](https://github.com/Respo/respo.calcit/pull/315)。
 
-Respo 0.17 系列配对 Calcit CLI / `@calcit/procs` `0.32.1` 与正式 JS-FFI `0.2.9`。应用需同步工具链、重新生成 JS，并迁移下文说明的 typed dispatch 等累计变化。候选尚未发布，须完成原 CI、实际消费者和浏览器验收后再使用正式 tag。
+Respo 0.17 系列配对 Calcit CLI / `@calcit/procs` `0.32.1` 与正式 JS-FFI `0.2.9`。应用需同步工具链、重新生成 JS，并迁移下文说明的 typed dispatch 等累计变化。0.17 系列的历史说明保留如下；0.18.1 候选的发布状态见上文。
 
 本次使用官方 `edit format` 迁移类型标注，测试夹具与文档同步改用 `quote $ Fn …` / `hint-fn $ Fn …`。已知签名的回调现在检查参数数量；旧的双参数派发会在检查时直接拒绝。`identical?` 在 native 与 JS 中都按容器引用判断身份，比较内容应使用 `=`。类型合同和原门禁保持，不改写历史 tag。
 
