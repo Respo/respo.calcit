@@ -1461,11 +1461,7 @@
                 props-map $ normalize-dom-props props
                 ref! $ normalize-ref (calcit.core/get props-map :ref) "|[Respo/create-element] expected :ref to be a function or nil"
                 attrs $ pick-attrs props-map
-                styles $ ->
-                  props-style-map $ calcit.core/get props-map :style
-                  &map:to-list
-                  sort $ fn (x y)
-                    &compare (&list:nth x 0) (&list:nth y 0)
+                styles $ style-entries $ props-style-map (calcit.core/get props-map :style)
                 event $ pick-event props-map
                 children-nodes $ loop
                     acc $ []
@@ -2420,14 +2416,7 @@
                 props-map $ normalize-dom-props props
                 ref! $ normalize-ref (calcit.core/get props-map :ref) (str |[Respo/ label "|] expected :ref to be a function or nil")
                 attrs $ pick-attrs props-map
-                styles $ sort
-                  assert-type
-                    &map:to-list $ props-style-map $ calcit.core/get props-map :style
-                    quote $ List $ List Dynamic
-                  fn (x y)
-                    &compare
-                      .unwrap $ calcit.core/first x
-                      .unwrap $ calcit.core/first y
+                styles $ style-entries $ props-style-map (calcit.core/get props-map :style)
                 event $ pick-event props-map
               schema/Element :name tag-name :coord (Option :none) :attrs attrs :style styles :event event :children children :ref ref!
           :examples $ []
@@ -2698,17 +2687,19 @@
                   if (map? value)
                     foldl value ({})
                       fn (acc pair)
-                        hint-fn $ Fn (Map Dynamic Dynamic) (List Dynamic)
-                          -> $ Map Dynamic Dynamic
+                        hint-fn $ Fn (Map respo.schema/StyleKey respo.schema/CssValue) (List Dynamic)
+                          -> $ Map respo.schema/StyleKey respo.schema/CssValue
                         match
                           resolve-prop-value $ &list:nth pair 1
                           (:some style-value)
-                            &map:assoc acc (&list:nth pair 0) style-value
+                            &map:assoc acc
+                              respo.util.format/read-style-key $ &list:nth pair 0
+                              respo.util.format/read-css-value style-value
                           (:none) acc
                     raise $ str "|[Respo] expected :style to be a map, got: " $ type-of value
           :examples $ []
           :schema $ quote $ Fn (Option Dynamic)
-            -> $ Map Dynamic Dynamic
+            -> $ Map respo.schema/StyleKey respo.schema/CssValue
         'realize-ssr! $ %{} 'CodeEntry
           :doc "|Adopt server-rendered DOM before the first client render. It compares the component tree to the existing HTML, attaches events by diffing a muted tree against the live tree, and mounts effects once. The live tree and shared dispatch reference are recorded before patches run, so events work immediately and later render! calls update handlers and dispatch without remounting."
           :code $ quote $ defn realize-ssr! (target element dispatch!)
@@ -2957,6 +2948,18 @@
           :examples $ [] $ quote
             style $ {} $ :innerHTML "|body { margin: 0; padding: 0; }"
           :schema $ quote $ Fn PropsInput & Dynamic (-> respo.schema/Element) (:generics PropsInput)
+        'style-entries $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn style-entries (styles)
+            map
+              sort
+                .to-list $ keys styles
+                , &compare
+              fn (k)
+                hint-fn $ Fn respo.schema/StyleKey $ -> (Tuple respo.schema/StyleKey respo.schema/CssValue)
+                [] k $ .unwrap $ &map:get styles k
+          :examples $ []
+          :schema $ quote $ Fn (Map respo.schema/StyleKey respo.schema/CssValue)
+            -> $ List $ Tuple respo.schema/StyleKey respo.schema/CssValue
         'textarea $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn textarea (props & children)
             create-element :textarea props & $ map children confirm-child
@@ -4921,26 +4924,26 @@
                   , &unit
                 (and was-empty? (not now-empty?))
                   let
-                      entry $ respo.util.list/first-pair new-style
-                      k $ respo.util.list/pair-tag-key entry
-                      v $ respo.util.list/pair-value entry
+                      entry $ &list:nth new-style 0
+                      k $ nth entry 0
+                      v $ nth entry 1
                       follows $ &list:rest new-style
                     collect! $ DomPatch :add-style c-coord coord k v
                     recur collect! c-coord coord old-style follows
                 (and (not was-empty?) now-empty?)
                   let
-                      entry $ respo.util.list/first-pair old-style
-                      k $ respo.util.list/pair-tag-key entry
+                      entry $ &list:nth old-style 0
+                      k $ nth entry 0
                       follows $ &list:rest old-style
                     collect! $ DomPatch :rm-style c-coord coord k
                     recur collect! c-coord coord follows new-style
                 true $ let
-                    old-entry $ respo.util.list/first-pair old-style
-                    new-entry $ respo.util.list/first-pair new-style
-                    old-k $ respo.util.list/pair-tag-key old-entry
-                    old-v $ respo.util.list/pair-value old-entry
-                    new-k $ respo.util.list/pair-tag-key new-entry
-                    new-v $ respo.util.list/pair-value new-entry
+                    old-entry $ &list:nth old-style 0
+                    new-entry $ &list:nth new-style 0
+                    old-k $ nth old-entry 0
+                    old-v $ nth old-entry 1
+                    new-k $ nth new-entry 0
+                    new-v $ nth new-entry 1
                     old-follows $ &list:rest old-style
                     new-follows $ &list:rest new-style
                   match (&compare old-k new-k)
@@ -4963,8 +4966,8 @@
             Fn respo.schema/DomPatch $ -> Unit
             List respo.schema/CoordKey
             List Number
-            List $ List Dynamic
-            List $ List Dynamic
+            List $ Tuple respo.schema/StyleKey respo.schema/CssValue
+            List $ Tuple respo.schema/StyleKey respo.schema/CssValue
             -> Unit
         'first-duplicate-key $ %{} 'CodeEntry
           :doc "|Find the first original key which occurs more than once, retaining deep Calcit equality and warning selection. Native evaluation uses hash sets; JavaScript uses hash-indexed buckets backed by native Map, with equality checks for collisions. Expected linear work in the number of keys, excluding key hashing/comparison costs and adversarial collisions."
@@ -5388,14 +5391,13 @@
                               k $ dashed->camel prop-str
                             if (calcit.core/non-nil? v) (aset element k v)
                   each style $ fn (entry)
-                    hint-fn $ Fn (List Dynamic) (-> Dynamic)
+                    hint-fn $ Fn (Tuple respo.schema/StyleKey respo.schema/CssValue) (-> Dynamic)
                     let
-                        style-name $ respo.util.list/pair-key-text entry
+                        style-name $ respo.util.format/style-key-text $ nth entry 0
                         k $ dashed->camel style-name
-                        v $ respo.util.list/pair-value entry
                       aset
                         browser/element-style $ host-element element
-                        , k $ style-value-text v k
+                        , k $ respo.util.format/get-style-value (nth entry 1) k
                   &doseq (entry events)
                     let
                         event-handler $ respo.util.list/pair-value entry
@@ -6144,12 +6146,12 @@
         'add-style $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn add-style (target p v)
             let
-                style-name $ dashed->camel $ calcit.core/to-string p
-                style-value $ style-value-text v style-name
+                style-name $ dashed->camel $ respo.util.format/style-key-text p
+                style-value $ respo.util.format/get-style-value v style-name
               aset (.-style target) style-name style-value
             , &unit
           :examples $ []
-          :schema $ quote $ Fn respo.dom/DomElement Tag Dynamic (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn respo.dom/DomElement respo.schema/StyleKey respo.schema/CssValue (-> Unit) (:features :js-ffi)
         'append-element $ %{} 'CodeEntry
           :doc "|Appends a new DOM element to the target container."
           :code $ quote $ defn append-element (target op listener-builder coord)
@@ -6534,11 +6536,11 @@
           :doc "|Updates a single style property on a DOM element."
           :code $ quote $ defn replace-style (target p v)
             let
-                style-name $ dashed->camel $ calcit.core/to-string p
-              aset (.-style target) style-name $ style-value-text v style-name
+                style-name $ dashed->camel $ respo.util.format/style-key-text p
+              aset (.-style target) style-name $ respo.util.format/get-style-value v style-name
             , &unit
           :examples $ []
-          :schema $ quote $ Fn respo.dom/DomElement Tag Dynamic (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn respo.dom/DomElement respo.schema/StyleKey respo.schema/CssValue (-> Unit) (:features :js-ffi)
         'rm-element $ %{} 'CodeEntry (:doc "|Removes the DOM element from the document.")
           :code $ quote $ defn rm-element (target)
             match target
@@ -6581,12 +6583,12 @@
         'rm-style $ %{} 'CodeEntry (:doc "|Removes a style property from a DOM element.")
           :code $ quote $ defn rm-style (target op)
             &let
-              style-name $ dashed->camel $ calcit.core/to-string op
+              style-name $ dashed->camel $ respo.util.format/style-key-text op
               do
                 -> (.-style target) (js-set style-name nil)
                 , &unit
           :examples $ []
-          :schema $ quote $ Fn Dynamic Tag (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn respo.dom/DomElement respo.schema/StyleKey (-> Unit) (:features :js-ffi)
         'run-effect $ %{} 'CodeEntry
           :doc "|Runs side effect functions.\n\nParameters:\n  target - Target DOM element or component instance, nil if target not found\n  method - Method function to execute on the target\n  coord - Coordinate information for identifying location in console warnings\n\nFunctionality:\n  If target exists, calls method function on target; if target is nil, outputs warning to console.\n  Mainly used to execute various side effects during rendering patch process, such as event listening, DOM operations, etc."
           :code $ quote $ defn run-effect (target method coord)
@@ -6962,15 +6964,15 @@
             :add-style
               quote $ List CoordKey
               quote $ List Number
-              , Tag Dynamic
+              , respo.schema/StyleKey respo.schema/CssValue
             :replace-style
               quote $ List CoordKey
               quote $ List Number
-              , Tag Dynamic
+              , respo.schema/StyleKey respo.schema/CssValue
             :rm-style
               quote $ List CoordKey
               quote $ List Number
-              , Tag
+              , respo.schema/StyleKey
             :set-event
               quote $ List CoordKey
               quote $ List Number
@@ -7104,7 +7106,7 @@
           :code $ quote $ defstruct Element (:name Tag)
             :coord $ quote $ Option (List CoordKey)
             :attrs $ quote $ List (List Dynamic)
-            :style $ quote $ List (List Dynamic)
+            :style $ quote $ List (Tuple respo.schema/StyleKey respo.schema/CssValue)
             :event $ quote $ Map Tag (JsNullish Fn)
             :children $ quote $ List respo.schema/ChildPair
             :ref $ quote $ JsNullish Fn
@@ -7164,6 +7166,10 @@
           :code $ quote $ def States ({})
           :examples $ []
           :schema $ quote $ Map Dynamic Dynamic
+        'StyleKey $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion StyleKey Tag String
+          :examples $ []
+          :schema $ quote UnionDef
         'cache-info $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def cache-info
             {} (:value nil) (:initial-loop nil) (:last-hit nil) (:hit-times 0)
@@ -7806,7 +7812,7 @@
               :style element
           :examples $ []
           :schema $ quote $ Fn respo.schema/Element
-            -> $ List $ List Dynamic
+            -> $ List $ Tuple respo.schema/StyleKey respo.schema/CssValue
         'element? $ %{} 'CodeEntry
           :doc "|check if value is a Respo element. returns true for element records, false otherwise."
           :code $ quote $ defn element? (x)
@@ -8294,6 +8300,25 @@
               assert= ({}) (:event cleaned)
               assert= 1 $ count $ :event leaf
               assert= outer $ respo.util.detect/child-pair-value $ &list:nth (:children root) 0
+        'read-css-value $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn read-css-value (x)
+            cond
+                string? x
+                , x
+              (number? x) x
+              (tag? x) x
+              true $ raise $ str "|[Respo] expected a style value as String, Number or Tag, got: " (type-of x) "| " (to-lispy-string x)
+          :examples $ []
+          :schema $ quote $ Fn Dynamic (-> respo.schema/CssValue)
+        'read-style-key $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn read-style-key (x)
+            cond
+                tag? x
+                , x
+              (string? x) x
+              true $ raise $ str "|[Respo] expected a style key as Tag or String, got: " (type-of x) "| " (to-lispy-string x)
+          :examples $ []
+          :schema $ quote $ Fn Dynamic (-> respo.schema/StyleKey)
         'scalar-attribute-text $ %{} 'CodeEntry (:doc "|将 DOM/SSR 属性值边界内已识别的标量转换为文本；拒绝集合及任意宿主对象。")
           :code $ quote $ defn scalar-attribute-text (x)
             cond
@@ -8320,6 +8345,13 @@
                   scalar-attribute-text $ [] 1 2
                   fn (error) error
               :tags $ #{} :unit
+        'style-key-text $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn style-key-text (k)
+            match k
+              (Tag t) (to-string t)
+              (String s) s
+          :examples $ []
+          :schema $ quote $ Fn respo.schema/StyleKey (-> String)
         'style-value-text $ %{} 'CodeEntry
           :doc "|Formats a style value read from an open style map. nil gives an empty string so DOM updates and SSR output can clear the declaration; String, Number and Tag are passed to `get-style-value` as `respo.schema/CssValue`; any other value raises instead of being stringified."
           :code $ quote $ defn style-value-text (x prop)
