@@ -1,8 +1,12 @@
 ## Respo: A virtual DOM library in Calcit-js
 
-### 当前版本：0.18.0 / 正式 Calcit 0.32.1
+### 0.19.0 正式发布候选
 
-未发布（版本号待定）：配对 Calcit CLI / `@calcit/procs` `0.34.1`，开始使用受限 union（`defunion`）。新增 `respo.schema/CoordKey`（Tag、String、Number）和 `respo.schema/CssValue`（String、Number、Tag）。破坏性改动：`ChildPair :key`、`>>` 的 key、`keyed-element` / `keyed-component` 的 key 改为 `CoordKey`，传入 `Dynamic` 的调用要先用 `respo.util.list/read-coord-key` 检查；`list->` 遇到 Bool、集合等 key 会报错。`respo.util.format/get-style-value` 只接收 `CssValue`，开放样式值改用 `style-value-text`，它不再把其他类型的值转成字符串而是报错。`comp-inspect` 的第三个参数改为 `respo.comp.inspect/InspectStyle`（class-name 字符串或 `Map Tag CssValue`），不再接受 `nil`，没有额外样式时传 `{}`。逻辑坐标（`Element :coord`、`Effect :coord`、`DomPatch` 的坐标、`state-cursor` 的返回值）改为 `List CoordKey`；`Element :style` 改为 `List (Tuple StyleKey CssValue)`，新增 `respo.schema/StyleKey`（Tag、String），props 的 `:style` 在创建元素时就检查键和值，不合法时立即报错而不是渲染时才报；`add-style` / `replace-style` 不再接收 nil，清空用 `rm-style`。
+事件回调现在接收名义 `RespoEvent`。从旧版升级的应用与组件库需将事件参数从 Map 改为 `respo.schema/RespoEvent`，使用字段读取及受检 helper。直接对事件执行 Map get 的调用方需要迁移。详细说明见 [DOM events 指南](docs/guide/dom-events.md)。
+
+本候选配对 Calcit CLI 与 `@calcit/procs` 0.34.1、JS-FFI 0.2.10。Router、UI 及应用应使用匹配的精确正式依赖图后重新构建。0.19.0 尚待正式 tag 发布。
+
+0.18 系列的 union 接口：配对 Calcit CLI / `@calcit/procs` `0.34.1`，开始使用受限 union（`defunion`）。新增 `respo.schema/CoordKey`（Tag、String、Number）和 `respo.schema/CssValue`（String、Number、Tag）。破坏性改动：`ChildPair :key`、`>>` 的 key、`keyed-element` / `keyed-component` 的 key 改为 `CoordKey`，传入 `Dynamic` 的调用要先用 `respo.util.list/read-coord-key` 检查；`list->` 遇到 Bool、集合等 key 会报错。`respo.util.format/get-style-value` 只接收 `CssValue`，开放样式值改用 `style-value-text`，它不再把其他类型的值转成字符串而是报错。`comp-inspect` 的第三个参数改为 `respo.comp.inspect/InspectStyle`（class-name 字符串或 `Map Tag CssValue`），不再接受 `nil`，没有额外样式时传 `{}`。逻辑坐标（`Element :coord`、`Effect :coord`、`DomPatch` 的坐标、`state-cursor` 的返回值）改为 `List CoordKey`；`Element :style` 改为 `List (Tuple StyleKey CssValue)`，新增 `respo.schema/StyleKey`（Tag、String），props 的 `:style` 在创建元素时就检查键和值，不合法时立即报错而不是渲染时才报；`add-style` / `replace-style` 不再接收 nil，清空用 `rm-style`。
 
 同一未发布版本的对外接口类型（破坏性）：事件回调的第一个参数从 `Map Tag Dynamic` 改为 `respo.schema/RespoEvent` struct（`(:value e)`、没写类型时的 `get e :value` 照常可用；未单独识别的事件 `:type` 从字符串改为 Tag），把事件标成 `Map Tag Dynamic` 的回调会被拒绝。effect 方法改收 `respo.schema/EffectParams`，`defeffect` 的 `el` 和 `effect-on-*` / `effect-watch` 回调参数都是 `respo.dom/DomElement`，`DomElement` trait 补上了布局读取、兄弟节点、`.closest`、`.clone-node`、属性读写等成员；`respo.ffi.browser/effect-element` 标记为 deprecated。`<>` 的样式参数改为 `respo.schema/TextStyle`（class-name 字符串或 `Map Tag CssValue`），传入的样式 def 需要写 `Map Tag respo.schema/CssValue` schema。`space-x` / `space-y` 接受任意 `CssValue`，`=<` / `comp-space` 标记 deprecated。`ResourceAction` / `ResourceState` 改为泛型 `ResourceAction T E` / `ResourceState T E`。
 
