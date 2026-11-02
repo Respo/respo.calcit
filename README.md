@@ -2,7 +2,7 @@
 
 ### 0.19.0 正式发布候选
 
-事件回调现在接收名义 `RespoEvent`。从旧版升级的应用与组件库需将事件参数从 Map 改为 `respo.schema/RespoEvent`，使用字段读取及受检 helper。直接对事件执行 Map get 的调用方需要迁移。详细说明见 [DOM events 指南](docs/guide/dom-events.md)。
+事件回调现在接收名义 `RespoEvent`。事件参数显式标注为 `Map Tag Dynamic` 的回调需要迁移为 `respo.schema/RespoEvent`，使用字段读取及受检 helper。未标注类型的回调仍可使用 `get e :value`。详细说明见 [DOM events 指南](docs/guide/dom-events.md)。
 
 本候选配对 Calcit CLI 与 `@calcit/procs` 0.34.1、JS-FFI 0.2.10。Router、UI 及应用应使用匹配的精确正式依赖图后重新构建。0.19.0 尚待正式 tag 发布。
 
