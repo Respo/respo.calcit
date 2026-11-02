@@ -70,7 +70,7 @@ CIRRU
 "$calcit_bin" eval --dep ./calcit.cirru "$positive" >/dev/null
 
 fields_positive=$(cat <<'CIRRU'
-&let (attrs $ [] ([] :id |probe))
+&let (attrs $ respo.util.list/pick-attrs ({} (:id |probe)))
   &let (styles $ respo.core/style-entries ({} (:color |red)))
     &let (events $ {} (:click nil))
       &let (element $ respo.schema/Element :name :span :coord (Option :none) :attrs attrs :style styles :event events :children ([]) :ref nil)

@@ -1679,18 +1679,20 @@
                             before $ []
                             remaining $ :attrs element
                           hint-fn $ Fn
-                            List $ List Dynamic
-                            List $ List Dynamic
-                            -> $ List $ List Dynamic
+                            List $ Tuple Tag Dynamic
+                            List $ Tuple Tag Dynamic
+                            -> $ List $ Tuple Tag Dynamic
                           if (empty? remaining)
-                            append before $ [] :data-comp name
+                            append before $ assert-type ([] :data-comp name)
+                              quote $ Tuple Tag Dynamic
                             let
                                 pair $ respo.util.list/first-pair remaining
-                                order $ &compare (respo.util.list/pair-key pair) :data-comp
+                                order $ &compare (&list:nth pair 0) :data-comp
                               if (&< order 0)
                                 recur (append before pair) (&list:rest remaining)
                                 concat before
-                                  [] $ [] :data-comp name
+                                  [] $ assert-type ([] :data-comp name)
+                                    quote $ Tuple Tag Dynamic
                                   if (&= order 0) (&list:rest remaining) remaining
                       .assoc c :tree $ Option :some $ respo.schema/RenderNode :element updated
           :examples $ []
@@ -4888,23 +4890,23 @@
                 (and was-empty? (not now-empty?))
                   let
                       new-pair $ respo.util.list/first-pair new-props
-                      new-k $ respo.util.list/pair-tag-key new-pair
-                      new-v $ respo.util.list/pair-value new-pair
+                      new-k $ &list:nth new-pair 0
+                      new-v $ &list:nth new-pair 1
                     collect! $ DomPatch :add-prop coord n-coord new-k new-v
                     recur collect! coord n-coord old-props $ &list:rest new-props
                 (and (not was-empty?) now-empty?)
                   let
                       old-pair $ respo.util.list/first-pair old-props
-                      old-k $ respo.util.list/pair-tag-key old-pair
+                      old-k $ &list:nth old-pair 0
                     collect! $ DomPatch :rm-prop coord n-coord old-k
                     recur collect! coord n-coord (&list:rest old-props) new-props
                 true $ let
                     old-pair $ respo.util.list/first-pair old-props
                     new-pair $ respo.util.list/first-pair new-props
-                    old-k $ respo.util.list/pair-tag-key old-pair
-                    old-v $ respo.util.list/pair-value old-pair
-                    new-k $ respo.util.list/pair-tag-key new-pair
-                    new-v $ respo.util.list/pair-value new-pair
+                    old-k $ &list:nth old-pair 0
+                    old-v $ &list:nth old-pair 1
+                    new-k $ &list:nth new-pair 0
+                    new-v $ &list:nth new-pair 1
                     old-follows $ &list:rest old-props
                     new-follows $ &list:rest new-props
                   match (&compare old-k new-k)
@@ -4927,8 +4929,8 @@
             Fn respo.schema/DomPatch $ -> Unit
             List respo.schema/CoordKey
             List Number
-            List $ List Dynamic
-            List $ List Dynamic
+            List $ Tuple Tag Dynamic
+            List $ Tuple Tag Dynamic
             -> Unit
           :tests $ [] $ %{} 'TestEntry (:name |reports-property-changes)
             :code $ quote $ let
@@ -5420,10 +5422,10 @@
           :code $ quote $ defn owns-inner-content? (element)
             any? (:attrs element)
               fn (pair)
-                hint-fn $ Fn (List Dynamic) (-> Bool)
+                hint-fn $ Fn (Tuple Tag Dynamic) (-> Bool)
                 and
-                  contains? (#{} :innerHTML :inner-text) (respo.util.list/pair-tag-key pair)
-                  non-nil? $ respo.util.list/pair-value pair
+                  contains? (#{} :innerHTML :inner-text) (&list:nth pair 0)
+                  non-nil? $ &list:nth pair 1
           :examples $ []
           :schema $ quote $ Fn respo.schema/Element (-> Bool)
           :tests $ [] $ %{} 'TestEntry (:name |detects-content-props)
@@ -5516,10 +5518,10 @@
                               , .unwrap
                           make-render-node-element child listener-builder (append coord k) child-svg?
                   each attrs $ fn (entry)
-                    hint-fn $ Fn (List Dynamic) (-> Dynamic)
+                    hint-fn $ Fn (Tuple Tag Dynamic) (-> Dynamic)
                     let
-                        prop-str $ respo.util.list/pair-key-text entry
-                        v $ respo.util.list/pair-value entry
+                        prop-str $ .to-string $ &list:nth entry 0
+                        v $ &list:nth entry 1
                       if (.!startsWith prop-str |data-)
                         if (calcit.core/non-nil? v)
                           js-set
@@ -5543,11 +5545,12 @@
                       aset
                         browser/element-style $ host-element element
                         , k $ respo.util.format/get-style-value (nth entry 1) k
-                  &doseq (entry events)
+                  &doseq
+                    entry $ .to-list events
                     let
-                        event-handler $ respo.util.list/pair-value entry
-                      when (calcit.core/non-nil? event-handler)
-                        install-listener! element (respo.util.list/pair-tag-key entry) listener-builder coord
+                        event-handler $ &list:nth entry 1
+                      when (js-present? event-handler)
+                        install-listener! element (&list:nth entry 0) listener-builder coord
                   each child-elements $ fn (child-element)
                     if (calcit.core/non-nil? child-element)
                       browser/append-child! (host-element element) (host-element child-element)
@@ -6132,10 +6135,10 @@
         'entry->html $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn entry->html (entry)
             let
-                k $ respo.util.list/pair-key entry
-                v $ respo.util.list/pair-value entry
+                k $ &list:nth entry 0
+                v $ &list:nth entry 1
                 value-text $ cond
-                    = k :style
+                    and (tag? k) (= k :style)
                     style->html $ coerce-pairs $ respo.util.list/checked-pairs v
                   (string? v) (escape-html v)
                   true $ respo.util.format/scalar-attribute-text v
@@ -6143,7 +6146,7 @@
                 prop->attr $ if (tag? k) (to-string k) (str k)
                 , |= $ &str:escape value-text
           :examples $ []
-          :schema $ quote $ Fn (List Dynamic) (-> String)
+          :schema $ quote $ Fn (Tuple AttrKey Dynamic) (-> String) (:generics AttrKey)
         'escape-html $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn escape-html (text)
             &str:replace
@@ -6190,17 +6193,19 @@
             let
                 pairs $ &map:to-list props
                 visible $ filter pairs $ fn (pair)
-                  hint-fn $ Fn (List Dynamic) (-> Bool)
+                  hint-fn $ Fn (Tuple AttrKey Dynamic) (-> Bool)
                   let
-                      k $ respo.util.list/pair-key pair
-                      v $ respo.util.list/pair-value pair
+                      k $ &list:nth pair 0
+                      v $ &list:nth pair 1
                       attr $ if (tag? k) (to-string k) (str k)
                     ; "A present boolean attribute reads as true, so false leaves it out; other attributes keep the text false"
                     and (calcit.core/non-nil? v)
                       not $ starts-with? attr |on-
                       not $ and (= v false)
                         includes? boolean-attrs $ prop->attr attr
-                sorted $ &list:sort-by visible respo.util.list/pair-key
+                sorted $ &list:sort-by visible $ fn (pair)
+                  hint-fn $ Fn (Tuple AttrKey Dynamic) (-> AttrKey)
+                  &list:nth pair 0
               calcit.core/join-string (map sorted entry->html) "| "
           :examples $ []
           :schema $ quote $ Fn (Map AttrKey Dynamic) (-> String) (:generics AttrKey)
@@ -6332,7 +6337,7 @@
                   &doseq
                     pair $ &map:to-list @scroll-snapshot
                     &doseq
-                      state $ respo.util.list/pair-value pair
+                      state $ &list:nth pair 1
                       let
                           entry $ as-move-scroll-state state
                         aset (:node entry) |scrollTop $ :top entry
@@ -7267,7 +7272,7 @@
         'Element $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Element (:name Tag)
             :coord $ quote $ Option (List CoordKey)
-            :attrs $ quote $ List (List Dynamic)
+            :attrs $ quote $ List (Tuple Tag Dynamic)
             :style $ quote $ List (Tuple respo.schema/StyleKey respo.schema/CssValue)
             :event $ quote $ Map Tag (JsNullish Fn)
             :children $ quote $ List respo.schema/ChildPair
@@ -7991,7 +7996,7 @@
               :attrs element
           :examples $ []
           :schema $ quote $ Fn respo.schema/Element
-            -> $ List $ List Dynamic
+            -> $ List $ Tuple Tag Dynamic
         'element-children $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn element-children (value)
             :children $ as-element value
@@ -8447,13 +8452,20 @@
           :schema $ quote $ Fn respo.schema/Element (-> respo.schema/Element)
         'purify-events $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn purify-events (events)
-            -> (&map:to-list events)
-              filter $ fn (pair)
-                calcit.core/non-nil? $ respo.util.list/pair-value pair
-              map respo.util.list/pair-tag-key
+            map
+              filter (&map:to-list events)
+                fn (pair)
+                  hint-fn $ Fn (Tuple Key Dynamic) (-> Bool)
+                  calcit.core/non-nil? $ &list:nth pair 1
+              fn (pair)
+                hint-fn $ Fn (Tuple Key Dynamic) (-> Tag)
+                &let
+                  key $ &list:nth pair 0
+                  if (tag? key) key $ raise $ str "|[Respo] expected a Tag key, got: " key
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic)
+          :schema $ quote $ Fn (Map Key Dynamic)
             -> $ List Tag
+            :generics Key
           :tests $ [] $ %{} 'TestEntry (:name |keeps-live-tag-keys)
             :code $ quote $ let
                 events $ {}
@@ -8677,9 +8689,7 @@
                 if (nil? pair) (raise "|first-pair expected a non-empty list of pairs") pair
               (:none) (raise "|first-pair expected a non-empty list of pairs")
           :examples $ []
-          :schema $ quote $ Fn
-            List $ List Dynamic
-            -> $ List Dynamic
+          :schema $ quote $ Fn (List T) (-> T) (:generics T)
           :tests $ [] $ %{} 'TestEntry (:name |absence-migration-values)
             :code $ quote $ do
               assert= ([] :a 1)
@@ -8773,11 +8783,11 @@
                     not $ starts-with? (to-string k) |on-
                 &map:to-list
                 sort $ fn (x y)
-                  hint-fn $ Fn (List Dynamic) (List Dynamic) (-> Number)
+                  hint-fn $ Fn (Tuple Tag Dynamic) (Tuple Tag Dynamic) (-> Number)
                   &compare (&list:nth x 0) (&list:nth y 0)
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic)
-            -> $ List $ List Dynamic
+            -> $ List $ Tuple Tag Dynamic
           :tests $ []
             %{} 'TestEntry (:name |filters-internal-and-empty-properties)
               :code $ quote $ let
