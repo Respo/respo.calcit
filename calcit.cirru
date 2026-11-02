@@ -165,13 +165,14 @@
                           [] task-id $ memo-comp-by task-id comp-task (>> states task-id) task
                   if
                     > (count tasks) 0
-                    div
+                    Option :some $ div
                       {} (:spell-check true) (:class-name style-toolbar)
                       div
                         {} (:class-name widget/style-button)
                           :on-click $ if (not locked?)
-                            fn (e d!)
+                            Option :some $ fn (e d!)
                               d! $ Op :clear
+                            Option :none
                         <> |Clear2
                       =< 8 0
                       div
@@ -183,6 +184,7 @@
                           {} $ :font-size 13
                       =< 8 0
                       comp-wrap $ comp-zero
+                    Option :none
                   comp-inspect |Tasks tasks $ {} (:left 500) (:top 20)
                   div
                     {} $ :style $ {} (:padding |8px) (:font-size 12) (:color |#999) (:margin-top |16px)
@@ -435,34 +437,34 @@
           :code $ quote $ defenum Op
             :states
               quote $ List Dynamic
-              , 'Dynamic
+              , Dynamic
             :states-kv
               quote $ List Dynamic
-              , 'Dynamic 'Dynamic
+              , Dynamic Dynamic
             :states-merge
               quote $ List Dynamic
-              , 'respo.app.schema/TodoState 'Dynamic
-            :add 'String
-            :remove 'String
+              , respo.app.schema/TodoState Dynamic
+            :add String
+            :remove String
             :clear
-            :update 'String 'String
-            :hit-first 'String
-            :toggle 'String
+            :update String String
+            :hit-first String
+            :toggle String
           :examples $ []
           :schema $ quote EnumDef
         'Store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Store
             :tasks $ quote $ List respo.app.schema/Task
-            :states 'respo.schema/States
+            :states respo.schema/States
             :cursor $ quote $ List Dynamic
           :examples $ []
           :schema $ quote StructDef
         'Task $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct Task (:id 'String) (:text 'String) (:done? 'Bool)
+          :code $ quote $ defstruct Task (:id String) (:text String) (:done? Bool)
           :examples $ []
           :schema $ quote StructDef
         'TodoState $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct TodoState (:draft 'String) (:locked? 'Bool) (:message 'String)
+          :code $ quote $ defstruct TodoState (:draft String) (:locked? Bool) (:message String)
           :examples $ []
           :schema $ quote StructDef
         'store $ %{} 'CodeEntry
@@ -1648,18 +1650,20 @@
                             before $ []
                             remaining $ :attrs element
                           hint-fn $ Fn
-                            List $ List Dynamic
-                            List $ List Dynamic
-                            -> $ List $ List Dynamic
+                            List $ Tuple Tag Dynamic
+                            List $ Tuple Tag Dynamic
+                            -> $ List $ Tuple Tag Dynamic
                           if (empty? remaining)
-                            append before $ [] :data-comp name
+                            append before $ assert-type ([] :data-comp name)
+                              quote $ Tuple Tag Dynamic
                             let
                                 pair $ respo.util.list/first-pair remaining
-                                order $ &compare (respo.util.list/pair-key pair) :data-comp
+                                order $ &compare (&list:nth pair 0) :data-comp
                               if (&< order 0)
                                 recur (append before pair) (&list:rest remaining)
                                 concat before
-                                  [] $ [] :data-comp name
+                                  [] $ assert-type ([] :data-comp name)
+                                    quote $ Tuple Tag Dynamic
                                   if (&= order 0) (&list:rest remaining) remaining
                       .assoc c :tree $ Option :some $ respo.schema/RenderNode :element updated
           :examples $ []
@@ -2855,7 +2859,7 @@
           :examples $ []
           :schema $ quote $ Fn PropsInput & Dynamic (-> respo.schema/Element) (:generics PropsInput)
         'show $ %{} 'CodeEntry
-          :doc "|Conditional rendering macro. Accepts one child and an optional fallback without introducing hidden component state."
+          :doc "|Conditional rendering macro. Accepts one child and an optional fallback without introducing hidden component state. Without a fallback it yields an Option: `Option :some child` when the condition holds, `Option :none` otherwise. Element children and component bodies leave none out, so no implicit nil branch reaches the caller."
           :code $ quote $ defmacro show (condition & branches)
             let
                 branch-count $ count branches
@@ -2864,10 +2868,11 @@
                 raise |[Respo/show]-expected-a-child-and-an-optional-fallback
               let
                   child $ .unwrap $ calcit.core/first branches
-                  fallback $ if (= branch-count 2)
-                    .unwrap $ calcit.core/last branches
-                    , nil
-                quasiquote $ if ~condition ~child ~fallback
+                if (= branch-count 2)
+                  let
+                      fallback $ .unwrap $ calcit.core/last branches
+                    quasiquote $ if ~condition ~child ~fallback
+                  quasiquote $ if ~condition (respo.core/resolve-prop-value ~child) (Option :none)
           :examples $ [] $ quote
             show true
               div ({}) (<> |Ready)
@@ -2876,10 +2881,11 @@
             -> $ Expr Dynamic
           :tests $ [] $ %{} 'TestEntry (:name |selects-one-branch)
             :code $ quote $ do
-              assert |true-selects-child $ = |child $ show true |child
-              assert |false-without-fallback-is-nil $ nil? $ show false |child
+              assert |true-without-fallback-is-some $ = (Option :some |child) (show true |child)
+              assert |false-without-fallback-is-none $ = (Option :none) (show false |child)
+              assert |nested-show-flattens $ = (Option :none)
+                show true $ show false |child
               assert |false-selects-fallback $ = |fallback $ show false |child |fallback
-            :tags $ #{} :unit
         'some-effect-callback $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn some-effect-callback (callback) (Option :some callback)
           :examples $ []
@@ -3027,7 +3033,7 @@
           :examples $ []
           :schema $ quote $ Ref (List String)
         'StyleCacheEntry $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct StyleCacheEntry (:rules 'Dynamic)
+          :code $ quote $ defstruct StyleCacheEntry (:rules Dynamic)
             :el $ quote $ JsNullish respo.css/StyleElement
           :examples $ []
           :schema $ quote StructDef
@@ -3253,7 +3259,7 @@
     'respo.cursor $ %{} 'FileEntry
       :defs $ {}
         'CursorTestState $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct CursorTestState (:draft 'String) (:locked? 'Bool) (:message 'String)
+          :code $ quote $ defstruct CursorTestState (:draft String) (:locked? Bool) (:message String)
           :examples $ []
           :schema $ quote StructDef
         'coerce-cursor-test-state $ %{} 'CodeEntry (:doc |)
@@ -3874,13 +3880,13 @@
           :examples $ []
           :schema $ quote $ Ref Bool
         'MemoCacheKey $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct MemoCacheKey (:callback 'Fn) (:key 'Dynamic)
+          :code $ quote $ defstruct MemoCacheKey (:callback Fn) (:key Dynamic)
           :examples $ []
           :schema $ quote StructDef
         'MemoEntry $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct MemoEntry
             :args $ quote $ List Dynamic
-            :value 'Dynamic
+            :value Dynamic
             :children $ quote $ Set respo.memo/MemoCacheKey
           :examples $ []
           :schema $ quote StructDef
@@ -4721,23 +4727,23 @@
                 (and was-empty? (not now-empty?))
                   let
                       new-pair $ respo.util.list/first-pair new-props
-                      new-k $ respo.util.list/pair-tag-key new-pair
-                      new-v $ respo.util.list/pair-value new-pair
+                      new-k $ &list:nth new-pair 0
+                      new-v $ &list:nth new-pair 1
                     collect! $ DomPatch :add-prop coord n-coord new-k new-v
                     recur collect! coord n-coord old-props $ &list:rest new-props
                 (and (not was-empty?) now-empty?)
                   let
                       old-pair $ respo.util.list/first-pair old-props
-                      old-k $ respo.util.list/pair-tag-key old-pair
+                      old-k $ &list:nth old-pair 0
                     collect! $ DomPatch :rm-prop coord n-coord old-k
                     recur collect! coord n-coord (&list:rest old-props) new-props
                 true $ let
                     old-pair $ respo.util.list/first-pair old-props
                     new-pair $ respo.util.list/first-pair new-props
-                    old-k $ respo.util.list/pair-tag-key old-pair
-                    old-v $ respo.util.list/pair-value old-pair
-                    new-k $ respo.util.list/pair-tag-key new-pair
-                    new-v $ respo.util.list/pair-value new-pair
+                    old-k $ &list:nth old-pair 0
+                    old-v $ &list:nth old-pair 1
+                    new-k $ &list:nth new-pair 0
+                    new-v $ &list:nth new-pair 1
                     old-follows $ &list:rest old-props
                     new-follows $ &list:rest new-props
                   match (&compare old-k new-k)
@@ -4760,8 +4766,8 @@
             Fn respo.schema/DomPatch $ -> Unit
             List Dynamic
             List Number
-            List $ List Dynamic
-            List $ List Dynamic
+            List $ Tuple Tag Dynamic
+            List $ Tuple Tag Dynamic
             -> Unit
           :tests $ [] $ %{} 'TestEntry (:name |reports-property-changes)
             :code $ quote $ let
@@ -5254,10 +5260,10 @@
           :code $ quote $ defn owns-inner-content? (element)
             any? (:attrs element)
               fn (pair)
-                hint-fn $ Fn (List Dynamic) (-> Bool)
+                hint-fn $ Fn (Tuple Tag Dynamic) (-> Bool)
                 and
-                  contains? (#{} :innerHTML :inner-text) (respo.util.list/pair-tag-key pair)
-                  non-nil? $ respo.util.list/pair-value pair
+                  contains? (#{} :innerHTML :inner-text) (&list:nth pair 0)
+                  non-nil? $ &list:nth pair 1
           :examples $ []
           :schema $ quote $ Fn respo.schema/Element (-> Bool)
           :tests $ [] $ %{} 'TestEntry (:name |detects-content-props)
@@ -5351,10 +5357,10 @@
                           when (nil? k) (js/console.warn |nil-key-is-bad-for-Respo)
                           make-render-node-element child listener-builder (append coord k) child-svg?
                   each attrs $ fn (entry)
-                    hint-fn $ Fn (List Dynamic) (-> Dynamic)
+                    hint-fn $ Fn (Tuple Tag Dynamic) (-> Dynamic)
                     let
-                        prop-str $ respo.util.list/pair-key-text entry
-                        v $ respo.util.list/pair-value entry
+                        prop-str $ .to-string $ &list:nth entry 0
+                        v $ &list:nth entry 1
                       if (.!startsWith prop-str |data-)
                         if (calcit.core/non-nil? v)
                           js-set
@@ -5375,15 +5381,16 @@
                     let
                         style-name $ respo.util.list/pair-key-text entry
                         k $ dashed->camel style-name
-                        v $ respo.util.list/pair-value entry
+                        v $ &list:nth entry 1
                       aset
                         browser/element-style $ host-element element
                         , k $ get-style-value v k
-                  &doseq (entry events)
+                  &doseq
+                    entry $ .to-list events
                     let
-                        event-handler $ respo.util.list/pair-value entry
-                      when (calcit.core/non-nil? event-handler)
-                        install-listener! element (respo.util.list/pair-tag-key entry) listener-builder coord
+                        event-handler $ &list:nth entry 1
+                      when (js-present? event-handler)
+                        install-listener! element (&list:nth entry 0) listener-builder coord
                   each child-elements $ fn (child-element)
                     if (calcit.core/non-nil? child-element)
                       browser/append-child! (host-element element) (host-element child-element)
@@ -5969,10 +5976,10 @@
         'entry->html $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn entry->html (entry)
             let
-                k $ respo.util.list/pair-key entry
-                v $ respo.util.list/pair-value entry
+                k $ &list:nth entry 0
+                v $ &list:nth entry 1
                 value-text $ cond
-                    = k :style
+                    and (tag? k) (= k :style)
                     style->html $ coerce-pairs $ respo.util.list/checked-pairs v
                   (string? v) (escape-html v)
                   true $ respo.util.format/scalar-attribute-text v
@@ -5980,7 +5987,7 @@
                 prop->attr $ if (tag? k) (to-string k) (str k)
                 , |= $ &str:escape value-text
           :examples $ []
-          :schema $ quote $ Fn (List Dynamic) (-> String)
+          :schema $ quote $ Fn (Tuple AttrKey Dynamic) (-> String) (:generics AttrKey)
         'escape-html $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn escape-html (text)
             &str:replace
@@ -6027,17 +6034,19 @@
             let
                 pairs $ &map:to-list props
                 visible $ filter pairs $ fn (pair)
-                  hint-fn $ Fn (List Dynamic) (-> Bool)
+                  hint-fn $ Fn (Tuple AttrKey Dynamic) (-> Bool)
                   let
-                      k $ respo.util.list/pair-key pair
-                      v $ respo.util.list/pair-value pair
+                      k $ &list:nth pair 0
+                      v $ &list:nth pair 1
                       attr $ if (tag? k) (to-string k) (str k)
                     ; "A present boolean attribute reads as true, so false leaves it out; other attributes keep the text false"
                     and (calcit.core/non-nil? v)
                       not $ starts-with? attr |on-
                       not $ and (= v false)
                         includes? boolean-attrs $ prop->attr attr
-                sorted $ &list:sort-by visible respo.util.list/pair-key
+                sorted $ &list:sort-by visible $ fn (pair)
+                  hint-fn $ Fn (Tuple AttrKey Dynamic) (-> AttrKey)
+                  &list:nth pair 0
               calcit.core/join-string (map sorted entry->html) "| "
           :examples $ []
           :schema $ quote $ Fn (Map AttrKey Dynamic) (-> String) (:generics AttrKey)
@@ -6080,7 +6089,7 @@
     'respo.render.patch $ %{} 'FileEntry
       :defs $ {}
         'MoveScrollState $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct MoveScrollState (:node 'respo.dom/DomElement) (:top 'Number) (:left 'Number)
+          :code $ quote $ defstruct MoveScrollState (:node respo.dom/DomElement) (:top Number) (:left Number)
           :examples $ []
           :schema $ quote StructDef
         'add-element $ %{} 'CodeEntry
@@ -6169,7 +6178,7 @@
                   &doseq
                     pair $ &map:to-list @scroll-snapshot
                     &doseq
-                      state $ respo.util.list/pair-value pair
+                      state $ &list:nth pair 1
                       let
                           entry $ as-move-scroll-state state
                         aset (:node entry) |scrollTop $ :top entry
@@ -6647,16 +6656,16 @@
           :schema $ quote $ Ref Number
         'ResourceAction $ %{} 'CodeEntry
           :doc "|Immutable request lifecycle enum: :started carries request-id; :ready carries request-id and data; :failed carries request-id and error."
-          :code $ quote $ defenum ResourceAction (:started 'Number) (:ready 'Number 'Dynamic) (:failed 'Number 'Dynamic)
+          :code $ quote $ defenum ResourceAction (:started Number) (:ready Number Dynamic) (:failed Number Dynamic)
           :examples $ []
           :schema $ quote EnumDef
           :tags $ #{} :data
         'ResourceState $ %{} 'CodeEntry
           :doc "|Immutable resource state record. :data and :error are application payload boundaries; :status and :request-id drive deterministic reducer transitions."
-          :code $ quote $ defstruct ResourceState (:status 'Tag)
+          :code $ quote $ defstruct ResourceState (:status Tag)
             :request-id $ quote $ Option Number
-            :data 'Dynamic
-            :error 'Dynamic
+            :data Dynamic
+            :error Dynamic
           :examples $ []
           :schema $ quote StructDef
           :tags $ #{} :data
@@ -6897,12 +6906,12 @@
           :examples $ []
           :schema $ quote Dynamic
         'ChildPair $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct ChildPair (:key 'Dynamic)
+          :code $ quote $ defstruct ChildPair (:key Dynamic)
             :node $ quote $ Option respo.schema/RenderNode
           :examples $ []
           :schema $ quote StructDef
         'Component $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct Component (:name 'Tag)
+          :code $ quote $ defstruct Component (:name Tag)
             :effects $ quote $ List respo.schema/Effect
             :listeners $ quote $ List respo.schema/RespoListener
             :tree $ quote $ Option respo.schema/RenderNode
@@ -6914,53 +6923,53 @@
             :replace-prop
               quote $ List Dynamic
               quote $ List Number
-              , 'Tag 'Dynamic
+              , Tag Dynamic
             :add-prop
               quote $ List Dynamic
               quote $ List Number
-              , 'Tag 'Dynamic
+              , Tag Dynamic
             :rm-prop
               quote $ List Dynamic
               quote $ List Number
-              , 'Tag
+              , Tag
             :add-style
               quote $ List Dynamic
               quote $ List Number
-              , 'Tag 'Dynamic
+              , Tag Dynamic
             :replace-style
               quote $ List Dynamic
               quote $ List Number
-              , 'Tag 'Dynamic
+              , Tag Dynamic
             :rm-style
               quote $ List Dynamic
               quote $ List Number
-              , 'Tag
+              , Tag
             :set-event
               quote $ List Dynamic
               quote $ List Number
-              , 'Tag
+              , Tag
             :rm-event
               quote $ List Dynamic
               quote $ List Number
-              , 'Tag
+              , Tag
             :add-element
               quote $ List Dynamic
               quote $ List Number
-              , 'Struct
+              , Struct
             :rm-element
               quote $ List Dynamic
               quote $ List Number
             :replace-element
               quote $ List Dynamic
               quote $ List Number
-              , 'Struct
+              , Struct
             :append-element
               quote $ List Dynamic
               quote $ List Number
-              , 'Struct
+              , Struct
             :move-element
               quote $ List Number
-              , 'Number $ quote $ Option Number
+              , Number $ quote $ Option Number
             :effect-mount
               quote $ List Dynamic
               quote $ List Number
@@ -7058,16 +7067,16 @@
           :examples $ []
           :schema $ quote StructDef
         'Effect $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct Effect (:name 'Tag)
+          :code $ quote $ defstruct Effect (:name Tag)
             :coord $ quote $ List Dynamic
             :args $ quote $ List Dynamic
             :method $ quote $ Fn (List Dynamic) (List Dynamic) (-> Unit)
           :examples $ []
           :schema $ quote StructDef
         'Element $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct Element (:name 'Tag)
+          :code $ quote $ defstruct Element (:name Tag)
             :coord $ quote $ Option (List Dynamic)
-            :attrs $ quote $ List (List Dynamic)
+            :attrs $ quote $ List (Tuple Tag Dynamic)
             :style $ quote $ List (List Dynamic)
             :event $ quote $ Map Tag (JsNullish Fn)
             :children $ quote $ List respo.schema/ChildPair
@@ -7076,7 +7085,7 @@
           :schema $ quote StructDef
         'EventConfig $ %{} 'CodeEntry
           :doc "|Mount-time event policy: whether Respo stops propagation, and whether handlers use on* properties or independent native listeners."
-          :code $ quote $ defstruct EventConfig (:stop-propagation? 'Bool) (:listener-mode 'respo.schema/ListenerMode)
+          :code $ quote $ defstruct EventConfig (:stop-propagation? Bool) (:listener-mode respo.schema/ListenerMode)
           :examples $ []
           :schema $ quote StructDef
         'EventHandler $ %{} 'CodeEntry
@@ -7089,7 +7098,7 @@
             -> Unit
         'KeyboardInfo $ %{} 'CodeEntry
           :doc "|Keyboard fields of a :keydown, :keyup or :keypress event, read with respo.core/keyboard-info."
-          :code $ quote $ defstruct KeyboardInfo (:key 'String) (:code 'String) (:ctrl? 'Bool) (:meta? 'Bool) (:alt? 'Bool) (:shift? 'Bool)
+          :code $ quote $ defstruct KeyboardInfo (:key String) (:code String) (:ctrl? Bool) (:meta? Bool) (:alt? Bool) (:shift? Bool)
           :examples $ []
           :schema $ quote StructDef
         'ListenerMode $ %{} 'CodeEntry
@@ -7098,16 +7107,16 @@
           :examples $ []
           :schema $ quote EnumDef
         'RenderNode $ %{} 'CodeEntry (:doc "|渲染节点的具名并集；每个变体保留具体 Element 或 Component payload。")
-          :code $ quote $ defenum RenderNode (:element 'respo.schema/Element) (:component 'respo.schema/Component)
+          :code $ quote $ defenum RenderNode (:element respo.schema/Element) (:component respo.schema/Component)
           :examples $ []
           :schema $ quote EnumDef
         'RespoEvent $ %{} 'CodeEntry
           :doc "|Struct view of DOM event fields. It is not the value passed to event listeners: Respo calls listeners with the immutable Map<Tag, Dynamic> produced by event->edn (see EventHandler). Do not annotate callback events with RespoEvent; read fields from the Map with get and check their types."
-          :code $ quote $ defstruct RespoEvent (:type 'Tag)
+          :code $ quote $ defstruct RespoEvent (:type Tag)
             :value $ quote $ JsNullish Dynamic
             :checked $ quote $ JsNullish Bool
-            :original-event 'Dynamic
-            :event 'Dynamic
+            :original-event Dynamic
+            :event Dynamic
             :key $ quote $ JsNullish String
             :code $ quote $ JsNullish String
             :key-code $ quote $ JsNullish Number
@@ -7120,7 +7129,7 @@
           :examples $ []
           :schema $ quote StructDef
         'RespoListener $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct RespoListener (:name 'Tag) (:handler 'Fn)
+          :code $ quote $ defstruct RespoListener (:name Tag) (:handler Fn)
           :examples $ []
           :schema $ quote StructDef
         'States $ %{} 'CodeEntry
@@ -7732,7 +7741,7 @@
               :attrs element
           :examples $ []
           :schema $ quote $ Fn respo.schema/Element
-            -> $ List $ List Dynamic
+            -> $ List $ Tuple Tag Dynamic
         'element-children $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn element-children (value)
             :children $ as-element value
@@ -8199,13 +8208,20 @@
           :schema $ quote $ Fn respo.schema/Element (-> respo.schema/Element)
         'purify-events $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn purify-events (events)
-            -> (&map:to-list events)
-              filter $ fn (pair)
-                calcit.core/non-nil? $ respo.util.list/pair-value pair
-              map respo.util.list/pair-tag-key
+            map
+              filter (&map:to-list events)
+                fn (pair)
+                  hint-fn $ Fn (Tuple Key Dynamic) (-> Bool)
+                  calcit.core/non-nil? $ &list:nth pair 1
+              fn (pair)
+                hint-fn $ Fn (Tuple Key Dynamic) (-> Tag)
+                &let
+                  key $ &list:nth pair 0
+                  if (tag? key) key $ raise $ str "|[Respo] expected a Tag key, got: " key
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic)
+          :schema $ quote $ Fn (Map Key Dynamic)
             -> $ List Tag
+            :generics Key
           :tests $ [] $ %{} 'TestEntry (:name |keeps-live-tag-keys)
             :code $ quote $ let
                 events $ {}
@@ -8377,9 +8393,7 @@
                 if (nil? pair) (raise "|first-pair expected a non-empty list of pairs") pair
               (:none) (raise "|first-pair expected a non-empty list of pairs")
           :examples $ []
-          :schema $ quote $ Fn
-            List $ List Dynamic
-            -> $ List Dynamic
+          :schema $ quote $ Fn (List T) (-> T) (:generics T)
           :tests $ [] $ %{} 'TestEntry (:name |absence-migration-values)
             :code $ quote $ do
               assert= ([] :a 1)
@@ -8472,11 +8486,11 @@
                     not $ starts-with? (to-string k) |on-
                 &map:to-list
                 sort $ fn (x y)
-                  hint-fn $ Fn (List Dynamic) (List Dynamic) (-> Number)
+                  hint-fn $ Fn (Tuple Tag Dynamic) (Tuple Tag Dynamic) (-> Number)
                   &compare (&list:nth x 0) (&list:nth y 0)
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic)
-            -> $ List $ List Dynamic
+            -> $ List $ Tuple Tag Dynamic
           :tests $ []
             %{} 'TestEntry (:name |filters-internal-and-empty-properties)
               :code $ quote $ let
