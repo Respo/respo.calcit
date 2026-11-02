@@ -2241,40 +2241,42 @@
                     , message
                 , "|[Respo] expected event :value as a string"
         'extract-effects-list $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn extract-effects-list (component-name markup-tree)
-            if (nil? markup-tree)
-              schema/Component :effects ([]) :name component-name :listeners ([]) :tree $ Option :some $ respo.util.detect/as-render-node
-                span $ {}
-              if (list? markup-tree)
-                let
-                    items markup-tree
-                  loop
-                      node-option $ none-render-node
-                      effects $ empty-effects
-                      listeners $ empty-listeners
-                      xs items
-                    if (empty? xs)
-                      match node-option
-                        (:none) (raise |expected-render-node)
-                        (:some node-tree)
-                          schema/Component :effects effects :name component-name :listeners listeners :tree $ Option :some node-tree
-                      let
-                          item $ .unwrap $ calcit.core/first xs
-                          next-node $ if
-                            and (struct? item)
-                              or (component? item) (element? item)
-                            Option :some $ respo.util.detect/as-render-node item
-                            , node-option
-                          next-effects $ if (effect? item)
-                            append effects $ respo.util.detect/as-effect item
-                            , effects
-                          next-listeners $ if (listener? item)
-                            append listeners $ respo.util.detect/as-listener item
-                            , listeners
-                        recur next-node next-effects next-listeners $ &list:rest xs
-                if (struct? markup-tree)
-                  schema/Component :effects ([]) :name component-name :listeners ([]) :tree $ Option :some $ respo.util.detect/as-render-node markup-tree
-                  raise |invalid-component-tree
+          :code $ quote $ defn extract-effects-list (component-name markup-body)
+            match (resolve-prop-value markup-body)
+              (:none)
+                schema/Component :effects ([]) :name component-name :listeners ([]) :tree $ Option :some $ respo.util.detect/as-render-node
+                  span $ {}
+              (:some markup-tree)
+                if (list? markup-tree)
+                  let
+                      items markup-tree
+                    loop
+                        node-option $ none-render-node
+                        effects $ empty-effects
+                        listeners $ empty-listeners
+                        xs items
+                      if (empty? xs)
+                        match node-option
+                          (:none) (raise |expected-render-node)
+                          (:some node-tree)
+                            schema/Component :effects effects :name component-name :listeners listeners :tree $ Option :some node-tree
+                        let
+                            item $ .unwrap $ calcit.core/first xs
+                            next-node $ if
+                              and (struct? item)
+                                or (component? item) (element? item)
+                              Option :some $ respo.util.detect/as-render-node item
+                              , node-option
+                            next-effects $ if (effect? item)
+                              append effects $ respo.util.detect/as-effect item
+                              , effects
+                            next-listeners $ if (listener? item)
+                              append listeners $ respo.util.detect/as-listener item
+                              , listeners
+                          recur next-node next-effects next-listeners $ &list:rest xs
+                  if (struct? markup-tree)
+                    schema/Component :effects ([]) :name component-name :listeners ([]) :tree $ Option :some $ respo.util.detect/as-render-node markup-tree
+                    raise |invalid-component-tree
           :examples $ []
           :schema $ quote $ Fn Tag Dynamic (-> respo.schema/Component) (:features :js-ffi)
         'for-keyed $ %{} 'CodeEntry
@@ -2934,7 +2936,7 @@
           :examples $ []
           :schema $ quote $ Fn PropsInput & Dynamic (-> respo.schema/Element) (:generics PropsInput)
         'show $ %{} 'CodeEntry
-          :doc "|Conditional rendering macro. Accepts one child and an optional fallback without introducing hidden component state."
+          :doc "|Conditional rendering macro. Accepts one child and an optional fallback without introducing hidden component state. Without a fallback it yields an Option: `Option :some child` when the condition holds, `Option :none` otherwise. Element children and component bodies leave none out, so no implicit nil branch reaches the caller."
           :code $ quote $ defmacro show (condition & branches)
             let
                 branch-count $ count branches
@@ -2947,7 +2949,7 @@
                   let
                       fallback $ .unwrap $ calcit.core/last branches
                     quasiquote $ if ~condition ~child ~fallback
-                  quasiquote $ if ~condition ~child nil
+                  quasiquote $ if ~condition (respo.core/resolve-prop-value ~child) (Option :none)
           :examples $ [] $ quote
             show true
               div ({}) (<> |Ready)
@@ -2956,8 +2958,10 @@
             -> $ Expr Dynamic
           :tests $ [] $ %{} 'TestEntry (:name |selects-one-branch)
             :code $ quote $ do
-              assert |true-selects-child $ = |child $ show true |child
-              assert |false-without-fallback-is-nil $ nil? $ show false |child
+              assert |true-without-fallback-is-some $ = (Option :some |child) (show true |child)
+              assert |false-without-fallback-is-none $ = (Option :none) (show false |child)
+              assert |nested-show-flattens $ = (Option :none)
+                show true $ show false |child
               assert |false-selects-fallback $ = |fallback $ show false |child |fallback
             :tags $ #{} :unit
         'some-effect-callback $ %{} 'CodeEntry (:doc |)
@@ -7712,6 +7716,31 @@
           :code $ quote $ defn reload! () (println |reload.) &unit
           :examples $ []
           :schema $ quote $ Fn (-> Unit)
+        'show-body-component $ %{} 'CodeEntry
+          :doc "|Regression for an implicit nil branch: a component body and an element child built with `show` and no fallback."
+          :code $ quote $ respo.core/defcomp show-body-component (visible?)
+            respo.core/show visible? $ div ({})
+              respo.core/show visible? $ div $ {}
+              respo.core/show (not visible?)
+                div $ {}
+          :examples $ []
+          :schema $ quote $ Fn Bool (-> respo.schema/Component)
+          :tests $ [] $ %{} 'TestEntry (:name |show-without-fallback-renders-or-skips)
+            :code $ quote $ do
+              match
+                respo.util.detect/component-tree $ show-body-component true
+                (:none) (assert |shown-body-should-produce-a-tree false)
+                (:some tree)
+                  do
+                    assert |shown-body-is-div $ &= :div $ respo.util.detect/element-name tree
+                    assert |hidden-child-is-skipped $ &= 1 $ count
+                      :children $ respo.util.detect/as-element tree
+              match
+                respo.util.detect/component-tree $ show-body-component false
+                (:none) (assert |hidden-body-should-produce-a-tree false)
+                (:some tree)
+                  assert |hidden-body-becomes-span $ &= :span $ respo.util.detect/element-name tree
+            :tags $ #{} :unit
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.test.main
           :require
