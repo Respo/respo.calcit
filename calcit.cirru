@@ -1448,9 +1448,12 @@
           :examples $ []
           :schema $ quote $ Fn respo.schema/EventConfig (-> Unit)
         'confirm-child $ %{} 'CodeEntry
-          :doc "|Validates if the item is a valid Respo node (element, component, or nil). Returns the item."
+          :doc "|Validates if the item is a valid Respo node (element, component, nil, or an Option of one, as `show` returns). Returns the item unchanged."
           :code $ quote $ defn confirm-child (x)
-            assert "|Invalid data in elements tree: " $ or (nil? x) (element? x) (component? x)
+            match (resolve-prop-value x)
+              (:some item)
+                assert "|Invalid data in elements tree: " $ or (element? item) (component? item)
+              (:none) &unit
             , x
           :examples $ []
           :schema $ quote $ Fn Dynamic (-> Dynamic)
@@ -2260,20 +2263,24 @@
                           (:none) (raise |expected-render-node)
                           (:some node-tree)
                             schema/Component :effects effects :name component-name :listeners listeners :tree $ Option :some node-tree
-                        let
-                            item $ .unwrap $ calcit.core/first xs
-                            next-node $ if
-                              and (struct? item)
-                                or (component? item) (element? item)
-                              Option :some $ respo.util.detect/as-render-node item
-                              , node-option
-                            next-effects $ if (effect? item)
-                              append effects $ respo.util.detect/as-effect item
-                              , effects
-                            next-listeners $ if (listener? item)
-                              append listeners $ respo.util.detect/as-listener item
-                              , listeners
-                          recur next-node next-effects next-listeners $ &list:rest xs
+                        match
+                          resolve-prop-value $ .unwrap $ calcit.core/first xs
+                          (:none)
+                            recur node-option effects listeners $ &list:rest xs
+                          (:some item)
+                            let
+                                next-node $ if
+                                  and (struct? item)
+                                    or (component? item) (element? item)
+                                  Option :some $ respo.util.detect/as-render-node item
+                                  , node-option
+                                next-effects $ if (effect? item)
+                                  append effects $ respo.util.detect/as-effect item
+                                  , effects
+                                next-listeners $ if (listener? item)
+                                  append listeners $ respo.util.detect/as-listener item
+                                  , listeners
+                              recur next-node next-effects next-listeners $ &list:rest xs
                   if (struct? markup-tree)
                     schema/Component :effects ([]) :name component-name :listeners ([]) :tree $ Option :some $ respo.util.detect/as-render-node markup-tree
                     raise |invalid-component-tree
@@ -7721,6 +7728,8 @@
           :code $ quote $ respo.core/defcomp show-body-component (visible?)
             respo.core/show visible? $ div ({})
               respo.core/show visible? $ div $ {}
+              respo.core/button ({})
+                respo.core/show visible? $ div $ {}
               respo.core/show (not visible?)
                 div $ {}
           :examples $ []
@@ -7733,13 +7742,36 @@
                 (:some tree)
                   do
                     assert |shown-body-is-div $ &= :div $ respo.util.detect/element-name tree
-                    assert |hidden-child-is-skipped $ &= 1 $ count
+                    assert |hidden-child-is-skipped $ &= 2 $ count
                       :children $ respo.util.detect/as-element tree
               match
                 respo.util.detect/component-tree $ show-body-component false
                 (:none) (assert |hidden-body-should-produce-a-tree false)
                 (:some tree)
                   assert |hidden-body-becomes-span $ &= :span $ respo.util.detect/element-name tree
+            :tags $ #{} :unit
+        'show-effect-body-component $ %{} 'CodeEntry
+          :doc "|Regression: an effect list body whose render node comes from `show`, plus keyed children from `for-keyed`."
+          :code $ quote $ respo.core/defcomp show-effect-body-component (visible?)
+            []
+              respo.core/effect-on-update ([] visible?)
+                fn (_target) &unit
+              respo.core/show visible? $ respo.core/list-> ({})
+                respo.core/for-keyed ([] :a :b)
+                  fn (item)
+                    hint-fn $ Fn Tag $ -> Tag
+                    , item
+                  fn (item _idx)
+                    respo.core/show (= item :a)
+                      div $ {}
+          :examples $ []
+          :schema $ quote $ Fn Bool (-> respo.schema/Component)
+          :tests $ [] $ %{} 'TestEntry (:name |show-in-effect-list-body-renders)
+            :code $ quote $ match
+              respo.util.detect/component-tree $ show-effect-body-component true
+              (:none) (assert |effect-body-should-produce-a-tree false)
+              (:some tree)
+                assert |effect-body-keeps-shown-node $ not $ &= :span (respo.util.detect/element-name tree)
             :tags $ #{} :unit
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.test.main
