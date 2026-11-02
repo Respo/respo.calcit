@@ -290,9 +290,9 @@ test('keyed-element rejects a Component node', () => {
 });
 
 for (const name of ['space-x', 'space-y']) {
-  test(`${name} rejects a non-Number size`, () => {
-    const result = evaluate(`respo.comp.space/${name} |8px`);
-    assert.notEqual(result.status, 0, 'String sizes must use comp-space');
+  test(`${name} rejects a non-CssValue size`, () => {
+    const result = evaluate(`respo.comp.space/${name} true`);
+    assert.notEqual(result.status, 0, 'sizes must be a CssValue');
     assert.match(result.output, /W_FN_ARG_TYPE_MISMATCH|E_CALL_ARGUMENT_MISMATCH/);
   });
 }

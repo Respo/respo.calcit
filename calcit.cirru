@@ -43,7 +43,7 @@
             respo.util.format :refer $ hsl
             respo.css :refer $ defstyle
             respo.app.comp.todolist :refer $ comp-todolist
-            respo.comp.space :refer $ =<
+            respo.comp.space :refer $ space-x
             respo.comp.inspect :refer $ highlight-defcomp
     'respo.app.comp.task $ %{} 'FileEntry
       :defs $ {}
@@ -64,21 +64,21 @@
                       if done? (hsl 200 20 80) (hsl 200 80 70)
                     :on-click $ fn (e d!)
                       d! $ :: :toggle task-id
-                  =< 8 0
+                  space-x 8
                   input $ {} (:value task-text) (:class-name widget/style-input)
                     :on-input $ fn (e d!)
                       d! $ Op :update task-id $ event-value e
-                  =< 8 0
+                  space-x 8
                   input $ {} (:value state) (:class-name widget/style-input)
                     :on-input $ fn (e d!)
                       d! $ Op :states cursor $ event-value e
-                  =< 8 0
+                  space-x 8
                   div
                     {} (:class-name widget/style-button)
                       :on-click $ fn (e d!)
                         d! $ Op :remove task-id
                     <> |Remove
-                  =< 8 0
+                  space-x 8
                   div ({})
                     <> $ str state
           :examples $ []
@@ -111,7 +111,7 @@
           :require
             respo.core :refer $ defcomp div input span button <> defeffect pick-state state-cursor event-value
             respo.util.format :refer $ hsl
-            respo.comp.space :refer $ =<
+            respo.comp.space :refer $ space-x
             respo.comp.inspect :refer $ comp-inspect
             respo.app.style.widget :as widget
             respo.css :refer $ defstyle
@@ -139,18 +139,18 @@
                         d! $ Op :states-merge cursor state $ {}
                           :draft $ event-value e
                       :on-focus on-focus
-                    =< 8 0
+                    space-x 8
                     span
                       {} (:class-name widget/style-button)
                         :on-click $ fn (e d!)
                           d! $ Op :add draft
                           d! $ Op :states cursor $ .assoc state :draft |
                       span $ {} (:on-click nil) (:inner-text |Add)
-                    =< 8 0
+                    space-x 8
                     span $ {} (:inner-text |Clear) (:class-name widget/style-button)
                       :on-click $ fn (e d!)
                         d! $ Op :clear
-                    =< 8 0
+                    space-x 8
                     div ({})
                       div
                         {} (:class-name widget/style-button) (:on-click on-test)
@@ -173,7 +173,7 @@
                             fn (e d!)
                               d! $ Op :clear
                         <> |Clear2
-                      =< 8 0
+                      space-x 8
                       div
                         {} (:class-name widget/style-button)
                           :on-click $ fn (e d!)
@@ -181,7 +181,7 @@
                               not $ :locked? state
                         <> (str-spaced |Lock? locked?)
                           {} $ :font-size 13
-                      =< 8 0
+                      space-x 8
                       comp-wrap $ comp-zero
                   comp-inspect |Tasks tasks $ {} (:left 500) (:top 20)
                   div
@@ -312,7 +312,7 @@
             respo.core :refer $ defcomp div span input <> list-> defeffect >> a memo-comp-by pick-state state-cursor event-value
             respo.util.format :refer $ hsl
             respo.app.comp.task :refer $ comp-task
-            respo.comp.space :refer $ =<
+            respo.comp.space :refer $ space-x
             respo.comp.inspect :refer $ comp-inspect
             respo.app.comp.zero :refer $ comp-zero
             respo.app.comp.wrap :refer $ comp-wrap
@@ -813,15 +813,16 @@
     'respo.comp.space $ %{} 'FileEntry
       :defs $ {}
         '=< $ %{} 'CodeEntry
-          :doc "|insert a tiny space, horizontally or verticaly.\n\n- `8 nil` for horizontal width 8px,\n- `nil 8` for vertical height 8px.\n"
+          :doc "|Deprecated: use `space-x` or `space-y`. Inserts a tiny space, horizontally or vertically.\n\n- `8 nil` for horizontal width 8px,\n- `nil 8` for vertical height 8px.\n\nThe nil-means-unset arguments cannot be typed, and a non-nil `w` wins, so `=< 0 16` renders width 0 rather than height 16.\n"
           :code $ quote $ defn =< (w x) (comp-space w x)
           :examples $ []
             quote $ =< 8 nil
             quote $ =< nil 16
             quote $ =< 12 nil
           :schema $ quote $ Fn Dynamic Dynamic (-> respo.schema/Component)
+          :tags $ #{} :deprecated
         'comp-space $ %{} 'CodeEntry
-          :doc "|A tiny spacer component that renders an empty styled `<div>` with either width or height.\n\nUse it for explicit horizontal or vertical gaps when you want spacing as a component, although plain CSS margin is often cheaper."
+          :doc "|Deprecated: use `space-x` or `space-y`. A tiny spacer component that renders an empty styled `<div>` with either width or height.\n\nUse it for explicit horizontal or vertical gaps when you want spacing as a component, although plain CSS margin is often cheaper."
           :code $ quote $ defcomp comp-space (w h)
             div $ {} (:class-name style-space)
               :style $ if (calcit.core/non-nil? w) (&{} :width w) (&{} :height h)
@@ -829,20 +830,25 @@
             quote $ comp-space 10 nil
             quote $ comp-space nil 16
           :schema $ quote $ Fn Dynamic Dynamic (-> respo.schema/Component)
+          :tags $ #{} :deprecated
         'space-x $ %{} 'CodeEntry
-          :doc "|Horizontal gap of `w` pixels, renders the same element as `=< w nil`. Takes a Number so the direction and size are checked; use `comp-space` for other CSS length values."
+          :doc "|Horizontal gap of width `w`, renders the same element as `=< w nil`. A Number is a pixel width; a String or Tag such as `|1em` is used as written."
           :code $ quote $ defcomp space-x (w)
             div $ {} (:class-name style-space)
               :style $ &{} :width w
-          :examples $ [] $ quote (space-x 8)
-          :schema $ quote $ Fn Number (-> respo.schema/Component)
+          :examples $ []
+            quote $ space-x 8
+            quote $ space-x |1em
+          :schema $ quote $ Fn respo.schema/CssValue (-> respo.schema/Component)
         'space-y $ %{} 'CodeEntry
-          :doc "|Vertical gap of `h` pixels, renders the same element as `=< nil h`. Takes a Number so the direction and size are checked; use `comp-space` for other CSS length values."
+          :doc "|Vertical gap of height `h`, renders the same element as `=< nil h`. A Number is a pixel height; a String or Tag such as `|1em` is used as written."
           :code $ quote $ defcomp space-y (h)
             div $ {} (:class-name style-space)
               :style $ &{} :height h
-          :examples $ [] $ quote (space-y 16)
-          :schema $ quote $ Fn Number (-> respo.schema/Component)
+          :examples $ []
+            quote $ space-y 16
+            quote $ space-y |1em
+          :schema $ quote $ Fn respo.schema/CssValue (-> respo.schema/Component)
         'style-space $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-space
             {} $ :& $ {} (:height 1) (:width 1) (:display :inline-block)
@@ -1223,15 +1229,22 @@
           :examples $ []
           :schema $ quote $ Ref (calcit.core/Option respo.schema/Component)
         '<> $ %{} 'CodeEntry
-          :doc "|Create a text node with `span`.\n\nThe first argument is the content string. The optional second argument can be a style map or a class-name string."
+          :doc "|Create a text node with `span`.\n\nThe first argument is the content string. The optional second argument is a `respo.schema/TextStyle`: a class-name string or a style map `Map Tag CssValue`. A style def passed here needs a `Map Tag respo.schema/CssValue` schema; a bare `Map` schema is rejected."
           :code $ quote $ defn <> (content & styles)
-            let
-                style $ if (empty? styles) nil $ .unwrap (calcit.core/first styles)
-              if (string? style)
-                span $ {} (:inner-text content) (:class-name style)
-                span $ {} (:inner-text content) (:style style)
+            match (calcit.core/first styles)
+              (:none)
+                span $ {} $ :inner-text content
+              (:some style)
+                match style
+                  (String class-name)
+                    span $ {} (:inner-text content) (:class-name class-name)
+                  (Map style-map)
+                    span $ {} (:inner-text content) (:style style-map)
           :examples $ []
-          :schema $ quote $ Fn String & Dynamic (-> respo.schema/Element)
+            quote $ <> |plain
+            quote $ <> |label |text-label
+            quote $ <> |warning $ {} (:color |red) (:font-size 12)
+          :schema $ quote $ Fn String & respo.schema/TextStyle (-> respo.schema/Element)
         '>> $ %{} 'CodeEntry
           :doc "|Create a nested state cursor for a child branch.\n\nThe returned map reuses branch data and extends `:cursor` with the new key, so child components can manage local state without losing the parent path."
           :code $ quote $ defn >> (states k)
@@ -7292,6 +7305,12 @@
           :schema $ quote $ Map Dynamic Dynamic
         'StyleKey $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defunion StyleKey Tag String
+          :examples $ []
+          :schema $ quote UnionDef
+        'TextStyle $ %{} 'CodeEntry
+          :doc "|Optional style argument of `respo.core/<>`: a class-name String or a style map."
+          :code $ quote $ defunion TextStyle String
+            quote $ Map Tag respo.schema/CssValue
           :examples $ []
           :schema $ quote UnionDef
         'cache-info $ %{} 'CodeEntry (:doc |)
