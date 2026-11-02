@@ -861,28 +861,28 @@
             let
                 listener-builder $ fn (event-name)
                   hint-fn $ Fn Tag $ ->
-                    Fn respo.dom/DomEvent (List Dynamic) (-> Unit)
+                    Fn respo.dom/DomEvent (List respo.schema/CoordKey) (-> Unit)
                   build-listener event-name deliver-event
               set! mount-point.:inner-html |
               mount-point .append-child! $ make-element entire-dom listener-builder $ []
             , &unit
           :examples $ []
           :schema $ quote $ Fn respo.schema/Component respo.dom/DomElement
-            Fn (List Dynamic) Tag (Map Tag Dynamic) (-> Unit)
+            Fn (List respo.schema/CoordKey) Tag (Map Tag Dynamic) (-> Unit)
             -> Unit
             :features :js-ffi
         'build-listener $ %{} 'CodeEntry
           :doc "|Creates a DOM event listener that converts events and dispatches them to Respo."
           :code $ quote $ defn build-listener (event-name deliver-event)
             fn (event coord)
-              hint-fn $ Fn respo.dom/DomEvent (List Dynamic) (-> Unit)
+              hint-fn $ Fn respo.dom/DomEvent (List respo.schema/CoordKey) (-> Unit)
               let
                   simple-event $ event->edn event
                 deliver-event coord event-name simple-event
           :examples $ []
           :schema $ quote $ Fn Tag
-            Fn (List Dynamic) Tag (Map Tag Dynamic) (-> Unit)
-            -> $ Fn respo.dom/DomEvent (List Dynamic) (-> Unit)
+            Fn (List respo.schema/CoordKey) Tag (Map Tag Dynamic) (-> Unit)
+            -> $ Fn respo.dom/DomEvent (List respo.schema/CoordKey) (-> Unit)
             :features :js-ffi
         'patch-instance! $ %{} 'CodeEntry
           :doc "|Apply collected patch operations to the mounted DOM root.\n\nIt builds event listeners from `deliver-event` and delegates concrete DOM mutations to `apply-dom-changes`."
@@ -890,13 +890,13 @@
             let
                 listener-builder $ fn (event-name)
                   hint-fn $ Fn Tag $ ->
-                    Fn respo.dom/DomEvent (List Dynamic) (-> Unit)
+                    Fn respo.dom/DomEvent (List respo.schema/CoordKey) (-> Unit)
                   build-listener event-name deliver-event
               apply-dom-changes changes mount-point listener-builder
             , &unit
           :examples $ []
           :schema $ quote $ Fn (List respo.schema/DomPatch) respo.dom/DomElement
-            Fn (List Dynamic) Tag (Map Tag Dynamic) (-> Unit)
+            Fn (List respo.schema/CoordKey) Tag (Map Tag Dynamic) (-> Unit)
             -> Unit
             :features :js-ffi
         'send-to-component! $ %{} 'CodeEntry (:doc |)
@@ -1003,7 +1003,7 @@
           :doc "|Creates a function to dispatch events from the DOM to Respo's event handling system."
           :code $ quote $ defn build-deliver-event (*global-element *dispatch-fn)
             fn (coord event-name simple-event)
-              hint-fn $ Fn (List Dynamic) Tag (Map Tag Dynamic) (-> Unit)
+              hint-fn $ Fn (List respo.schema/CoordKey) Tag (Map Tag Dynamic) (-> Unit)
               let
                   target-element-option $ find-event-target
                       deref *global-element
@@ -1028,7 +1028,7 @@
           :schema $ quote $ Fn
             Ref $ calcit.core/Option respo.schema/Component
             Ref $ Fn *dispatch-op $ -> Unit
-            -> $ Fn (List Dynamic) Tag (Map Tag Dynamic) (-> Unit)
+            -> $ Fn (List respo.schema/CoordKey) Tag (Map Tag Dynamic) (-> Unit)
             :features :js-ffi
         'extract-listeners $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn extract-listeners (component-result)
@@ -1097,7 +1097,7 @@
                   slice coord 0 $ Option :some $ - (count coord) 1
                   , event-name
           :examples $ []
-          :schema $ quote $ Fn Struct (List Dynamic) Tag
+          :schema $ quote $ Fn Struct (List respo.schema/CoordKey) Tag
             -> $ calcit.core/Option respo.schema/Element
           :tests $ [] $ %{} 'TestEntry (:name |returns-none-through-empty-component-tree)
             :code $ quote $ let
@@ -1112,7 +1112,7 @@
               get-render-node-at (respo.util.detect/as-render-node markup) coord
               , respo.util.detect/render-node-value
           :examples $ []
-          :schema $ quote $ Fn Struct (List Dynamic)
+          :schema $ quote $ Fn Struct (List respo.schema/CoordKey)
             -> $ calcit.core/Option Struct
         'get-render-node-at $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn get-render-node-at (node coord)
@@ -1132,7 +1132,7 @@
                         (:none)
                           raise $ str |child-not-found: coord $ map children
                             fn (pair)
-                              hint-fn $ Fn respo.schema/ChildPair $ -> Dynamic
+                              hint-fn $ Fn respo.schema/ChildPair $ -> respo.schema/CoordKey
                               :key pair
           :examples $ []
           :schema $ quote $ Fn respo.schema/RenderNode (List K)
@@ -4308,9 +4308,9 @@
           :examples $ []
           :schema $ quote $ Fn
             Fn respo.schema/DomPatch $ -> Unit
-            List K
+            List respo.schema/CoordKey
             List Number
-            , Struct (-> Unit) (:generics K)
+            , Struct (-> Unit)
           :tests $ [] $ %{} 'TestEntry (:name |skips-nil-children-and-handlers)
             :code $ quote $ let
                 ops $ ref $ assert-type ([])
@@ -4362,7 +4362,7 @@
           :examples $ []
           :schema $ quote $ Fn
             Fn respo.schema/DomPatch $ -> Unit
-            List Dynamic
+            List respo.schema/CoordKey
             List Number
             , respo.schema/RenderNode (-> Unit)
           :tests $ [] $ %{} 'TestEntry (:name |mixed-render-path)
@@ -4411,10 +4411,10 @@
               if
                 =
                   map old-children $ fn (pair)
-                    hint-fn $ Fn respo.schema/ChildPair $ -> Dynamic
+                    hint-fn $ Fn respo.schema/ChildPair $ -> respo.schema/CoordKey
                     :key pair
                   map new-children $ fn (pair)
-                    hint-fn $ Fn respo.schema/ChildPair $ -> Dynamic
+                    hint-fn $ Fn respo.schema/ChildPair $ -> respo.schema/CoordKey
                     :key pair
                 loop
                     old-pairs old-children
@@ -4432,18 +4432,18 @@
                 match
                   keyed-rotation
                     map old-children $ fn (pair)
-                      hint-fn $ Fn respo.schema/ChildPair $ -> Dynamic
+                      hint-fn $ Fn respo.schema/ChildPair $ -> respo.schema/CoordKey
                       :key pair
                     map new-children $ fn (pair)
-                      hint-fn $ Fn respo.schema/ChildPair $ -> Dynamic
+                      hint-fn $ Fn respo.schema/ChildPair $ -> respo.schema/CoordKey
                       :key pair
                   (:none)
                     let
                         full-old-keys $ map old-children $ fn (pair)
-                          hint-fn $ Fn respo.schema/ChildPair $ -> Dynamic
+                          hint-fn $ Fn respo.schema/ChildPair $ -> respo.schema/CoordKey
                           :key pair
                         full-new-keys $ map new-children $ fn (pair)
-                          hint-fn $ Fn respo.schema/ChildPair $ -> Dynamic
+                          hint-fn $ Fn respo.schema/ChildPair $ -> respo.schema/CoordKey
                           :key pair
                         boundaries $ keyed-boundaries full-old-keys full-new-keys
                         prefix $ &list:nth boundaries 0
@@ -4477,10 +4477,10 @@
                             :node $ &list:nth new-children new-position
                       let
                           old-keys $ map middle-old-children $ fn (pair)
-                            hint-fn $ Fn respo.schema/ChildPair $ -> Dynamic
+                            hint-fn $ Fn respo.schema/ChildPair $ -> respo.schema/CoordKey
                             :key pair
                           new-keys $ map middle-new-children $ fn (pair)
-                            hint-fn $ Fn respo.schema/ChildPair $ -> Dynamic
+                            hint-fn $ Fn respo.schema/ChildPair $ -> respo.schema/CoordKey
                             :key pair
                           old-index $ keyed-index old-keys
                           new-index $ keyed-index new-keys
@@ -4589,7 +4589,7 @@
           :examples $ []
           :schema $ quote $ Fn
             Fn respo.schema/DomPatch $ -> Unit
-            List Dynamic
+            List respo.schema/CoordKey
             List Number
             , Number (List respo.schema/ChildPair) (List respo.schema/ChildPair) (-> Unit) (:features :js-ffi)
           :tests $ []
@@ -4641,7 +4641,7 @@
           :examples $ []
           :schema $ quote $ Fn
             Fn respo.schema/DomPatch $ -> Unit
-            List Dynamic
+            List respo.schema/CoordKey
             List Number
             , Dynamic Dynamic (-> Unit) (:features :js-ffi)
           :tests $ []
@@ -4777,7 +4777,7 @@
           :examples $ []
           :schema $ quote $ Fn
             Fn respo.schema/DomPatch $ -> Unit
-            List Dynamic
+            List respo.schema/CoordKey
             List Number
             List $ List Dynamic
             List $ List Dynamic
@@ -4861,7 +4861,7 @@
                                   if
                                     and dev? $ detect-keys-dup $ map new-children
                                       fn (entry)
-                                        hint-fn $ Fn respo.schema/ChildPair $ -> Dynamic
+                                        hint-fn $ Fn respo.schema/ChildPair $ -> respo.schema/CoordKey
                                         :key entry
                                     js/console.error "|Parent that has dups" new-tree
                                   when children-first? $ find-children-diffs collect! coord n-coord 0 old-children new-children
@@ -4904,12 +4904,11 @@
           :examples $ []
           :schema $ quote $ Fn
             Fn respo.schema/DomPatch $ -> Unit
-            List CoordKey
+            List respo.schema/CoordKey
             List Number
             Option respo.schema/RenderNode
             Option respo.schema/RenderNode
             -> Unit
-            :generics CoordKey
             :features :js-ffi
         'find-style-diffs $ %{} 'CodeEntry
           :doc "|Compares two style maps and collects effects for additions, removals, or updates."
@@ -4962,7 +4961,7 @@
           :examples $ []
           :schema $ quote $ Fn
             Fn respo.schema/DomPatch $ -> Unit
-            List Dynamic
+            List respo.schema/CoordKey
             List Number
             List $ List Dynamic
             List $ List Dynamic
@@ -5332,8 +5331,8 @@
             make-render-node-element (respo.util.detect/as-render-node virtual-element) listener-builder coord $ if (empty? svg-context) false $ &list:nth svg-context 0
           :examples $ []
           :schema $ quote $ Fn Struct
-            Fn Tag $ -> $ Fn respo.dom/DomEvent (List Dynamic) (-> Unit)
-            List Dynamic
+            Fn Tag $ -> $ Fn respo.dom/DomEvent (List respo.schema/CoordKey) (-> Unit)
+            List respo.schema/CoordKey
             , & Bool (-> respo.dom/DomElement) (:features :js-ffi)
         'make-render-node-element $ %{} 'CodeEntry
           :doc "|根据 RenderNode 变体递归创建 DOM，保留组件坐标、SVG 上下文、事件和子节点创建顺序。"
@@ -5408,8 +5407,8 @@
                   , element
           :examples $ []
           :schema $ quote $ Fn respo.schema/RenderNode
-            Fn Tag $ -> $ Fn respo.dom/DomEvent (List Dynamic) (-> Unit)
-            List Dynamic
+            Fn Tag $ -> $ Fn respo.dom/DomEvent (List respo.schema/CoordKey) (-> Unit)
+            List respo.schema/CoordKey
             , Bool (-> respo.dom/DomElement) (:features :js-ffi)
         'style->string $ %{} 'CodeEntry
           :doc "|this functions is used inside DOM operations, inserting styles into a `<style>` element. to render to HTML, use `style->html` instead"
@@ -5466,7 +5465,7 @@
           :examples $ []
           :schema $ quote $ Fn
             Fn respo.schema/DomPatch $ -> Unit
-            List Dynamic
+            List respo.schema/CoordKey
             List Number
             , Struct Bool (-> Unit) (:features :js-ffi)
           :tests $ []
@@ -5598,9 +5597,9 @@
           :examples $ []
           :schema $ quote $ Fn
             Fn respo.schema/DomPatch $ -> Unit
-            List CoordKey
+            List respo.schema/CoordKey
             List Number
-            , respo.schema/RenderNode Bool (-> Unit) (:generics CoordKey) (:features :js-ffi)
+            , respo.schema/RenderNode Bool (-> Unit) (:features :js-ffi)
         'collect-own-mounting $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn collect-own-mounting (collect! coord n-coord tree at-place?)
             when
@@ -5618,7 +5617,7 @@
           :examples $ []
           :schema $ quote $ Fn
             Fn respo.schema/DomPatch $ -> Unit
-            List Dynamic
+            List respo.schema/CoordKey
             List Number
             , respo.schema/Component Bool (-> Unit)
           :tags $ #{} :internal
@@ -5639,7 +5638,7 @@
           :examples $ []
           :schema $ quote $ Fn
             Fn respo.schema/DomPatch $ -> Unit
-            List Dynamic
+            List respo.schema/CoordKey
             List Number
             , respo.schema/Component Bool (-> Unit)
           :tags $ #{} :internal
@@ -5654,7 +5653,7 @@
           :examples $ []
           :schema $ quote $ Fn
             Fn respo.schema/DomPatch $ -> Unit
-            List Dynamic
+            List respo.schema/CoordKey
             List Number
             , Struct Bool (-> Unit) (:features :js-ffi)
         'collect-unmounting-node $ %{} 'CodeEntry (:doc |)
@@ -5702,9 +5701,9 @@
           :examples $ []
           :schema $ quote $ Fn
             Fn respo.schema/DomPatch $ -> Unit
-            List CoordKey
+            List respo.schema/CoordKey
             List Number
-            , respo.schema/RenderNode Bool (-> Unit) (:generics CoordKey) (:features :js-ffi)
+            , respo.schema/RenderNode Bool (-> Unit) (:features :js-ffi)
         'collect-updating $ %{} 'CodeEntry
           :doc "|Compares effects between component updates and collects effect actions if arguments change."
           :code $ quote $ defn collect-updating (collect! action coord n-coord old-tree new-tree)
@@ -5774,7 +5773,7 @@
           :examples $ []
           :schema $ quote $ Fn
             Fn respo.schema/DomPatch $ -> Unit
-            , Tag (List Dynamic) (List Number) respo.schema/Component respo.schema/Component (-> Unit)
+            , Tag (List respo.schema/CoordKey) (List Number) respo.schema/Component respo.schema/Component (-> Unit)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.render.effect
           :require (respo.schema.op :as op)
@@ -5817,10 +5816,9 @@
             , &unit
           :examples $ []
           :schema $ quote $ Fn respo.dom/DomElement Tag
-            Fn Tag $ -> $ Fn respo.dom/DomEvent (List K) (-> Unit)
-            List K
+            Fn Tag $ -> $ Fn respo.dom/DomEvent (List respo.schema/CoordKey) (-> Unit)
+            List respo.schema/CoordKey
             -> Unit
-            :generics K
             :features :js-ffi
           :tags $ #{} :internal
         'remove-listener! $ %{} 'CodeEntry
@@ -6110,16 +6108,16 @@
             , &unit
           :examples $ []
           :schema $ quote $ Fn respo.dom/DomElement Struct
-            Fn Tag $ -> $ Fn respo.dom/DomEvent (List Dynamic) (-> Unit)
-            List Dynamic
+            Fn Tag $ -> $ Fn respo.dom/DomEvent (List respo.schema/CoordKey) (-> Unit)
+            List respo.schema/CoordKey
             -> Unit
             :features :js-ffi
         'add-event $ %{} 'CodeEntry (:doc "|Attaches an event listener to a DOM element.")
           :code $ quote $ defn add-event (target event-name listener-builder coord) (install-listener! target event-name listener-builder coord)
           :examples $ []
           :schema $ quote $ Fn respo.dom/DomElement Tag
-            Fn Tag $ -> $ Fn respo.dom/DomEvent (List Dynamic) (-> Unit)
-            List Dynamic
+            Fn Tag $ -> $ Fn respo.dom/DomEvent (List respo.schema/CoordKey) (-> Unit)
+            List respo.schema/CoordKey
             -> Unit
             :features :js-ffi
         'add-prop $ %{} 'CodeEntry
@@ -6161,8 +6159,8 @@
             , &unit
           :examples $ []
           :schema $ quote $ Fn respo.dom/DomElement Struct
-            Fn Tag $ -> $ Fn respo.dom/DomEvent (List Dynamic) (-> Unit)
-            List Dynamic
+            Fn Tag $ -> $ Fn respo.dom/DomEvent (List respo.schema/CoordKey) (-> Unit)
+            List respo.schema/CoordKey
             -> Unit
             :features :js-ffi
         'apply-dom-changes $ %{} 'CodeEntry
@@ -6330,7 +6328,7 @@
             , &unit
           :examples $ []
           :schema $ quote $ Fn (List respo.schema/DomPatch) respo.dom/DomElement
-            Fn Tag $ -> $ Fn respo.dom/DomEvent (List Dynamic) (-> Unit)
+            Fn Tag $ -> $ Fn respo.dom/DomEvent (List respo.schema/CoordKey) (-> Unit)
             -> Unit
             :features :js-ffi
         'as-move-scroll-state $ %{} 'CodeEntry (:doc "|按 Struct 来源校验滚动快照。")
@@ -6500,8 +6498,8 @@
             , &unit
           :examples $ []
           :schema $ quote $ Fn respo.dom/DomElement Struct
-            Fn Tag $ -> $ Fn respo.dom/DomEvent (List Dynamic) (-> Unit)
-            List Dynamic
+            Fn Tag $ -> $ Fn respo.dom/DomEvent (List respo.schema/CoordKey) (-> Unit)
+            List respo.schema/CoordKey
             -> Unit
             :features :js-ffi
         'replace-prop $ %{} 'CodeEntry
@@ -6950,69 +6948,69 @@
           :doc "|Nominal internal command protocol shared by Respo's virtual-tree diff producers and sole DOM patch consumer."
           :code $ quote $ defenum DomPatch
             :replace-prop
-              quote $ List Dynamic
+              quote $ List CoordKey
               quote $ List Number
               , Tag Dynamic
             :add-prop
-              quote $ List Dynamic
+              quote $ List CoordKey
               quote $ List Number
               , Tag Dynamic
             :rm-prop
-              quote $ List Dynamic
+              quote $ List CoordKey
               quote $ List Number
               , Tag
             :add-style
-              quote $ List Dynamic
+              quote $ List CoordKey
               quote $ List Number
               , Tag Dynamic
             :replace-style
-              quote $ List Dynamic
+              quote $ List CoordKey
               quote $ List Number
               , Tag Dynamic
             :rm-style
-              quote $ List Dynamic
+              quote $ List CoordKey
               quote $ List Number
               , Tag
             :set-event
-              quote $ List Dynamic
+              quote $ List CoordKey
               quote $ List Number
               , Tag
             :rm-event
-              quote $ List Dynamic
+              quote $ List CoordKey
               quote $ List Number
               , Tag
             :add-element
-              quote $ List Dynamic
+              quote $ List CoordKey
               quote $ List Number
               , Struct
             :rm-element
-              quote $ List Dynamic
+              quote $ List CoordKey
               quote $ List Number
             :replace-element
-              quote $ List Dynamic
+              quote $ List CoordKey
               quote $ List Number
               , Struct
             :append-element
-              quote $ List Dynamic
+              quote $ List CoordKey
               quote $ List Number
               , Struct
             :move-element
               quote $ List Number
               , Number $ quote $ Option Number
             :effect-mount
-              quote $ List Dynamic
+              quote $ List CoordKey
               quote $ List Number
               quote $ Fn respo.dom/DomElement $ -> Unit
             :effect-unmount
-              quote $ List Dynamic
+              quote $ List CoordKey
               quote $ List Number
               quote $ Fn respo.dom/DomElement $ -> Unit
             :effect-update
-              quote $ List Dynamic
+              quote $ List CoordKey
               quote $ List Number
               quote $ Fn respo.dom/DomElement $ -> Unit
             :effect-before-update
-              quote $ List Dynamic
+              quote $ List CoordKey
               quote $ List Number
               quote $ Fn respo.dom/DomElement $ -> Unit
           :examples $ []
@@ -7097,14 +7095,14 @@
           :schema $ quote StructDef
         'Effect $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Effect (:name Tag)
-            :coord $ quote $ List Dynamic
+            :coord $ quote $ List CoordKey
             :args $ quote $ List Dynamic
             :method $ quote $ Fn (List Dynamic) (List Dynamic) (-> Unit)
           :examples $ []
           :schema $ quote StructDef
         'Element $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Element (:name Tag)
-            :coord $ quote $ Option (List Dynamic)
+            :coord $ quote $ Option (List CoordKey)
             :attrs $ quote $ List (List Dynamic)
             :style $ quote $ List (List Dynamic)
             :event $ quote $ Map Tag (JsNullish Fn)
@@ -7248,7 +7246,7 @@
                   host $ make-element root
                     fn (_name)
                       fn (_event _coord)
-                        hint-fn $ Fn respo.dom/DomEvent (List Dynamic) (-> Unit)
+                        hint-fn $ Fn respo.dom/DomEvent (List respo.schema/CoordKey) (-> Unit)
                         , &unit
                     []
                 append-element host
@@ -7257,7 +7255,7 @@
                     {} $ :r $ to-string 5
                   fn (_name)
                     fn (_event _coord)
-                      hint-fn $ Fn respo.dom/DomEvent (List Dynamic) (-> Unit)
+                      hint-fn $ Fn respo.dom/DomEvent (List respo.schema/CoordKey) (-> Unit)
                       , &unit
                   []
                 , host
