@@ -207,7 +207,7 @@
         'on-focus $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn on-focus (e dispatch!) (println "|Just focused~") &unit
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic)
+          :schema $ quote $ Fn respo.schema/RespoEvent
             Fn respo.app.schema/Op $ -> Unit
             -> Unit
         'on-keydown $ %{} 'CodeEntry
@@ -235,7 +235,7 @@
           :code $ quote $ defn on-test (e dispatch!) (println "|trigger test!")
             try-test! dispatch! $ []
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic)
+          :schema $ quote $ Fn respo.schema/RespoEvent
             Fn respo.app.schema/Op $ -> Unit
             -> Unit
         'style-bold! $ %{} 'CodeEntry (:doc |)
@@ -874,7 +874,7 @@
             , &unit
           :examples $ []
           :schema $ quote $ Fn respo.schema/Component respo.dom/DomElement
-            Fn (List respo.schema/CoordKey) Tag (Map Tag Dynamic) (-> Unit)
+            Fn (List respo.schema/CoordKey) Tag respo.schema/RespoEvent $ -> Unit
             -> Unit
             :features :js-ffi
         'build-listener $ %{} 'CodeEntry
@@ -887,7 +887,7 @@
                 deliver-event coord event-name simple-event
           :examples $ []
           :schema $ quote $ Fn Tag
-            Fn (List respo.schema/CoordKey) Tag (Map Tag Dynamic) (-> Unit)
+            Fn (List respo.schema/CoordKey) Tag respo.schema/RespoEvent $ -> Unit
             -> $ Fn respo.dom/DomEvent (List respo.schema/CoordKey) (-> Unit)
             :features :js-ffi
         'patch-instance! $ %{} 'CodeEntry
@@ -902,7 +902,7 @@
             , &unit
           :examples $ []
           :schema $ quote $ Fn (List respo.schema/DomPatch) respo.dom/DomElement
-            Fn (List respo.schema/CoordKey) Tag (Map Tag Dynamic) (-> Unit)
+            Fn (List respo.schema/CoordKey) Tag respo.schema/RespoEvent $ -> Unit
             -> Unit
             :features :js-ffi
         'send-to-component! $ %{} 'CodeEntry (:doc |)
@@ -1009,7 +1009,7 @@
           :doc "|Creates a function to dispatch events from the DOM to Respo's event handling system."
           :code $ quote $ defn build-deliver-event (*global-element *dispatch-fn)
             fn (coord event-name simple-event)
-              hint-fn $ Fn (List respo.schema/CoordKey) Tag (Map Tag Dynamic) (-> Unit)
+              hint-fn $ Fn (List respo.schema/CoordKey) Tag respo.schema/RespoEvent $ -> Unit
               let
                   target-element-option $ find-event-target
                       deref *global-element
@@ -1034,7 +1034,7 @@
           :schema $ quote $ Fn
             Ref $ calcit.core/Option respo.schema/Component
             Ref $ Fn *dispatch-op $ -> Unit
-            -> $ Fn (List respo.schema/CoordKey) Tag (Map Tag Dynamic) (-> Unit)
+            -> $ Fn (List respo.schema/CoordKey) Tag respo.schema/RespoEvent $ -> Unit
             :features :js-ffi
         'extract-listeners $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn extract-listeners (component-result)
@@ -1168,14 +1168,15 @@
     'respo.core $ %{} 'FileEntry
       :defs $ {}
         '&event-field $ %{} 'CodeEntry
-          :doc "|Read one field from an event map; raises when the field is missing. Internal helper for event-value, event-checked? and keyboard-info."
+          :doc "|Read one field from a RespoEvent (or a plain event map); raises when the field is missing or nil. Internal helper for event-value, event-checked? and keyboard-info."
           :code $ quote $ defn &event-field (e field)
             let
-                event $ decode-map-as e $ quote (Map Tag Dynamic)
-              match (calcit.core/get event field)
-                (:some value) value
-                (:none)
-                  raise $ str "|[Respo] event has no " field "|, got type: " $ .unwrap-or (calcit.core/get event :type) |unknown
+                missing! $ fn () $ raise
+                  str "|[Respo] event has no " field "|, got type: " $ .unwrap-or (calcit.core/get e :type) |unknown
+              match (calcit.core/get e field)
+                (:some value)
+                  if (nil? value) (missing!) value
+                (:none) (missing!)
           :examples $ []
           :schema $ quote $ Fn Dynamic Tag (-> Dynamic)
         '&state-plain $ %{} 'CodeEntry
@@ -3892,11 +3893,12 @@
     'respo.ffi.browser $ %{} 'FileEntry
       :defs $ {}
         'effect-element $ %{} 'CodeEntry
-          :doc "|Turn the `el` a browser effect receives into a typed `respo.dom/DomElement`. Raises a JS FFI contract violation when the value is not a DOM element host (an object with `nodeType` 1 and a tag name), so a wrong target fails at the effect boundary instead of deep inside a DOM call. Use it in browser-only effects, for example `(when (= action :mount) (.select! (effect-element el)))`. Effects that also run on other targets keep `el` open."
+          :doc "|Deprecated: effects now receive `el` as a typed `respo.dom/DomElement` (see `respo.schema/EffectParams`), so this check is no longer needed. Raises a JS FFI contract violation when the value is not a DOM element host."
           :code $ quote $ defn effect-element (el)
             narrow-element $ browser/element-host el
           :examples $ []
           :schema $ quote $ Fn Dynamic (-> respo.dom/DomElement) (:features :js-ffi)
+          :tags $ #{} :deprecated
         'host-element $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn host-element (element) (unsafe-coerce element 'js-ffi.browser/DomElementHost)
           :examples $ []
@@ -4452,7 +4454,7 @@
                   respo.core/append-dynamic! ops op
                 leaf $ respo.schema/Element :name :span :coord (Option :none) :attrs ([]) :style ([]) :ref nil :children ([]) :event $ {}
                   :click $ fn (_event _d!)
-                    hint-fn $ Fn (Map Tag Dynamic)
+                    hint-fn $ Fn respo.schema/RespoEvent
                       Fn Dynamic $ -> Unit
                       -> Unit
                     , &unit
@@ -4507,7 +4509,7 @@
                   , &unit
                 leaf $ respo.schema/Element :name :span :coord (Option :none) :attrs ([]) :style ([]) :ref nil :children ([]) :event $ {}
                   :click $ fn (_event _d!)
-                    hint-fn $ Fn (Map Tag Dynamic)
+                    hint-fn $ Fn respo.schema/RespoEvent
                       Fn Dynamic $ -> Unit
                       -> Unit
                     , &unit
@@ -6157,7 +6159,7 @@
               :code $ quote $ let
                   element $ respo.schema/Element :name :div :coord (Option :none) :attrs ([]) :style ([]) :event
                     {} $ :click $ fn (_event _dispatch!)
-                      hint-fn $ Fn (Map Tag Dynamic)
+                      hint-fn $ Fn respo.schema/RespoEvent
                         Fn Dynamic $ -> Unit
                         -> Unit
                       , &unit
@@ -7267,11 +7269,11 @@
           :examples $ []
           :schema $ quote StructDef
         'EventHandler $ %{} 'CodeEntry
-          :doc "|Event callback signature. Respo delivers an immutable map produced by event->edn together with the application dispatch function, which accepts exactly one value of the entry's :dispatch-op type. The exported value is a no-op callback, matching the declared callable type rather than a Unit placeholder."
+          :doc "|Event callback signature. Respo delivers the respo.schema/RespoEvent produced by event->edn together with the application dispatch function, which accepts exactly one value of the entry's :dispatch-op type. The exported value is a no-op callback, matching the declared callable type rather than a Unit placeholder."
           :code $ quote $ def EventHandler
             fn (_event _dispatch!) &unit
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic)
+          :schema $ quote $ Fn respo.schema/RespoEvent
             Fn *dispatch-op $ -> Unit
             -> Unit
         'KeyboardInfo $ %{} 'CodeEntry
@@ -7289,12 +7291,11 @@
           :examples $ []
           :schema $ quote EnumDef
         'RespoEvent $ %{} 'CodeEntry
-          :doc "|Struct view of DOM event fields. It is not the value passed to event listeners: Respo calls listeners with the immutable Map<Tag, Dynamic> produced by event->edn (see EventHandler). Do not annotate callback events with RespoEvent; read fields from the Map with get and check their types."
-          :code $ quote $ defstruct RespoEvent (:type Tag)
-            :value $ quote $ JsNullish Dynamic
+          :doc "|Event value passed to event handlers (see EventHandler), built by event->edn. `:type` is the event name as a Tag and `:original-event` / `:event` hold the native event; fields that do not apply to the event type are nil. Read fields with `(:value e)`, or use event-value, event-checked? and keyboard-info for checked reads."
+          :code $ quote $ defstruct RespoEvent (:type Tag) (:value Dynamic)
             :checked $ quote $ JsNullish Bool
-            :original-event Dynamic
-            :event Dynamic
+            :original-event respo.dom/DomEvent
+            :event respo.dom/DomEvent
             :key $ quote $ JsNullish String
             :code $ quote $ JsNullish String
             :key-code $ quote $ JsNullish Number
@@ -8175,16 +8176,14 @@
           :examples $ []
           :schema $ quote JsObject
         'event->edn $ %{} 'CodeEntry
-          :doc "|Converts a native DOM event into a Respo EDN event structure."
+          :doc "|Converts a native DOM event into the `respo.schema/RespoEvent` struct passed to event handlers."
           :code $ quote $ defn event->edn (event)
             let
                 event-type $ event.:type
                 keyboard-event $ unsafe-coerce event 'respo.dom/DomKeyboardEvent
-              -> (event-base-edn event event-type keyboard-event) (.assoc :original-event event) (.assoc :event event)
+              event-base-edn event event-type keyboard-event
           :examples $ []
-          :schema $ quote $ Fn respo.dom/DomEvent
-            -> $ Map Tag Dynamic
-            :features :js-ffi
+          :schema $ quote $ Fn respo.dom/DomEvent (-> respo.schema/RespoEvent) (:features :js-ffi)
         'event->prop $ %{} 'CodeEntry
           :doc "|Converts an event keyword (e.g. :click) to a prop name string (e.g. 'onclick')."
           :code $ quote $ defn event->prop (x)
@@ -8202,28 +8201,25 @@
               assert= |click $ respo.util.format/event->string :on-click
               assert= |change $ respo.util.format/event->string |on-change
             :tags $ #{} :unit
-        'event-base-edn $ %{} 'CodeEntry (:doc "|按事件类型构造事件 EDN 的基础字段。")
+        'event-base-edn $ %{} 'CodeEntry
+          :doc "|按事件类型构造 RespoEvent：先填好 :type 和原生事件，其余字段为 nil，再按事件类型补上键盘或输入字段。"
           :code $ quote $ defn event-base-edn (event event-type keyboard-event)
-            match event-type
-              |click $ {} $ :type :click
-              |keydown $ -> (map-keyboard-event keyboard-event) (&map:assoc :type :keydown)
-                &map:assoc :key-code $ keyboard-event.:key-code
-                &map:assoc :keycode $ keyboard-event.:key-code
-              |keypress $ &map:assoc (map-keyboard-event keyboard-event) :type :keypress
-              |keyup $ &map:assoc (map-keyboard-event keyboard-event) :type :keyup
-              |input $ {} (:type :input)
-                :value $ input-event-value event
-                :checked $ input-event-checked? event
-              |change $ {} (:type :change)
-                :value $ input-event-value event
-                :checked $ input-event-checked? event
-              |focus $ {} $ :type :focus
-              _ $ {} (:type event-type)
-                :msg $ str "|Unhandled event: " event-type
+            let
+                base $ respo.schema/RespoEvent :type (turn-tag event-type) :value nil :checked nil :original-event event :event event :key nil :code nil :key-code nil :keycode nil :ctrl? nil :meta? nil :alt? nil :shift? nil :msg nil
+              match event-type (|click base)
+                |keydown $ -> (map-keyboard-event base keyboard-event) (&struct:assoc :key-code keyboard-event.:key-code) (&struct:assoc :keycode keyboard-event.:key-code)
+                |keypress $ map-keyboard-event base keyboard-event
+                |keyup $ map-keyboard-event base keyboard-event
+                |input $ -> base
+                  &struct:assoc :value $ input-event-value event
+                  &struct:assoc :checked $ input-event-checked? event
+                |change $ -> base
+                  &struct:assoc :value $ input-event-value event
+                  &struct:assoc :checked $ input-event-checked? event
+                |focus base
+                _ $ &struct:assoc base :msg $ str "|Unhandled event: " event-type
           :examples $ []
-          :schema $ quote $ Fn respo.dom/DomEvent String respo.dom/DomKeyboardEvent
-            -> $ Map Tag Dynamic
-            :features :js-ffi
+          :schema $ quote $ Fn respo.dom/DomEvent String respo.dom/DomKeyboardEvent (-> respo.schema/RespoEvent) (:features :js-ffi)
         'get-style-value $ %{} 'CodeEntry
           :doc "|Formats a typed style value for a given property. Adds px to numeric values when the property expects units and drops the colon from tags. Values from props or style maps are Dynamic; format them with `style-value-text`, which checks the value and turns nil into an empty string."
           :code $ quote $ defn get-style-value (x prop)
@@ -8286,19 +8282,11 @@
           :examples $ []
           :schema $ quote $ Fn respo.dom/DomEvent (-> Dynamic) (:features :js-ffi)
         'map-keyboard-event $ %{} 'CodeEntry
-          :doc "|Extracts key information from a JavaScript KeyboardEvent."
-          :code $ quote $ defn map-keyboard-event (event)
-            {}
-              :key $ event.:key
-              :code $ event.:code
-              :ctrl? $ event.:ctrl-key
-              :meta? $ event.:meta-key
-              :alt? $ event.:alt-key
-              :shift? $ event.:shift-key
+          :doc "|Copies key information from a JavaScript KeyboardEvent into a RespoEvent."
+          :code $ quote $ defn map-keyboard-event (base event)
+            -> base (&struct:assoc :key event.:key) (&struct:assoc :code event.:code) (&struct:assoc :ctrl? event.:ctrl-key) (&struct:assoc :meta? event.:meta-key) (&struct:assoc :alt? event.:alt-key) (&struct:assoc :shift? event.:shift-key)
           :examples $ []
-          :schema $ quote $ Fn respo.dom/DomKeyboardEvent
-            -> $ Map Tag Dynamic
-            :features :js-ffi
+          :schema $ quote $ Fn respo.schema/RespoEvent respo.dom/DomKeyboardEvent (-> respo.schema/RespoEvent) (:features :js-ffi)
         'mute-element $ %{} 'CodeEntry
           :doc "|Recursively remove event handlers from a component or element tree.\n\nThis is used in SSR-related flows where the initial HTML should not carry live client event functions."
           :code $ quote $ defn mute-element (element)
@@ -8309,7 +8297,7 @@
             :code $ quote $ let
                 leaf $ respo.schema/Element :name :span :coord (Option :none) :attrs ([]) :style ([]) :children ([]) :ref nil :event $ {}
                   :click $ fn (_event _dispatch!)
-                    hint-fn $ Fn (Map Tag Dynamic)
+                    hint-fn $ Fn respo.schema/RespoEvent
                       Fn Dynamic $ -> Unit
                       -> Unit
                     , &unit
@@ -8317,7 +8305,7 @@
                   [] (respo.util.detect/make-child-pair :child leaf) (respo.util.detect/make-child-pair :empty nil)
                   , :ref nil :event $ {}
                     :click $ fn (_event _dispatch!)
-                      hint-fn $ Fn (Map Tag Dynamic)
+                      hint-fn $ Fn respo.schema/RespoEvent
                         Fn Dynamic $ -> Unit
                         -> Unit
                       , &unit

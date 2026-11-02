@@ -16,7 +16,7 @@ export function verifyPasteEvents(mount, prepareSSR, firePaste) {
   const handler = name => (event, dispatch) => {
     const original = c.option_$o_unwrap(c.get(event, tags['original-event']));
     if (c.option_$o_unwrap(c.get(event, tags.event)) !== original ||
-        c.option_$o_unwrap(c.get(event, tags.type)) !== 'paste') {
+        c.option_$o_unwrap(c.get(event, tags.type)).value !== 'paste') {
       throw new Error('Paste event lost its original event or existing event type');
     }
     delivered.push([name, original.clipboardData.getData('text/plain')]);

@@ -28,15 +28,15 @@ input $ {}
     println $ event-value e
 ```
 
-`e` 是不可变 Map，包含事件类型、表单字段和原生事件。输入事件的
-`:type` 是 Tag `:input`；未单独识别的事件（例如 paste）保留原生类型字符串。
+`e` 是 `respo.schema/RespoEvent` struct，包含事件类型、表单字段和原生事件。`:type` 是 Tag，
+例如 `:input`；未单独识别的事件（例如 paste）也转成 Tag（`:paste`），并在 `:msg` 里说明。
 
 ### 回调类型
 
-回调合同是 `respo.schema/EventHandler`：第一个参数为 `Map Tag Dynamic`，
-第二个参数为 dispatch 函数。不要把事件参数标成 `respo.schema/RespoEvent`：
-它是 Struct，监听器收到的不是它，运行时会出现 `e.nthAt is not a function`
-一类错误。用 `get` 或下面的读取函数取字段。
+回调合同是 `respo.schema/EventHandler`：第一个参数为 `respo.schema/RespoEvent`，
+第二个参数为 dispatch 函数。用 `(:value e)` 这样的字段访问读取，字段名会被检查；
+与当前事件无关的字段（例如 click 事件的 `:key`）为 nil。没写类型的回调里 `get e :value`
+仍然可用，返回 Option。把事件参数标成 `Map Tag Dynamic` 的回调会在预处理阶段被拒绝。
 
 `DomProps` 的 `:on-*` 字段（`Option EventHandler`）与 `:on` Map 的值都按 `EventHandler` 检查，类型错误
 的回调会在预处理阶段被拒绝。普通 props Map（`{} (:on-input …)`）的值是
@@ -67,8 +67,8 @@ let
   assert= true $ :ctrl? info
 ```
 
-相比 `(:value e)`，这些函数让 handler 中的值有确定类型，后续字段访问可以被检查；
-需要其他字段时仍可直接读取 `e`。
+`(:value e)` 的类型是开放的 `Dynamic`（自定义元素的 value 可以是任意宿主值），
+这些函数在边界检查类型并返回精确值。它们也接受普通 Map，方便测试里直接构造事件。
 
 ```cirru.no-check
 ; ns app.demo

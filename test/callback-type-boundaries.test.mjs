@@ -249,8 +249,8 @@ for (const [field, wrap, absent] of [
   [':on-input', callback => `(Option :some ${callback})`, '(Option :none)'],
   [':on', callback => `(Option :some ({} (:input ${callback})))`, '(Option :some ({} (:input nil)))'],
 ]) {
-  test(`DomProps ${field} accepts the Map event delivered by event->edn`, () => {
-    const result = evaluate(domPropsWith(field, wrap(listener('(Map Tag Dynamic)'))));
+  test(`DomProps ${field} accepts the RespoEvent delivered by event->edn`, () => {
+    const result = evaluate(domPropsWith(field, wrap(listener('respo.schema/RespoEvent'))));
     assert.equal(result.status, 0, result.output);
   });
 
@@ -259,11 +259,11 @@ for (const [field, wrap, absent] of [
     assert.equal(result.status, 0, result.output);
   });
 
-  test(`DomProps ${field} rejects a RespoEvent-typed listener`, () => {
-    const result = evaluate(domPropsWith(field, wrap(listener('respo.schema/RespoEvent'))));
-    assert.notEqual(result.status, 0, 'listeners receive a Map, not a RespoEvent Struct');
+  test(`DomProps ${field} rejects a Map-typed listener`, () => {
+    const result = evaluate(domPropsWith(field, wrap(listener('(Map Tag Dynamic)'))));
+    assert.notEqual(result.status, 0, 'listeners receive a RespoEvent Struct, not a Map');
     assert.match(result.output, new RegExp(`field \`${field}\` expects type`));
-    assert.match(result.output, /respo\.schema\/RespoEvent/);
+    assert.match(result.output, /map<:tag,dynamic>/);
     assert.doesNotMatch(result.output, /took [\d.]+ms:/, 'the invalid props must not run');
   });
 }
