@@ -71,7 +71,7 @@ CIRRU
 
 fields_positive=$(cat <<'CIRRU'
 &let (attrs $ [] ([] :id |probe))
-  &let (styles $ [] ([] :color |red))
+  &let (styles $ respo.core/style-entries ({} (:color |red)))
     &let (events $ {} (:click nil))
       &let (element $ respo.schema/Element :name :span :coord (Option :none) :attrs attrs :style styles :event events :children ([]) :ref nil)
         assert= :span $ respo.util.detect/element-name element

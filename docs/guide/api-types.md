@@ -38,10 +38,11 @@ Respo 里剩下的 `Dynamic` 大多不是“还没来得及写”，而是当前
   key 参数、`keyed-element` / `keyed-component` 的 key 和 `get-style-value` 的值已经用这两个
   类型；`list->` 的 `[key child]` 与 props 里的样式仍是开放数据，由 `read-coord-key`、
   `style-value-text` 在边界检查后转换，Bool、集合等其他值会报错。props map 本身还是
-  `Dynamic`：混合了 String 和 Number 值的 `{}` 字面量目前推断为 `Map Tag Dynamic`，
-  不能直接满足 `Map Tag CssValue`。
-- **元组**：`list->` 的子节点是 `[key child]` 对，`Element` 的 `:attrs`、`:style`
-  是键值对列表。没有元组类型时只能写 `List Dynamic`。
+  `Map Tag Dynamic`：同一个 map 里有样式 map、字符串、回调等不同类型的值，Calcit 还没有按键
+  区分值类型的记录类型。
+- **元组**：`Element` 的 `:style` 是 `List (Tuple StyleKey CssValue)`，在 props 边界解码一次；
+  `list->` 的 `[key child]` 对和 `:attrs` 仍是 `List Dynamic`：调用方自己拼的 `[] k v`
+  没有期望类型时不会推断成 `Tuple`，属性值也是开放的 DOM 值。
 - **应用自己的数据**：states 树、memo 的参数、resource 的 `:data`/`:error`、effect
   的依赖列表，形状由应用决定，Respo 只负责原样传递。
 
@@ -79,15 +80,17 @@ props Map 和 `:style` Map 的值同样可以是 `Option`：`Option :some v` 取
 | --- | --- | --- |
 | `>>` | `Fn Dynamic respo.schema/CoordKey (-> respo.schema/States)` | 从父 states 取出子分支，并把 key 追加到 `:cursor` |
 | `as-states-map` | `Fn Dynamic (-> respo.schema/States)` | 在开放边界校验 states：nil 视为空 map，不是 map 时报错 |
-| `state-cursor` | `Fn Dynamic (-> (List Dynamic))` | 读取 cursor；缺失或 nil 时返回空列表 |
+| `state-cursor` | `Fn Dynamic (-> (List CoordKey))` | 读取 cursor 并逐项检查成 `CoordKey`；缺失或 nil 时返回空列表 |
 | `pick-state` | 宏，`pick-state states TypeExpr default` | 返回值的类型就是 `TypeExpr`，这是把组件状态接回精确类型的位置 |
 
 `respo.schema/States` 是 `Map Dynamic Dynamic` 的类型名，可以用在 store 的字段上，
 例如 `:states 'respo.schema/States`。它只是别名，不校验内部结构。`update-state-tree` 系列为了兼容
 非 map 的旧状态仍返回 `Dynamic`，写回这样的字段前用 `as-states-map` 收窄。
 
-组件的 `states` 参数本身保持 `Dynamic`：states 树把 `:cursor` 和各个子分支放在同一个
-map 里，是异构的，而且检查器不允许把 Dynamic 值直接传给 `States` 参数。读取自己的状态时用 `pick-state` 并给出 Struct 类型：
+组件的 `states` 参数可以声明成 `respo.schema/States`：调用方传入的是 `>>` 的结果，它已经是
+`States`（demo 的 `comp-task`、`comp-todolist` 就这样写）。如果调用方传的是没收窄的 Dynamic，
+检查器不允许直接传给 `States` 参数，这时参数保持 `Dynamic`，或者先用 `as-states-map` 收窄。
+states 树把 `:cursor` 和各个子分支放在同一个 map 里，是异构的，所以 `States` 本身仍是 `Map Dynamic Dynamic`。读取自己的状态时用 `pick-state` 并给出 Struct 类型：
 
 ```cirru.no-check
 defcomp comp-task (states task)
