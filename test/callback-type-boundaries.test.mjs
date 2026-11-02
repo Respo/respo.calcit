@@ -185,7 +185,7 @@ const effect = (args, types, result, body) => `respo.core/build-effect :test ([]
   fn (${args})
     hint-fn $ Fn ${types} (-> ${result})
     , ${body}`;
-const lists = "(List Dynamic) (List Dynamic)";
+const lists = "(List Dynamic) respo.schema/EffectParams";
 const patchEffect = (variant, args, types, result, body) => `respo.schema/DomPatch :${variant} ([]) ([])
   fn (${args})
     hint-fn $ Fn ${types} (-> ${result})
@@ -203,7 +203,7 @@ for (const [name, source] of [
     assert |identity $ = callback checked
     assert |result $ = 3 $ checked 2
     , &unit`)],
-  ['effect accepts its actual two-list Unit callback', effect('args params', lists, 'Unit', '&unit')],
+  ['effect accepts its actual args-and-params Unit callback', effect('args params', lists, 'Unit', '&unit')],
 ]) {
   test(name, () => {
     const result = evaluate(source);
@@ -219,7 +219,7 @@ for (const [name, source, diagnostics] of [
   ['effect rejects wrong callback parameter types', effect('args params', "Number Number", 'Unit', '&unit'),
     [/W_FN_ARG_TYPE_MISMATCH/, /Function `respo.core\/build-effect` arg 3/, /but got `fn\(:number, :number\) -> :unit`/]],
   ['effect rejects a non-Unit callback result', effect('args params', lists, 'Number', '42'),
-    [/W_FN_ARG_TYPE_MISMATCH/, /Function `respo.core\/build-effect` arg 3/, /but got `fn\(list<dynamic>, list<dynamic>\) -> :number`/]],
+    [/W_FN_ARG_TYPE_MISMATCH/, /Function `respo.core\/build-effect` arg 3/, /but got `fn\(list<dynamic>, 'respo.schema\/EffectParams\) -> :number`/]],
   ['mount patch rejects Number as callback target', patchEffect('effect-mount', 'target', "Number", 'Unit', '&unit'),
     [/Enum `DomPatch::effect-mount` payload 3 expects type/, /but got `fn\(:number\) -> :unit`/]],
   ['unmount patch rejects two callback parameters', patchEffect('effect-unmount', 'a b', "respo.dom/DomElement respo.dom/DomElement", 'Unit', '&unit'),

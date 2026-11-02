@@ -139,7 +139,8 @@ function fixture(includeEmpty) {
     t.name, name, t.listeners, list([]), t.tree, optionSome(as_render_node(element)),
     t.effects, list([c._$n__PCT__$M_(Effect, t.name, name, t.coord, list([]), t.args, list([name.value]),
       t.method, (args, params) => {
-        const [action, target, atPlace] = c.listToArray(params);
+        const [action, target, atPlace] = ['action', 'target', 'at-place?']
+          .map(name => c.option_$o_unwrap(c.get(params, c.turn_tag(name))));
         calls.push([`effect:${name.value}`, action.value, target.id, atPlace, c.listToArray(args)]);
       })]));
   const ref = label => target => { calls.push([`ref:${label}`, target?.id ?? null]); };

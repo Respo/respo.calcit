@@ -2,9 +2,12 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import * as c from '../js-out/calcit.core.mjs';
 import { effect_listen_keyboard } from '../js-out/respo.comp.global-keydown.mjs';
+import { EffectParams } from '../js-out/respo.schema.mjs';
 
 const field = (value, name) => c.option_$o_unwrap(c.get(value, c.turn_tag(name)));
-const run = (effect, action, target) => field(effect, 'method')(field(effect, 'args'), c.arrayToList([c.turn_tag(action), target, false]));
+const paramTags = c.init_tags(['action', 'target', 'at-place?']);
+const run = (effect, action, target) => field(effect, 'method')(field(effect, 'args'),
+  c._$n__PCT__$M_(EffectParams, paramTags.action, c.turn_tag(action), paramTags.target, target, paramTags['at-place?'], false));
 
 function withKeyboardHost(body) {
   const savedWindow = globalThis.window;

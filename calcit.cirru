@@ -719,7 +719,7 @@
                           and (contains? disabled-commands key) (or ctrl-key? meta-key?)
                           .!preventDefault event
                           Option :none
-                        .!dispatchEvent el $ new js/KeyboardEvent (.-type event) event
+                        .dispatch-event! el $ new js/KeyboardEvent (.-type event) event
                         , &unit
                   remove-stored-listener! el $ str event-name
                   aset el dirty-field handler
@@ -1384,7 +1384,7 @@
               schema/Effect :name name :coord ([]) :args deps :method method-fn
           :examples $ []
           :schema $ quote $ Fn Tag (List Dynamic)
-            Fn (List Dynamic) (List Dynamic) (-> Unit)
+            Fn (List Dynamic) respo.schema/EffectParams $ -> Unit
             -> respo.schema/Effect
           :tags $ #{} :internal
         'button $ %{} 'CodeEntry
@@ -1785,7 +1785,7 @@
           :schema $ quote $ Macro SyntaxSymbol SyntaxList & Syntax
             -> $ Definition Fn
         'defeffect $ %{} 'CodeEntry
-          :doc "|Macro for defining component effects.\n\n`defeffect name (args...) (action el at-place?) body` builds an effect. Respo calls it with up to three lifecycle values: `action` (`:mount`, `:before-update`, `:update` or `:unmount`), the root element `el`, and `at-place?`. You may bind fewer than three; binding more raises when the macro expands, because Respo never supplies a fourth value.\n\nUse it inside a component effect vector like `[] (effect ...) child-tree`. `el` stays open (Dynamic) so effects also work on non-browser targets; browser-only effects can read it as a typed `respo.dom/DomElement` with `respo.ffi.browser/effect-element`."
+          :doc "|Macro for defining component effects.\n\n`defeffect name (args...) (action el at-place?) body` builds an effect. Respo calls it with up to three lifecycle values: `action` (`:mount`, `:before-update`, `:update` or `:unmount`), the root element `el`, and `at-place?`. You may bind fewer than three; binding more raises when the macro expands, because Respo never supplies a fourth value.\n\nUse it inside a component effect vector like `[] (effect ...) child-tree`. `el` is typed as `respo.dom/DomElement` (the method receives a `respo.schema/EffectParams`), so members of that trait such as `.focus!`, `:offset-top` or `.query-selector` are checked."
           :code $ quote $ defmacro defeffect (effect-name args params & body)
             assert "|args in symbol" $ and (list? args) (every? args symbol?)
             assert "|params like [action el at-place?]" $ and (list? params) (every? params symbol?)
@@ -1793,31 +1793,44 @@
             let
                 args-var $ gensym |args
                 params-var $ gensym |params
+                param-fields $ [] :action :target :at-place?
+                param-bindings $ map-indexed params $ fn (idx param)
+                  [] param $ []
+                    .unwrap $ nth param-fields idx
+                    , params-var
               quasiquote $ defn ~effect-name ~args $ schema/Effect :name
                 ~ $ turn-tag effect-name
                 , :coord ([]) :args ([] ~@args) :method
                   fn (~args-var ~params-var)
-                    hint-fn $ Fn (List Dynamic) (List Dynamic) (-> Unit)
-                    let[] ~args ~args-var $ let[] ~params ~params-var $ ~
+                    hint-fn $ Fn (List Dynamic) respo.schema/EffectParams $ -> Unit
+                    let[] ~args ~args-var $ let ~param-bindings $ ~
                       if (empty? body)
                         quasiquote $ do $ println (str-spaced |WARNING: ~effect-name "|lack code for handling effects!")
                         quasiquote $ do ~@body
                     , &unit
-          :examples $ [] $ quote
-            defeffect log-message (message) (action el at-place?)
+          :examples $ []
+            quote $ defeffect log-message (message) (action el at-place?)
               if (= action :mount) (js/console.log message)
+            quote $ defeffect effect-reveal () (action el)
+              when
+                and (= action :mount) (> el.:offset-top 0)
+                .scroll-into-view! el
           :schema $ quote $ Macro SyntaxSymbol SyntaxList SyntaxList & Syntax
             -> $ Definition Fn
           :tests $ []
             %{} 'TestEntry (:name |discards-body-result-after-running-effects)
               :code $ quote $ let
                   hits $ ref 0
-                  factory $ defeffect effect-result-probe (payload) (action target at?) (assert= :payload payload) (assert= :mount action) (assert= :target target) (assert= true at?) (swap! hits inc) |ignored-result
+                  factory $ defeffect effect-result-probe (payload) (action target at?) (assert= :payload payload) (assert= :mount action)
+                    assert |receives-target $ identical? (respo.core/stub-dom-target :target) target
+                    assert= true at?
+                    swap! hits inc
+                    , |ignored-result
                   effect $ respo.util.detect/as-effect $ factory :payload
                 assert= &unit $
                   :method effect
                   :args effect
-                  [] :mount :target true
+                  respo.schema/EffectParams :action :mount :target (respo.core/stub-dom-target :target) :at-place? true
                 assert= 1 $ deref hits
               :tags $ #{} :regression :unit
             %{} 'TestEntry (:name |rejects-extra-lifecycle-params)
@@ -1904,12 +1917,17 @@
                 mount-fn $ expect-function mount! "|[Respo/effect-on-mount] expected a callback function"
               build-effect :effect-on-mount ([])
                 fn (_args params)
-                  let[] (action target _at-place?) params $ if (&= action :mount)
-                    do (mount-fn target) &unit
-                    , &unit
+                  let
+                      action $ :action params
+                      target $ :target params
+                    if (&= action :mount)
+                      do (mount-fn target) &unit
+                      , &unit
           :examples $ [] $ quote
-            effect-on-mount $ fn (_target) nil
-          :schema $ quote $ Fn Fn (-> respo.schema/Effect)
+            effect-on-mount $ fn (_target) &unit
+          :schema $ quote $ Fn
+            Fn respo.dom/DomElement $ -> Unit
+            -> respo.schema/Effect
         'effect-on-unmount $ %{} 'CodeEntry
           :doc "|Creates a component effect that calls unmount! with the current DOM target before removal."
           :code $ quote $ defn effect-on-unmount (unmount!)
@@ -1917,12 +1935,17 @@
                 unmount-fn $ expect-function unmount! "|[Respo/effect-on-unmount] expected a callback function"
               build-effect :effect-on-unmount ([])
                 fn (_args params)
-                  let[] (action target _at-place?) params $ if (&= action :unmount)
-                    do (unmount-fn target) &unit
-                    , &unit
+                  let
+                      action $ :action params
+                      target $ :target params
+                    if (&= action :unmount)
+                      do (unmount-fn target) &unit
+                      , &unit
           :examples $ [] $ quote
-            effect-on-unmount $ fn (_target) nil
-          :schema $ quote $ Fn Fn (-> respo.schema/Effect)
+            effect-on-unmount $ fn (_target) &unit
+          :schema $ quote $ Fn
+            Fn respo.dom/DomElement $ -> Unit
+            -> respo.schema/Effect
         'effect-on-update $ %{} 'CodeEntry
           :doc "|Creates a component effect that calls update! when the immutable dependency list changes."
           :code $ quote $ defn effect-on-update (deps update!)
@@ -1932,14 +1955,17 @@
             let
                 update-fn $ expect-function update! "|[Respo/effect-on-update] expected a callback function"
               build-effect :effect-on-update deps $ fn (_args params)
-                let[] (action target _at-place?) params $ if (&= action :update)
-                  do (update-fn target) &unit
-                  , &unit
+                let
+                    action $ :action params
+                    target $ :target params
+                  if (&= action :update)
+                    do (update-fn target) &unit
+                    , &unit
           :examples $ [] $ quote
             effect-on-update ([] 1)
               fn (_target) &unit
           :schema $ quote $ Fn (List Dynamic)
-            Fn Dynamic $ -> Unit
+            Fn respo.dom/DomElement $ -> Unit
             -> respo.schema/Effect
           :tests $ [] $ %{} 'TestEntry (:name |dispatches-only-matching-lifecycle-phases)
             :code $ quote $ let
@@ -1956,10 +1982,14 @@
                     , &unit
                 update-method $ :method update-effect
                 unmount-method $ :method unmount-effect
-              update-method (:args update-effect) ([] :mount :node false)
-              update-method (:args update-effect) ([] :update :node false)
-              unmount-method (:args unmount-effect) ([] :update :node false)
-              unmount-method (:args unmount-effect) ([] :unmount :node false)
+              update-method (:args update-effect)
+                respo.schema/EffectParams :action :mount :target (respo.core/stub-dom-target :node) :at-place? false
+              update-method (:args update-effect)
+                respo.schema/EffectParams :action :update :target (respo.core/stub-dom-target :node) :at-place? false
+              unmount-method (:args unmount-effect)
+                respo.schema/EffectParams :action :update :target (respo.core/stub-dom-target :node) :at-place? false
+              unmount-method (:args unmount-effect)
+                respo.schema/EffectParams :action :unmount :target (respo.core/stub-dom-target :node) :at-place? false
               assert |only-matching-phases-run $ &=
                 [] ([] :update :node) ([] :unmount :node)
                 , @log
@@ -1974,25 +2004,28 @@
               (:some cleanup!)
                 if (fn? cleanup!) &unit $ raise |[Respo/effect-watch]-expected-cleanup-callback
             build-effect :effect-watch deps $ fn (_args params)
-              let[] (action target _at-place?) params $ match action
-                :mount $ do (setup! target) &unit
-                :before-update $ match cleanup-option
-                  (:none) &unit
-                  (:some cleanup!)
-                    do (cleanup! target) &unit
-                :update $ do (setup! target) &unit
-                :unmount $ match cleanup-option
-                  (:none) &unit
-                  (:some cleanup!)
-                    do (cleanup! target) &unit
-                _ &unit
+              let
+                  action $ :action params
+                  target $ :target params
+                match action
+                  :mount $ do (setup! target) &unit
+                  :before-update $ match cleanup-option
+                    (:none) &unit
+                    (:some cleanup!)
+                      do (cleanup! target) &unit
+                  :update $ do (setup! target) &unit
+                  :unmount $ match cleanup-option
+                    (:none) &unit
+                    (:some cleanup!)
+                      do (cleanup! target) &unit
+                  _ &unit
           :examples $ [] $ quote
             effect-watch ([] 1)
               fn (_target) &unit
               Option :some $ fn (_target) &unit
           :schema $ quote $ Fn (List Dynamic)
-            Fn Dynamic $ -> Unit
-            calcit.core/Option $ Fn Dynamic $ -> Unit
+            Fn respo.dom/DomElement $ -> Unit
+            calcit.core/Option $ Fn respo.dom/DomElement $ -> Unit
             -> respo.schema/Effect
           :tests $ []
             %{} 'TestEntry (:name |cleans-old-closure-before-new-setup)
@@ -2917,8 +2950,8 @@
           :code $ quote $ defn some-effect-callback (callback) (Option :some callback)
           :examples $ []
           :schema $ quote $ Fn
-            Fn Dynamic $ -> Unit
-            -> $ calcit.core/Option $ Fn Dynamic (-> Unit)
+            Fn respo.dom/DomElement $ -> Unit
+            -> $ calcit.core/Option $ Fn respo.dom/DomElement (-> Unit)
         'some-enqueue $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn some-enqueue (enqueue!) (Option :some enqueue!)
           :examples $ []
@@ -2966,6 +2999,11 @@
           :code $ quote $ defn strong (props & children) (create-element :strong props & children)
           :examples $ []
           :schema $ quote $ Fn PropsInput & Dynamic (-> respo.schema/Element) (:generics PropsInput)
+        'stub-dom-target $ %{} 'CodeEntry
+          :doc "|Test helper: stand in any value for the DOM element an effect receives, so native tests can drive `respo.schema/EffectParams` without a browser."
+          :code $ quote $ defn stub-dom-target (value) (unsafe-coerce value 'respo.dom/DomElement)
+          :examples $ []
+          :schema $ quote $ Fn T (-> respo.dom/DomElement) (:generics T) (:features :js-ffi)
         'style $ %{} 'CodeEntry
           :doc "|Creates HTML style element for defining CSS styles.\n\nParameters:\n  props - Attribute map, can include standard HTML attributes for style elements\n  & children - Variable arguments for child elements, typically CSS style content\n\nReturns:\n  Created style element component\n\nUsed to dynamically define CSS styles within components, supports nested and dynamic style generation."
           :code $ quote $ defn style (props & children) (create-element :style props & children)
@@ -3710,7 +3748,7 @@
             :names $ {} (:create-element |createElement) (:document-element |documentElement) (:query-selector |querySelector)
           :schema $ quote Trait
         'DomElement $ %{} 'CodeEntry
-          :doc "|Stable DOM element capability set used by renderer and patches."
+          :doc "|Stable DOM element capability set used by renderer, patches and effects. Effects receive their root element as this trait (see `respo.schema/EffectParams`), so it also covers the layout reads (`:offset-*`, `:client-*`, `:scroll-*`), sibling navigation, `.closest`, `.contains?`, `.clone-node`, attribute access and `.scroll-into-view!` that effects commonly need."
           :code $ quote $ deftrait DomElement (:id 'String) (:text-content 'String) (:inner-html 'String) (:inner-text 'String) (:value 'Dynamic) (:checked 'Bool) (:disabled 'Bool) (:selected 'Bool) (:class-name 'String) (:type 'String) (:href 'String) (:dataset 'JsObject) (:style 'JsObject)
             :parent-element $ quote $ JsNullish respo.dom/DomElement
             :children 'respo.dom/DomElementCollection
@@ -3719,7 +3757,28 @@
             :namespace-uri 'String
             :scroll-top 'Number
             :scroll-left 'Number
+            :scroll-width 'Number
+            :scroll-height 'Number
+            :client-width 'Number
+            :client-height 'Number
+            :offset-width 'Number
+            :offset-height 'Number
+            :offset-top 'Number
+            :offset-left 'Number
+            :next-element-sibling $ quote $ JsNullish respo.dom/DomElement
+            :previous-element-sibling $ quote $ JsNullish respo.dom/DomElement
             .matches? $ quote $ Fn T String (-> Bool) (:generics T)
+            .closest $ quote $ Fn T String
+              -> $ JsNullish respo.dom/DomElement
+              :generics T
+            .contains? $ quote $ Fn T respo.dom/DomElement (-> Bool) (:generics T)
+            .clone-node $ quote $ Fn T Bool (-> respo.dom/DomElement) (:generics T)
+            .get-attribute $ quote $ Fn T String
+              -> $ JsNullish String
+              :generics T
+            .set-attribute! $ quote $ Fn T String String (-> Unit) (:generics T)
+            .scroll-into-view! $ quote $ Fn T (-> Unit) (:generics T)
+            .click! $ quote $ Fn T (-> Unit) (:generics T)
             .query-selector $ quote $ Fn T String
               -> $ JsNullish respo.dom/DomElement
               :generics T
@@ -3739,7 +3798,7 @@
               Map Tag $ Fn respo.dom/DomEvent $ -> Unit
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
-            :names $ {} (:focus-preserving-scroll! |focus) (:inner-html |innerHTML) (:insert-before! |insertBefore) (:move-before! |moveBefore) (:namespace-uri |namespaceURI) (:owned-event-listeners |__respo_calcit_event_listeners) (:parent-element |parentElement) (:remove! |remove) (:scroll-left |scrollLeft) (:scroll-top |scrollTop)
+            :names $ {} (:click! |click) (:client-height |clientHeight) (:client-width |clientWidth) (:clone-node |cloneNode) (:contains? |contains) (:focus-preserving-scroll! |focus) (:get-attribute |getAttribute) (:inner-html |innerHTML) (:insert-before! |insertBefore) (:move-before! |moveBefore) (:namespace-uri |namespaceURI) (:next-element-sibling |nextElementSibling) (:offset-height |offsetHeight) (:offset-left |offsetLeft) (:offset-top |offsetTop) (:offset-width |offsetWidth) (:owned-event-listeners |__respo_calcit_event_listeners) (:parent-element |parentElement) (:previous-element-sibling |previousElementSibling) (:remove! |remove) (:scroll-height |scrollHeight) (:scroll-into-view! |scrollIntoView) (:scroll-left |scrollLeft) (:scroll-top |scrollTop) (:scroll-width |scrollWidth) (:set-attribute! |setAttribute)
             :writable $ #{} :checked :disabled :id :inner-html :inner-text :owned-event-listeners :scroll-left :scroll-top :selected
           :schema $ quote Trait
         'DomElementCollection $ %{} 'CodeEntry
@@ -4740,11 +4799,14 @@
                   inner $ .assoc plain :ref $ fn (target)
                     respo.core/append-dynamic! log $ [] :ref target
                   watch $ respo.schema/Effect :name :effect-watch :coord ([]) :args ([]) :method $ fn (_args params)
-                    let[] (action target _at-place?) params $ if (&= action :mount)
-                      respo.core/append-dynamic! log $ [] :setup target
-                      if (&= action :unmount)
-                        respo.core/append-dynamic! log $ [] :cleanup target
-                        , &unit
+                    let
+                        action $ :action params
+                        target $ :target params
+                      if (&= action :mount)
+                        respo.core/append-dynamic! log $ [] :setup target
+                        if (&= action :unmount)
+                          respo.core/append-dynamic! log $ [] :cleanup target
+                          , &unit
                   wrapped $ respo.schema/Component :name :boundary :effects ([] watch) :listeners ([]) :tree $ Option :some (respo.util.detect/as-render-node inner)
                 find-element-diffs collect! ([]) ([]) plain wrapped
                 respo.core/run-effect-ops! @ops :target
@@ -5554,7 +5616,7 @@
                   ops $ ref $ assert-type ([])
                     quote $ List respo.schema/DomPatch
                   effect $ respo.schema/Effect :name :watch :coord ([]) :args ([]) :method $ fn (_args params)
-                    respo.core/append-dynamic! actions $ &list:nth params 0
+                    respo.core/append-dynamic! actions $ :action params
                   component $ respo.schema/Component :name :empty :effects ([] effect) :listeners ([]) :tree $ Option :none
                   collect! $ fn (op)
                     hint-fn $ Fn respo.schema/DomPatch $ -> Unit
@@ -5602,7 +5664,7 @@
                   ops $ ref $ assert-type ([])
                     quote $ List respo.schema/DomPatch
                   effect $ respo.schema/Effect :name :watch :coord ([]) :args ([]) :method $ fn (_args params)
-                    respo.core/append-dynamic! flags $ &list:nth params 2
+                    respo.core/append-dynamic! flags $ :at-place? params
                   component $ respo.schema/Component :name :root :effects ([] effect) :listeners ([]) :tree $ Option :some
                     respo.util.detect/as-render-node $ respo.core/div $ {}
                   collect! $ fn (op)
@@ -5626,7 +5688,7 @@
                           method $ :method typed-effect
                         collect! $ DomPatch :effect-mount next-coord n-coord $ fn (target)
                           hint-fn $ Fn respo.dom/DomElement $ -> Unit
-                          method (:args typed-effect) ([] :mount target at-place?)
+                          method (:args typed-effect) (respo.schema/EffectParams :action :mount :target target :at-place? at-place?)
                   match (:tree component-value)
                     (:none) &unit
                     (:some child-tree) (collect-mounting-node collect! next-coord n-coord child-tree false)
@@ -5672,7 +5734,7 @@
                     method $ :method effect
                   collect! $ DomPatch :effect-mount next-coord n-coord $ fn (target)
                     hint-fn $ Fn respo.dom/DomElement $ -> Unit
-                    method (effect-args effect) ([] :mount target at-place?)
+                    method (effect-args effect) (respo.schema/EffectParams :action :mount :target target :at-place? at-place?)
           :examples $ []
           :schema $ quote $ Fn
             Fn respo.schema/DomPatch $ -> Unit
@@ -5693,7 +5755,7 @@
                     method $ :method effect
                   collect! $ DomPatch :effect-unmount next-coord n-coord $ fn (target)
                     hint-fn $ Fn respo.dom/DomElement $ -> Unit
-                    method (effect-args effect) ([] :unmount target at-place?)
+                    method (effect-args effect) (respo.schema/EffectParams :action :unmount :target target :at-place? at-place?)
           :examples $ []
           :schema $ quote $ Fn
             Fn respo.schema/DomPatch $ -> Unit
@@ -5733,7 +5795,7 @@
                           method $ :method typed-effect
                         collect! $ DomPatch :effect-unmount new-coord n-coord $ fn (target)
                           hint-fn $ Fn respo.dom/DomElement $ -> Unit
-                          method (:args typed-effect) ([] :unmount target at-place?)
+                          method (:args typed-effect) (respo.schema/EffectParams :action :unmount :target target :at-place? at-place?)
               (:element tree)
                 do
                   loop
@@ -5795,10 +5857,10 @@
                                 collect! $ if (= :update action)
                                   DomPatch :effect-update next-coord n-coord $ fn (target)
                                     hint-fn $ Fn respo.dom/DomElement $ -> Unit
-                                    method (effect-args effect) ([] action target false)
+                                    method (effect-args effect) (respo.schema/EffectParams :action action :target target :at-place? false)
                                   DomPatch :effect-before-update next-coord n-coord $ fn (target)
                                     hint-fn $ Fn respo.dom/DomElement $ -> Unit
-                                    method (effect-args effect) ([] action target false)
+                                    method (effect-args effect) (respo.schema/EffectParams :action action :target target :at-place? false)
                             let
                                 effect $ if (= action :before-update) old-effect new-effect
                                 method $ :method effect
@@ -5806,10 +5868,10 @@
                               collect! $ if (= :update action)
                                 DomPatch :effect-update next-coord n-coord $ fn (target)
                                   hint-fn $ Fn respo.dom/DomElement $ -> Unit
-                                  method (effect-args effect) ([] lifecycle-action target false)
+                                  method (effect-args effect) (respo.schema/EffectParams :action lifecycle-action :target target :at-place? false)
                                 DomPatch :effect-before-update next-coord n-coord $ fn (target)
                                   hint-fn $ Fn respo.dom/DomElement $ -> Unit
-                                  method (effect-args effect) ([] lifecycle-action target false)
+                                  method (effect-args effect) (respo.schema/EffectParams :action lifecycle-action :target target :at-place? false)
                           , &unit
                         do
                           when (= action :before-update)
@@ -5817,7 +5879,7 @@
                                 method $ :method old-effect
                               collect! $ DomPatch :effect-before-update next-coord n-coord $ fn (target)
                                 hint-fn $ Fn respo.dom/DomElement $ -> Unit
-                                method (effect-args old-effect) ([] :unmount target false)
+                                method (effect-args old-effect) (respo.schema/EffectParams :action :unmount :target target :at-place? false)
                           , &unit
                       , &unit
                     do
@@ -5827,7 +5889,7 @@
                               method $ :method new-effect
                             collect! $ DomPatch :effect-update next-coord n-coord $ fn (target)
                               hint-fn $ Fn respo.dom/DomElement $ -> Unit
-                              method (effect-args new-effect) ([] :mount target false)
+                              method (effect-args new-effect) (respo.schema/EffectParams :action :mount :target target :at-place? false)
                       , &unit
           :examples $ []
           :schema $ quote $ Fn
@@ -7156,7 +7218,12 @@
           :code $ quote $ defstruct Effect (:name Tag)
             :coord $ quote $ List CoordKey
             :args $ quote $ List Dynamic
-            :method $ quote $ Fn (List Dynamic) (List Dynamic) (-> Unit)
+            :method $ quote $ Fn (List Dynamic) respo.schema/EffectParams (-> Unit)
+          :examples $ []
+          :schema $ quote StructDef
+        'EffectParams $ %{} 'CodeEntry
+          :doc "|Lifecycle values Respo passes to an effect method: `:action` (`:mount`, `:before-update`, `:update` or `:unmount`), the component's root DOM element as `:target`, and `:at-place?`. `defeffect` binds them to the names you write, so `(action el at-place?)` still works."
+          :code $ quote $ defstruct EffectParams (:action Tag) (:target respo.dom/DomElement) (:at-place? Bool)
           :examples $ []
           :schema $ quote StructDef
         'Element $ %{} 'CodeEntry (:doc |)
@@ -7814,7 +7881,7 @@
             :code $ quote $ do
               assert= true $ respo.util.detect/effect? $ respo.schema/Effect :name :probe :coord ([]) :args ([]) :method
                 fn (coord args)
-                  hint-fn $ Fn (List Dynamic) (List Dynamic) (-> Unit)
+                  hint-fn $ Fn (List Dynamic) respo.schema/EffectParams $ -> Unit
                   , &unit
               assert= false $ respo.util.detect/effect? $ respo.schema/Component :name :probe :effects ([]) :listeners ([])
               assert= false $ respo.util.detect/effect? nil
