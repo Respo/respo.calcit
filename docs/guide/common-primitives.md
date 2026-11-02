@@ -76,6 +76,8 @@ list->
 
 应使用稳定的业务 key。遇到 `nil` key 时，错误包含对应的列表索引，便于在构建列表的位置定位缺失的 ID。
 
+不写回退节点时，`show` 返回 `Option`：条件成立为 `Option :some child`，否则为 `Option :none`。元素子节点和组件体都会跳过 `:none`（组件体渲染为空 `span`），因此不会把隐式 `nil` 分支留给调用方，在 Calcit 0.34 的严格检查下也不会报 `E_IMPLICIT_NIL_BRANCH`。
+
 `show` 在宏展开时检查分支数量。`for-keyed` 的 schema 检查普通 Calcit 调用；在动态或 JavaScript 边界，仍保留明确的 `[Respo/for-keyed]` 运行时错误。
 
 <a id="memoizing-immutable-derived-values"></a>
