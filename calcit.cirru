@@ -2700,6 +2700,26 @@
           :examples $ []
           :schema $ quote $ Fn (Option Dynamic)
             -> $ Map respo.schema/StyleKey respo.schema/CssValue
+          :tests $ [] $ %{} 'TestEntry (:name |decodes-style-entries)
+            :code $ quote $ do
+              assert= ([])
+                style-entries $ props-style-map $ Option :none
+              assert=
+                [] ([] :color |red) ([] :width 4)
+                style-entries $ props-style-map $ Option :some
+                  {} (:width 4) (:color |red) (:height nil)
+                    :margin $ Option :none
+              assert=
+                [] $ [] :display :block
+                style-entries $ props-style-map $ Option :some
+                  {} $ :display $ Option :some :block
+              assert |rejects-bool-value $ string? $ try
+                props-style-map $ Option :some $ {} (:display true)
+                fn (error) (str error)
+              assert |rejects-number-key $ string? $ try
+                props-style-map $ Option :some $ {} (1 |red)
+                fn (error) (str error)
+            :tags $ #{} :unit
         'realize-ssr! $ %{} 'CodeEntry
           :doc "|Adopt server-rendered DOM before the first client render. It compares the component tree to the existing HTML, attaches events by diffing a muted tree against the live tree, and mounts effects once. The live tree and shared dispatch reference are recorded before patches run, so events work immediately and later render! calls update handlers and dispatch without remounting."
           :code $ quote $ defn realize-ssr! (target element dispatch!)
