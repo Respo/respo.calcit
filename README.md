@@ -2,6 +2,8 @@
 
 ### 当前版本：0.18.0 / 正式 Calcit 0.32.1
 
+未发布（版本号待定）：配对 Calcit CLI / `@calcit/procs` `0.34.0`，开始使用受限 union（`defunion`）。新增 `respo.schema/CoordKey`（Tag、String、Number）和 `respo.schema/CssValue`（String、Number、Tag）。破坏性改动：`ChildPair :key`、`>>` 的 key、`keyed-element` / `keyed-component` 的 key 改为 `CoordKey`，传入 `Dynamic` 的调用要先用 `respo.util.list/read-coord-key` 检查；`list->` 遇到 Bool、集合等 key 会报错。`respo.util.format/get-style-value` 只接收 `CssValue`，开放样式值改用 `style-value-text`，它不再把其他类型的值转成字符串而是报错。`comp-inspect` 的第三个参数改为 `respo.comp.inspect/InspectStyle`（class-name 字符串或 `Map Tag CssValue`），不再接受 `nil`，没有额外样式时传 `{}`。
+
 0.18.0 起 props 用 `Option` 表示缺省：`respo.schema/DomProps` 的字段从 `JsNullish` 改为 `Option`，构造时省略的字段自动填入 `Option :none`；props Map 与 `:style` Map 的值也可以是 `Option`，`none` 表示不写该属性；子节点同样可以是 `Option`，`none` 与 `nil` 一样被跳过。普通值和 `nil` 的行为不变。逐个字段写 `nil` 构造 `DomProps` 的代码需要改成只写用到的字段，并用 `Option :some` 包装取值。
 
 0.17.2 在 0.17.1 之上收紧 `DomProps :on` 的类型为 `Map Tag (JsNullish EventHandler)`：`:on` 中把事件标成 `RespoEvent` 的回调会在预处理阶段被拒绝，`nil` 监听器仍被丢弃。见[DOM events 指南](docs/guide/dom-events.md)与 [#315](https://github.com/Respo/respo.calcit/pull/315)。

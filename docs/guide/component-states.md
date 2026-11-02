@@ -75,6 +75,10 @@ You also notice that its structure is simpler than a DOM tree, it only contains 
 状态 map 的 key 都是 Tag。`>>` 的返回类型因此是 `Map<Dynamic, Dynamic>`；
 开放的分支值需要在使用处验证，不能通过 `Map<Tag, Dynamic>` 声明排除已有数据。
 
+`>>` 的 key 参数类型是 `respo.schema/CoordKey`（Tag、String 或 Number 的 union）。从开放 map
+里取出的 key 是 `Dynamic`，要先用 `respo.util.list/read-coord-key` 检查，或者让数据本身带具体类型
+（例如 Struct 字段 `:id String`）。
+
 `>>` 不改变状态树层级或 key，也不写回传入的 map。nil 分支视为空 map，
 已有 `:cursor` 必须为 List；非 map 的状态或分支会报错。
 

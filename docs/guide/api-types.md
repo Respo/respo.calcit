@@ -32,10 +32,14 @@ entry_for:
 
 Respo 里剩下的 `Dynamic` 大多不是“还没来得及写”，而是当前类型系统写不出来的形状：
 
-- **联合类型**：子节点可以是 `Element`、`Component` 或 `nil`；cursor 的 key 可以是
-  Tag、String 或 Number；样式值可以是 String、Number 或 Tag。Calcit 目前没有联合类型，
-  这些位置只能写 `Dynamic`，再由 Respo 在运行时检查（例如 `confirm-child`、
-  `checked-pairs`）。
+- **开放的 props / style map**：Calcit 0.34 起有受限 union（`defunion`），Respo 用它声明了
+  `respo.schema/CoordKey`（Tag、String 或 Number，子节点 key 和 cursor key）和
+  `respo.schema/CssValue`（String、Number 或 Tag，样式值）。`ChildPair :key`、`>>` 的
+  key 参数、`keyed-element` / `keyed-component` 的 key 和 `get-style-value` 的值已经用这两个
+  类型；`list->` 的 `[key child]` 与 props 里的样式仍是开放数据，由 `read-coord-key`、
+  `style-value-text` 在边界检查后转换，Bool、集合等其他值会报错。props map 本身还是
+  `Dynamic`：混合了 String 和 Number 值的 `{}` 字面量目前推断为 `Map Tag Dynamic`，
+  不能直接满足 `Map Tag CssValue`。
 - **元组**：`list->` 的子节点是 `[key child]` 对，`Element` 的 `:attrs`、`:style`
   是键值对列表。没有元组类型时只能写 `List Dynamic`。
 - **应用自己的数据**：states 树、memo 的参数、resource 的 `:data`/`:error`、effect
@@ -73,7 +77,7 @@ props Map 和 `:style` Map 的值同样可以是 `Option`：`Option :some v` 取
 
 | API | schema | 说明 |
 | --- | --- | --- |
-| `>>` | `Fn Dynamic Dynamic (-> respo.schema/States)` | 从父 states 取出子分支，并把 key 追加到 `:cursor` |
+| `>>` | `Fn Dynamic respo.schema/CoordKey (-> respo.schema/States)` | 从父 states 取出子分支，并把 key 追加到 `:cursor` |
 | `as-states-map` | `Fn Dynamic (-> respo.schema/States)` | 在开放边界校验 states：nil 视为空 map，不是 map 时报错 |
 | `state-cursor` | `Fn Dynamic (-> (List Dynamic))` | 读取 cursor；缺失或 nil 时返回空列表 |
 | `pick-state` | 宏，`pick-state states TypeExpr default` | 返回值的类型就是 `TypeExpr`，这是把组件状态接回精确类型的位置 |
