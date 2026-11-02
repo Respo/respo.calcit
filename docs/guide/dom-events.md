@@ -141,8 +141,8 @@ respo.core/textarea $ {}
   :on-paste $ fn (event dispatch!) &unit
 ```
 
-Paste 沿用通用事件转换：`:type` 是字符串 `"paste"`，`:original-event` 和
-`:event` 均保留原生事件。剪贴板数据从浏览器边界的 `clipboardData` 读取。
+Paste 沿用通用事件转换：`:type` 是 Tag `:paste`，`:msg` 说明这是未单独识别的事件，
+`:original-event` 和 `:event` 均保留原生事件。剪贴板数据从浏览器边界的 `clipboardData` 读取。
 默认阻止传播，但保留浏览器粘贴行为；应用需要覆盖默认行为时，对原生事件调用
 `preventDefault`。移除 `:on-paste` 会按照配置的监听模式移除 Respo 处理器。
 
