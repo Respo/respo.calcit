@@ -75,7 +75,7 @@ The type contract of each public API (which positions are precise and which stay
 | `respo.comp.inspect` | `comp-inspect`    |
 | `respo.render.html`  | `make-string`     |
 | `respo.ffi.browser`  | `query-selector`：查询并返回 `Option<respo.dom/DomElement>` |
-|                      | `effect-element`：把 effect 收到的 `el` 校验为 `respo.dom/DomElement` |
+|                      | `effect-element`（deprecated）：effect 收到的 `el` 已经是 `respo.dom/DomElement` |
 
 ### Lower level APIs
 

@@ -128,13 +128,15 @@ defcomp comp-chart (chart-data)
 
 ### 读取 effect 的目标元素
 
-回调和 `defeffect` 收到的 `target` / `el` 保持开放类型（Dynamic），因为 effect 也可能在非浏览器目标上执行。只在浏览器运行的 effect 可以用 `respo.ffi.browser/effect-element` 把它转成有类型的 `respo.dom/DomElement`；传入的值不是 DOM 元素时，会在这一边界直接报错：
+回调和 `defeffect` 收到的 `target` / `el` 是 `respo.dom/DomElement`：effect 方法收到 `respo.schema/EffectParams`（`:action`、`:target`、`:at-place?`），`defeffect` 按你写的名字把它们绑定出来。trait 上的成员（`.select!`、`.focus!`、`:offset-top`、`.query-selector` 等）都会被检查：
 
 ```cirru.no-check
 defeffect effect-select-all () (action el)
   when (= action :mount)
-    .select! $ respo.ffi.browser/effect-element el
+    .select! el
 ```
+
+`respo.ffi.browser/effect-element` 已不再需要，标记为 `:deprecated`。原生测试里用 `respo.core/stub-dom-target` 构造替身节点。
 
 `defeffect` 的生命周期参数最多绑定三个：`(action el at-place?)`，可以少写，多写会在宏展开时报错，因为 Respo 不会提供第四个值。
 

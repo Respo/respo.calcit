@@ -43,7 +43,7 @@
             respo.util.format :refer $ hsl
             respo.css :refer $ defstyle
             respo.app.comp.todolist :refer $ comp-todolist
-            respo.comp.space :refer $ =<
+            respo.comp.space :refer $ space-x
             respo.comp.inspect :refer $ highlight-defcomp
     'respo.app.comp.task $ %{} 'FileEntry
       :defs $ {}
@@ -64,21 +64,21 @@
                       if done? (hsl 200 20 80) (hsl 200 80 70)
                     :on-click $ fn (e d!)
                       d! $ :: :toggle task-id
-                  =< 8 0
+                  space-x 8
                   input $ {} (:value task-text) (:class-name widget/style-input)
                     :on-input $ fn (e d!)
                       d! $ Op :update task-id $ event-value e
-                  =< 8 0
+                  space-x 8
                   input $ {} (:value state) (:class-name widget/style-input)
                     :on-input $ fn (e d!)
                       d! $ Op :states cursor $ event-value e
-                  =< 8 0
+                  space-x 8
                   div
                     {} (:class-name widget/style-button)
                       :on-click $ fn (e d!)
                         d! $ Op :remove task-id
                     <> |Remove
-                  =< 8 0
+                  space-x 8
                   div ({})
                     <> $ str state
           :examples $ []
@@ -111,7 +111,7 @@
           :require
             respo.core :refer $ defcomp div input span button <> defeffect pick-state state-cursor event-value
             respo.util.format :refer $ hsl
-            respo.comp.space :refer $ =<
+            respo.comp.space :refer $ space-x
             respo.comp.inspect :refer $ comp-inspect
             respo.app.style.widget :as widget
             respo.css :refer $ defstyle
@@ -139,18 +139,18 @@
                         d! $ Op :states-merge cursor state $ {}
                           :draft $ event-value e
                       :on-focus on-focus
-                    =< 8 0
+                    space-x 8
                     span
                       {} (:class-name widget/style-button)
                         :on-click $ fn (e d!)
                           d! $ Op :add draft
                           d! $ Op :states cursor $ .assoc state :draft |
                       span $ {} (:on-click nil) (:inner-text |Add)
-                    =< 8 0
+                    space-x 8
                     span $ {} (:inner-text |Clear) (:class-name widget/style-button)
                       :on-click $ fn (e d!)
                         d! $ Op :clear
-                    =< 8 0
+                    space-x 8
                     div ({})
                       div
                         {} (:class-name widget/style-button) (:on-click on-test)
@@ -173,7 +173,7 @@
                             fn (e d!)
                               d! $ Op :clear
                         <> |Clear2
-                      =< 8 0
+                      space-x 8
                       div
                         {} (:class-name widget/style-button)
                           :on-click $ fn (e d!)
@@ -181,7 +181,7 @@
                               not $ :locked? state
                         <> (str-spaced |Lock? locked?)
                           {} $ :font-size 13
-                      =< 8 0
+                      space-x 8
                       comp-wrap $ comp-zero
                   comp-inspect |Tasks tasks $ {} (:left 500) (:top 20)
                   div
@@ -207,7 +207,7 @@
         'on-focus $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn on-focus (e dispatch!) (println "|Just focused~") &unit
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic)
+          :schema $ quote $ Fn respo.schema/RespoEvent
             Fn respo.app.schema/Op $ -> Unit
             -> Unit
         'on-keydown $ %{} 'CodeEntry
@@ -235,7 +235,7 @@
           :code $ quote $ defn on-test (e dispatch!) (println "|trigger test!")
             try-test! dispatch! $ []
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic)
+          :schema $ quote $ Fn respo.schema/RespoEvent
             Fn respo.app.schema/Op $ -> Unit
             -> Unit
         'style-bold! $ %{} 'CodeEntry (:doc |)
@@ -312,7 +312,7 @@
             respo.core :refer $ defcomp div span input <> list-> defeffect >> a memo-comp-by pick-state state-cursor event-value
             respo.util.format :refer $ hsl
             respo.app.comp.task :refer $ comp-task
-            respo.comp.space :refer $ =<
+            respo.comp.space :refer $ space-x
             respo.comp.inspect :refer $ comp-inspect
             respo.app.comp.zero :refer $ comp-zero
             respo.app.comp.wrap :refer $ comp-wrap
@@ -719,7 +719,7 @@
                           and (contains? disabled-commands key) (or ctrl-key? meta-key?)
                           .!preventDefault event
                           Option :none
-                        .!dispatchEvent el $ new js/KeyboardEvent (.-type event) event
+                        .dispatch-event! el $ new js/KeyboardEvent (.-type event) event
                         , &unit
                   remove-stored-listener! el $ str event-name
                   aset el dirty-field handler
@@ -813,15 +813,16 @@
     'respo.comp.space $ %{} 'FileEntry
       :defs $ {}
         '=< $ %{} 'CodeEntry
-          :doc "|insert a tiny space, horizontally or verticaly.\n\n- `8 nil` for horizontal width 8px,\n- `nil 8` for vertical height 8px.\n"
+          :doc "|Deprecated: use `space-x` or `space-y`. Inserts a tiny space, horizontally or vertically.\n\n- `8 nil` for horizontal width 8px,\n- `nil 8` for vertical height 8px.\n\nThe nil-means-unset arguments cannot be typed, and a non-nil `w` wins, so `=< 0 16` renders width 0 rather than height 16.\n"
           :code $ quote $ defn =< (w x) (comp-space w x)
           :examples $ []
             quote $ =< 8 nil
             quote $ =< nil 16
             quote $ =< 12 nil
           :schema $ quote $ Fn Dynamic Dynamic (-> respo.schema/Component)
+          :tags $ #{} :deprecated
         'comp-space $ %{} 'CodeEntry
-          :doc "|A tiny spacer component that renders an empty styled `<div>` with either width or height.\n\nUse it for explicit horizontal or vertical gaps when you want spacing as a component, although plain CSS margin is often cheaper."
+          :doc "|Deprecated: use `space-x` or `space-y`. A tiny spacer component that renders an empty styled `<div>` with either width or height.\n\nUse it for explicit horizontal or vertical gaps when you want spacing as a component, although plain CSS margin is often cheaper."
           :code $ quote $ defcomp comp-space (w h)
             div $ {} (:class-name style-space)
               :style $ if (calcit.core/non-nil? w) (&{} :width w) (&{} :height h)
@@ -829,20 +830,25 @@
             quote $ comp-space 10 nil
             quote $ comp-space nil 16
           :schema $ quote $ Fn Dynamic Dynamic (-> respo.schema/Component)
+          :tags $ #{} :deprecated
         'space-x $ %{} 'CodeEntry
-          :doc "|Horizontal gap of `w` pixels, renders the same element as `=< w nil`. Takes a Number so the direction and size are checked; use `comp-space` for other CSS length values."
+          :doc "|Horizontal gap of width `w`, renders the same element as `=< w nil`. A Number is a pixel width; a String or Tag such as `|1em` is used as written."
           :code $ quote $ defcomp space-x (w)
             div $ {} (:class-name style-space)
               :style $ &{} :width w
-          :examples $ [] $ quote (space-x 8)
-          :schema $ quote $ Fn Number (-> respo.schema/Component)
+          :examples $ []
+            quote $ space-x 8
+            quote $ space-x |1em
+          :schema $ quote $ Fn respo.schema/CssValue (-> respo.schema/Component)
         'space-y $ %{} 'CodeEntry
-          :doc "|Vertical gap of `h` pixels, renders the same element as `=< nil h`. Takes a Number so the direction and size are checked; use `comp-space` for other CSS length values."
+          :doc "|Vertical gap of height `h`, renders the same element as `=< nil h`. A Number is a pixel height; a String or Tag such as `|1em` is used as written."
           :code $ quote $ defcomp space-y (h)
             div $ {} (:class-name style-space)
               :style $ &{} :height h
-          :examples $ [] $ quote (space-y 16)
-          :schema $ quote $ Fn Number (-> respo.schema/Component)
+          :examples $ []
+            quote $ space-y 16
+            quote $ space-y |1em
+          :schema $ quote $ Fn respo.schema/CssValue (-> respo.schema/Component)
         'style-space $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-space
             {} $ :& $ {} (:height 1) (:width 1) (:display :inline-block)
@@ -868,7 +874,7 @@
             , &unit
           :examples $ []
           :schema $ quote $ Fn respo.schema/Component respo.dom/DomElement
-            Fn (List respo.schema/CoordKey) Tag (Map Tag Dynamic) (-> Unit)
+            Fn (List respo.schema/CoordKey) Tag respo.schema/RespoEvent $ -> Unit
             -> Unit
             :features :js-ffi
         'build-listener $ %{} 'CodeEntry
@@ -881,7 +887,7 @@
                 deliver-event coord event-name simple-event
           :examples $ []
           :schema $ quote $ Fn Tag
-            Fn (List respo.schema/CoordKey) Tag (Map Tag Dynamic) (-> Unit)
+            Fn (List respo.schema/CoordKey) Tag respo.schema/RespoEvent $ -> Unit
             -> $ Fn respo.dom/DomEvent (List respo.schema/CoordKey) (-> Unit)
             :features :js-ffi
         'patch-instance! $ %{} 'CodeEntry
@@ -896,7 +902,7 @@
             , &unit
           :examples $ []
           :schema $ quote $ Fn (List respo.schema/DomPatch) respo.dom/DomElement
-            Fn (List respo.schema/CoordKey) Tag (Map Tag Dynamic) (-> Unit)
+            Fn (List respo.schema/CoordKey) Tag respo.schema/RespoEvent $ -> Unit
             -> Unit
             :features :js-ffi
         'send-to-component! $ %{} 'CodeEntry (:doc |)
@@ -1003,7 +1009,7 @@
           :doc "|Creates a function to dispatch events from the DOM to Respo's event handling system."
           :code $ quote $ defn build-deliver-event (*global-element *dispatch-fn)
             fn (coord event-name simple-event)
-              hint-fn $ Fn (List respo.schema/CoordKey) Tag (Map Tag Dynamic) (-> Unit)
+              hint-fn $ Fn (List respo.schema/CoordKey) Tag respo.schema/RespoEvent $ -> Unit
               let
                   target-element-option $ find-event-target
                       deref *global-element
@@ -1028,7 +1034,7 @@
           :schema $ quote $ Fn
             Ref $ calcit.core/Option respo.schema/Component
             Ref $ Fn *dispatch-op $ -> Unit
-            -> $ Fn (List respo.schema/CoordKey) Tag (Map Tag Dynamic) (-> Unit)
+            -> $ Fn (List respo.schema/CoordKey) Tag respo.schema/RespoEvent $ -> Unit
             :features :js-ffi
         'extract-listeners $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn extract-listeners (component-result)
@@ -1162,14 +1168,15 @@
     'respo.core $ %{} 'FileEntry
       :defs $ {}
         '&event-field $ %{} 'CodeEntry
-          :doc "|Read one field from an event map; raises when the field is missing. Internal helper for event-value, event-checked? and keyboard-info."
+          :doc "|Read one field from a RespoEvent (or a plain event map); raises when the field is missing or nil. Internal helper for event-value, event-checked? and keyboard-info."
           :code $ quote $ defn &event-field (e field)
             let
-                event $ decode-map-as e $ quote (Map Tag Dynamic)
-              match (calcit.core/get event field)
-                (:some value) value
-                (:none)
-                  raise $ str "|[Respo] event has no " field "|, got type: " $ .unwrap-or (calcit.core/get event :type) |unknown
+                missing! $ fn () $ raise
+                  str "|[Respo] event has no " field "|, got type: " $ .unwrap-or (calcit.core/get e :type) |unknown
+              match (calcit.core/get e field)
+                (:some value)
+                  if (nil? value) (missing!) value
+                (:none) (missing!)
           :examples $ []
           :schema $ quote $ Fn Dynamic Tag (-> Dynamic)
         '&state-plain $ %{} 'CodeEntry
@@ -1223,15 +1230,22 @@
           :examples $ []
           :schema $ quote $ Ref (calcit.core/Option respo.schema/Component)
         '<> $ %{} 'CodeEntry
-          :doc "|Create a text node with `span`.\n\nThe first argument is the content string. The optional second argument can be a style map or a class-name string."
+          :doc "|Create a text node with `span`.\n\nThe first argument is the content string. The optional second argument is a `respo.schema/TextStyle`: a class-name string or a style map `Map Tag CssValue`. A style def passed here needs a `Map Tag respo.schema/CssValue` schema; a bare `Map` schema is rejected."
           :code $ quote $ defn <> (content & styles)
-            let
-                style $ if (empty? styles) nil $ .unwrap (calcit.core/first styles)
-              if (string? style)
-                span $ {} (:inner-text content) (:class-name style)
-                span $ {} (:inner-text content) (:style style)
+            match (calcit.core/first styles)
+              (:none)
+                span $ {} $ :inner-text content
+              (:some style)
+                match style
+                  (String class-name)
+                    span $ {} (:inner-text content) (:class-name class-name)
+                  (Map style-map)
+                    span $ {} (:inner-text content) (:style style-map)
           :examples $ []
-          :schema $ quote $ Fn String & Dynamic (-> respo.schema/Element)
+            quote $ <> |plain
+            quote $ <> |label |text-label
+            quote $ <> |warning $ {} (:color |red) (:font-size 12)
+          :schema $ quote $ Fn String & respo.schema/TextStyle (-> respo.schema/Element)
         '>> $ %{} 'CodeEntry
           :doc "|Create a nested state cursor for a child branch.\n\nThe returned map reuses branch data and extends `:cursor` with the new key, so child components can manage local state without losing the parent path."
           :code $ quote $ defn >> (states k)
@@ -1384,7 +1398,7 @@
               schema/Effect :name name :coord ([]) :args deps :method method-fn
           :examples $ []
           :schema $ quote $ Fn Tag (List Dynamic)
-            Fn (List Dynamic) (List Dynamic) (-> Unit)
+            Fn (List Dynamic) respo.schema/EffectParams $ -> Unit
             -> respo.schema/Effect
           :tags $ #{} :internal
         'button $ %{} 'CodeEntry
@@ -1785,7 +1799,7 @@
           :schema $ quote $ Macro SyntaxSymbol SyntaxList & Syntax
             -> $ Definition Fn
         'defeffect $ %{} 'CodeEntry
-          :doc "|Macro for defining component effects.\n\n`defeffect name (args...) (action el at-place?) body` builds an effect. Respo calls it with up to three lifecycle values: `action` (`:mount`, `:before-update`, `:update` or `:unmount`), the root element `el`, and `at-place?`. You may bind fewer than three; binding more raises when the macro expands, because Respo never supplies a fourth value.\n\nUse it inside a component effect vector like `[] (effect ...) child-tree`. `el` stays open (Dynamic) so effects also work on non-browser targets; browser-only effects can read it as a typed `respo.dom/DomElement` with `respo.ffi.browser/effect-element`."
+          :doc "|Macro for defining component effects.\n\n`defeffect name (args...) (action el at-place?) body` builds an effect. Respo calls it with up to three lifecycle values: `action` (`:mount`, `:before-update`, `:update` or `:unmount`), the root element `el`, and `at-place?`. You may bind fewer than three; binding more raises when the macro expands, because Respo never supplies a fourth value.\n\nUse it inside a component effect vector like `[] (effect ...) child-tree`. `el` is typed as `respo.dom/DomElement` (the method receives a `respo.schema/EffectParams`), so members of that trait such as `.focus!`, `:offset-top` or `.query-selector` are checked."
           :code $ quote $ defmacro defeffect (effect-name args params & body)
             assert "|args in symbol" $ and (list? args) (every? args symbol?)
             assert "|params like [action el at-place?]" $ and (list? params) (every? params symbol?)
@@ -1793,31 +1807,44 @@
             let
                 args-var $ gensym |args
                 params-var $ gensym |params
+                param-fields $ [] :action :target :at-place?
+                param-bindings $ map-indexed params $ fn (idx param)
+                  [] param $ []
+                    .unwrap $ nth param-fields idx
+                    , params-var
               quasiquote $ defn ~effect-name ~args $ schema/Effect :name
                 ~ $ turn-tag effect-name
                 , :coord ([]) :args ([] ~@args) :method
                   fn (~args-var ~params-var)
-                    hint-fn $ Fn (List Dynamic) (List Dynamic) (-> Unit)
-                    let[] ~args ~args-var $ let[] ~params ~params-var $ ~
+                    hint-fn $ Fn (List Dynamic) respo.schema/EffectParams $ -> Unit
+                    let[] ~args ~args-var $ let ~param-bindings $ ~
                       if (empty? body)
                         quasiquote $ do $ println (str-spaced |WARNING: ~effect-name "|lack code for handling effects!")
                         quasiquote $ do ~@body
                     , &unit
-          :examples $ [] $ quote
-            defeffect log-message (message) (action el at-place?)
+          :examples $ []
+            quote $ defeffect log-message (message) (action el at-place?)
               if (= action :mount) (js/console.log message)
+            quote $ defeffect effect-reveal () (action el)
+              when
+                and (= action :mount) (> el.:offset-top 0)
+                .scroll-into-view! el
           :schema $ quote $ Macro SyntaxSymbol SyntaxList SyntaxList & Syntax
             -> $ Definition Fn
           :tests $ []
             %{} 'TestEntry (:name |discards-body-result-after-running-effects)
               :code $ quote $ let
                   hits $ ref 0
-                  factory $ defeffect effect-result-probe (payload) (action target at?) (assert= :payload payload) (assert= :mount action) (assert= :target target) (assert= true at?) (swap! hits inc) |ignored-result
+                  factory $ defeffect effect-result-probe (payload) (action target at?) (assert= :payload payload) (assert= :mount action)
+                    assert |receives-target $ identical? (respo.core/stub-dom-target :target) target
+                    assert= true at?
+                    swap! hits inc
+                    , |ignored-result
                   effect $ respo.util.detect/as-effect $ factory :payload
                 assert= &unit $
                   :method effect
                   :args effect
-                  [] :mount :target true
+                  respo.schema/EffectParams :action :mount :target (respo.core/stub-dom-target :target) :at-place? true
                 assert= 1 $ deref hits
               :tags $ #{} :regression :unit
             %{} 'TestEntry (:name |rejects-extra-lifecycle-params)
@@ -1904,12 +1931,17 @@
                 mount-fn $ expect-function mount! "|[Respo/effect-on-mount] expected a callback function"
               build-effect :effect-on-mount ([])
                 fn (_args params)
-                  let[] (action target _at-place?) params $ if (&= action :mount)
-                    do (mount-fn target) &unit
-                    , &unit
+                  let
+                      action $ :action params
+                      target $ :target params
+                    if (&= action :mount)
+                      do (mount-fn target) &unit
+                      , &unit
           :examples $ [] $ quote
-            effect-on-mount $ fn (_target) nil
-          :schema $ quote $ Fn Fn (-> respo.schema/Effect)
+            effect-on-mount $ fn (_target) &unit
+          :schema $ quote $ Fn
+            Fn respo.dom/DomElement $ -> Unit
+            -> respo.schema/Effect
         'effect-on-unmount $ %{} 'CodeEntry
           :doc "|Creates a component effect that calls unmount! with the current DOM target before removal."
           :code $ quote $ defn effect-on-unmount (unmount!)
@@ -1917,12 +1949,17 @@
                 unmount-fn $ expect-function unmount! "|[Respo/effect-on-unmount] expected a callback function"
               build-effect :effect-on-unmount ([])
                 fn (_args params)
-                  let[] (action target _at-place?) params $ if (&= action :unmount)
-                    do (unmount-fn target) &unit
-                    , &unit
+                  let
+                      action $ :action params
+                      target $ :target params
+                    if (&= action :unmount)
+                      do (unmount-fn target) &unit
+                      , &unit
           :examples $ [] $ quote
-            effect-on-unmount $ fn (_target) nil
-          :schema $ quote $ Fn Fn (-> respo.schema/Effect)
+            effect-on-unmount $ fn (_target) &unit
+          :schema $ quote $ Fn
+            Fn respo.dom/DomElement $ -> Unit
+            -> respo.schema/Effect
         'effect-on-update $ %{} 'CodeEntry
           :doc "|Creates a component effect that calls update! when the immutable dependency list changes."
           :code $ quote $ defn effect-on-update (deps update!)
@@ -1932,14 +1969,17 @@
             let
                 update-fn $ expect-function update! "|[Respo/effect-on-update] expected a callback function"
               build-effect :effect-on-update deps $ fn (_args params)
-                let[] (action target _at-place?) params $ if (&= action :update)
-                  do (update-fn target) &unit
-                  , &unit
+                let
+                    action $ :action params
+                    target $ :target params
+                  if (&= action :update)
+                    do (update-fn target) &unit
+                    , &unit
           :examples $ [] $ quote
             effect-on-update ([] 1)
               fn (_target) &unit
           :schema $ quote $ Fn (List Dynamic)
-            Fn Dynamic $ -> Unit
+            Fn respo.dom/DomElement $ -> Unit
             -> respo.schema/Effect
           :tests $ [] $ %{} 'TestEntry (:name |dispatches-only-matching-lifecycle-phases)
             :code $ quote $ let
@@ -1956,10 +1996,14 @@
                     , &unit
                 update-method $ :method update-effect
                 unmount-method $ :method unmount-effect
-              update-method (:args update-effect) ([] :mount :node false)
-              update-method (:args update-effect) ([] :update :node false)
-              unmount-method (:args unmount-effect) ([] :update :node false)
-              unmount-method (:args unmount-effect) ([] :unmount :node false)
+              update-method (:args update-effect)
+                respo.schema/EffectParams :action :mount :target (respo.core/stub-dom-target :node) :at-place? false
+              update-method (:args update-effect)
+                respo.schema/EffectParams :action :update :target (respo.core/stub-dom-target :node) :at-place? false
+              unmount-method (:args unmount-effect)
+                respo.schema/EffectParams :action :update :target (respo.core/stub-dom-target :node) :at-place? false
+              unmount-method (:args unmount-effect)
+                respo.schema/EffectParams :action :unmount :target (respo.core/stub-dom-target :node) :at-place? false
               assert |only-matching-phases-run $ &=
                 [] ([] :update :node) ([] :unmount :node)
                 , @log
@@ -1974,25 +2018,28 @@
               (:some cleanup!)
                 if (fn? cleanup!) &unit $ raise |[Respo/effect-watch]-expected-cleanup-callback
             build-effect :effect-watch deps $ fn (_args params)
-              let[] (action target _at-place?) params $ match action
-                :mount $ do (setup! target) &unit
-                :before-update $ match cleanup-option
-                  (:none) &unit
-                  (:some cleanup!)
-                    do (cleanup! target) &unit
-                :update $ do (setup! target) &unit
-                :unmount $ match cleanup-option
-                  (:none) &unit
-                  (:some cleanup!)
-                    do (cleanup! target) &unit
-                _ &unit
+              let
+                  action $ :action params
+                  target $ :target params
+                match action
+                  :mount $ do (setup! target) &unit
+                  :before-update $ match cleanup-option
+                    (:none) &unit
+                    (:some cleanup!)
+                      do (cleanup! target) &unit
+                  :update $ do (setup! target) &unit
+                  :unmount $ match cleanup-option
+                    (:none) &unit
+                    (:some cleanup!)
+                      do (cleanup! target) &unit
+                  _ &unit
           :examples $ [] $ quote
             effect-watch ([] 1)
               fn (_target) &unit
               Option :some $ fn (_target) &unit
           :schema $ quote $ Fn (List Dynamic)
-            Fn Dynamic $ -> Unit
-            calcit.core/Option $ Fn Dynamic $ -> Unit
+            Fn respo.dom/DomElement $ -> Unit
+            calcit.core/Option $ Fn respo.dom/DomElement $ -> Unit
             -> respo.schema/Effect
           :tests $ []
             %{} 'TestEntry (:name |cleans-old-closure-before-new-setup)
@@ -2917,8 +2964,8 @@
           :code $ quote $ defn some-effect-callback (callback) (Option :some callback)
           :examples $ []
           :schema $ quote $ Fn
-            Fn Dynamic $ -> Unit
-            -> $ calcit.core/Option $ Fn Dynamic (-> Unit)
+            Fn respo.dom/DomElement $ -> Unit
+            -> $ calcit.core/Option $ Fn respo.dom/DomElement (-> Unit)
         'some-enqueue $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn some-enqueue (enqueue!) (Option :some enqueue!)
           :examples $ []
@@ -2966,6 +3013,11 @@
           :code $ quote $ defn strong (props & children) (create-element :strong props & children)
           :examples $ []
           :schema $ quote $ Fn PropsInput & Dynamic (-> respo.schema/Element) (:generics PropsInput)
+        'stub-dom-target $ %{} 'CodeEntry
+          :doc "|Test helper: stand in any value for the DOM element an effect receives, so native tests can drive `respo.schema/EffectParams` without a browser."
+          :code $ quote $ defn stub-dom-target (value) (unsafe-coerce value 'respo.dom/DomElement)
+          :examples $ []
+          :schema $ quote $ Fn T (-> respo.dom/DomElement) (:generics T) (:features :js-ffi)
         'style $ %{} 'CodeEntry
           :doc "|Creates HTML style element for defining CSS styles.\n\nParameters:\n  props - Attribute map, can include standard HTML attributes for style elements\n  & children - Variable arguments for child elements, typically CSS style content\n\nReturns:\n  Created style element component\n\nUsed to dynamically define CSS styles within components, supports nested and dynamic style generation."
           :code $ quote $ defn style (props & children) (create-element :style props & children)
@@ -3710,7 +3762,7 @@
             :names $ {} (:create-element |createElement) (:document-element |documentElement) (:query-selector |querySelector)
           :schema $ quote Trait
         'DomElement $ %{} 'CodeEntry
-          :doc "|Stable DOM element capability set used by renderer and patches."
+          :doc "|Stable DOM element capability set used by renderer, patches and effects. Effects receive their root element as this trait (see `respo.schema/EffectParams`), so it also covers the layout reads (`:offset-*`, `:client-*`, `:scroll-*`), sibling navigation, `.closest`, `.contains?`, `.clone-node`, attribute access and `.scroll-into-view!` that effects commonly need."
           :code $ quote $ deftrait DomElement (:id 'String) (:text-content 'String) (:inner-html 'String) (:inner-text 'String) (:value 'Dynamic) (:checked 'Bool) (:disabled 'Bool) (:selected 'Bool) (:class-name 'String) (:type 'String) (:href 'String) (:dataset 'JsObject) (:style 'JsObject)
             :parent-element $ quote $ JsNullish respo.dom/DomElement
             :children 'respo.dom/DomElementCollection
@@ -3719,7 +3771,28 @@
             :namespace-uri 'String
             :scroll-top 'Number
             :scroll-left 'Number
+            :scroll-width 'Number
+            :scroll-height 'Number
+            :client-width 'Number
+            :client-height 'Number
+            :offset-width 'Number
+            :offset-height 'Number
+            :offset-top 'Number
+            :offset-left 'Number
+            :next-element-sibling $ quote $ JsNullish respo.dom/DomElement
+            :previous-element-sibling $ quote $ JsNullish respo.dom/DomElement
             .matches? $ quote $ Fn T String (-> Bool) (:generics T)
+            .closest $ quote $ Fn T String
+              -> $ JsNullish respo.dom/DomElement
+              :generics T
+            .contains? $ quote $ Fn T respo.dom/DomElement (-> Bool) (:generics T)
+            .clone-node $ quote $ Fn T Bool (-> respo.dom/DomElement) (:generics T)
+            .get-attribute $ quote $ Fn T String
+              -> $ JsNullish String
+              :generics T
+            .set-attribute! $ quote $ Fn T String String (-> Unit) (:generics T)
+            .scroll-into-view! $ quote $ Fn T (-> Unit) (:generics T)
+            .click! $ quote $ Fn T (-> Unit) (:generics T)
             .query-selector $ quote $ Fn T String
               -> $ JsNullish respo.dom/DomElement
               :generics T
@@ -3739,7 +3812,7 @@
               Map Tag $ Fn respo.dom/DomEvent $ -> Unit
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object)
-            :names $ {} (:focus-preserving-scroll! |focus) (:inner-html |innerHTML) (:insert-before! |insertBefore) (:move-before! |moveBefore) (:namespace-uri |namespaceURI) (:owned-event-listeners |__respo_calcit_event_listeners) (:parent-element |parentElement) (:remove! |remove) (:scroll-left |scrollLeft) (:scroll-top |scrollTop)
+            :names $ {} (:click! |click) (:client-height |clientHeight) (:client-width |clientWidth) (:clone-node |cloneNode) (:contains? |contains) (:focus-preserving-scroll! |focus) (:get-attribute |getAttribute) (:inner-html |innerHTML) (:insert-before! |insertBefore) (:move-before! |moveBefore) (:namespace-uri |namespaceURI) (:next-element-sibling |nextElementSibling) (:offset-height |offsetHeight) (:offset-left |offsetLeft) (:offset-top |offsetTop) (:offset-width |offsetWidth) (:owned-event-listeners |__respo_calcit_event_listeners) (:parent-element |parentElement) (:previous-element-sibling |previousElementSibling) (:remove! |remove) (:scroll-height |scrollHeight) (:scroll-into-view! |scrollIntoView) (:scroll-left |scrollLeft) (:scroll-top |scrollTop) (:scroll-width |scrollWidth) (:set-attribute! |setAttribute)
             :writable $ #{} :checked :disabled :id :inner-html :inner-text :owned-event-listeners :scroll-left :scroll-top :selected
           :schema $ quote Trait
         'DomElementCollection $ %{} 'CodeEntry
@@ -3820,11 +3893,12 @@
     'respo.ffi.browser $ %{} 'FileEntry
       :defs $ {}
         'effect-element $ %{} 'CodeEntry
-          :doc "|Turn the `el` a browser effect receives into a typed `respo.dom/DomElement`. Raises a JS FFI contract violation when the value is not a DOM element host (an object with `nodeType` 1 and a tag name), so a wrong target fails at the effect boundary instead of deep inside a DOM call. Use it in browser-only effects, for example `(when (= action :mount) (.select! (effect-element el)))`. Effects that also run on other targets keep `el` open."
+          :doc "|Deprecated: effects now receive `el` as a typed `respo.dom/DomElement` (see `respo.schema/EffectParams`), so this check is no longer needed. Raises a JS FFI contract violation when the value is not a DOM element host."
           :code $ quote $ defn effect-element (el)
             narrow-element $ browser/element-host el
           :examples $ []
           :schema $ quote $ Fn Dynamic (-> respo.dom/DomElement) (:features :js-ffi)
+          :tags $ #{} :deprecated
         'host-element $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn host-element (element) (unsafe-coerce element 'js-ffi.browser/DomElementHost)
           :examples $ []
@@ -4380,7 +4454,7 @@
                   respo.core/append-dynamic! ops op
                 leaf $ respo.schema/Element :name :span :coord (Option :none) :attrs ([]) :style ([]) :ref nil :children ([]) :event $ {}
                   :click $ fn (_event _d!)
-                    hint-fn $ Fn (Map Tag Dynamic)
+                    hint-fn $ Fn respo.schema/RespoEvent
                       Fn Dynamic $ -> Unit
                       -> Unit
                     , &unit
@@ -4435,7 +4509,7 @@
                   , &unit
                 leaf $ respo.schema/Element :name :span :coord (Option :none) :attrs ([]) :style ([]) :ref nil :children ([]) :event $ {}
                   :click $ fn (_event _d!)
-                    hint-fn $ Fn (Map Tag Dynamic)
+                    hint-fn $ Fn respo.schema/RespoEvent
                       Fn Dynamic $ -> Unit
                       -> Unit
                     , &unit
@@ -4740,11 +4814,14 @@
                   inner $ .assoc plain :ref $ fn (target)
                     respo.core/append-dynamic! log $ [] :ref target
                   watch $ respo.schema/Effect :name :effect-watch :coord ([]) :args ([]) :method $ fn (_args params)
-                    let[] (action target _at-place?) params $ if (&= action :mount)
-                      respo.core/append-dynamic! log $ [] :setup target
-                      if (&= action :unmount)
-                        respo.core/append-dynamic! log $ [] :cleanup target
-                        , &unit
+                    let
+                        action $ :action params
+                        target $ :target params
+                      if (&= action :mount)
+                        respo.core/append-dynamic! log $ [] :setup target
+                        if (&= action :unmount)
+                          respo.core/append-dynamic! log $ [] :cleanup target
+                          , &unit
                   wrapped $ respo.schema/Component :name :boundary :effects ([] watch) :listeners ([]) :tree $ Option :some (respo.util.detect/as-render-node inner)
                 find-element-diffs collect! ([]) ([]) plain wrapped
                 respo.core/run-effect-ops! @ops :target
@@ -5554,7 +5631,7 @@
                   ops $ ref $ assert-type ([])
                     quote $ List respo.schema/DomPatch
                   effect $ respo.schema/Effect :name :watch :coord ([]) :args ([]) :method $ fn (_args params)
-                    respo.core/append-dynamic! actions $ &list:nth params 0
+                    respo.core/append-dynamic! actions $ :action params
                   component $ respo.schema/Component :name :empty :effects ([] effect) :listeners ([]) :tree $ Option :none
                   collect! $ fn (op)
                     hint-fn $ Fn respo.schema/DomPatch $ -> Unit
@@ -5602,7 +5679,7 @@
                   ops $ ref $ assert-type ([])
                     quote $ List respo.schema/DomPatch
                   effect $ respo.schema/Effect :name :watch :coord ([]) :args ([]) :method $ fn (_args params)
-                    respo.core/append-dynamic! flags $ &list:nth params 2
+                    respo.core/append-dynamic! flags $ :at-place? params
                   component $ respo.schema/Component :name :root :effects ([] effect) :listeners ([]) :tree $ Option :some
                     respo.util.detect/as-render-node $ respo.core/div $ {}
                   collect! $ fn (op)
@@ -5626,7 +5703,7 @@
                           method $ :method typed-effect
                         collect! $ DomPatch :effect-mount next-coord n-coord $ fn (target)
                           hint-fn $ Fn respo.dom/DomElement $ -> Unit
-                          method (:args typed-effect) ([] :mount target at-place?)
+                          method (:args typed-effect) (respo.schema/EffectParams :action :mount :target target :at-place? at-place?)
                   match (:tree component-value)
                     (:none) &unit
                     (:some child-tree) (collect-mounting-node collect! next-coord n-coord child-tree false)
@@ -5672,7 +5749,7 @@
                     method $ :method effect
                   collect! $ DomPatch :effect-mount next-coord n-coord $ fn (target)
                     hint-fn $ Fn respo.dom/DomElement $ -> Unit
-                    method (effect-args effect) ([] :mount target at-place?)
+                    method (effect-args effect) (respo.schema/EffectParams :action :mount :target target :at-place? at-place?)
           :examples $ []
           :schema $ quote $ Fn
             Fn respo.schema/DomPatch $ -> Unit
@@ -5693,7 +5770,7 @@
                     method $ :method effect
                   collect! $ DomPatch :effect-unmount next-coord n-coord $ fn (target)
                     hint-fn $ Fn respo.dom/DomElement $ -> Unit
-                    method (effect-args effect) ([] :unmount target at-place?)
+                    method (effect-args effect) (respo.schema/EffectParams :action :unmount :target target :at-place? at-place?)
           :examples $ []
           :schema $ quote $ Fn
             Fn respo.schema/DomPatch $ -> Unit
@@ -5733,7 +5810,7 @@
                           method $ :method typed-effect
                         collect! $ DomPatch :effect-unmount new-coord n-coord $ fn (target)
                           hint-fn $ Fn respo.dom/DomElement $ -> Unit
-                          method (:args typed-effect) ([] :unmount target at-place?)
+                          method (:args typed-effect) (respo.schema/EffectParams :action :unmount :target target :at-place? at-place?)
               (:element tree)
                 do
                   loop
@@ -5795,10 +5872,10 @@
                                 collect! $ if (= :update action)
                                   DomPatch :effect-update next-coord n-coord $ fn (target)
                                     hint-fn $ Fn respo.dom/DomElement $ -> Unit
-                                    method (effect-args effect) ([] action target false)
+                                    method (effect-args effect) (respo.schema/EffectParams :action action :target target :at-place? false)
                                   DomPatch :effect-before-update next-coord n-coord $ fn (target)
                                     hint-fn $ Fn respo.dom/DomElement $ -> Unit
-                                    method (effect-args effect) ([] action target false)
+                                    method (effect-args effect) (respo.schema/EffectParams :action action :target target :at-place? false)
                             let
                                 effect $ if (= action :before-update) old-effect new-effect
                                 method $ :method effect
@@ -5806,10 +5883,10 @@
                               collect! $ if (= :update action)
                                 DomPatch :effect-update next-coord n-coord $ fn (target)
                                   hint-fn $ Fn respo.dom/DomElement $ -> Unit
-                                  method (effect-args effect) ([] lifecycle-action target false)
+                                  method (effect-args effect) (respo.schema/EffectParams :action lifecycle-action :target target :at-place? false)
                                 DomPatch :effect-before-update next-coord n-coord $ fn (target)
                                   hint-fn $ Fn respo.dom/DomElement $ -> Unit
-                                  method (effect-args effect) ([] lifecycle-action target false)
+                                  method (effect-args effect) (respo.schema/EffectParams :action lifecycle-action :target target :at-place? false)
                           , &unit
                         do
                           when (= action :before-update)
@@ -5817,7 +5894,7 @@
                                 method $ :method old-effect
                               collect! $ DomPatch :effect-before-update next-coord n-coord $ fn (target)
                                 hint-fn $ Fn respo.dom/DomElement $ -> Unit
-                                method (effect-args old-effect) ([] :unmount target false)
+                                method (effect-args old-effect) (respo.schema/EffectParams :action :unmount :target target :at-place? false)
                           , &unit
                       , &unit
                     do
@@ -5827,7 +5904,7 @@
                               method $ :method new-effect
                             collect! $ DomPatch :effect-update next-coord n-coord $ fn (target)
                               hint-fn $ Fn respo.dom/DomElement $ -> Unit
-                              method (effect-args new-effect) ([] :mount target false)
+                              method (effect-args new-effect) (respo.schema/EffectParams :action :mount :target target :at-place? false)
                       , &unit
           :examples $ []
           :schema $ quote $ Fn
@@ -6082,7 +6159,7 @@
               :code $ quote $ let
                   element $ respo.schema/Element :name :div :coord (Option :none) :attrs ([]) :style ([]) :event
                     {} $ :click $ fn (_event _dispatch!)
-                      hint-fn $ Fn (Map Tag Dynamic)
+                      hint-fn $ Fn respo.schema/RespoEvent
                         Fn Dynamic $ -> Unit
                         -> Unit
                       , &unit
@@ -6720,17 +6797,17 @@
           :examples $ []
           :schema $ quote $ Ref Number
         'ResourceAction $ %{} 'CodeEntry
-          :doc "|Immutable request lifecycle enum: :started carries request-id; :ready carries request-id and data; :failed carries request-id and error."
-          :code $ quote $ defenum ResourceAction (:started Number) (:ready Number Dynamic) (:failed Number Dynamic)
+          :doc "|Immutable request lifecycle enum, generic over the payload `T` and the error `E`: :started carries request-id; :ready carries request-id and data; :failed carries request-id and error."
+          :code $ quote $ defenum ResourceAction ([] T E) (:started Number) (:ready Number T) (:failed Number E)
           :examples $ []
           :schema $ quote EnumDef
           :tags $ #{} :data
         'ResourceState $ %{} 'CodeEntry
-          :doc "|Immutable resource state record. :data and :error are Options around application payloads: :data holds the initial data given to resource-idle or the last :ready payload, :error the last failure; :status and :request-id drive deterministic reducer transitions."
-          :code $ quote $ defstruct ResourceState (:status Tag)
+          :doc "|Immutable resource state record, generic over the payload `T` and the error `E`. :data and :error are Options around application payloads: :data holds the initial data given to resource-idle or the last :ready payload, :error the last failure; :status and :request-id drive deterministic reducer transitions."
+          :code $ quote $ defstruct ResourceState ([] T E) (:status Tag)
             :request-id $ quote $ Option Number
-            :data $ quote $ Option Dynamic
-            :error $ quote $ Option Dynamic
+            :data $ quote $ Option T
+            :error $ quote $ Option E
           :examples $ []
           :schema $ quote StructDef
           :tags $ #{} :data
@@ -6758,7 +6835,7 @@
           :examples $ []
           :schema $ quote $ Fn
             Fn $ -> T
-            Fn respo.resource/ResourceAction $ -> Unit
+            Fn (respo.resource/ResourceAction Dynamic Dynamic) (-> Unit)
             -> Number
             :generics T
             :features :js-ffi
@@ -6808,7 +6885,9 @@
               raise "|[Respo/resource-failed] expected a numeric request id"
             ResourceAction :failed request-id error
           :examples $ []
-          :schema $ quote $ Fn Number Dynamic (-> respo.resource/ResourceAction)
+          :schema $ quote $ Fn Number E
+            -> $ respo.resource/ResourceAction T E
+            :generics T E
         'resource-idle $ %{} 'CodeEntry
           :doc "|Creates an immutable idle ResourceState with optional initial data."
           :code $ quote $ defn resource-idle (initial-data-option)
@@ -6817,7 +6896,9 @@
             quote $ resource-idle $ Option :none
             quote $ resource-idle $ Option :some
               {} $ :items $ []
-          :schema $ quote $ Fn (calcit.core/Option Dynamic) (-> respo.resource/ResourceState)
+          :schema $ quote $ Fn (calcit.core/Option T)
+            -> $ respo.resource/ResourceState T E
+            :generics T E
           :tests $ [] $ %{} 'TestEntry (:name |preserves-option-initial-data)
             :code $ quote $ let
                 payload $ {} $ :items ([])
@@ -6841,7 +6922,7 @@
               or (= status :pending) (= status :refreshing)
           :examples $ [] $ quote
             resource-loading? $ resource-reducer (resource-idle) (resource-started 1)
-          :schema $ quote $ Fn respo.resource/ResourceState (-> Bool)
+          :schema $ quote $ Fn (respo.resource/ResourceState T E) (-> Bool) (:generics T E)
         'resource-ready $ %{} 'CodeEntry
           :doc "|Creates a :ready ResourceAction carrying resolved immutable data."
           :code $ quote $ defn resource-ready (request-id data)
@@ -6850,7 +6931,9 @@
               raise "|[Respo/resource-ready] expected a numeric request id"
             ResourceAction :ready request-id data
           :examples $ []
-          :schema $ quote $ Fn Number Dynamic (-> respo.resource/ResourceAction)
+          :schema $ quote $ Fn Number T
+            -> $ respo.resource/ResourceAction T E
+            :generics T E
         'resource-reducer $ %{} 'CodeEntry
           :doc "|Purely applies a ResourceAction to ResourceState. Ready and failed actions with stale request ids return the identical current state; refreshes retain previous data."
           :code $ quote $ defn resource-reducer (state action)
@@ -6868,13 +6951,15 @@
                     if
                       or (= :ready status) (= :refreshing status)
                       , :refreshing :pending
-                  , :request-id (Option :some request-id) :data (:data state) :error $ Option :none
+                  , :request-id (Option :some request-id) :data (:data state) :error $ assert-type (Option :none)
+                    quote $ Option E
               (:ready request-id data)
                 if
                   match (:request-id state)
                     (:some current-id) (= current-id request-id)
                     (:none) false
-                  ResourceState :status :ready :request-id (Option :some request-id) :data (Option :some data) :error $ Option :none
+                  ResourceState :status :ready :request-id (Option :some request-id) :data (Option :some data) :error $ assert-type (Option :none)
+                    quote $ Option E
                   , state
               (:failed request-id error)
                 if
@@ -6889,7 +6974,9 @@
                 pending $ resource-reducer idle $ resource-started 1
               resource-reducer pending $ resource-ready 1 $ {}
                 :items $ [] :a :b
-          :schema $ quote $ Fn respo.resource/ResourceState respo.resource/ResourceAction (-> respo.resource/ResourceState)
+          :schema $ quote $ Fn (respo.resource/ResourceState T E) (respo.resource/ResourceAction T E)
+            -> $ respo.resource/ResourceState T E
+            :generics T E
           :tests $ []
             %{} 'TestEntry (:name |handles-refresh-stale-and-error-results)
               :code $ quote $ let
@@ -6948,7 +7035,9 @@
               raise "|[Respo/resource-started] expected a numeric request id"
             ResourceAction :started request-id
           :examples $ []
-          :schema $ quote $ Fn Number (-> respo.resource/ResourceAction)
+          :schema $ quote $ Fn Number
+            -> $ respo.resource/ResourceAction T E
+            :generics T E
         'resource-state? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn resource-state? (x)
             and (struct? x)
@@ -7156,7 +7245,12 @@
           :code $ quote $ defstruct Effect (:name Tag)
             :coord $ quote $ List CoordKey
             :args $ quote $ List Dynamic
-            :method $ quote $ Fn (List Dynamic) (List Dynamic) (-> Unit)
+            :method $ quote $ Fn (List Dynamic) respo.schema/EffectParams (-> Unit)
+          :examples $ []
+          :schema $ quote StructDef
+        'EffectParams $ %{} 'CodeEntry
+          :doc "|Lifecycle values Respo passes to an effect method: `:action` (`:mount`, `:before-update`, `:update` or `:unmount`), the component's root DOM element as `:target`, and `:at-place?`. `defeffect` binds them to the names you write, so `(action el at-place?)` still works."
+          :code $ quote $ defstruct EffectParams (:action Tag) (:target respo.dom/DomElement) (:at-place? Bool)
           :examples $ []
           :schema $ quote StructDef
         'Element $ %{} 'CodeEntry (:doc |)
@@ -7175,11 +7269,11 @@
           :examples $ []
           :schema $ quote StructDef
         'EventHandler $ %{} 'CodeEntry
-          :doc "|Event callback signature. Respo delivers an immutable map produced by event->edn together with the application dispatch function, which accepts exactly one value of the entry's :dispatch-op type. The exported value is a no-op callback, matching the declared callable type rather than a Unit placeholder."
+          :doc "|Event callback signature. Respo delivers the respo.schema/RespoEvent produced by event->edn together with the application dispatch function, which accepts exactly one value of the entry's :dispatch-op type. The exported value is a no-op callback, matching the declared callable type rather than a Unit placeholder."
           :code $ quote $ def EventHandler
             fn (_event _dispatch!) &unit
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic)
+          :schema $ quote $ Fn respo.schema/RespoEvent
             Fn *dispatch-op $ -> Unit
             -> Unit
         'KeyboardInfo $ %{} 'CodeEntry
@@ -7197,12 +7291,11 @@
           :examples $ []
           :schema $ quote EnumDef
         'RespoEvent $ %{} 'CodeEntry
-          :doc "|Struct view of DOM event fields. It is not the value passed to event listeners: Respo calls listeners with the immutable Map<Tag, Dynamic> produced by event->edn (see EventHandler). Do not annotate callback events with RespoEvent; read fields from the Map with get and check their types."
-          :code $ quote $ defstruct RespoEvent (:type Tag)
-            :value $ quote $ JsNullish Dynamic
+          :doc "|Event value passed to event handlers (see EventHandler), built by event->edn. `:type` is the event name as a Tag and `:original-event` / `:event` hold the native event; fields that do not apply to the event type are nil. Read fields with `(:value e)`, or use event-value, event-checked? and keyboard-info for checked reads."
+          :code $ quote $ defstruct RespoEvent (:type Tag) (:value Dynamic)
             :checked $ quote $ JsNullish Bool
-            :original-event Dynamic
-            :event Dynamic
+            :original-event respo.dom/DomEvent
+            :event respo.dom/DomEvent
             :key $ quote $ JsNullish String
             :code $ quote $ JsNullish String
             :key-code $ quote $ JsNullish Number
@@ -7225,6 +7318,12 @@
           :schema $ quote $ Map Dynamic Dynamic
         'StyleKey $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defunion StyleKey Tag String
+          :examples $ []
+          :schema $ quote UnionDef
+        'TextStyle $ %{} 'CodeEntry
+          :doc "|Optional style argument of `respo.core/<>`: a class-name String or a style map."
+          :code $ quote $ defunion TextStyle String
+            quote $ Map Tag respo.schema/CssValue
           :examples $ []
           :schema $ quote UnionDef
         'cache-info $ %{} 'CodeEntry (:doc |)
@@ -7539,7 +7638,7 @@
             let
                 calls $ ref 0
                 actions $ ref $ assert-type ([])
-                  quote $ List respo.resource/ResourceAction
+                  quote $ List $ respo.resource/ResourceAction Dynamic Dynamic
                 request-id $ load-resource!
                   fn () (swap! calls inc) |ready
                   fn (action) (swap! actions conj action) &unit
@@ -7547,15 +7646,15 @@
               assert |resource-load-starts-synchronously $ = (resource-started request-id)
                 assert-type
                   option:unwrap $ first @actions
-                  , 'respo.resource/ResourceAction
+                  quote $ respo.resource/ResourceAction Dynamic Dynamic
               shared/queue-microtask! $ fn () (swap! *async-checks inc)
                 assert |resolved-resource-emits-ready $ = (resource-ready request-id |ready)
                   assert-type
                     option:unwrap $ get @actions 1
-                    , 'respo.resource/ResourceAction
+                    quote $ respo.resource/ResourceAction Dynamic Dynamic
             let
                 actions $ ref $ assert-type ([])
-                  quote $ List respo.resource/ResourceAction
+                  quote $ List $ respo.resource/ResourceAction Dynamic Dynamic
                 request-id $ load-resource!
                   fn () $ raise |offline
                   fn (action) (swap! actions conj action) &unit
@@ -7570,7 +7669,7 @@
                 _ $ assert |expected-failed-resource-action false
             let
                 actions $ ref $ assert-type ([])
-                  quote $ List respo.resource/ResourceAction
+                  quote $ List $ respo.resource/ResourceAction Dynamic Dynamic
                 request-id $ load-resource!
                   fn () |ready
                   fn (action) (swap! actions conj action)
@@ -7814,7 +7913,7 @@
             :code $ quote $ do
               assert= true $ respo.util.detect/effect? $ respo.schema/Effect :name :probe :coord ([]) :args ([]) :method
                 fn (coord args)
-                  hint-fn $ Fn (List Dynamic) (List Dynamic) (-> Unit)
+                  hint-fn $ Fn (List Dynamic) respo.schema/EffectParams $ -> Unit
                   , &unit
               assert= false $ respo.util.detect/effect? $ respo.schema/Component :name :probe :effects ([]) :listeners ([])
               assert= false $ respo.util.detect/effect? nil
@@ -8077,16 +8176,14 @@
           :examples $ []
           :schema $ quote JsObject
         'event->edn $ %{} 'CodeEntry
-          :doc "|Converts a native DOM event into a Respo EDN event structure."
+          :doc "|Converts a native DOM event into the `respo.schema/RespoEvent` struct passed to event handlers."
           :code $ quote $ defn event->edn (event)
             let
                 event-type $ event.:type
                 keyboard-event $ unsafe-coerce event 'respo.dom/DomKeyboardEvent
-              -> (event-base-edn event event-type keyboard-event) (.assoc :original-event event) (.assoc :event event)
+              event-base-edn event event-type keyboard-event
           :examples $ []
-          :schema $ quote $ Fn respo.dom/DomEvent
-            -> $ Map Tag Dynamic
-            :features :js-ffi
+          :schema $ quote $ Fn respo.dom/DomEvent (-> respo.schema/RespoEvent) (:features :js-ffi)
         'event->prop $ %{} 'CodeEntry
           :doc "|Converts an event keyword (e.g. :click) to a prop name string (e.g. 'onclick')."
           :code $ quote $ defn event->prop (x)
@@ -8104,28 +8201,25 @@
               assert= |click $ respo.util.format/event->string :on-click
               assert= |change $ respo.util.format/event->string |on-change
             :tags $ #{} :unit
-        'event-base-edn $ %{} 'CodeEntry (:doc "|按事件类型构造事件 EDN 的基础字段。")
+        'event-base-edn $ %{} 'CodeEntry
+          :doc "|按事件类型构造 RespoEvent：先填好 :type 和原生事件，其余字段为 nil，再按事件类型补上键盘或输入字段。"
           :code $ quote $ defn event-base-edn (event event-type keyboard-event)
-            match event-type
-              |click $ {} $ :type :click
-              |keydown $ -> (map-keyboard-event keyboard-event) (&map:assoc :type :keydown)
-                &map:assoc :key-code $ keyboard-event.:key-code
-                &map:assoc :keycode $ keyboard-event.:key-code
-              |keypress $ &map:assoc (map-keyboard-event keyboard-event) :type :keypress
-              |keyup $ &map:assoc (map-keyboard-event keyboard-event) :type :keyup
-              |input $ {} (:type :input)
-                :value $ input-event-value event
-                :checked $ input-event-checked? event
-              |change $ {} (:type :change)
-                :value $ input-event-value event
-                :checked $ input-event-checked? event
-              |focus $ {} $ :type :focus
-              _ $ {} (:type event-type)
-                :msg $ str "|Unhandled event: " event-type
+            let
+                base $ respo.schema/RespoEvent :type (turn-tag event-type) :value nil :checked nil :original-event event :event event :key nil :code nil :key-code nil :keycode nil :ctrl? nil :meta? nil :alt? nil :shift? nil :msg nil
+              match event-type (|click base)
+                |keydown $ -> (map-keyboard-event base keyboard-event) (&struct:assoc :key-code keyboard-event.:key-code) (&struct:assoc :keycode keyboard-event.:key-code)
+                |keypress $ map-keyboard-event base keyboard-event
+                |keyup $ map-keyboard-event base keyboard-event
+                |input $ -> base
+                  &struct:assoc :value $ input-event-value event
+                  &struct:assoc :checked $ input-event-checked? event
+                |change $ -> base
+                  &struct:assoc :value $ input-event-value event
+                  &struct:assoc :checked $ input-event-checked? event
+                |focus base
+                _ $ &struct:assoc base :msg $ str "|Unhandled event: " event-type
           :examples $ []
-          :schema $ quote $ Fn respo.dom/DomEvent String respo.dom/DomKeyboardEvent
-            -> $ Map Tag Dynamic
-            :features :js-ffi
+          :schema $ quote $ Fn respo.dom/DomEvent String respo.dom/DomKeyboardEvent (-> respo.schema/RespoEvent) (:features :js-ffi)
         'get-style-value $ %{} 'CodeEntry
           :doc "|Formats a typed style value for a given property. Adds px to numeric values when the property expects units and drops the colon from tags. Values from props or style maps are Dynamic; format them with `style-value-text`, which checks the value and turns nil into an empty string."
           :code $ quote $ defn get-style-value (x prop)
@@ -8188,19 +8282,11 @@
           :examples $ []
           :schema $ quote $ Fn respo.dom/DomEvent (-> Dynamic) (:features :js-ffi)
         'map-keyboard-event $ %{} 'CodeEntry
-          :doc "|Extracts key information from a JavaScript KeyboardEvent."
-          :code $ quote $ defn map-keyboard-event (event)
-            {}
-              :key $ event.:key
-              :code $ event.:code
-              :ctrl? $ event.:ctrl-key
-              :meta? $ event.:meta-key
-              :alt? $ event.:alt-key
-              :shift? $ event.:shift-key
+          :doc "|Copies key information from a JavaScript KeyboardEvent into a RespoEvent."
+          :code $ quote $ defn map-keyboard-event (base event)
+            -> base (&struct:assoc :key event.:key) (&struct:assoc :code event.:code) (&struct:assoc :ctrl? event.:ctrl-key) (&struct:assoc :meta? event.:meta-key) (&struct:assoc :alt? event.:alt-key) (&struct:assoc :shift? event.:shift-key)
           :examples $ []
-          :schema $ quote $ Fn respo.dom/DomKeyboardEvent
-            -> $ Map Tag Dynamic
-            :features :js-ffi
+          :schema $ quote $ Fn respo.schema/RespoEvent respo.dom/DomKeyboardEvent (-> respo.schema/RespoEvent) (:features :js-ffi)
         'mute-element $ %{} 'CodeEntry
           :doc "|Recursively remove event handlers from a component or element tree.\n\nThis is used in SSR-related flows where the initial HTML should not carry live client event functions."
           :code $ quote $ defn mute-element (element)
@@ -8211,7 +8297,7 @@
             :code $ quote $ let
                 leaf $ respo.schema/Element :name :span :coord (Option :none) :attrs ([]) :style ([]) :children ([]) :ref nil :event $ {}
                   :click $ fn (_event _dispatch!)
-                    hint-fn $ Fn (Map Tag Dynamic)
+                    hint-fn $ Fn respo.schema/RespoEvent
                       Fn Dynamic $ -> Unit
                       -> Unit
                     , &unit
@@ -8219,7 +8305,7 @@
                   [] (respo.util.detect/make-child-pair :child leaf) (respo.util.detect/make-child-pair :empty nil)
                   , :ref nil :event $ {}
                     :click $ fn (_event _dispatch!)
-                      hint-fn $ Fn (Map Tag Dynamic)
+                      hint-fn $ Fn respo.schema/RespoEvent
                         Fn Dynamic $ -> Unit
                         -> Unit
                       , &unit

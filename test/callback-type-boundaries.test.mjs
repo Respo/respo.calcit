@@ -185,7 +185,7 @@ const effect = (args, types, result, body) => `respo.core/build-effect :test ([]
   fn (${args})
     hint-fn $ Fn ${types} (-> ${result})
     , ${body}`;
-const lists = "(List Dynamic) (List Dynamic)";
+const lists = "(List Dynamic) respo.schema/EffectParams";
 const patchEffect = (variant, args, types, result, body) => `respo.schema/DomPatch :${variant} ([]) ([])
   fn (${args})
     hint-fn $ Fn ${types} (-> ${result})
@@ -203,7 +203,7 @@ for (const [name, source] of [
     assert |identity $ = callback checked
     assert |result $ = 3 $ checked 2
     , &unit`)],
-  ['effect accepts its actual two-list Unit callback', effect('args params', lists, 'Unit', '&unit')],
+  ['effect accepts its actual args-and-params Unit callback', effect('args params', lists, 'Unit', '&unit')],
 ]) {
   test(name, () => {
     const result = evaluate(source);
@@ -219,7 +219,7 @@ for (const [name, source, diagnostics] of [
   ['effect rejects wrong callback parameter types', effect('args params', "Number Number", 'Unit', '&unit'),
     [/W_FN_ARG_TYPE_MISMATCH/, /Function `respo.core\/build-effect` arg 3/, /but got `fn\(:number, :number\) -> :unit`/]],
   ['effect rejects a non-Unit callback result', effect('args params', lists, 'Number', '42'),
-    [/W_FN_ARG_TYPE_MISMATCH/, /Function `respo.core\/build-effect` arg 3/, /but got `fn\(list<dynamic>, list<dynamic>\) -> :number`/]],
+    [/W_FN_ARG_TYPE_MISMATCH/, /Function `respo.core\/build-effect` arg 3/, /but got `fn\(list<dynamic>, 'respo.schema\/EffectParams\) -> :number`/]],
   ['mount patch rejects Number as callback target', patchEffect('effect-mount', 'target', "Number", 'Unit', '&unit'),
     [/Enum `DomPatch::effect-mount` payload 3 expects type/, /but got `fn\(:number\) -> :unit`/]],
   ['unmount patch rejects two callback parameters', patchEffect('effect-unmount', 'a b', "respo.dom/DomElement respo.dom/DomElement", 'Unit', '&unit'),
@@ -249,8 +249,8 @@ for (const [field, wrap, absent] of [
   [':on-input', callback => `(Option :some ${callback})`, '(Option :none)'],
   [':on', callback => `(Option :some ({} (:input ${callback})))`, '(Option :some ({} (:input nil)))'],
 ]) {
-  test(`DomProps ${field} accepts the Map event delivered by event->edn`, () => {
-    const result = evaluate(domPropsWith(field, wrap(listener('(Map Tag Dynamic)'))));
+  test(`DomProps ${field} accepts the RespoEvent delivered by event->edn`, () => {
+    const result = evaluate(domPropsWith(field, wrap(listener('respo.schema/RespoEvent'))));
     assert.equal(result.status, 0, result.output);
   });
 
@@ -259,11 +259,11 @@ for (const [field, wrap, absent] of [
     assert.equal(result.status, 0, result.output);
   });
 
-  test(`DomProps ${field} rejects a RespoEvent-typed listener`, () => {
-    const result = evaluate(domPropsWith(field, wrap(listener('respo.schema/RespoEvent'))));
-    assert.notEqual(result.status, 0, 'listeners receive a Map, not a RespoEvent Struct');
+  test(`DomProps ${field} rejects a Map-typed listener`, () => {
+    const result = evaluate(domPropsWith(field, wrap(listener('(Map Tag Dynamic)'))));
+    assert.notEqual(result.status, 0, 'listeners receive a RespoEvent Struct, not a Map');
     assert.match(result.output, new RegExp(`field \`${field}\` expects type`));
-    assert.match(result.output, /respo\.schema\/RespoEvent/);
+    assert.match(result.output, /map<:tag,dynamic>/);
     assert.doesNotMatch(result.output, /took [\d.]+ms:/, 'the invalid props must not run');
   });
 }
@@ -290,9 +290,9 @@ test('keyed-element rejects a Component node', () => {
 });
 
 for (const name of ['space-x', 'space-y']) {
-  test(`${name} rejects a non-Number size`, () => {
-    const result = evaluate(`respo.comp.space/${name} |8px`);
-    assert.notEqual(result.status, 0, 'String sizes must use comp-space');
+  test(`${name} rejects a non-CssValue size`, () => {
+    const result = evaluate(`respo.comp.space/${name} true`);
+    assert.notEqual(result.status, 0, 'sizes must be a CssValue');
     assert.match(result.output, /W_FN_ARG_TYPE_MISMATCH|E_CALL_ARGUMENT_MISMATCH/);
   });
 }

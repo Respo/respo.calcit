@@ -55,11 +55,12 @@ Respo 里剩下的 `Dynamic` 大多不是“还没来得及写”，而是当前
 | --- | --- | --- |
 | `div` 等元素函数 | `Fn PropsInput & Dynamic (-> Element)`，`:generics PropsInput` | props 接受 `nil`、`Map Tag _` 或 `respo.schema/DomProps`；子节点是 `Element`、`Component` 或 `nil` |
 | `create-element` | `Fn Tag PropsInput & Dynamic (-> Element)` | 同上，第一个参数是标签名 |
-| `<>` | `Fn String & Dynamic (-> Element)` | 第一个参数是文本；可选第二个参数是 class-name 字符串或 style map |
+| `<>` | `Fn String & TextStyle (-> Element)` | 第一个参数是文本；可选第二个参数是 `respo.schema/TextStyle`：class-name 字符串或 `Map Tag CssValue`。传入的样式 def 要写 `Map Tag respo.schema/CssValue` schema，裸 `Map` 会被拒绝 |
 | `list->` | `Fn PropsInput (List (List Dynamic)) (-> Element)` | 子节点是 `[key child]` 对，key 为 Tag、String 或 Number |
 | `for-keyed` | `Fn (List T) (Fn T (-> K)) (Fn T Number (-> Dynamic)) (-> (List (List Dynamic)))`，`:generics T K` | items 和 key-fn 是精确泛型；渲染结果仍是开放的子节点 |
 | `defcomp` | 宏，生成 `Fn … (-> Component)` | 组件参数的类型写在组件定义的 schema 上 |
-| `comp-space` / `=<` | `Fn Dynamic Dynamic (-> Component)` | 宽、高传 Number 或 `nil`；不用的一侧传 `nil`，不要传 `&unit` |
+| `space-x` / `space-y` | `Fn CssValue (-> Component)` | 水平或垂直间隔；Number 按像素，String / Tag 原样使用 |
+| `comp-space` / `=<` | `Fn Dynamic Dynamic (-> Component)` | 已标记 `:deprecated`，改用 `space-x` / `space-y`。用 `nil` 表示不设的写法无法写类型，而且非 nil 的宽度优先，`=< 0 16` 得到的是宽 0 |
 
 props 最好用 `respo.schema/DomProps` 记录或字面量 `{}`。`DomProps` 的事件字段按
 `EventHandler` 检查，类型写错会在预处理阶段报出来，见 [DOM Events](./dom-events.md)。
@@ -108,14 +109,16 @@ defcomp comp-task (states task)
 
 | API | schema | 说明 |
 | --- | --- | --- |
-| `respo.schema/EventHandler` | `Fn (Map Tag Dynamic) (Fn *dispatch-op (-> Unit)) (-> Unit)` | 事件是 `event->edn` 生成的不可变 Map，不是 `RespoEvent` |
+| `respo.schema/EventHandler` | `Fn RespoEvent (Fn *dispatch-op (-> Unit)) (-> Unit)` | 事件是 `event->edn` 生成的 `respo.schema/RespoEvent` struct |
 | `event-value` | `Fn Dynamic (-> String)` | 读取 `:value` 并检查是字符串 |
 | `event-checked?` | `Fn Dynamic (-> Bool)` | 读取 `:checked` 并检查是布尔值 |
 | `keyboard-info` | `Fn Dynamic (-> KeyboardInfo)` | 读取键盘字段，得到 `respo.schema/KeyboardInfo` 记录 |
 | `d!` | `Fn *dispatch-op (-> Unit)` | `*dispatch-op` 是类型槽，由每个 entry 绑定到应用的 `Op` |
 
-事件 Map 的字段类型因事件而异，所以 handler 的第一个参数写 `Map Tag Dynamic`。
-读字段时用上面三个函数，它们在边界检查类型并返回精确值。`d!` 的类型由
+handler 的第一个参数是 `respo.schema/RespoEvent`：`:type` 是 Tag，`:original-event` / `:event`
+是原生 `respo.dom/DomEvent`，`:key`、`:checked`、`:key-code` 等字段在不相关的事件里为 nil，
+`:value` 保持开放（自定义元素的 value 可以是任意宿主值）。字段用 `(:value e)` 读取，
+需要确定类型时用上面三个函数，它们在边界检查类型并返回精确值，也仍接受普通 Map。`d!` 的类型由
 `calcit config set-type-slot :dispatch-op app.schema/Op` 决定，绑定后写错的 Op 会被
 检查出来，见 [Typed dispatch](./type-slots.md)。
 
@@ -135,14 +138,17 @@ defcomp comp-task (states task)
 
 | API | schema | 说明 |
 | --- | --- | --- |
-| `effect-on-mount` / `effect-on-unmount` | `Fn Fn (-> Effect)` | 回调收到挂载的 DOM 节点 |
-| `effect-on-update` | `Fn (List Dynamic) (Fn Dynamic (-> Unit)) (-> Effect)` | 依赖列表由应用决定，回调收到 DOM 节点 |
-| `effect-watch` | `Fn (List Dynamic) (Fn Dynamic (-> Unit)) (Option (Fn Dynamic (-> Unit))) (-> Effect)` | setup 和可选的 cleanup |
-| `respo.ffi.browser/effect-element` | `Fn Dynamic (-> DomElement)` | 在只跑浏览器的 effect 里把节点检查成 `DomElement` |
+| `effect-on-mount` / `effect-on-unmount` | `Fn (Fn DomElement (-> Unit)) (-> Effect)` | 回调收到挂载的 DOM 节点 |
+| `effect-on-update` | `Fn (List Dynamic) (Fn DomElement (-> Unit)) (-> Effect)` | 依赖列表由应用决定，回调收到 DOM 节点 |
+| `effect-watch` | `Fn (List Dynamic) (Fn DomElement (-> Unit)) (Option (Fn DomElement (-> Unit))) (-> Effect)` | setup 和可选的 cleanup |
+| `Effect :method` | `Fn (List Dynamic) EffectParams (-> Unit)` | `respo.schema/EffectParams` 带 `:action`、`:target`（`DomElement`）和 `:at-place?` |
 
-回调参数是 `Dynamic`，因为同一个 effect 在 SSR 和测试里拿到的不是浏览器节点。
-只在浏览器里运行的 effect 先用 `effect-element` 把它转成 `respo.dom/DomElement`，
-之后的 DOM 调用就都有类型了。
+effect 只在浏览器里运行（SSR 不执行 effect），所以回调和 `defeffect` 的 `el` 直接是
+`respo.dom/DomElement`。这个 trait 覆盖了 effect 常用的成员：布局读取（`:offset-*`、`:client-*`、
+`:scroll-*`）、兄弟节点、`.closest`、`.contains?`、`.clone-node`、属性读写、`.focus!`、
+`.scroll-into-view!` 等。trait 里没有的宿主成员，在应用自己的 `:js-ffi` 适配函数里读取。
+原生测试里可以用 `respo.core/stub-dom-target` 代替真实节点。依赖列表和 memo 参数仍是
+`Dynamic`，原因见审查文档：它们是调用方随手写的异构列表，需要变长泛型才能写准。
 
 ## Memo
 
@@ -158,12 +164,13 @@ defcomp comp-task (states task)
 
 | API | schema | 说明 |
 | --- | --- | --- |
-| `resource-idle` | `Fn (Option Dynamic) (-> ResourceState)` | 初始数据可选 |
-| `resource-reducer` | `Fn ResourceState ResourceAction (-> ResourceState)` | 纯函数状态迁移 |
-| `load-resource!` | `Fn (Fn (-> T)) (Fn ResourceAction (-> Unit)) (-> Number)`，`:generics T` | 返回请求 id |
+| `resource-idle` | `Fn (Option T) (-> ResourceState T E)`，`:generics T E` | 初始数据可选 |
+| `resource-reducer` | `Fn (ResourceState T E) (ResourceAction T E) (-> ResourceState T E)` | 纯函数状态迁移 |
+| `resource-ready` / `resource-failed` | `Fn Number T (-> ResourceAction T E)` / `Fn Number E (-> ResourceAction T E)` | 构造结果 |
+| `load-resource!` | `Fn (Fn (-> T)) (Fn (ResourceAction Dynamic Dynamic) (-> Unit)) (-> Number)`，`:generics T` | 返回请求 id；fetcher 可能返回 Promise、错误来自宿主，所以发出的 action 是 `Dynamic` 负载 |
 
-`ResourceState` 的 `:status` 是 Tag，`:request-id` 是 `Option Number`；`:data` 和
-`:error` 是 `Option Dynamic`。`:data` 初始为传给 `resource-idle` 的 Option（给了初始数据就是
+`ResourceState T E` 的 `:status` 是 Tag，`:request-id` 是 `Option Number`；`:data` 是
+`Option T`，`:error` 是 `Option E`。`:data` 初始为传给 `resource-idle` 的 Option（给了初始数据就是
 some，否则为 none），`:ready` 后为 `Option :some payload`（payload 可以是 nil）；`:error` 初始为
 none，`:failed` 后为 `Option :some error`。
 取出负载后在应用里用 `try-decode-map-as` 解码成自己的类型。
