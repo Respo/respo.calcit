@@ -82,7 +82,7 @@
                   div ({})
                     <> $ str state
           :examples $ []
-          :schema $ quote $ Fn Dynamic respo.app.schema/Task (-> respo.schema/Component)
+          :schema $ quote $ Fn respo.schema/States respo.app.schema/Task (-> respo.schema/Component)
         'effect-log $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defeffect effect-log (task) (action parent at-place?) (; js/console.log "|Task effect" action at-place?)
             match action
@@ -188,7 +188,7 @@
                     {} $ :style $ {} (:padding |8px) (:font-size 12) (:color |#999) (:margin-top |16px)
                     <> message
           :examples $ []
-          :schema $ quote $ Fn Dynamic (List respo.app.schema/Task) (-> respo.schema/Component)
+          :schema $ quote $ Fn respo.schema/States (List respo.app.schema/Task) (-> respo.schema/Component)
         'effect-focus $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defeffect effect-focus (pattern) (action parent at-place?)
             when
@@ -208,7 +208,7 @@
           :code $ quote $ defn on-focus (e dispatch!) (println "|Just focused~") &unit
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic)
-            Fn Dynamic $ -> Unit
+            Fn respo.app.schema/Op $ -> Unit
             -> Unit
         'on-keydown $ %{} 'CodeEntry
           :doc "|Creates a keyboard listener for Ctrl+M shortcut. This function demonstrates how to create component-local listeners that can access component state through closures. Returns a RespoListener that updates the message state when Ctrl+M is pressed."
@@ -230,13 +230,13 @@
           :examples $ [] $ quote
             on-keydown ([] :todolist)
               %{} respo.app.schema/TodoState (:draft |task) (:locked? false) (:message |)
-          :schema $ quote $ Fn (List Dynamic) respo.app.schema/TodoState (-> respo.schema/RespoListener) (:features :js-ffi)
+          :schema $ quote $ Fn (List respo.schema/CoordKey) respo.app.schema/TodoState (-> respo.schema/RespoListener) (:features :js-ffi)
         'on-test $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn on-test (e dispatch!) (println "|trigger test!")
             try-test! dispatch! $ []
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic)
-            Fn Dynamic $ -> Unit
+            Fn respo.app.schema/Op $ -> Unit
             -> Unit
         'style-bold! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-bold!
@@ -248,12 +248,12 @@
             {} (:color :black)
               :background-color $ hsl 120 20 98
           :examples $ []
-          :schema $ quote Map
+          :schema $ quote $ Map Tag respo.schema/CssValue
         'style-panel $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def style-panel
             {} (:display :flex) (:margin-bottom 4)
           :examples $ []
-          :schema $ quote Map
+          :schema $ quote $ Map Tag respo.schema/CssValue
         'style-todo-root $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-todo-root
             {} $ |& $ {} (:color :black)
@@ -302,7 +302,7 @@
                 , &unit
           :examples $ []
           :schema $ quote $ Fn
-            Fn Dynamic $ -> Unit
+            Fn respo.app.schema/Op $ -> Unit
             List Number
             -> Unit
             :features :js-ffi
@@ -434,13 +434,13 @@
         'Op $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum Op
             :states
-              quote $ List Dynamic
+              quote $ List respo.schema/CoordKey
               , Dynamic
             :states-kv
-              quote $ List Dynamic
+              quote $ List respo.schema/CoordKey
               , Dynamic Dynamic
             :states-merge
-              quote $ List Dynamic
+              quote $ List respo.schema/CoordKey
               , respo.app.schema/TodoState Dynamic
             :add String
             :remove String
@@ -454,7 +454,7 @@
           :code $ quote $ defstruct Store
             :tasks $ quote $ List respo.app.schema/Task
             :states respo.schema/States
-            :cursor $ quote $ List Dynamic
+            :cursor $ quote $ List respo.schema/CoordKey
           :examples $ []
           :schema $ quote StructDef
         'Task $ %{} 'CodeEntry (:doc |)
@@ -489,7 +489,7 @@
               :line-height |28px
               :transition-duration |200ms
           :examples $ []
-          :schema $ quote Map
+          :schema $ quote $ Map Tag respo.schema/CssValue
         'style-button $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-button
             {} (:& button)
@@ -1049,7 +1049,7 @@
           :code $ quote $ defn find-child-by-key (children expected-key)
             option:map (find-child-node children expected-key) respo.util.detect/render-node-value
           :examples $ []
-          :schema $ quote $ Fn (List respo.schema/ChildPair) Dynamic
+          :schema $ quote $ Fn (List respo.schema/ChildPair) respo.schema/CoordKey
             -> $ Option Struct
         'find-child-node $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn find-child-node (children expected-key)
@@ -2923,12 +2923,13 @@
               calcit.core/get (as-states-map states) :cursor
               (:some raw-cursor)
                 if (nil? raw-cursor) ([])
-                  if (list? raw-cursor) raw-cursor $ raise $ str "|[Respo] expected states cursor as a list, got: " (type-of raw-cursor)
+                  if (list? raw-cursor) (map raw-cursor respo.util.list/read-coord-key)
+                    raise $ str "|[Respo] expected states cursor as a list, got: " $ type-of raw-cursor
               (:none) ([])
           :examples $ [] $ quote
             state-cursor $ >> ({}) :todolist
           :schema $ quote $ Fn Dynamic
-            -> $ List Dynamic
+            -> $ List respo.schema/CoordKey
           :tests $ [] $ %{} 'TestEntry (:name |reads-cursor)
             :code $ quote $ do
               assert= ([]) (state-cursor nil)
@@ -4400,7 +4401,7 @@
               (:some key)
                 do (eprintln "|duplicated key" key) true
           :examples $ []
-          :schema $ quote $ Fn (List Dynamic) (-> Bool)
+          :schema $ quote $ Fn (List respo.schema/CoordKey) (-> Bool)
         'find-children-diffs $ %{} 'CodeEntry
           :doc "|Reconcile whole keyed lists with common prefix/suffix trimming and an LIS over retained source positions. Update retained children before structural edits; remove missing nodes in descending order, append new nodes, and then move from right to left using stable node snapshots. Moves preserve DOM identity and component mount/unmount lifecycle."
           :code $ quote $ defn find-children-diffs (collect! coord n-coord index old-pairs-input new-pairs-input)
@@ -8525,11 +8526,12 @@
             assert (fn? f) "|expects function"
             assert (list? xs) "|expects list"
             map-indexed xs $ fn (idx x)
+              hint-fn $ Fn Number A $ -> (Tuple Number B)
               [] idx $ f x
           :examples $ []
           :schema $ quote $ Fn (List A)
             Fn A $ -> B
-            -> $ List $ List Dynamic
+            -> $ List $ Tuple Number B
             :generics A B
         'pair-first $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn pair-first (pair) (&list:nth pair 0)
