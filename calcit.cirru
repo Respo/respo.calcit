@@ -2689,13 +2689,13 @@
                       fn (acc pair)
                         hint-fn $ Fn (Map respo.schema/StyleKey respo.schema/CssValue) (List Dynamic)
                           -> $ Map respo.schema/StyleKey respo.schema/CssValue
-                        match
-                          resolve-prop-value $ &list:nth pair 1
-                          (:some style-value)
-                            &map:assoc acc
-                              respo.util.format/read-style-key $ &list:nth pair 0
-                              respo.util.format/read-css-value style-value
-                          (:none) acc
+                        &let
+                          style-key $ respo.util.format/read-style-key $ &list:nth pair 0
+                          match
+                            resolve-prop-value $ &list:nth pair 1
+                            (:some style-value)
+                              &map:assoc acc style-key $ respo.util.format/read-css-value style-value
+                            (:none) acc
                     raise $ str "|[Respo] expected :style to be a map, got: " $ type-of value
           :examples $ []
           :schema $ quote $ Fn (Option Dynamic)
@@ -2718,6 +2718,9 @@
                 fn (error) (str error)
               assert |rejects-number-key $ string? $ try
                 props-style-map $ Option :some $ {} (1 |red)
+                fn (error) (str error)
+              assert |rejects-number-key-with-absent-value $ string? $ try
+                props-style-map $ Option :some $ {} (1 nil)
                 fn (error) (str error)
             :tags $ #{} :unit
         'realize-ssr! $ %{} 'CodeEntry

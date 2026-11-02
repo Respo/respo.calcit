@@ -87,8 +87,10 @@ props Map 和 `:style` Map 的值同样可以是 `Option`：`Option :some v` 取
 例如 `:states 'respo.schema/States`。它只是别名，不校验内部结构。`update-state-tree` 系列为了兼容
 非 map 的旧状态仍返回 `Dynamic`，写回这样的字段前用 `as-states-map` 收窄。
 
-组件的 `states` 参数本身保持 `Dynamic`：states 树把 `:cursor` 和各个子分支放在同一个
-map 里，是异构的，而且检查器不允许把 Dynamic 值直接传给 `States` 参数。读取自己的状态时用 `pick-state` 并给出 Struct 类型：
+组件的 `states` 参数可以声明成 `respo.schema/States`：调用方传入的是 `>>` 的结果，它已经是
+`States`（demo 的 `comp-task`、`comp-todolist` 就这样写）。如果调用方传的是没收窄的 Dynamic，
+检查器不允许直接传给 `States` 参数，这时参数保持 `Dynamic`，或者先用 `as-states-map` 收窄。
+states 树把 `:cursor` 和各个子分支放在同一个 map 里，是异构的，所以 `States` 本身仍是 `Map Dynamic Dynamic`。读取自己的状态时用 `pick-state` 并给出 Struct 类型：
 
 ```cirru.no-check
 defcomp comp-task (states task)
