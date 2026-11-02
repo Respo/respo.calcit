@@ -27,7 +27,7 @@ const { div, span } = await import('../js-out/respo.core.mjs');
 const { as_render_node, make_child_pair } = await import('../js-out/respo.util.detect.mjs');
 const { make_element } = await import('../js-out/respo.render.dom.mjs');
 const { compare_to_dom_$x_ } = await import('../js-out/respo.util.dom.mjs');
-const { add_style, replace_style, replace_prop } = await import('../js-out/respo.render.patch.mjs');
+const { add_style, replace_style, rm_style, replace_prop } = await import('../js-out/respo.render.patch.mjs');
 const { with_fixture_children, with_fixture_events } = await import('../js-out/respo.test.dom.mjs');
 const t = c.init_tags(['name', 'effects', 'listeners', 'tree', 'children', 'root', 'child']);
 const event = c.init_tags(['event', 'click', 'input']);
@@ -102,8 +102,9 @@ test('style updates retain the style object, camel names, units and clearing', (
   assert.equal(style.padding, '8px');
   assert.equal(style.opacity, '0.5');
   assert.equal(style.backgroundColor, 'red');
-  replace_style(target, props.padding, null);
-  assert.equal(style.padding, '');
+  // Clearing goes through rm-style; browsers treat a null declaration as removed.
+  rm_style(target, props.padding);
+  assert.equal(style.padding, null);
 });
 
 test('DOM creation keeps child order, component event coordinates, properties and styles', () => {
