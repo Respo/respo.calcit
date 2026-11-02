@@ -1,14 +1,20 @@
 ## Respo: A virtual DOM library in Calcit-js
 
-### 0.19.0 正式发布候选
+### 0.19.1 / Calcit 0.34.2 迁移
+
+常规 DOM props、HTML 输出和属性顺序保持；手动构造 `Element` 时，`:attrs` 需要是 `List (Tuple Tag Dynamic)`，每个成员是 Tag 键和属性值组成的两项列表。Map 转换产生的 Tuple 会保留键值类型，排序、属性合并、事件名和滚动恢复沿用该合同。当前候选配对 Calcit CLI / `@calcit/procs` 0.34.2、JS-FFI 0.2.10；应用需同步工具链与精确正式依赖图后重新构建。
+
+`show` 只传一个子节点时，缺省分支使用 `Option :none`，命中分支也统一为 Option；直接作为子节点渲染的行为保持。提供显式 fallback 的双分支调用保持原返回合同。
+
+### 0.19.0 事件接口
 
 事件回调现在接收名义 `RespoEvent`。事件参数显式标注为 `Map Tag Dynamic` 的回调需要迁移为 `respo.schema/RespoEvent`，使用字段读取及受检 helper。未标注类型的回调仍可使用 `get e :value`。详细说明见 [DOM events 指南](docs/guide/dom-events.md)。
 
-本候选配对 Calcit CLI 与 `@calcit/procs` 0.34.1、JS-FFI 0.2.10。Router、UI 及应用应使用匹配的精确正式依赖图后重新构建。0.19.0 尚待正式 tag 发布。
+0.19.0 已发布，原版本配对 Calcit CLI / `@calcit/procs` 0.34.1 和 JS-FFI 0.2.10。
 
-0.18 系列的 union 接口：配对 Calcit CLI / `@calcit/procs` `0.34.1`，开始使用受限 union（`defunion`）。新增 `respo.schema/CoordKey`（Tag、String、Number）和 `respo.schema/CssValue`（String、Number、Tag）。破坏性改动：`ChildPair :key`、`>>` 的 key、`keyed-element` / `keyed-component` 的 key 改为 `CoordKey`，传入 `Dynamic` 的调用要先用 `respo.util.list/read-coord-key` 检查；`list->` 遇到 Bool、集合等 key 会报错。`respo.util.format/get-style-value` 只接收 `CssValue`，开放样式值改用 `style-value-text`，它不再把其他类型的值转成字符串而是报错。`comp-inspect` 的第三个参数改为 `respo.comp.inspect/InspectStyle`（class-name 字符串或 `Map Tag CssValue`），不再接受 `nil`，没有额外样式时传 `{}`。逻辑坐标（`Element :coord`、`Effect :coord`、`DomPatch` 的坐标、`state-cursor` 的返回值）改为 `List CoordKey`；`Element :style` 改为 `List (Tuple StyleKey CssValue)`，新增 `respo.schema/StyleKey`（Tag、String），props 的 `:style` 在创建元素时就检查键和值，不合法时立即报错而不是渲染时才报；`add-style` / `replace-style` 不再接收 nil，清空用 `rm-style`。
+0.19.0 的 union 接口：配对 Calcit CLI / `@calcit/procs` `0.34.1`，开始使用受限 union（`defunion`）。新增 `respo.schema/CoordKey`（Tag、String、Number）和 `respo.schema/CssValue`（String、Number、Tag）。破坏性改动：`ChildPair :key`、`>>` 的 key、`keyed-element` / `keyed-component` 的 key 改为 `CoordKey`，传入 `Dynamic` 的调用要先用 `respo.util.list/read-coord-key` 检查；`list->` 遇到 Bool、集合等 key 会报错。`respo.util.format/get-style-value` 只接收 `CssValue`，开放样式值改用 `style-value-text`，它不再把其他类型的值转成字符串而是报错。`comp-inspect` 的第三个参数改为 `respo.comp.inspect/InspectStyle`（class-name 字符串或 `Map Tag CssValue`），不再接受 `nil`，没有额外样式时传 `{}`。逻辑坐标（`Element :coord`、`Effect :coord`、`DomPatch` 的坐标、`state-cursor` 的返回值）改为 `List CoordKey`；`Element :style` 改为 `List (Tuple StyleKey CssValue)`，新增 `respo.schema/StyleKey`（Tag、String），props 的 `:style` 在创建元素时就检查键和值，不合法时立即报错而不是渲染时才报；`add-style` / `replace-style` 不再接收 nil，清空用 `rm-style`。
 
-同一未发布版本的对外接口类型（破坏性）：事件回调的第一个参数从 `Map Tag Dynamic` 改为 `respo.schema/RespoEvent` struct（`(:value e)`、没写类型时的 `get e :value` 照常可用；未单独识别的事件 `:type` 从字符串改为 Tag），把事件标成 `Map Tag Dynamic` 的回调会被拒绝。effect 方法改收 `respo.schema/EffectParams`，`defeffect` 的 `el` 和 `effect-on-*` / `effect-watch` 回调参数都是 `respo.dom/DomElement`，`DomElement` trait 补上了布局读取、兄弟节点、`.closest`、`.clone-node`、属性读写等成员；`respo.ffi.browser/effect-element` 标记为 deprecated。`<>` 的样式参数改为 `respo.schema/TextStyle`（class-name 字符串或 `Map Tag CssValue`），传入的样式 def 需要写 `Map Tag respo.schema/CssValue` schema。`space-x` / `space-y` 接受任意 `CssValue`，`=<` / `comp-space` 标记 deprecated。`ResourceAction` / `ResourceState` 改为泛型 `ResourceAction T E` / `ResourceState T E`。
+0.19.0 的对外接口类型变化（破坏性）：事件回调的第一个参数从 `Map Tag Dynamic` 改为 `respo.schema/RespoEvent` struct（`(:value e)`、没写类型时的 `get e :value` 照常可用；未单独识别的事件 `:type` 从字符串改为 Tag），把事件标成 `Map Tag Dynamic` 的回调会被拒绝。effect 方法改收 `respo.schema/EffectParams`，`defeffect` 的 `el` 和 `effect-on-*` / `effect-watch` 回调参数都是 `respo.dom/DomElement`，`DomElement` trait 补上了布局读取、兄弟节点、`.closest`、`.clone-node`、属性读写等成员；`respo.ffi.browser/effect-element` 标记为 deprecated。`<>` 的样式参数改为 `respo.schema/TextStyle`（class-name 字符串或 `Map Tag CssValue`），传入的样式 def 需要写 `Map Tag respo.schema/CssValue` schema。`space-x` / `space-y` 接受任意 `CssValue`，`=<` / `comp-space` 标记 deprecated。`ResourceAction` / `ResourceState` 改为泛型 `ResourceAction T E` / `ResourceState T E`。
 
 0.18.0 起 props 用 `Option` 表示缺省：`respo.schema/DomProps` 的字段从 `JsNullish` 改为 `Option`，构造时省略的字段自动填入 `Option :none`；props Map 与 `:style` Map 的值也可以是 `Option`，`none` 表示不写该属性；子节点同样可以是 `Option`，`none` 与 `nil` 一样被跳过。普通值和 `nil` 的行为不变。逐个字段写 `nil` 构造 `DomProps` 的代码需要改成只写用到的字段，并用 `Option :some` 包装取值。
 
