@@ -3198,7 +3198,29 @@
                     class-rule $ str |. style-name
                     rule-name $ &str:replace (&str:replace k |$0 class-rule) |& class-rule
                     contained $ calcit.core/get styles-map :contained
-                    css-line $ style->string $ &map:to-list styles-map
+                    entries-in-block $ &map:to-list styles-map
+                    declarations $ filter entries-in-block $ fn (entry)
+                      and
+                        not $ map? $ &list:nth entry 1
+                        not $ &= :contained $ &list:nth entry 0
+                    nested-blocks $ map
+                      &list:sort-by
+                        filter entries-in-block $ fn (entry)
+                          map? $ &list:nth entry 1
+                        , respo.util.list/pair-key-text
+                      fn (entry)
+                        &let
+                          inner $ &list:nth entry 1
+                          if (map? inner)
+                            str (respo.util.list/pair-key-text entry) (char-from-code 32) |{ &newline
+                              style->string $ &map:to-list inner
+                              , &newline |}
+                            , |
+                    css-line $ cond
+                        empty? nested-blocks
+                        style->string declarations
+                      (empty? declarations) (calcit.core/join-string nested-blocks &newline)
+                      true $ str (style->string declarations) &newline $ calcit.core/join-string nested-blocks &newline
                     block $ match contained
                       (:some contained)
                         if (calcit.core/non-nil? contained)
@@ -3210,6 +3232,17 @@
                   recur next-acc $ &list:rest xs
           :examples $ []
           :schema $ quote $ Fn String Dynamic (-> String) (:features :js-ffi)
+          :tests $ [] $ %{} 'TestEntry (:name |renders-nested-blocks)
+            :code $ quote $ do
+              assert= "|.box {\ncolor:red;\n}" $ render-css-block |box $ {}
+                |& $ {} $ :color :red
+              assert= "|@keyframes pulse {\nfrom {\nopacity:0.45;\n}\nto {\nopacity:1;\n}\n}" $ render-css-block |box $ {}
+                "|@keyframes pulse" $ {}
+                  |to $ {} $ :opacity 1
+                  |from $ {} $ :opacity 0.45
+              assert= "|@media (max-width: 600px) {\n.box {\nwidth:4px;\n}\n}" $ render-css-block |box $ {}
+                |& $ {} (:width 4) (:contained "|@media (max-width: 600px)")
+            :tags $ #{} :unit
         'warn-style-literals $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn warn-style-literals (x)
             if (list? x)
