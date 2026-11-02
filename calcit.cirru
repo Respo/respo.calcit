@@ -6795,17 +6795,17 @@
           :examples $ []
           :schema $ quote $ Ref Number
         'ResourceAction $ %{} 'CodeEntry
-          :doc "|Immutable request lifecycle enum: :started carries request-id; :ready carries request-id and data; :failed carries request-id and error."
-          :code $ quote $ defenum ResourceAction (:started Number) (:ready Number Dynamic) (:failed Number Dynamic)
+          :doc "|Immutable request lifecycle enum, generic over the payload `T` and the error `E`: :started carries request-id; :ready carries request-id and data; :failed carries request-id and error."
+          :code $ quote $ defenum ResourceAction ([] T E) (:started Number) (:ready Number T) (:failed Number E)
           :examples $ []
           :schema $ quote EnumDef
           :tags $ #{} :data
         'ResourceState $ %{} 'CodeEntry
-          :doc "|Immutable resource state record. :data and :error are Options around application payloads: :data holds the initial data given to resource-idle or the last :ready payload, :error the last failure; :status and :request-id drive deterministic reducer transitions."
-          :code $ quote $ defstruct ResourceState (:status Tag)
+          :doc "|Immutable resource state record, generic over the payload `T` and the error `E`. :data and :error are Options around application payloads: :data holds the initial data given to resource-idle or the last :ready payload, :error the last failure; :status and :request-id drive deterministic reducer transitions."
+          :code $ quote $ defstruct ResourceState ([] T E) (:status Tag)
             :request-id $ quote $ Option Number
-            :data $ quote $ Option Dynamic
-            :error $ quote $ Option Dynamic
+            :data $ quote $ Option T
+            :error $ quote $ Option E
           :examples $ []
           :schema $ quote StructDef
           :tags $ #{} :data
@@ -6833,7 +6833,7 @@
           :examples $ []
           :schema $ quote $ Fn
             Fn $ -> T
-            Fn respo.resource/ResourceAction $ -> Unit
+            Fn (respo.resource/ResourceAction Dynamic Dynamic) (-> Unit)
             -> Number
             :generics T
             :features :js-ffi
@@ -6883,7 +6883,9 @@
               raise "|[Respo/resource-failed] expected a numeric request id"
             ResourceAction :failed request-id error
           :examples $ []
-          :schema $ quote $ Fn Number Dynamic (-> respo.resource/ResourceAction)
+          :schema $ quote $ Fn Number E
+            -> $ respo.resource/ResourceAction T E
+            :generics T E
         'resource-idle $ %{} 'CodeEntry
           :doc "|Creates an immutable idle ResourceState with optional initial data."
           :code $ quote $ defn resource-idle (initial-data-option)
@@ -6892,7 +6894,9 @@
             quote $ resource-idle $ Option :none
             quote $ resource-idle $ Option :some
               {} $ :items $ []
-          :schema $ quote $ Fn (calcit.core/Option Dynamic) (-> respo.resource/ResourceState)
+          :schema $ quote $ Fn (calcit.core/Option T)
+            -> $ respo.resource/ResourceState T E
+            :generics T E
           :tests $ [] $ %{} 'TestEntry (:name |preserves-option-initial-data)
             :code $ quote $ let
                 payload $ {} $ :items ([])
@@ -6916,7 +6920,7 @@
               or (= status :pending) (= status :refreshing)
           :examples $ [] $ quote
             resource-loading? $ resource-reducer (resource-idle) (resource-started 1)
-          :schema $ quote $ Fn respo.resource/ResourceState (-> Bool)
+          :schema $ quote $ Fn (respo.resource/ResourceState T E) (-> Bool) (:generics T E)
         'resource-ready $ %{} 'CodeEntry
           :doc "|Creates a :ready ResourceAction carrying resolved immutable data."
           :code $ quote $ defn resource-ready (request-id data)
@@ -6925,7 +6929,9 @@
               raise "|[Respo/resource-ready] expected a numeric request id"
             ResourceAction :ready request-id data
           :examples $ []
-          :schema $ quote $ Fn Number Dynamic (-> respo.resource/ResourceAction)
+          :schema $ quote $ Fn Number T
+            -> $ respo.resource/ResourceAction T E
+            :generics T E
         'resource-reducer $ %{} 'CodeEntry
           :doc "|Purely applies a ResourceAction to ResourceState. Ready and failed actions with stale request ids return the identical current state; refreshes retain previous data."
           :code $ quote $ defn resource-reducer (state action)
@@ -6943,13 +6949,15 @@
                     if
                       or (= :ready status) (= :refreshing status)
                       , :refreshing :pending
-                  , :request-id (Option :some request-id) :data (:data state) :error $ Option :none
+                  , :request-id (Option :some request-id) :data (:data state) :error $ assert-type (Option :none)
+                    quote $ Option E
               (:ready request-id data)
                 if
                   match (:request-id state)
                     (:some current-id) (= current-id request-id)
                     (:none) false
-                  ResourceState :status :ready :request-id (Option :some request-id) :data (Option :some data) :error $ Option :none
+                  ResourceState :status :ready :request-id (Option :some request-id) :data (Option :some data) :error $ assert-type (Option :none)
+                    quote $ Option E
                   , state
               (:failed request-id error)
                 if
@@ -6964,7 +6972,9 @@
                 pending $ resource-reducer idle $ resource-started 1
               resource-reducer pending $ resource-ready 1 $ {}
                 :items $ [] :a :b
-          :schema $ quote $ Fn respo.resource/ResourceState respo.resource/ResourceAction (-> respo.resource/ResourceState)
+          :schema $ quote $ Fn (respo.resource/ResourceState T E) (respo.resource/ResourceAction T E)
+            -> $ respo.resource/ResourceState T E
+            :generics T E
           :tests $ []
             %{} 'TestEntry (:name |handles-refresh-stale-and-error-results)
               :code $ quote $ let
@@ -7023,7 +7033,9 @@
               raise "|[Respo/resource-started] expected a numeric request id"
             ResourceAction :started request-id
           :examples $ []
-          :schema $ quote $ Fn Number (-> respo.resource/ResourceAction)
+          :schema $ quote $ Fn Number
+            -> $ respo.resource/ResourceAction T E
+            :generics T E
         'resource-state? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn resource-state? (x)
             and (struct? x)
@@ -7625,7 +7637,7 @@
             let
                 calls $ ref 0
                 actions $ ref $ assert-type ([])
-                  quote $ List respo.resource/ResourceAction
+                  quote $ List $ respo.resource/ResourceAction Dynamic Dynamic
                 request-id $ load-resource!
                   fn () (swap! calls inc) |ready
                   fn (action) (swap! actions conj action) &unit
@@ -7633,15 +7645,15 @@
               assert |resource-load-starts-synchronously $ = (resource-started request-id)
                 assert-type
                   option:unwrap $ first @actions
-                  , 'respo.resource/ResourceAction
+                  quote $ respo.resource/ResourceAction Dynamic Dynamic
               shared/queue-microtask! $ fn () (swap! *async-checks inc)
                 assert |resolved-resource-emits-ready $ = (resource-ready request-id |ready)
                   assert-type
                     option:unwrap $ get @actions 1
-                    , 'respo.resource/ResourceAction
+                    quote $ respo.resource/ResourceAction Dynamic Dynamic
             let
                 actions $ ref $ assert-type ([])
-                  quote $ List respo.resource/ResourceAction
+                  quote $ List $ respo.resource/ResourceAction Dynamic Dynamic
                 request-id $ load-resource!
                   fn () $ raise |offline
                   fn (action) (swap! actions conj action) &unit
@@ -7656,7 +7668,7 @@
                 _ $ assert |expected-failed-resource-action false
             let
                 actions $ ref $ assert-type ([])
-                  quote $ List respo.resource/ResourceAction
+                  quote $ List $ respo.resource/ResourceAction Dynamic Dynamic
                 request-id $ load-resource!
                   fn () |ready
                   fn (action) (swap! actions conj action)
