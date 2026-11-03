@@ -105,3 +105,56 @@ test('component call boundaries retain identity, callback arguments, errors and 
   assert.throws(() => m.memo_comp_by('throw', () => { throw failure; }), error => error === failure);
   assert.throws(() => m.call_component(null, c.arrayToList([])), { message: '[Respo/memo] expected a memo callback function' });
 });
+
+test('DOM mount failure retains the last committed memo frame', () => {
+  m.reset_component_caches_$x_();
+  let calls = 0;
+  const derive = value => { calls++; return value; };
+  m.begin_memo_frame_$x_();
+  m.memo_value_by('kept', derive, 1);
+  m.finish_memo_frame_$x_();
+  const tags = c.init_tags(['name', 'effects', 'listeners', 'tree', 'empty']);
+  const empty = c._$n__PCT__$M_(Component, tags.name, tags.empty,
+    tags.effects, c._$L_(), tags.listeners, c._$L_(), tags.tree, optionNone());
+  assert.throws(() => render_with_$x_(null, () => {
+    m.memo_value_by('new', derive, 2);
+    return empty;
+  }, () => {}), /expected-mount-target/);
+  m.begin_memo_frame_$x_();
+  assert.equal(m.memo_value_by('kept', derive, 1), 1);
+  m.finish_memo_frame_$x_();
+  assert.equal(calls, 2);
+  m.reset_component_caches_$x_();
+});
+
+test('data identities resolve hash collisions and survive key reorder without retaining inactive keys', () => {
+  m.reset_component_caches_$x_();
+  const first = c._$L_(1), second = c._$L_(2);
+  // Only synthetic immutable values are used: force the same cached hash while
+  // keeping their Calcit equality distinct, exercising the real memo Map bucket.
+  first.cachedHash = 123;
+  second.cachedHash = 123;
+  assert.equal(c.hashFunction(first), c.hashFunction(second));
+  assert.equal(c._$e_(first, second), false);
+  m.begin_memo_frame_$x_();
+  const firstId = m.data_key(first), secondId = m.data_key(second);
+  assert.notEqual(firstId, secondId);
+  const falseId = m.data_key(false);
+  assert.notEqual(falseId, m.data_key('false'));
+  assert.notEqual(m.data_key(0), m.data_key(''));
+  assert.notEqual(falseId, m.data_key(falseId));
+  m.finish_memo_frame_$x_();
+  const equalFirst = c._$L_(1), equalSecond = c._$L_(2);
+  equalFirst.cachedHash = 123;
+  equalSecond.cachedHash = 123;
+  m.begin_memo_frame_$x_();
+  assert.equal(m.data_key(equalSecond), secondId);
+  assert.equal(m.data_key(equalFirst), firstId);
+  m.finish_memo_frame_$x_();
+  assert.equal(m.component_cache_size(), 2);
+  m.begin_memo_frame_$x_();
+  m.finish_memo_frame_$x_();
+  assert.equal(m.component_cache_size(), 0);
+  assert.throws(() => m.data_key(false), /requires-managed-memo-frame/);
+  m.reset_component_caches_$x_();
+});
