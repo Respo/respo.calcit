@@ -1248,18 +1248,7 @@
           :schema $ quote $ Fn String & respo.schema/TextStyle (-> respo.schema/Element)
         '>> $ %{} 'CodeEntry
           :doc "|Create a nested state cursor for a child branch.\n\nThe returned map reuses branch data and extends `:cursor` with the new key, so child components can manage local state without losing the parent path."
-          :code $ quote $ defn >> (states k)
-            let
-                base $ as-states-map states
-                parent-cursor $ match (calcit.core/get base :cursor)
-                  (:some raw-cursor)
-                    if (nil? raw-cursor) ([])
-                      if (list? raw-cursor) raw-cursor $ raise $ str "|[Respo] expected states cursor as a list, got: " (type-of raw-cursor)
-                  (:none) ([])
-                branch $ match (calcit.core/get base k)
-                  (:some branch-value) (as-states-map branch-value)
-                  (:none) ({})
-              &map:assoc branch :cursor $ append parent-cursor k
+          :code $ quote $ defn >> (states k) (data-states states k)
           :examples $ [] $ quote
             >> ({}) :task-a
           :schema $ quote $ Fn Dynamic respo.schema/CoordKey (-> respo.schema/States) (:features :js-ffi)
@@ -1665,6 +1654,51 @@
               List $ List Dynamic
           :examples $ []
           :schema $ quote $ Fn Tag (Map Tag Dynamic) Dynamic (-> respo.schema/Element) (:features :js-ffi)
+        'data-list-> $ %{} 'CodeEntry
+          :doc "|Render a whole keyed list whose keys are heterogeneous data. Every non-nil key is adapted together to a stable String CoordKey using full memo-key equality; state paths remain separate through data-states. Requires render-with! or explicit begin/finish/abort memo frames, also for SSR. Unused identities follow the existing memo lifecycle; no second global key registry is retained."
+          :code $ quote $ defn data-list-> (props child-pairs)
+            create-list-element :div props $ map child-pairs $ fn (pair)
+              let[] (key child) pair $ [] (memo/data-key key) child
+          :examples $ []
+          :schema $ quote $ Fn PropsInput
+            List $ Tuple Key Child
+            -> respo.schema/Element
+            :generics PropsInput Key Child
+        'data-states $ %{} 'CodeEntry
+          :doc "|Descend a data inspector state tree using the original data key. Unlike the DOM coordinate helper >>, the data key and resulting cursor may be heterogeneous; branch data and raw key identity are preserved. Pair with data-list-> for rendering; this does not widen CoordKey."
+          :code $ quote $ defn data-states (states k)
+            let
+                base $ as-states-map states
+                parent-cursor $ match (calcit.core/get base :cursor)
+                  (:some raw-cursor)
+                    if (nil? raw-cursor) ([])
+                      if (list? raw-cursor) raw-cursor $ raise $ str "|[Respo] expected states cursor as a list, got: " (type-of raw-cursor)
+                  (:none) ([])
+                branch $ match (calcit.core/get base k)
+                  (:some branch-value) (as-states-map branch-value)
+                  (:none) ({})
+              &map:assoc branch :cursor $ append parent-cursor k
+          :examples $ []
+          :schema $ quote $ Fn StateInput Key (-> respo.schema/States) (:generics StateInput Key) (:features :js-ffi)
+          :tests $ [] $ %{} 'TestEntry (:name |raw-heterogeneous-key-paths)
+            :code $ quote $ let
+                key $ [] 1 2
+                child $ {} $ :data
+                  {} $ :folded? false
+                base $ {}
+                  :cursor $ [] :root
+                  false child
+                  key child
+                bool-branch $ data-states base false
+                list-branch $ data-states base $ [] 1 2
+              assert=
+                Option :some $ [] :root false
+                get bool-branch :cursor
+              assert=
+                Option :some $ [] :root key
+                get list-branch :cursor
+              assert= (get child :data) (get list-branch :data)
+            :tags $ #{} :unit
         'decorate-defcomp $ %{} 'CodeEntry
           :doc "|Add the component name to the root element as one data-comp attribute at its sorted position. Preserves the property ordering required by the merge diff, replacing an existing marker when necessary."
           :code $ quote $ defn decorate-defcomp (c name)
@@ -2831,21 +2865,37 @@
               assert |nil-mount-target-rejected @caught?
             :tags $ #{} :unit
         'render-with! $ %{} 'CodeEntry
-          :doc "|在受管理的 memo 帧中构建 Component 树，清理不再活跃的组件 key，然后渲染。传入零参数树构建函数，使 memo 调用位于帧内。向外传播的渲染错误会中止当前帧并重新抛出，保留上次成功提交的缓存。仅限浏览器（需要 DOM 挂载点），用法：`render-with! mount-target (fn () (comp-container @*store)) dispatch!`"
-          :code $ quote $ defn render-with! (target render-tree dispatch!) (memo/begin-memo-frame!)
-            try
-              let
-                  element $ render-tree
-                memo/finish-memo-frame!
-                render! target element dispatch!
-              fn (error) (memo/abort-memo-frame!) (raise error)
-            , &unit
+          :doc "|在受管理的 memo 帧内构建 Component 树，并在实际 DOM 渲染成功后提交缓存。零参数建树函数使嵌套 memo/data-list-> 调用位于帧内；建树或 DOM 渲染错误都会 abort 并保留上一次成功缓存。仅浏览器，SSR 可显式使用 begin/finish/abort memo 帧。"
+          :code $ quote $ defn render-with! (target render-tree dispatch!)
+            memo/with-memo-frame $ fn () $ render! target (render-tree) dispatch!
           :examples $ []
           :schema $ quote $ Fn (JsNullish respo.dom/DomElement)
             Fn $ -> respo.schema/Component
             Fn *dispatch-op $ -> Unit
             -> Unit
             :features :js-ffi
+          :tests $ [] $ %{} 'TestEntry (:name |failed-dom-render-retains-committed-memo)
+            :code $ quote $ let
+                calls $ ref 0
+                derive $ fn (value) (swap! calls inc) value
+                caught? $ ref false
+                component $ respo.schema/Component :name :empty :effects ([]) :listeners ([]) :tree $ Option :none
+              memo/reset-component-caches!
+              memo/begin-memo-frame!
+              memo/memo-value-by :kept derive 1
+              memo/finish-memo-frame!
+              try
+                render-with! nil
+                  fn () (memo/memo-value-by :new derive 2) component
+                  fn (op) &unit
+                fn (error) (assert= |[Respo/render!]-expected-mount-target error) (reset! caught? true)
+              assert= true @caught?
+              memo/begin-memo-frame!
+              assert= 1 $ memo/memo-value-by :kept derive 1
+              memo/finish-memo-frame!
+              assert= 2 @calls
+              memo/reset-component-caches!
+            :tags $ #{} :unit
         'rerender-app! $ %{} 'CodeEntry
           :doc "|Diffs the new element against the global element and patches the DOM. Used internally by render!. Browser-only (needs a DOM mount target); usage: `rerender-app! mount-target (comp-demo) *dispatch-fn`"
           :code $ quote $ defn rerender-app! (target element *dispatch-fn)
@@ -4026,6 +4076,11 @@
           :code $ quote $ defref *component-caches ({})
           :examples $ []
           :schema $ quote $ Ref (Map respo.memo/MemoCacheKey respo.memo/MemoEntry)
+        '*data-key-counter $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defref *data-key-counter 0
+          :examples $ []
+          :schema $ quote $ Ref Number
+          :tags $ #{} :internal
         '*frame-component-caches $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defref *frame-component-caches ({})
           :examples $ []
@@ -4140,6 +4195,54 @@
           :examples $ []
           :schema $ quote $ Fn Fn (List A) (-> respo.memo/MemoEntry) (:generics A)
           :tags $ #{} :internal
+        'data-key $ %{} 'CodeEntry
+          :doc "|Internal data-key boundary: use existing memo equality and frame lifecycle, not hashing or formatting, to reuse a String coordinate for equal keys. Reject nil and use only inside a managed memo frame."
+          :code $ quote $ defn data-key (key)
+            when (nil? key) (raise |[Respo/data-list->]-expected-non-nil-data-key)
+            when (not @*memo-frame-active?) (raise |[Respo/data-list->]-requires-managed-memo-frame)
+            let
+                token $ memo-value-by key next-data-key!
+              if (string? token) token $ raise |[Respo/data-list->]-invalid-memo-token
+          :examples $ []
+          :schema $ quote $ Fn Key (-> String) (:generics Key)
+          :tags $ #{} :internal
+          :tests $ []
+            %{} 'TestEntry (:name |heterogeneous-identity-and-frame-pruning)
+              :code $ quote $ let
+                  a $ ref |
+                  b $ ref |
+                reset-component-caches!
+                begin-memo-frame!
+                reset! a $ data-key false
+                reset! b $ data-key $ [] 1 2
+                assert= @b $ data-key $ [] 1 2
+                let
+                    ids $ #{} @a @b (data-key 0) (data-key |) (data-key |false) (data-key @a)
+                  assert= 6 $ .len ids
+                finish-memo-frame!
+                begin-memo-frame!
+                assert= @b $ data-key $ [] 1 2
+                assert= @a $ data-key false
+                finish-memo-frame!
+                assert= 2 $ component-cache-size
+                begin-memo-frame!
+                finish-memo-frame!
+                assert= 0 $ component-cache-size
+                reset-component-caches!
+              :tags $ #{} :unit
+            %{} 'TestEntry (:name |requires-frame-and-preserves-nil-rejection)
+              :code $ quote $ let
+                  caught $ ref 0
+                reset-component-caches!
+                try (data-key false)
+                  fn (error) (assert= |[Respo/data-list->]-requires-managed-memo-frame error) (swap! caught inc)
+                begin-memo-frame!
+                try (data-key nil)
+                  fn (error) (assert= |[Respo/data-list->]-expected-non-nil-data-key error) (swap! caught inc)
+                abort-memo-frame!
+                assert= 2 @caught
+                reset-component-caches!
+              :tags $ #{} :unit
         'finish-memo-frame! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn finish-memo-frame! ()
             when @*memo-frame-active? $ reset! *component-caches @*frame-component-caches
@@ -4371,6 +4474,15 @@
                 assert= 2 @calls
                 reset-component-caches!
               :tags $ #{} :unit
+        'next-data-key! $ %{} 'CodeEntry
+          :doc "|Internal monotonic render token. Never reset or reuse IDs while DOM nodes may still exist; fail before integer precision can repeat a token."
+          :code $ quote $ defn next-data-key! ()
+            when (>= @*data-key-counter 9007199254740991) (raise |[Respo/data-list->]-data-key-counter-exhausted)
+            swap! *data-key-counter inc
+            str |respo-data: @*data-key-counter
+          :examples $ []
+          :schema $ quote $ Fn (-> String)
+          :tags $ #{} :internal
         'record-memo-child! $ %{} 'CodeEntry (:doc "|内部依赖记录器，将带 key 的 memo 调用加入当前最内层正在计算的回调依赖中。")
           :code $ quote $ defn record-memo-child! (cache-key)
             when
@@ -4432,6 +4544,44 @@
           :examples $ []
           :schema $ quote $ Fn respo.memo/MemoEntry (-> Unit)
           :tags $ #{} :internal
+        'with-memo-frame $ %{} 'CodeEntry
+          :doc "|Build or render any result inside one managed memo frame. Commit only after the callback returns; abort on escaping errors. Nested calls reuse the active outer frame instead of resetting it. Use for SSR or custom renderers; the outermost caller owns commit/abort."
+          :code $ quote $ defn with-memo-frame (build)
+            if @*memo-frame-active? (build)
+              do (begin-memo-frame!)
+                try
+                  let
+                      value $ build
+                    finish-memo-frame!
+                    , value
+                  fn (error) (abort-memo-frame!) (raise error)
+          :examples $ []
+          :schema $ quote $ Fn
+            Fn (-> Value) (:features :js-ffi)
+            -> Value
+            :generics Value
+            :features :js-ffi
+          :tests $ [] $ %{} 'TestEntry
+            :name |nested-scopes-preserve-outer-keys-and-return-value
+            :code $ quote $ let
+                output $ with-memo-frame $ fn ()
+                  let
+                      root-id $ data-key false
+                      child-id $ with-memo-frame $ fn ()
+                        data-key $ [] 1 2
+                    assert= root-id $ data-key false
+                    [] root-id child-id
+              assert= 2 $ component-cache-size
+              begin-memo-frame!
+              assert=
+                .unwrap $ get output 1
+                data-key $ [] 1 2
+              assert=
+                .unwrap $ get output 0
+                data-key false
+              finish-memo-frame!
+              reset-component-caches!
+            :tags $ #{} :unit
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.memo
           :require $ respo.util.detect :refer $ component?

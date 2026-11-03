@@ -1,5 +1,30 @@
 ## Respo: A virtual DOM library in Calcit-js
 
+### 0.19.2 数据键边界候选
+
+使用者影响：原 `list->`、`>>` 和 `CoordKey = Tag | String | Number` 合同保持。
+需要展示 Bool/List 等异构数据键的组件，可使用 `data-list->` 整组适配渲染键，
+用 `data-states` 保留原始数据键及状态路径；不通过 hash、字符串化或行号替换原键。
+nil 数据键仍拒绝。
+
+`data-list->` 接收 `List (Tuple Key Child)`，必须在 managed memo 帧内同步构造。
+浏览器使用既有 `render-with!`；SSR 或自定义 renderer 可用
+`respo.memo/with-memo-frame` 包住“建树及渲染”，它保留回调的真实返回类型。
+嵌套作用域复用外帧，不重置外层缓存；Promise 返回值不延长同步帧。
+同一数据键按既有 memo 的完整相等关系复用内部 String 坐标，未使用的身份由既有帧清理，
+没有第二套全局键表。移除后再插入的节点可获得新 DOM 身份，原始状态路径不变。
+
+```cirru.no-check
+respo.memo/with-memo-frame $ fn ()
+  make-string $ data-list-> props keyed-pairs
+```
+
+`render-with!` 同时修复 DOM 渲染失败时提前提交 memo 缓存的问题：建树和 DOM 渲染
+均成功后才提交，向外传播的错误保留上次成功缓存，见 [#342](https://github.com/Respo/respo.calcit/issues/342)。
+边界方案与真实 Value/Reel 消费者见 [#341](https://github.com/Respo/respo.calcit/issues/341)。
+配对仍为正式 Calcit / procs 0.34.2、JS-FFI 0.2.10，原类型门禁和预算保持；
+0.19.2 尚为候选，完整门禁、消费者、浏览器和精确 CI/评审需全部核验后再发布。
+
 ### 0.19.1 / Calcit 0.34.2 迁移
 
 常规 DOM props、HTML 输出和属性顺序保持；手动构造 `Element` 时，`:attrs` 需要是 `List (Tuple Tag Dynamic)`，每个成员是 Tag 键和属性值组成的两项列表。Map 转换产生的 Tuple 会保留键值类型，排序、属性合并、事件名和滚动恢复沿用该合同。当前候选配对 Calcit CLI / `@calcit/procs` 0.34.2、JS-FFI 0.2.10；应用需同步工具链与精确正式依赖图后重新构建。
