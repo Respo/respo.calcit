@@ -29,10 +29,10 @@ entry_for:
 
 The Respo project is a virtual DOM library written in Calcit-js, containing:
 
-- **Main codebase**: `calcit.cirru` (2314 lines) - serialized source code
-- **Compiled source**: `calcit.cirru` (13806 lines) - full AST representation
-- **Namespaces**: 33 total namespaces organized by functionality
-- **Version**: 0.16.21
+- **Source Snapshot**: `calcit.cirru`, edited through `calcit edit` / `calcit tree`
+- **Generated JavaScript**: `js-out/`, produced by `calcit js`; do not commit it
+- **Namespaces**: inspect the current project with `calcit query ns`
+- **Version**: read the module metadata with `caps version get`
 - **Testing**: `calcit test` definition-attached tests and a JS-target smoke suite; no external test module
 
 ### Core Namespace Organization
@@ -225,7 +225,7 @@ add-watch! *store :changes $ fn (next previous)
 
 ; Hot reload with cache clearing
 defn reload! ()
-  remove-watch *store :changes
+  remove-watch! *store :changes
   add-watch! *store :changes $ fn (next previous)
     render-app!
   clear-cache!
@@ -515,7 +515,7 @@ add-watch! *store :changes $ fn (next previous)
 
 ; Ensure clear-cache! is called on reload
 defn reload! ()
-  remove-watch *store :changes
+  remove-watch! *store :changes
   clear-cache!
   add-watch! *store :changes $ fn (next previous)
     render-app!
@@ -601,7 +601,7 @@ calcit query usages 'respo.core/clear-cache!'
 ```cirru.no-check
 ; clear-cache! must be called during reload
 defn reload! ()
-  remove-watch *store :changes
+  remove-watch! *store :changes
   clear-cache!  ; Critical!
   add-watch! *store :changes $ fn (next previous)
     render-app!
@@ -617,7 +617,7 @@ defn reload! ()
 ```bash
 calcit query ns namespace-name
 calcit query peek '<namespace/def>'
-calcit tree show '<namespace/def>' --path @  --depth 2
+calcit tree show '<namespace/def>' --path '' --depth 2
 calcit tree show '<namespace/def>' --path @2 --depth 2
 calcit tree replace '<namespace/def>' --path @2.1.0 --code 'quote |new-value'
 calcit tree show '<namespace/def>' --path @2.1  # 确认
