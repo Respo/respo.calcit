@@ -293,7 +293,7 @@ To cooperate with hot swapping:
 
 ```cirru.no-check
 defn reload! ()
-  remove-watch *store :rerender
+  remove-watch! *store :rerender
   clear-cache!
   render-app!
   watch-render!
