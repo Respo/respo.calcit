@@ -2657,11 +2657,14 @@
             match value-option
               (:none) nil
               (:some value)
-                if (nil? value) nil $ if (fn? value) value $ raise message
+                if (nil? value) nil $ if (fn? value)
+                  unsafe-coerce value $ quote $ Fn (JsNullish respo.dom/DomElement) (-> Dynamic)
+                  raise message
           :examples $ []
           :schema $ quote $ Fn (Option RefInput) String
-            -> $ JsNullish Fn
+            -> $ JsNullish $ Fn (JsNullish respo.dom/DomElement) (-> Dynamic)
             :generics RefInput
+            :features :js-ffi
           :tags $ #{} :internal
           :tests $ []
             %{} 'TestEntry (:name |preserves-nil-and-callback)
@@ -7443,7 +7446,8 @@
             :style $ quote $ List (Tuple respo.schema/StyleKey respo.schema/CssValue)
             :event $ quote $ Map Tag (JsNullish respo.schema/EventHandler)
             :children $ quote $ List respo.schema/ChildPair
-            :ref $ quote $ JsNullish Fn
+            :ref $ quote $ JsNullish
+              Fn (JsNullish respo.dom/DomElement) (-> Dynamic)
           :examples $ []
           :schema $ quote StructDef
         'EventConfig $ %{} 'CodeEntry
@@ -7558,7 +7562,11 @@
             with-fixture-events
               with-fixture-children
                 respo.core/div $ {}
-                [] $ respo.util.detect/make-child-pair |child $ respo.core/span ({})
+                [] $ respo.util.detect/make-child-pair |child $ with-fixture-ref
+                  respo.core/span $ {}
+                  fn (_target)
+                    hint-fn $ Fn (JsNullish respo.dom/DomElement) (-> Dynamic)
+                    , &unit
               {} $ :click $ fn (_event _dispatch!) &unit
             , &unit
           :examples $ []
@@ -7769,6 +7777,24 @@
               assert= events $ :event changed
               assert= 0 $ count $ :event element
               assert= :span $ :name changed
+            :tags $ #{} :unit
+        'with-fixture-ref $ %{} 'CodeEntry
+          :doc "|测试专用：给元素设置 DOM ref 回调（或 nil），经过静态证明的字段更新，供 JS 测试替代动态 assoc。"
+          :code $ quote $ defn with-fixture-ref (element ref!) (element.assoc :ref ref!)
+          :examples $ []
+          :schema $ quote $ Fn respo.schema/Element
+            JsNullish $ Fn (JsNullish respo.dom/DomElement) (-> Dynamic)
+            -> respo.schema/Element
+          :tests $ [] $ %{} 'TestEntry (:name |sets-and-clears-ref)
+            :code $ quote $ let
+                element $ respo.core/span $ {}
+                callback $ fn (_target)
+                  hint-fn $ Fn (JsNullish respo.dom/DomElement) (-> Dynamic)
+                  , nil
+                changed $ with-fixture-ref element callback
+              assert |ref-identity-preserved $ identical? callback $ :ref changed
+              assert |original-ref-untouched $ js-nullish? $ :ref element
+              assert |ref-cleared $ js-nullish? $ :ref (with-fixture-ref changed nil)
             :tags $ #{} :unit
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.test.dom
@@ -8200,7 +8226,7 @@
               :ref element
           :examples $ []
           :schema $ quote $ Fn respo.schema/Element
-            -> $ JsNullish Fn
+            -> $ JsNullish $ Fn (JsNullish respo.dom/DomElement) (-> Dynamic)
         'element-style $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn element-style (value)
             let

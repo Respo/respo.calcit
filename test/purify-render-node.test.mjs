@@ -9,7 +9,7 @@ import { div, span } from '../js-out/respo.core.mjs';
 import { as_render_node, make_child_pair, child_pair_value, element_name, element_ref } from '../js-out/respo.util.detect.mjs';
 import { purify_element, coerce_element, coerce_component, purify_events } from '../js-out/respo.util.format.mjs';
 import { make_string, coerce_pairs, props__GT_html } from '../js-out/respo.render.html.mjs';
-import { with_fixture_children, with_fixture_events } from '../js-out/respo.test.dom.mjs';
+import { with_fixture_children, with_fixture_events, with_fixture_ref } from '../js-out/respo.test.dom.mjs';
 
 const tags = c.init_tags(['name', 'effects', 'listeners', 'tree', 'children', 'ref', 'event', 'key', 'node', 'wrapped']);
 const component = tree => c._$n__PCT__$M_(Component,
@@ -20,7 +20,7 @@ const field = (value, key) => c.option_$o_unwrap(c.get(value, key));
 test('nominal helpers preserve the original element, component, ref and child identities', () => {
   const leaf = span(c.parse_cirru_edn('{} (:inner-text |leaf)'));
   const ref = () => 42;
-  const live = c.assoc(leaf, tags.ref, ref);
+  const live = with_fixture_ref(leaf, ref);
   const wrapped = component(optionSome(as_render_node(live)));
   assert.equal(coerce_element(live), live);
   assert.equal(coerce_component(wrapped), wrapped);
@@ -40,7 +40,7 @@ test('event name purification drops nil and retains the existing undefined behav
 
 test('purification unwraps nested components, clears refs/events and preserves child keys and absence', () => {
   const leaf = span(c.parse_cirru_edn('{} (:inner-text |leaf)'));
-  const liveLeaf = with_fixture_events(c.assoc(leaf, tags.ref, () => {}),
+  const liveLeaf = with_fixture_events(with_fixture_ref(leaf, () => {}),
     c.parse_cirru_edn('{} (:click nil)'));
   const wrapped = component(optionSome(as_render_node(component(optionSome(as_render_node(liveLeaf))))));
   const root = with_fixture_children(div(c.parse_cirru_edn('{}')), c.arrayToList([
