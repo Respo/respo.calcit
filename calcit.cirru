@@ -7427,7 +7427,7 @@
           :examples $ []
           :schema $ quote StructDef
         'RespoListener $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct RespoListener (:name Tag) (:handler Fn)
+          :code $ quote $ defstruct RespoListener (:name Tag) (:handler AnyFn)
           :examples $ []
           :schema $ quote StructDef
         'States $ %{} 'CodeEntry
@@ -8216,7 +8216,7 @@
                 listener $ assert-type value 'respo.schema/RespoListener
               :handler listener
           :examples $ []
-          :schema $ quote $ Fn respo.schema/RespoListener (-> Fn)
+          :schema $ quote $ Fn respo.schema/RespoListener (-> AnyFn)
         'listener? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn listener? (item)
             and (struct? item)
