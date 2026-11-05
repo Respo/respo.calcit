@@ -13,7 +13,7 @@ const { as_render_node, make_child_pair } = await import('../js-out/respo.util.d
 const { collect_mounting, collect_unmounting } = await import('../js-out/respo.render.effect.mjs');
 const { apply_dom_changes, run_effect } = await import('../js-out/respo.render.patch.mjs');
 const { find_element_diffs } = await import('../js-out/respo.render.diff.mjs');
-const { with_fixture_children } = await import('../js-out/respo.test.dom.mjs');
+const { with_fixture_children, with_fixture_ref } = await import('../js-out/respo.test.dom.mjs');
 const t = c.init_tags(['name', 'effects', 'listeners', 'tree', 'coord', 'args', 'method', 'children', 'ref', 'outer', 'first', 'second']);
 const list = c.arrayToList;
 
@@ -49,7 +49,7 @@ test('effect callback exceptions propagate unchanged after one invocation', () =
 
 function refChanges(oldRef, newRef) {
   const changes = [];
-  const element = callback => c.assoc(div(c.parse_cirru_edn('{}')), t.ref, callback);
+  const element = callback => with_fixture_ref(div(c.parse_cirru_edn('{}')), callback);
   find_element_diffs(op => { changes.push(op); }, list([]), list([]), element(oldRef), element(newRef));
   return changes;
 }
@@ -85,7 +85,7 @@ for (const [phase, collect, absent] of [
     const target = new ElementHost('div');
     const calls = [];
     const patches = [];
-    const element = c.assoc(div(c.parse_cirru_edn('{}')), t.ref, value => {
+    const element = with_fixture_ref(div(c.parse_cirru_edn('{}')), value => {
       calls.push(value);
       return 42;
     });
@@ -97,7 +97,7 @@ for (const [phase, collect, absent] of [
 
     const failure = new Error(`ref ${phase} fixture`);
     let attempts = 0;
-    const failing = c.assoc(element, t.ref, value => {
+    const failing = with_fixture_ref(element, value => {
       assert.equal(value, absent ? null : target);
       attempts += 1;
       throw failure;
@@ -145,10 +145,10 @@ function fixture(includeEmpty) {
       })]));
   const ref = label => target => { calls.push([`ref:${label}`, target?.id ?? null]); };
   const leaf = (name, id) => component(name,
-    c.assoc(span(c.parse_cirru_edn('{}')), t.ref, ref(id)));
+    with_fixture_ref(span(c.parse_cirru_edn('{}')), ref(id)));
   const pairs = [make_child_pair('a', leaf(t.first, 'first')), make_child_pair('b', leaf(t.second, 'second'))];
   if (includeEmpty) pairs.splice(1, 0, make_child_pair('empty', null));
-  const parent = with_fixture_children(c.assoc(div(c.parse_cirru_edn('{}')), t.ref, ref('parent')), list(pairs));
+  const parent = with_fixture_children(with_fixture_ref(div(c.parse_cirru_edn('{}')), ref('parent')), list(pairs));
   const root = component(t.outer, parent);
   const mount = new ElementHost('main');
   const dom = new ElementHost(); dom.id = 'parent';
