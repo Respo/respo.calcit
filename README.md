@@ -1,5 +1,11 @@
 ## Respo: A virtual DOM library in Calcit-js
 
+### 0.19.3 / 正式 Calcit 0.35.0 候选
+
+使用者注意：本候选配对 Calcit CLI、`deps.cirru :calcit-version` 与 `@calcit/procs` **0.35.0**，以及正式 JS-FFI **0.2.12**。下游需一起更新精确依赖图、重新安装并生成 JS；正式发布状态以 Git tag 为准。
+
+通过官方格式化器迁移类型专用位置的复合类型语法，保留原 `CoordKey`、CSS 和节点 union 合同。`data-states` 的原始数据键可以是 Bool/List 等类型，开放状态树仍保留真实边界，不能把所有状态键误收窄为 `CoordKey`。原门禁与运行测试保持；候选需通过 CI、评审和真实消费者验收后发版。
+
 ### 0.19.2 数据键边界候选
 
 使用者影响：原 `list->`、`>>` 和 `CoordKey = Tag | String | Number` 合同保持。
