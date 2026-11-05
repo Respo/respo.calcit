@@ -1,6 +1,17 @@
 ## Respo: A virtual DOM library in Calcit-js
 
-### 0.19.3 / 正式 Calcit 0.35.0 候选
+### 0.19.4 候选 / 正式 Calcit 0.35.1
+
+使用者注意：CLI、`deps.cirru :calcit-version` 与 `@calcit/procs` 同步正式 **0.35.1**，
+配对正式 JS-FFI **0.2.13**；下游需统一精确依赖图并重新生成 JS。
+本 patch 保留 CoordKey、CSS/节点 union、开放异构状态树以及 DOM/SSR/事件合同。
+
+相对 0.19.3，包含已在 main 合并的两处 listener `Fn` → `AnyFn` 拼写：这里需要容纳真实
+异构函数签名，AnyFn 与原裸 Fn 是同一类型，不扩大调用能力或运行时信任。其余源码相同。
+类型检查、原回归和实际部署结果以 PR 为准；原测试、预算、工作流与路径保留，正式 tag
+发布前仍是候选。0.35.1 新检查发现的下游错误参数需在入口按实际合同修复。
+
+### 历史 0.19.3 / 正式 Calcit 0.35.0
 
 使用者注意：本候选配对 Calcit CLI、`deps.cirru :calcit-version` 与 `@calcit/procs` **0.35.0**，以及正式 JS-FFI **0.2.12**。下游需一起更新精确依赖图、重新安装并生成 JS；正式发布状态以 Git tag 为准。
 
