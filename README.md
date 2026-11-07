@@ -1,11 +1,13 @@
 ## Respo: A virtual DOM library in Calcit-js
 
-### 0.19.5 候选 / 正式 Calcit 0.36.0
+### 0.19.5 候选 / 正式 Calcit 0.37.0
 
-使用者注意：CLI、`deps.cirru :calcit-version` 与 `@calcit/procs` 同步正式 **0.36.0**，
+使用者注意：CLI、`deps.cirru :calcit-version` 与 `@calcit/procs` 同步正式 **0.37.0**，
 JS-FFI 仍配对 **0.2.13**。源码由 0.36.0 的 `calcit edit format` 迁移：type slot 绑定写成 symbol，
 `Fn` 剩余参数写成 `(& T)` 分组；`:tests` 里类型位置的复合类型去掉 `quote`，为 0.37.0 删除旧写法（calcit#2583）做准备。
 运行逻辑不变。
+已发布的 0.19.4 仍用旧的 `& T` 写法，在 0.37 下作为依赖载入即报错；0.37 项目需要固定本版本。
+0.37.0 下 `edit format` 无变化，strict、174 项 tests 与 weak-types 上限（180）均保持。
 
 ### 历史 0.19.4 / 正式 Calcit 0.35.1
 
