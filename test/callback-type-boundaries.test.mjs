@@ -23,7 +23,7 @@ for (const [name, value, diagnostic] of [
 ]) {
   test(`generic append ${name}`, () => {
     const result = evaluate(`let
-    values $ ref $ assert-type ([]) $ quote $ List Number
+    values $ ref $ assert-type ([]) $ List Number
   respo.core/append-dynamic! values ${value}`);
     assert.notEqual(result.status, 0, 'incompatible elements must fail preprocessing');
     assert.match(result.output, diagnostic);
@@ -46,13 +46,44 @@ const renderBoundary = (type, result, body) => `let
           , ${body}
   , &unit`;
 
-test('render-with! retains the existing open Unit dispatch contract', () => {
-  const result = evaluate(renderBoundary('Dynamic', 'Unit', '&unit'));
+// `eval --dep` snippets cannot bind the dependency's `*dispatch-op` slot, which
+// 0.37 rejects as E_UNBOUND_TYPE_SLOT, so APIs using that slot are checked
+// inside a scratch copy of the project whose entry binds it.
+function checkInProject(body) {
+  const scratch = mkdtempSync(join(root, '.calcit', 'project-check-'));
+  const invoke = args => {
+    const result = spawnSync(bin, args, { cwd: scratch, encoding: 'utf8', timeout: 60_000 });
+    assert.ifError(result.error);
+    assert.equal(result.signal, null, 'Calcit must exit normally');
+    return result;
+  };
+  try {
+    copyFileSync(join(root, 'calcit.cirru'), join(scratch, 'calcit.cirru'));
+    copyFileSync(join(root, 'deps.cirru'), join(scratch, 'deps.cirru'));
+    mkdirSync(join(scratch, '.calcit'));
+    symlinkSync(join(root, '.calcit', 'modules'), join(scratch, '.calcit', 'modules'));
+    const source = `quote $ defn main! ()\n  ${body.replaceAll('\n', '\n  ')}`;
+    const args = ['edit', 'transaction', '--code', JSON.stringify([
+      ['edit', 'def', 'respo.main/main!', '--overwrite', '--input-format', 'cirru', '--code', source],
+    ]), '--format', 'json'];
+    const preview = invoke([...args, '--dry-run']);
+    assert.equal(preview.status, 0, preview.stdout + preview.stderr);
+    const applied = invoke([...args, '--expect-revision', JSON.parse(preview.stdout).scoped_revision]);
+    assert.equal(applied.status, 0, applied.stdout + applied.stderr);
+    const checked = invoke(['calcit.cirru', '--check-only']);
+    return { status: checked.status, output: checked.stdout + checked.stderr };
+  } finally {
+    rmSync(scratch, { recursive: true, force: true });
+  }
+}
+
+test('render-with! accepts an open Dynamic Unit dispatch callback for the entry Op', () => {
+  const result = checkInProject(renderBoundary('Dynamic', 'Unit', '&unit'));
   assert.equal(result.status, 0, result.output);
 });
 
 test('demo SSR accepts the declared DomElement target without executing DOM work', () => {
-  const result = evaluate(`let
+  const result = checkInProject(`let
     adopt! $ fn (target)
       hint-fn $ Fn respo.dom/DomElement (-> Unit)
       respo.app.core/handle-ssr! target
