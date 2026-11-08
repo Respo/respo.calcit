@@ -1,6 +1,13 @@
 ## Respo: A virtual DOM library in Calcit-js
 
-### 0.19.5 候选 / 正式 Calcit 0.37.0
+### 0.19.6 候选 / 正式 Calcit 0.38.0
+
+使用者注意：CLI、`deps.cirru :calcit-version` 与 `@calcit/procs` 同步正式 **0.38.0**，
+JS-FFI 仍配对 **0.2.13**。源码与运行逻辑不变。
+`test/callback-type-boundaries.test.mjs` 重新用 `calcit eval --dep` 检查回调边界：
+0.38.0 起 `eval --dep` 继承依赖入口的 `:type-slots`（calcit#2632），不再需要临时项目。
+
+### 历史 0.19.5 / 正式 Calcit 0.37.0
 
 使用者注意：CLI、`deps.cirru :calcit-version` 与 `@calcit/procs` 同步正式 **0.37.0**，
 JS-FFI 仍配对 **0.2.13**。源码由 0.36.0 的 `calcit edit format` 迁移：type slot 绑定写成 symbol，
