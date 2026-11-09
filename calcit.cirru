@@ -8191,7 +8191,7 @@
                 listener $ assert-type value 'respo.schema/RespoListener
               :handler listener
           :examples $ []
-          :schema $ quote $ Fn respo.schema/RespoListener (-> AnyFn)
+          :schema $ quote $ Fn respo.schema/RespoListener (-> AnyFn) (:open :reflect)
         'listener? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn listener? (item)
             and (struct? item)
