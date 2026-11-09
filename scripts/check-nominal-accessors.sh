@@ -82,7 +82,7 @@ fields_positive=$(cat <<'CIRRU'
         assert |preserves-attrs-identity $ identical? attrs $ respo.util.detect/element-attrs element
         assert |preserves-style-identity $ identical? styles $ respo.util.detect/element-style element
         assert |preserves-event-map-identity $ identical? events $ respo.util.detect/element-event element
-        &let (handler $ fn (payload) &unit)
+        &let (handler $ fn (_event _dispatch!) &unit)
           &let (listener $ respo.schema/RespoListener :name :probe :handler handler)
             assert |preserves-handler-identity $ identical? handler $ respo.util.detect/listener-handler listener
             &let (listeners $ [] listener)
