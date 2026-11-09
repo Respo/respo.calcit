@@ -903,7 +903,7 @@
                 (:none) &unit
                 (:some component) (traverse-and-call component event-tuple dispatch!)
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> Unit)
+          :schema $ quote $ Fn AnyEnum (-> Unit) (:open :reflect)
         'traverse-and-call $ %{} 'CodeEntry
           :doc "|Traverses the rendered tree and invokes component listeners. Listeners receive the app dispatch function unchanged."
           :code $ quote $ defn traverse-and-call (element event-tuple dispatch!)
@@ -937,9 +937,10 @@
                             (:some child) (prepend acc child)
             , &unit
           :examples $ []
-          :schema $ quote $ Fn respo.schema/NodeValue Dynamic
+          :schema $ quote $ Fn respo.schema/NodeValue AnyEnum
             Fn *dispatch-op $ -> Unit
             -> Unit
+            :open :reflect
           :tests $ []
             %{} 'TestEntry
               :name |tolerates-none-subtree-and-keeps-component-listener
@@ -957,9 +958,10 @@
               :name |keeps-listener-order-dispatch-and-empty-children
               :code $ quote $ let
                   calls $ ref $ assert-type ([]) (List Tag)
-                  operations $ ref $ assert-type ([]) (List Dynamic)
+                  operations $ ref $ assert-type ([]) (List respo.app.schema/Op)
                   event $ :: :changed
                   dispatch! $ fn (op)
+                    hint-fn $ Fn respo.app.schema/Op $ -> Unit
                     reset! operations $ append @operations op
                     , &unit
                   make-component $ fn (name tree)
@@ -967,7 +969,7 @@
                     respo.schema/Component :name name :effects ([]) :tree tree :listeners $ [] $ respo.schema/RespoListener :name :watch :handler
                       fn (received dispatch!) (assert= event received)
                         reset! calls $ append @calls name
-                        dispatch! $ :: :heard name
+                        dispatch! $ respo.app.schema/Op :states ([]) name
                         , &unit
                   first-component $ make-component :first $ Option :none
                   second-component $ make-component :second $ Option :none
@@ -979,7 +981,11 @@
                 traverse-and-call root event dispatch!
                 assert= ([] :root :nested :first :second) @calls
                 assert=
-                  [] (:: :heard :root) (:: :heard :nested) (:: :heard :first) (:: :heard :second)
+                  []
+                    respo.app.schema/Op :states ([]) :root
+                    respo.app.schema/Op :states ([]) :nested
+                    respo.app.schema/Op :states ([]) :first
+                    respo.app.schema/Op :states ([]) :second
                   , @operations
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.controller.client
@@ -7401,8 +7407,12 @@
             :msg $ JsNullish String
           :examples $ []
           :schema $ quote StructDef
-        'RespoListener $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct RespoListener (:name Tag) (:handler AnyFn)
+        'RespoListener $ %{} 'CodeEntry
+          :doc "|A component listener receives an application-defined enum event and the unchanged application dispatch function. The handler result is ignored."
+          :code $ quote $ defstruct RespoListener (:name Tag)
+            :handler $ Fn AnyEnum
+              Fn *dispatch-op $ -> Unit
+              -> Dynamic
           :examples $ []
           :schema $ quote StructDef
         'States $ %{} 'CodeEntry
@@ -8191,7 +8201,11 @@
                 listener $ assert-type value 'respo.schema/RespoListener
               :handler listener
           :examples $ []
-          :schema $ quote $ Fn respo.schema/RespoListener (-> AnyFn) (:open :reflect)
+          :schema $ quote $ Fn respo.schema/RespoListener
+            -> $ Fn AnyEnum
+              Fn *dispatch-op $ -> Unit
+              -> Dynamic
+            :open :reflect
         'listener? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn listener? (item)
             and (struct? item)
