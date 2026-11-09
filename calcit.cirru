@@ -8909,20 +8909,18 @@
                 base-events $ match (calcit.core/get props :on)
                   (:some raw-on) (pick-on-events raw-on)
                   (:none) ({})
-                property-events $ filter-map-kv props $ fn (k v)
-                  hint-fn $ Fn Tag Dynamic $ -> (MapEntryDecision Tag respo.schema/EventHandler)
-                  if
-                    starts-with? (to-string k) |on-
-                    if (fn? v)
-                      MapEntryDecision :keep
-                        to-tag $ &str:slice (to-string k) 3
-                        unsafe-coerce v $ Fn respo.schema/RespoEvent
-                          Fn *dispatch-op $ -> Unit
-                          -> Unit
-                      if (nil? v) (MapEntryDecision :drop)
-                        raise $ str "|[Respo] expected event listener to be a function: " k
-                    MapEntryDecision :drop
-              &merge base-events property-events
+              &map:fold-kv props base-events $ fn (events k v)
+                hint-fn $ Fn (Map Tag respo.schema/EventHandler) Tag Dynamic $ -> (Map Tag respo.schema/EventHandler)
+                if
+                  starts-with? (to-string k) |on-
+                  if (fn? v)
+                    assoc events
+                      to-tag $ &str:slice (to-string k) 3
+                      unsafe-coerce v $ Fn respo.schema/RespoEvent
+                        Fn *dispatch-op $ -> Unit
+                        -> Unit
+                    if (nil? v) events $ raise $ str "|[Respo] expected event listener to be a function: " k
+                  , events
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic)
             -> $ Map Tag respo.schema/EventHandler
@@ -8941,16 +8939,16 @@
           :doc "|校验 :on 事件 map：键必须是 Tag，值必须是函数（nil 值被丢弃），原函数原样返回，只在类型上记为 respo.schema/EventHandler，不做适配或签名转换。静态的 EventHandler 合同只在 DomProps 的 :on 与 :on-* 字段上检查。"
           :code $ quote $ defn pick-on-events (raw-on)
             if (map? raw-on)
-              filter-map-kv raw-on $ fn (k v)
-                hint-fn $ Fn Dynamic Dynamic $ -> (MapEntryDecision Tag respo.schema/EventHandler)
-                if (tag? k)
-                  if (fn? v)
-                    MapEntryDecision :keep k $ unsafe-coerce v $ Fn respo.schema/RespoEvent
-                      Fn *dispatch-op $ -> Unit
-                      -> Unit
-                    if (nil? v) (MapEntryDecision :drop)
-                      raise $ str "|[Respo] expected event listener to be a function: " k
-                  raise $ str "|[Respo] expected event names in :on to be tags: " k
+              &map:fold-kv raw-on ({})
+                fn (events k v)
+                  hint-fn $ Fn (Map Tag respo.schema/EventHandler) Dynamic Dynamic $ -> (Map Tag respo.schema/EventHandler)
+                  if (tag? k)
+                    if (fn? v)
+                      assoc events k $ unsafe-coerce v $ Fn respo.schema/RespoEvent
+                        Fn *dispatch-op $ -> Unit
+                        -> Unit
+                      if (nil? v) events $ raise $ str "|[Respo] expected event listener to be a function: " k
+                    raise $ str "|[Respo] expected event names in :on to be tags: " k
               if (nil? raw-on) ({})
                 raise $ str "|[Respo] expected :on to be a map, got: " $ type-of raw-on
           :examples $ []
