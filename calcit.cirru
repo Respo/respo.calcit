@@ -6220,7 +6220,7 @@
                       if (calcit.core/non-nil? text) (text->html text) (calcit.core/join-string children |)
                     (:err _) (calcit.core/join-string children |)
           :examples $ []
-          :schema $ quote $ Fn Tag (Map AttrKey Dynamic) (List String) (-> String) (:generics AttrKey)
+          :schema $ quote $ Fn Tag (Map AttrKey AttrValue) (List String) (-> String) (:generics AttrKey AttrValue)
           :tests $ []
             %{} 'TestEntry (:name |absence-migration-html-values)
               :code $ quote $ do
@@ -6274,7 +6274,7 @@
                 prop->attr $ if (tag? k) (to-string k) (str k)
                 , |= $ &str:escape value-text
           :examples $ []
-          :schema $ quote $ Fn (Tuple AttrKey Dynamic) (-> String) (:generics AttrKey)
+          :schema $ quote $ Fn (Tuple AttrKey AttrValue) (-> String) (:generics AttrKey AttrValue)
         'escape-html $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn escape-html (text)
             &str:replace
@@ -6321,7 +6321,6 @@
             let
                 pairs $ &map:to-list props
                 visible $ filter pairs $ fn (pair)
-                  hint-fn $ Fn (Tuple AttrKey Dynamic) (-> Bool)
                   let
                       k $ &list:nth pair 0
                       v $ &list:nth pair 1
@@ -6329,14 +6328,14 @@
                     ; "A present boolean attribute reads as true, so false leaves it out; other attributes keep the text false"
                     and (calcit.core/non-nil? v)
                       not $ starts-with? attr |on-
-                      not $ and (= v false)
+                      not $ and (bool? v) (not v)
                         includes? boolean-attrs $ prop->attr attr
                 sorted $ &list:sort-by visible $ fn (pair)
-                  hint-fn $ Fn (Tuple AttrKey Dynamic) (-> AttrKey)
+                  hint-fn $ Fn (Tuple AttrKey AttrValue) (-> AttrKey)
                   &list:nth pair 0
               calcit.core/join-string (map sorted entry->html) "| "
           :examples $ []
-          :schema $ quote $ Fn (Map AttrKey Dynamic) (-> String) (:generics AttrKey)
+          :schema $ quote $ Fn (Map AttrKey AttrValue) (-> String) (:generics AttrKey AttrValue)
           :tests $ [] $ %{} 'TestEntry (:name |preserves-original-key-formatting)
             :code $ quote $ do
               assert= "|1=\"one\"" $ props->html $ {} (1 |one)
@@ -8886,16 +8885,15 @@
             if (nil? props) ([])
               -> props (&map:dissoc :on) (&map:dissoc :style) (&map:dissoc :ref)
                 &map:filter-kv $ fn (k v)
-                  hint-fn $ Fn Tag Dynamic $ -> Bool
                   and (calcit.core/non-nil? v)
                     not $ starts-with? (to-string k) |on-
                 &map:to-list
                 sort $ fn (x y)
-                  hint-fn $ Fn (Tuple Tag Dynamic) (Tuple Tag Dynamic) (-> Number)
                   &compare (&list:nth x 0) (&list:nth y 0)
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic)
-            -> $ List $ Tuple Tag Dynamic
+          :schema $ quote $ Fn (Map Tag AttrValue)
+            -> $ List $ Tuple Tag AttrValue
+            :generics AttrValue
           :tests $ []
             %{} 'TestEntry (:name |filters-internal-and-empty-properties)
               :code $ quote $ let

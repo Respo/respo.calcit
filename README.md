@@ -1,6 +1,11 @@
 ## Respo: A virtual DOM library in Calcit-js
 
-### 0.19.6 候选 / 正式 Calcit 0.38.0
+### 0.19.7 候选 / 正式 Calcit 0.40.0
+
+升级时同步 Calcit CLI 和 `@calcit/procs` 到 **0.40.0**，JS-FFI 到正式 **0.2.16**，重新安装并生成 JS。
+HTML 属性处理会保留调用方 Map 的值类型，现有 DOM 属性、HTML 输出与布尔属性行为保持。
+
+### 历史 0.19.6 / 正式 Calcit 0.38.0
 
 使用者注意：CLI、`deps.cirru :calcit-version` 与 `@calcit/procs` 同步正式 **0.38.0**，
 JS-FFI 仍配对 **0.2.13**。源码与运行逻辑不变。
