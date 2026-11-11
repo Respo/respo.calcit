@@ -24,7 +24,7 @@
 let
     leaf $ respo.core/span $ {}
     component $ respo.schema/Component :name :manual :effects ([]) :listeners ([]) :tree $ Option :some $ respo.util.detect/as-render-node leaf
-  assert= leaf $ option:unwrap $ respo.util.detect/component-tree component
+  assert= leaf $ (respo.util.detect/component-tree component) .unwrap
 ```
 
 ## 转换计数
