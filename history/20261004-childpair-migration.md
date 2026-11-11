@@ -22,7 +22,7 @@ let
     children $ respo.util.detect/element-children parent
   assert= 2 $ count children
   assert |payload-identity $ identical? leaf $ respo.util.detect/child-pair-value pair
-  assert |empty-is-preserved $ option:none? $ :node empty-pair
+  assert |empty-is-preserved $ (:node empty-pair) .none?
 ```
 
 `element-children` 返回存储的 `List<ChildPair>`，不再重建旧二元列表；读取 key

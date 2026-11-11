@@ -89,11 +89,11 @@ fields_positive=$(cat <<'CIRRU'
               &let (component $ respo.schema/Component :name :probe :effects ([]) :listeners listeners :tree (Option :some (respo.schema/RenderNode :element element)))
                 assert= :probe $ respo.util.detect/component-name component
                 assert |preserves-listeners-identity $ identical? listeners $ respo.util.detect/component-listeners component
-                assert |preserves-tree-payload-identity $ identical? element $ option:unwrap $ respo.util.detect/component-tree component
+                assert |preserves-tree-payload-identity $ identical? element $ (respo.util.detect/component-tree component) .unwrap
                 &let (outer-component $ respo.schema/Component :name :outer :effects ([]) :listeners ([]) :tree (Option :some (respo.schema/RenderNode :component component)))
-                  assert |preserves-component-payload-identity $ identical? component $ option:unwrap $ respo.util.detect/component-tree outer-component
+                  assert |preserves-component-payload-identity $ identical? component $ (respo.util.detect/component-tree outer-component) .unwrap
                 &let (empty-component $ respo.schema/Component :name :probe :effects ([]) :listeners listeners :tree (Option :none))
-                  assert |preserves-none-tree $ option:none? $ respo.util.detect/component-tree empty-component
+                  assert |preserves-none-tree $ (respo.util.detect/component-tree empty-component) .none?
 CIRRU
 )
 "$calcit_bin" eval --dep ./calcit.cirru "$fields_positive" >/dev/null
