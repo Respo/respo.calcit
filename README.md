@@ -1,6 +1,12 @@
 ## Respo: A virtual DOM library in Calcit-js
 
-### 0.19.7 候选 / 正式 Calcit 0.40.0
+### 0.19.8 候选 / 正式 Calcit 0.41.0
+
+升级时同步 Calcit CLI 和 `@calcit/procs` 到 **0.41.0**，JS-FFI 仍配对正式 **0.2.16**，重新安装并生成 JS。
+源码里直接调用的 `option:*` helper 全部改成 Option 方法（`.unwrap`、`.map`、`.none?` 等），清掉 0.41 的
+`W_OPTION_HELPER_CALL`；并用 0.41.0 的 `calcit edit format` 迁移为 `Some` / `None` 与短类型名。运行逻辑不变。
+
+### 历史 0.19.7 / 正式 Calcit 0.40.0
 
 升级时同步 Calcit CLI 和 `@calcit/procs` 到 **0.40.0**，JS-FFI 到正式 **0.2.16**，重新安装并生成 JS。
 HTML 属性处理会保留调用方 Map 的值类型，现有 DOM 属性、HTML 输出与布尔属性行为保持。
