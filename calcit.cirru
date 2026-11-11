@@ -82,7 +82,7 @@
                   div ({})
                     <> $ str state
           :examples $ []
-          :schema $ quote $ Fn (Map Dynamic Dynamic) respo.app.schema/Task (-> respo.schema/Component)
+          :schema $ quote $ Fn respo.schema/States respo.app.schema/Task (-> respo.schema/Component)
         'effect-log $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defeffect effect-log (task) (action parent at-place?) (; js/console.log "|Task effect" action at-place?)
             match action
@@ -188,7 +188,7 @@
                     {} $ :style $ {} (:padding |8px) (:font-size 12) (:color |#999) (:margin-top |16px)
                     <> message
           :examples $ []
-          :schema $ quote $ Fn (Map Dynamic Dynamic) (List respo.app.schema/Task) (-> respo.schema/Component)
+          :schema $ quote $ Fn respo.schema/States (List respo.app.schema/Task) (-> respo.schema/Component)
         'effect-focus $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defeffect effect-focus (pattern) (action parent at-place?)
             when
@@ -447,7 +447,7 @@
         'Store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct Store
             :tasks $ List respo.app.schema/Task
-            :states $ Map Dynamic Dynamic
+            :states respo.schema/States
             :cursor $ List respo.schema/CoordKey
           :examples $ []
           :schema $ quote StructDef
@@ -1204,7 +1204,7 @@
           :doc "|Internal helper of `pick-state`: the branch's `:data` as an Option; nil counts as missing."
           :code $ quote $ defn &state-raw (states)
             match
-              calcit.core/get (as-states-map states) :data
+              &map:get (as-states-map states) :data
               (:some raw)
                 if (nil? raw) None $ Some raw
               (:none) None
@@ -1260,9 +1260,7 @@
           :code $ quote $ defn >> (states k) (data-states states k)
           :examples $ [] $ quote
             >> ({}) :task-a
-          :schema $ quote $ Fn Dynamic schema/CoordKey
-            -> $ Map Dynamic Dynamic
-            :features :js-ffi
+          :schema $ quote $ Fn Dynamic schema/CoordKey (-> schema/States) (:features :js-ffi)
           :tests $ []
             %{} 'TestEntry (:name |mixed-state-keys)
               :code $ quote $ let
@@ -1274,19 +1272,19 @@
                   branch $ >> root |task-1
                   nested $ >> branch 7
                 assert=
-                  .unwrap $ calcit.core/get branch :data
+                  .unwrap $ &map:get branch :data
                   , |draft
                 assert=
-                  .unwrap $ calcit.core/get branch :cursor
+                  .unwrap $ &map:get branch :cursor
                   [] :panel |task-1
                 assert=
-                  .unwrap $ calcit.core/get nested :data
+                  .unwrap $ &map:get nested :data
                   , |nested
                 assert=
-                  .unwrap $ calcit.core/get nested :cursor
+                  .unwrap $ &map:get nested :cursor
                   [] :panel |task-1 7
                 assert=
-                  .unwrap $ calcit.core/get (>> root 7) :data
+                  .unwrap $ &map:get (>> root 7) :data
                   , |number
                 assert=
                   .unwrap $ calcit.core/get root :cursor
@@ -1369,8 +1367,7 @@
             if (nil? value) ({})
               if (map? value) value $ raise $ str "|[Respo] expected states as a map, got: " (type-of value)
           :examples $ []
-          :schema $ quote $ Fn Dynamic
-            -> $ Map Dynamic Dynamic
+          :schema $ quote $ Fn Dynamic (-> schema/States)
         'blockquote $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn blockquote (props & children) (create-element :blockquote props & children)
           :examples $ []
@@ -1674,20 +1671,17 @@
           :code $ quote $ defn data-states (states k)
             let
                 base $ as-states-map states
-                parent-cursor $ match (calcit.core/get base :cursor)
+                parent-cursor $ match (&map:get base :cursor)
                   (:some raw-cursor)
                     if (nil? raw-cursor) ([])
                       if (list? raw-cursor) raw-cursor $ raise $ str "|[Respo] expected states cursor as a list, got: " (type-of raw-cursor)
                   (:none) ([])
-                branch $ match (calcit.core/get base k)
+                branch $ match (&map:get base k)
                   (:some branch-value) (as-states-map branch-value)
                   (:none) ({})
               &map:assoc branch :cursor $ append parent-cursor k
           :examples $ []
-          :schema $ quote $ Fn StateInput Key
-            -> $ Map Dynamic Dynamic
-            :generics StateInput Key
-            :features :js-ffi
+          :schema $ quote $ Fn StateInput Key (-> schema/States) (:generics StateInput Key) (:features :js-ffi)
           :tests $ [] $ %{} 'TestEntry (:name |raw-heterogeneous-key-paths)
             :code $ quote $ let
                 key $ [] 1 2
@@ -1701,11 +1695,11 @@
                 list-branch $ data-states base $ [] 1 2
               assert=
                 Some $ [] :root false
-                get bool-branch :cursor
+                &map:get bool-branch :cursor
               assert=
                 Some $ [] :root key
-                get list-branch :cursor
-              assert= (get child :data) (get list-branch :data)
+                &map:get list-branch :cursor
+              assert= (get child :data) (&map:get list-branch :data)
             :tags $ #{} :unit
         'decorate-defcomp $ %{} 'CodeEntry
           :doc "|Add the component name to the root element as one data-comp attribute at its sorted position. Preserves the property ordering required by the merge diff, replacing an existing marker when necessary."
@@ -3056,7 +3050,7 @@
           :doc "|Read the state cursor from `states` (the value `>>` returns). Missing or nil cursors become an empty list; a cursor that is not a list raises an error. Send it back with `:: :states cursor new-state`."
           :code $ quote $ defn state-cursor (states)
             match
-              calcit.core/get (as-states-map states) :cursor
+              &map:get (as-states-map states) :cursor
               (:some raw-cursor)
                 if (nil? raw-cursor) ([])
                   if (list? raw-cursor) (map raw-cursor respo.util.list/read-coord-key)

@@ -55,8 +55,7 @@ jobs:
 
       - name: Keep unresolved weak types from growing
         env:
-          # 179 while respo.schema/States is spelled out as Map Dynamic Dynamic (Calcit 0.41.1 alias regression); back to 173 after the fix.
-          UNRESOLVED_LIMIT: "179"
+          UNRESOLVED_LIMIT: "173"
         run: |
           set -euo pipefail
           actual="$(calcit calcit.cirru analyze weak-types --summary-only --format json | jq -e '.data.summary.intents.unresolved')"

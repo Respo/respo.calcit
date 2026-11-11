@@ -5,8 +5,8 @@
 升级时同步 Calcit CLI 和 `@calcit/procs` 到 **0.41.1**，JS-FFI 仍配对正式 **0.2.16**，重新安装并生成 JS。
 源码里直接调用的 `option:*` helper 全部改成 Option 方法（`.unwrap`、`.map`、`.none?` 等），清掉 0.41 的
 `W_OPTION_HELPER_CALL`；并用 0.41.1 的 `calcit edit format` 迁移为 `Some` / `None` 与短类型名。运行逻辑不变。
-0.41.1 下以 `respo.schema/States` 作为返回类型时，对结果调 `get` 会误报 `E_UNSUPPORTED_INDEXED_RECEIVER`，
-本版在类型位置暂时直接写 `Map Dynamic Dynamic`（与 `States` 等价），Calcit 修复后改回。
+0.41.1 下对 `respo.schema/States` 调用 `get` 可能误报 `E_UNSUPPORTED_INDEXED_RECEIVER`。
+内部状态读取改用 `&map:get`，保留 `States` 签名与原有 Option 行为。
 
 ### 历史 0.19.7 / 正式 Calcit 0.40.0
 
