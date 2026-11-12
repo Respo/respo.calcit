@@ -18,7 +18,7 @@ function evaluate(source) {
 }
 
 for (const [name, value, diagnostic] of [
-  ['rejects a String in a Number collector', '|wrong', /W_FN_ARG_TYPE_MISMATCH/],
+  ['rejects a String in a Number collector', '|wrong', /E_FN_ARG_TYPE_MISMATCH/],
   ['rejects an unproved Dynamic in a Number collector', "(assert-type 7 'Dynamic)", /E_ERASED_GENERIC_RELATION/],
 ]) {
   test(`generic append ${name}`, () => {
@@ -63,7 +63,7 @@ test('demo SSR accepts the declared DomElement target without executing DOM work
 test('demo SSR rejects a Number target before execution', () => {
   const result = evaluate('respo.app.core/handle-ssr! 42');
   assert.notEqual(result.status, 0);
-  assert.match(result.output, /W_FN_ARG_TYPE_MISMATCH|E_DYNAMIC_NOMINAL_ARGUMENT|E_CALL_ARGUMENT_MISMATCH/);
+  assert.match(result.output, /E_FN_ARG_TYPE_MISMATCH|E_DYNAMIC_NOMINAL_ARGUMENT|E_CALL_ARGUMENT_MISMATCH/);
   assert.match(result.output, /handle-ssr!/);
   assert.doesNotMatch(result.output, /took [\d.]+ms:/, 'invalid SSR targets must not execute');
 });
@@ -71,7 +71,7 @@ test('demo SSR rejects a Number target before execution', () => {
 test('render-with! rejects a non-Unit dispatch result', () => {
   const checked = evaluate(renderBoundary('Dynamic', 'Number', '42'));
   assert.notEqual(checked.status, 0, 'an incompatible dispatch callback must not compile');
-  assert.match(checked.output, /W_FN_ARG_TYPE_MISMATCH|E_CALL_ARGUMENT_MISMATCH/);
+  assert.match(checked.output, /E_FN_ARG_TYPE_MISMATCH|E_CALL_ARGUMENT_MISMATCH/);
   assert.match(checked.output, /render-with!/);
   assert.doesNotMatch(checked.output, /took [\d.]+ms:/, 'the invalid callback must not run');
 });
@@ -124,7 +124,7 @@ for (const [name, source] of [
   test(`typed render fixtures ${name}`, () => {
     const result = evaluate(source);
     assert.notEqual(result.status, 0, 'invalid fixture input must fail preprocessing');
-    assert.match(result.output, /W_FN_ARG_TYPE_MISMATCH|E_DYNAMIC_NOMINAL_ARGUMENT/);
+    assert.match(result.output, /E_FN_ARG_TYPE_MISMATCH|E_DYNAMIC_NOMINAL_ARGUMENT/);
     assert.doesNotMatch(result.output, /took [\d.]+ms:/, 'invalid fixture input must not run');
   });
 }
@@ -175,7 +175,7 @@ for (const helper of ['add-style', 'replace-style']) {
   test(`${helper} rejects Number as its DOM target before execution`, () => {
     const result = evaluate(`respo.render.patch/${helper} 42 :padding 4`);
     assert.notEqual(result.status, 0, 'a Number is not a DOM capability');
-    assert.match(result.output, /W_FN_ARG_TYPE_MISMATCH/);
+    assert.match(result.output, /E_FN_ARG_TYPE_MISMATCH/);
     assert.match(result.output, new RegExp(`Function .respo.render.patch/${helper}. arg 1`));
     assert.doesNotMatch(result.output, /took [\d.]+ms:/, 'the invalid style update must not run');
   });
@@ -213,13 +213,13 @@ for (const [name, source] of [
 
 for (const [name, source, diagnostics] of [
   ['guard rejects String passed to the retained Number callback', guarded('checked |wrong'),
-    [/W_LOCAL_FN_ARG_TYPE_MISMATCH/, /calling `checked` arg 1/, /expects type `:number`, but got `:string`/]],
+    [/E_LOCAL_FN_ARG_TYPE_MISMATCH/, /calling `checked` arg 1/, /expects type `:number`, but got `:string`/]],
   ['effect rejects one-argument callback', effect('value', "Number", 'Unit', '&unit'),
-    [/W_FN_ARG_TYPE_MISMATCH/, /Function `respo.core\/build-effect` arg 3/, /but got `fn\(:number\) -> :unit`/]],
+    [/E_FN_ARG_TYPE_MISMATCH/, /Function `respo.core\/build-effect` arg 3/, /but got `fn\(:number\) -> :unit`/]],
   ['effect rejects wrong callback parameter types', effect('args params', "Number Number", 'Unit', '&unit'),
-    [/W_FN_ARG_TYPE_MISMATCH/, /Function `respo.core\/build-effect` arg 3/, /but got `fn\(:number, :number\) -> :unit`/]],
+    [/E_FN_ARG_TYPE_MISMATCH/, /Function `respo.core\/build-effect` arg 3/, /but got `fn\(:number, :number\) -> :unit`/]],
   ['effect rejects a non-Unit callback result', effect('args params', lists, 'Number', '42'),
-    [/W_FN_ARG_TYPE_MISMATCH/, /Function `respo.core\/build-effect` arg 3/, /but got `fn\(list<dynamic>, 'respo.schema\/EffectParams\) -> :number`/]],
+    [/E_FN_ARG_TYPE_MISMATCH/, /Function `respo.core\/build-effect` arg 3/, /but got `fn\(list<dynamic>, 'respo.schema\/EffectParams\) -> :number`/]],
   ['mount patch rejects Number as callback target', patchEffect('effect-mount', 'target', "Number", 'Unit', '&unit'),
     [/Enum `DomPatch::effect-mount` payload 3 expects type/, /but got `fn\(:number\) -> :unit`/]],
   ['unmount patch rejects two callback parameters', patchEffect('effect-unmount', 'a b', "respo.dom/DomElement respo.dom/DomElement", 'Unit', '&unit'),
@@ -293,6 +293,6 @@ for (const name of ['space-x', 'space-y']) {
   test(`${name} rejects a non-CssValue size`, () => {
     const result = evaluate(`respo.comp.space/${name} true`);
     assert.notEqual(result.status, 0, 'sizes must be a CssValue');
-    assert.match(result.output, /W_FN_ARG_TYPE_MISMATCH|E_CALL_ARGUMENT_MISMATCH/);
+    assert.match(result.output, /E_FN_ARG_TYPE_MISMATCH|E_CALL_ARGUMENT_MISMATCH/);
   });
 }
