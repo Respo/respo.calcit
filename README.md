@@ -1,9 +1,9 @@
 ## Respo: A virtual DOM library in Calcit-js
 
-### 0.19.9 候选 / 正式 Calcit 0.42.0
+### 0.19.9 候选 / 正式 Calcit 0.42.1
 
-升级时同步 Calcit CLI 和 `@calcit/procs` 到 **0.42.0**，JS-FFI 仍配对正式 **0.2.16**，重新安装并生成 JS。
-0.42.0 修好了别名类型上的 `get`，内部状态读取从 `&map:get` 改回 `get`。
+升级时同步 Calcit CLI 和 `@calcit/procs` 到 **0.42.1**，JS-FFI 仍配对正式 **0.2.16**，重新安装并生成 JS。
+0.42.1 修好了别名类型上的 `get`，内部状态读取从 `&map:get` 改回 `get`。
 用 `calcit fix --rule effect-features-v1` 给 80 个函数签名补上 `:state` / `:io` 效果声明，清掉 0.42 的
 `W_STATE_FEATURE_REQUIRED` / `W_IO_FEATURE_REQUIRED`。调用读写全局 Ref 或打印输出的 Respo API 时，
 自己的签名也需要声明相应的 feature（0.42 默认只警告）。运行逻辑不变。
