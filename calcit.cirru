@@ -1204,7 +1204,7 @@
           :doc "|Internal helper of `pick-state`: the branch's `:data` as an Option; nil counts as missing."
           :code $ quote $ defn &state-raw (states)
             match
-              &map:get (as-states-map states) :data
+              get (as-states-map states) :data
               (:some raw)
                 if (nil? raw) None $ Some raw
               (:none) None
@@ -1272,19 +1272,19 @@
                   branch $ >> root |task-1
                   nested $ >> branch 7
                 assert=
-                  .unwrap $ &map:get branch :data
+                  .unwrap $ get branch :data
                   , |draft
                 assert=
-                  .unwrap $ &map:get branch :cursor
+                  .unwrap $ get branch :cursor
                   [] :panel |task-1
                 assert=
-                  .unwrap $ &map:get nested :data
+                  .unwrap $ get nested :data
                   , |nested
                 assert=
-                  .unwrap $ &map:get nested :cursor
+                  .unwrap $ get nested :cursor
                   [] :panel |task-1 7
                 assert=
-                  .unwrap $ &map:get (>> root 7) :data
+                  .unwrap $ get (>> root 7) :data
                   , |number
                 assert=
                   .unwrap $ calcit.core/get root :cursor
@@ -1671,12 +1671,12 @@
           :code $ quote $ defn data-states (states k)
             let
                 base $ as-states-map states
-                parent-cursor $ match (&map:get base :cursor)
+                parent-cursor $ match (get base :cursor)
                   (:some raw-cursor)
                     if (nil? raw-cursor) ([])
                       if (list? raw-cursor) raw-cursor $ raise $ str "|[Respo] expected states cursor as a list, got: " (type-of raw-cursor)
                   (:none) ([])
-                branch $ match (&map:get base k)
+                branch $ match (get base k)
                   (:some branch-value) (as-states-map branch-value)
                   (:none) ({})
               &map:assoc branch :cursor $ append parent-cursor k
@@ -1695,11 +1695,11 @@
                 list-branch $ data-states base $ [] 1 2
               assert=
                 Some $ [] :root false
-                &map:get bool-branch :cursor
+                get bool-branch :cursor
               assert=
                 Some $ [] :root key
-                &map:get list-branch :cursor
-              assert= (get child :data) (&map:get list-branch :data)
+                get list-branch :cursor
+              assert= (get child :data) (get list-branch :data)
             :tags $ #{} :unit
         'decorate-defcomp $ %{} 'CodeEntry
           :doc "|Add the component name to the root element as one data-comp attribute at its sorted position. Preserves the property ordering required by the merge diff, replacing an existing marker when necessary."
@@ -3050,7 +3050,7 @@
           :doc "|Read the state cursor from `states` (the value `>>` returns). Missing or nil cursors become an empty list; a cursor that is not a list raises an error. Send it back with `:: :states cursor new-state`."
           :code $ quote $ defn state-cursor (states)
             match
-              &map:get (as-states-map states) :cursor
+              get (as-states-map states) :cursor
               (:some raw-cursor)
                 if (nil? raw-cursor) ([])
                   if (list? raw-cursor) (map raw-cursor respo.util.list/read-coord-key)
@@ -3092,7 +3092,7 @@
                 , &compare
               fn (k)
                 hint-fn $ Fn schema/StyleKey $ -> (Tuple schema/StyleKey schema/CssValue)
-                [] k $ .unwrap $ &map:get styles k
+                [] k $ .unwrap $ get styles k
           :examples $ []
           :schema $ quote $ Fn (Map schema/StyleKey schema/CssValue)
             -> $ List $ Tuple schema/StyleKey schema/CssValue
