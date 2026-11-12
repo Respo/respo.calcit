@@ -12,7 +12,7 @@ expect_argument_failure() {
     printf 'Expected %s to reject %s before execution.\n' "$target" "$value" >&2
     exit 1
   fi
-  if [[ "$output" != *"[W_FN_ARG_TYPE_MISMATCH]"* || "$output" != *"Function \`$target\` arg 1 expects type"* ]]; then
+  if [[ "$output" != *"[E_FN_ARG_TYPE_MISMATCH]"* || "$output" != *"Function \`$target\` arg 1 expects type"* ]]; then
     printf 'Unexpected diagnostic for %s:\n%s\n' "$target" "$output" >&2
     exit 1
   fi
