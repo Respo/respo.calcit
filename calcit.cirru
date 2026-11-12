@@ -6474,13 +6474,10 @@
                 flush-scroll! $ fn ()
                   hint-fn $ Fn (-> Unit) (:features :js-ffi)
                   &doseq
-                    pair $ &map:to-list @scroll-snapshot
-                    &doseq
-                      state $ &list:nth pair 1
-                      let
-                          entry $ as-move-scroll-state state
-                        aset (:node entry) |scrollTop $ :top entry
-                        aset (:node entry) |scrollLeft $ :left entry
+                    states $ map-list-kv @scroll-snapshot $ fn (_coord states) states
+                    &doseq (entry states)
+                      aset (:node entry) |scrollTop $ :top entry
+                      aset (:node entry) |scrollLeft $ :left entry
                   reset! scroll-snapshot $ {}
                   reset! child-snapshots $ {}
                   , &unit
@@ -6639,13 +6636,6 @@
             Fn Tag $ -> $ Fn respo.dom/DomEvent (List respo.schema/CoordKey) (-> Unit)
             -> Unit
             :features :io :js-ffi :state
-        'as-move-scroll-state $ %{} 'CodeEntry (:doc "|按 Struct 来源校验滚动快照。")
-          :code $ quote $ defn as-move-scroll-state (value)
-            if (struct? value)
-              if (&struct:matches? value MoveScrollState) value $ raise "|[Respo] expected a MoveScrollState snapshot"
-              raise "|[Respo] expected a MoveScrollState snapshot"
-          :examples $ []
-          :schema $ quote $ Fn Dynamic (-> MoveScrollState)
         'collect-scroll-states $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn collect-scroll-states (node)
             let
