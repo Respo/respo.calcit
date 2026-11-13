@@ -243,7 +243,7 @@ const domPropsWith = (field, value) => `let
     props $ respo.schema/DomProps ${field} ${value}
   , &unit`;
 
-const listener = eventType => `(fn (e d!) (hint-fn $ Fn ${eventType} AnyFn (-> Unit)) &unit)`;
+const listener = eventType => `(fn (e d!) (hint-fn $ Fn ${eventType} (Fn *dispatch-op (-> Unit) (:features :io :state)) (-> Unit)) &unit)`;
 
 for (const [field, wrap, absent] of [
   [':on-input', callback => `(Option :some ${callback})`, '(Option :none)'],
