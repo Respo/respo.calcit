@@ -231,7 +231,7 @@
           :examples $ [] $ quote
             on-keydown ([] :todolist)
               %{} respo.app.schema/TodoState (:draft |task) (:locked? false) (:message |)
-          :schema $ quote $ Fn (List respo.schema/CoordKey) respo.app.schema/TodoState (-> respo.schema/RespoListener) (:features :js-ffi)
+          :schema $ quote $ Fn (List respo.schema/CoordKey) respo.app.schema/TodoState (-> respo.schema/RespoListener) (:features :io :js-ffi :state)
         'on-test $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn on-test (e dispatch!) (println "|trigger test!")
             try-test! dispatch! $ []
@@ -954,7 +954,7 @@
             , &unit
           :examples $ []
           :schema $ quote $ Fn respo.schema/NodeValue AnyEnum
-            Fn *dispatch-op $ -> Unit
+            Fn *dispatch-op (-> Unit) (:features :io :state)
             -> Unit
             :open :reflect
           :tests $ []
@@ -1043,7 +1043,7 @@
           :examples $ []
           :schema $ quote $ Fn
             Ref $ Option respo.schema/Component
-            Ref $ Fn *dispatch-op $ -> Unit
+            Ref $ Fn *dispatch-op (-> Unit) (:features :io :state)
             -> $ Fn (List respo.schema/CoordKey) Tag respo.schema/RespoEvent $ -> Unit
             :features :js-ffi :state
         'extract-listeners $ %{} 'CodeEntry (:doc |)
@@ -1234,7 +1234,7 @@
             fn (op) (raise |[Respo]-dispatch-before-render)
           :examples $ []
           :schema $ quote $ Ref
-            Fn *dispatch-op $ -> Unit
+            Fn *dispatch-op (-> Unit) (:features :io :state)
         '*global-element $ %{} 'CodeEntry
           :doc "|internal Ref storing the current virtual DOM tree. used by render! to track and update the application state."
           :code $ quote $ defref *global-element None
@@ -2582,7 +2582,7 @@
             , &unit
           :examples $ []
           :schema $ quote $ Fn respo.dom/DomElement schema/Component
-            Ref $ Fn *dispatch-op $ -> Unit
+            Ref $ Fn *dispatch-op (-> Unit) (:features :io :state)
             -> Unit
             :features :io :js-ffi :state
         'none-render-node $ %{} 'CodeEntry (:doc |)
@@ -2838,7 +2838,7 @@
             , &unit
           :examples $ []
           :schema $ quote $ Fn respo.dom/DomElement schema/Component
-            Fn *dispatch-op $ -> Unit
+            Fn *dispatch-op (-> Unit) (:features :io :state)
             -> Unit
             :features :io :js-ffi :state
         'render! $ %{} 'CodeEntry
@@ -2852,7 +2852,7 @@
           :examples $ [] $ quote
             fn (mount-target component dispatch!) (render! mount-target component dispatch!)
           :schema $ quote $ Fn (JsNullish respo.dom/DomElement) schema/Component
-            Fn *dispatch-op $ -> Unit
+            Fn *dispatch-op (-> Unit) (:features :io :state)
             -> Unit
             :features :io :js-ffi :state
           :tests $ [] $ %{} 'TestEntry (:name |rejects-nil-mount-target)
@@ -2871,7 +2871,7 @@
           :examples $ []
           :schema $ quote $ Fn (JsNullish respo.dom/DomElement)
             Fn $ -> schema/Component
-            Fn *dispatch-op $ -> Unit
+            Fn *dispatch-op (-> Unit) (:features :io :state)
             -> Unit
             :features :io :js-ffi :state
           :tests $ [] $ %{} 'TestEntry (:name |failed-dom-render-retains-committed-memo)
@@ -2914,7 +2914,7 @@
             , &unit
           :examples $ []
           :schema $ quote $ Fn respo.dom/DomElement schema/Component
-            Ref $ Fn *dispatch-op $ -> Unit
+            Ref $ Fn *dispatch-op (-> Unit) (:features :io :state)
             -> Unit
             :features :io :js-ffi :state
         'resolve-element-constructor $ %{} 'CodeEntry
@@ -4634,7 +4634,7 @@
                 leaf $ respo.schema/Element :name :span :coord None :attrs ([]) :style ([]) :ref nil :children ([]) :event $ {}
                   :click $ fn (_event _d!)
                     hint-fn $ Fn respo.schema/RespoEvent
-                      Fn *dispatch-op $ -> Unit
+                      Fn *dispatch-op (-> Unit) (:features :io :state)
                       -> Unit
                     , &unit
                   :focus $ assert-type nil $ JsNullish respo.schema/EventHandler
@@ -4688,7 +4688,7 @@
                 leaf $ respo.schema/Element :name :span :coord None :attrs ([]) :style ([]) :ref nil :children ([]) :event $ {}
                   :click $ fn (_event _d!)
                     hint-fn $ Fn respo.schema/RespoEvent
-                      Fn *dispatch-op $ -> Unit
+                      Fn *dispatch-op (-> Unit) (:features :io :state)
                       -> Unit
                     , &unit
                   :focus $ assert-type nil $ JsNullish respo.schema/EventHandler
@@ -6314,7 +6314,7 @@
                   element $ respo.schema/Element :name :div :coord None :attrs ([]) :style ([]) :event
                     {} $ :click $ fn (_event _dispatch!)
                       hint-fn $ Fn respo.schema/RespoEvent
-                        Fn *dispatch-op $ -> Unit
+                        Fn *dispatch-op (-> Unit) (:features :io :state)
                         -> Unit
                       , &unit
                     , :children ([]) :ref nil
@@ -7386,7 +7386,7 @@
             fn (_event _dispatch!) &unit
           :examples $ []
           :schema $ quote $ Fn RespoEvent
-            Fn *dispatch-op $ -> Unit
+            Fn *dispatch-op (-> Unit) (:features :io :state)
             -> Unit
         'KeyboardInfo $ %{} 'CodeEntry
           :doc "|Keyboard fields of a :keydown, :keyup or :keypress event, read with respo.core/keyboard-info."
@@ -7428,7 +7428,7 @@
           :doc "|A component listener receives an application-defined enum event and the unchanged application dispatch function. The handler result is ignored."
           :code $ quote $ defstruct RespoListener (:name Tag)
             :handler $ Fn AnyEnum
-              Fn *dispatch-op $ -> Unit
+              Fn *dispatch-op (-> Unit) (:features :io :state)
               -> Dynamic
           :examples $ []
           :schema $ quote StructDef
@@ -7555,7 +7555,7 @@
             let
                 dispatched $ ref $ assert-type ([]) (List *dispatch-op)
                 dispatch! $ fn (op)
-                  hint-fn $ Fn *dispatch-op $ -> Unit
+                  hint-fn $ Fn *dispatch-op (-> Unit) (:features :state)
                   respo.core/append-dynamic! dispatched op
                 child-tree $ comp-event-shell $ span
                   {} $ :on-click $ fn (_event d!)
@@ -7617,10 +7617,10 @@
                 dispatched $ ref $ assert-type ([]) (List *dispatch-op)
                 later-dispatched $ ref $ assert-type ([]) (List *dispatch-op)
                 dispatch! $ fn (op)
-                  hint-fn $ Fn *dispatch-op $ -> Unit
+                  hint-fn $ Fn *dispatch-op (-> Unit) (:features :state)
                   respo.core/append-dynamic! dispatched op
                 later-dispatch! $ fn (op)
-                  hint-fn $ Fn *dispatch-op $ -> Unit
+                  hint-fn $ Fn *dispatch-op (-> Unit) (:features :state)
                   respo.core/append-dynamic! later-dispatched op
                 ref! $ fn (target)
                   hint-fn $ Fn respo.dom/DomElement $ -> Unit
@@ -8496,7 +8496,7 @@
                 leaf $ respo.schema/Element :name :span :coord None :attrs ([]) :style ([]) :children ([]) :ref nil :event $ {}
                   :click $ fn (_event _dispatch!)
                     hint-fn $ Fn respo.schema/RespoEvent
-                      Fn *dispatch-op $ -> Unit
+                      Fn *dispatch-op (-> Unit) (:features :io :state)
                       -> Unit
                     , &unit
                 root $ respo.schema/Element :name :div :coord None :attrs ([]) :style ([]) :children
@@ -8504,7 +8504,7 @@
                   , :ref nil :event $ {}
                     :click $ fn (_event _dispatch!)
                       hint-fn $ Fn respo.schema/RespoEvent
-                        Fn *dispatch-op $ -> Unit
+                        Fn *dispatch-op (-> Unit) (:features :io :state)
                         -> Unit
                       , &unit
                 component $ respo.schema/Component :name :root :effects ([]) :listeners ([]) :tree $ Some (respo.util.detect/as-render-node root)
@@ -8964,7 +8964,7 @@
                     assoc events
                       to-tag $ &str:slice (to-string k) 3
                       unsafe-coerce v $ Fn respo.schema/RespoEvent
-                        Fn *dispatch-op $ -> Unit
+                        Fn *dispatch-op (-> Unit) (:features :io :state)
                         -> Unit
                     if (nil? v) events $ raise $ str "|[Respo] expected event listener to be a function: " k
                   , events
@@ -8992,7 +8992,7 @@
                   if (tag? k)
                     if (fn? v)
                       assoc events k $ unsafe-coerce v $ Fn respo.schema/RespoEvent
-                        Fn *dispatch-op $ -> Unit
+                        Fn *dispatch-op (-> Unit) (:features :io :state)
                         -> Unit
                       if (nil? v) events $ raise $ str "|[Respo] expected event listener to be a function: " k
                     raise $ str "|[Respo] expected event names in :on to be tags: " k

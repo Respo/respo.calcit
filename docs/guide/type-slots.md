@@ -22,6 +22,11 @@ Respo 定义了类型槽 `respo.schema/*dispatch-op`。`render!`、`render-with!
 所以 `d!` 只接受一个参数，类型是当前 entry 绑定的应用 Op。Respo 在运行时
 不再改写 op，原样交给应用的 dispatch。
 
+渲染和事件交付的 dispatch 合同允许 `:io` 与 `:state`，也接受纯回调。
+在 Calcit 0.43 工具链下，显式编写 DOM handler 的签名时，使用
+`Fn *dispatch-op (-> Unit) (:features :io :state)` 作为 `d!` 的类型。
+调用 `d!` 的 handler 也要声明使用到的效果。
+
 ## 每个 entry 绑定一次
 
 ```bash
@@ -79,7 +84,7 @@ alerts 的组件只发 `:states`，respo-ui 的组件转发调用方传入的 op
 
 ```cirru.no-check
 :on-click $ fn (e d!)
-  hint-fn $ Fn (Map Tag Dynamic) (Fn *dispatch-op (-> Unit)) (-> Unit)
+  hint-fn $ Fn respo.schema/RespoEvent (Fn *dispatch-op (-> Unit) (:features :io :state)) (-> Unit) (:features :io :state)
   d! $ :: :toggle task-id
 ```
 
