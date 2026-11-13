@@ -109,7 +109,7 @@ comp-input text $ Option :some $ InputOptions
 
 ## 编译器版本
 
-当前模块需要 Calcit CLI 与 `@calcit/procs` `0.32.0` 配对。`0.30.1-alpha.4` 修复了 codegen 线程丢失 entry 类型槽绑定的问题（calcit-lang/calcit#2108，由 #2109 修复）：此前可能出现 `--check-only` 通过而 `calcit js` 报 `E_UNBOUND_TYPE_SLOT`。这只是历史背景，不表示当前模块兼容旧工具链。
+当前模块使用 Calcit CLI 与 `@calcit/procs` `0.42.1` 配对。`0.30.1-alpha.4` 修复了 codegen 线程丢失 entry 类型槽绑定的问题（calcit-lang/calcit#2108，由 #2109 修复）：此前可能出现 `--check-only` 通过而 `calcit js` 报 `E_UNBOUND_TYPE_SLOT`。
 
 迁移调查的过程记录保留在 `history/20261004-dispatch-boundary-probe.md` 等文件中。
 
