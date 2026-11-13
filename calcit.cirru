@@ -3313,7 +3313,7 @@
             if (map? value) (&map:to-list value) ([])
           :examples $ []
           :schema $ quote $ Fn Dynamic
-            -> $ List Dynamic
+            -> $ List $ Tuple Dynamic Dynamic
         'nodejs? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def nodejs? (detect-nodejs?)
           :examples $ []
@@ -7928,7 +7928,7 @@
                   recur (&list:rest xs) (&list:rest ys)
                 true false
           :examples $ []
-          :schema $ quote $ Fn (List Dynamic) (List Dynamic) (-> Bool)
+          :schema $ quote $ Fn (List A) (List B) (-> Bool) (:generics A B)
           :tests $ [] $ %{} 'TestEntry (:name |absence-migration-values)
             :code $ quote $ do
               assert= true $ respo.util.detect/=seq ([]) ([])
@@ -8597,17 +8597,17 @@
             map
               filter (&map:to-list events)
                 fn (pair)
-                  hint-fn $ Fn (Tuple Key Dynamic) (-> Bool)
+                  hint-fn $ Fn (Tuple Key Value) (-> Bool)
                   calcit.core/non-nil? $ &list:nth pair 1
               fn (pair)
-                hint-fn $ Fn (Tuple Key Dynamic) (-> Tag)
+                hint-fn $ Fn (Tuple Key Value) (-> Tag)
                 &let
                   key $ &list:nth pair 0
                   if (tag? key) key $ raise $ str "|[Respo] expected a Tag key, got: " key
           :examples $ []
-          :schema $ quote $ Fn (Map Key Dynamic)
+          :schema $ quote $ Fn (Map Key Value)
             -> $ List Tag
-            :generics Key
+            :generics Key Value
           :tests $ [] $ %{} 'TestEntry (:name |keeps-live-tag-keys)
             :code $ quote $ let
                 events $ {}
