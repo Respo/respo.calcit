@@ -9012,7 +9012,7 @@
               (number? k) k
               true $ raise $ str "|[Respo] expected a child key as Tag, String or Number, got: " (type-of k) "| " (to-lispy-string k)
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> respo.schema/CoordKey)
+          :schema $ quote $ Fn Input (-> respo.schema/CoordKey) (:generics Input)
           :tests $ [] $ %{} 'TestEntry (:name |reads-supported-keys)
             :code $ quote $ do
               assert= :a $ read-coord-key :a
