@@ -7969,28 +7969,28 @@
               if (&struct:matches? value respo.schema/Component) value $ raise $ str "|as-component expected a Component, but received: " (type-of value)
               raise $ str "|as-component expected a Component, but received: " $ type-of value
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> schema/Component)
+          :schema $ quote $ Fn Input (-> schema/Component) (:generics Input)
         'as-effect $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn as-effect (value)
             if (struct? value)
               if (&struct:matches? value respo.schema/Effect) value $ raise $ str "|as-effect expected a Effect, but received: " (type-of value)
               raise $ str "|as-effect expected a Effect, but received: " $ type-of value
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> schema/Effect)
+          :schema $ quote $ Fn Input (-> schema/Effect) (:generics Input)
         'as-element $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn as-element (value)
             if (struct? value)
               if (&struct:matches? value respo.schema/Element) value $ raise $ str "|as-element expected an Element, but received: " (type-of value)
               raise $ str "|as-element expected an Element, but received: " $ type-of value
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> schema/Element)
+          :schema $ quote $ Fn Input (-> schema/Element) (:generics Input)
         'as-listener $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn as-listener (value)
             if (struct? value)
               if (&struct:matches? value respo.schema/RespoListener) value $ raise $ str "|as-listener expected a RespoListener, but received: " (type-of value)
               raise $ str "|as-listener expected a RespoListener, but received: " $ type-of value
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> schema/RespoListener)
+          :schema $ quote $ Fn Input (-> schema/RespoListener) (:generics Input)
         'as-render-node $ %{} 'CodeEntry
           :doc "|在创建边界标记 Element 或 Component，保留 payload 的身份；非法节点报告组件树错误。"
           :code $ quote $ defn as-render-node (value)
@@ -8086,7 +8086,7 @@
               comp-demo
             quote $ component? $ respo.core/div ({})
             quote $ component? nil
-          :schema $ quote $ Fn Dynamic (-> Bool)
+          :schema $ quote $ Fn Input (-> Bool) (:generics Input)
           :tests $ [] $ %{} 'TestEntry (:name |absence-migration-nominal-identity)
             :code $ quote $ do
               assert= true $ respo.util.detect/component? $ respo.schema/Component :name :probe :effects ([]) :listeners ([])
@@ -8129,7 +8129,7 @@
                 (:some calcit-absence-definition) (= calcit-absence-definition schema/Effect)
                 (:none) false
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> Bool)
+          :schema $ quote $ Fn Input (-> Bool) (:generics Input)
           :tests $ [] $ %{} 'TestEntry (:name |absence-migration-nominal-identity)
             :code $ quote $ do
               assert= true $ respo.util.detect/effect? $ respo.schema/Effect :name :probe :coord ([]) :args ([]) :method
@@ -8203,7 +8203,7 @@
             quote $ element? $ respo.core/span
               {} $ :inner-text |text
             quote $ element? nil
-          :schema $ quote $ Fn Dynamic (-> Bool)
+          :schema $ quote $ Fn Input (-> Bool) (:generics Input)
           :tests $ [] $ %{} 'TestEntry (:name |absence-migration-nominal-identity)
             :code $ quote $ do
               assert= true $ respo.util.detect/element? $ respo.schema/Element :name :div :attrs ([]) :style ([]) :event (&{}) :children ([]) :ref nil
@@ -8260,7 +8260,7 @@
             and (struct? item)
               = :RespoListener $ &struct:get-name item
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> Bool)
+          :schema $ quote $ Fn Input (-> Bool) (:generics Input)
         'make-child-pair $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn make-child-pair (key node)
             respo.schema/ChildPair :key key :node $ if (nil? node) None $ Some (as-render-node node)
