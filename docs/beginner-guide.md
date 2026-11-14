@@ -192,24 +192,24 @@ Actually it is still `{:states {}}`. A missing branch is absence in the deep
 state tree; component code should supply an initial state rather than pass a
 missing value into typed application logic.
 
-Handle a component-state operation by passing the deep state `Map` to
-`respo.cursor/update-state-tree`. Keep the application Store nominal so the
-compiler can check its `:states` field:
+For a state tree keyed by `respo.schema/CoordKey`, use
+`respo.cursor/update-state-map` to preserve the root Map type. Keep the
+application Store nominal so the compiler can check its `:states` field:
 
 ```cirru.no-check
-defstruct Store (:states 'Map)
+defstruct Store $ :states $ Map respo.schema/CoordKey Dynamic
 
 defref *store $ %{} Store (:states $ {})
 
 defn updater (store op op-id)
   match op
     (:states cursor new-state)
-      assoc store :states $ update-state-tree (:states store) cursor new-state
+      assoc store :states $ respo.cursor/update-state-map (:states store) cursor new-state
     _ store
 ```
 
-The older `update-states*` helpers accept Map stores for compatibility. Do not
-pass an arbitrary Struct through them or use a hard-coded `&struct:nth` index.
+`update-state-tree` still accepts legacy roots, including nil.
+The older `update-states*` helpers accept Map stores for compatibility.
 
 ### Render to the DOM
 

@@ -3498,6 +3498,32 @@
                 {} $ :panel $ {}
                 [] :panel |task-1 :data
             :tags $ #{} :regression :unit
+        'update-state-map $ %{} 'CodeEntry
+          :doc "|Update a CoordKey state map while preserving its root type and legacy branch behavior."
+          :code $ quote $ defn update-state-map (states cursor new-state)
+            match (.first cursor)
+              (:none) (.assoc states :data new-state)
+              (:some key)
+                .assoc states key $ update-state-tree
+                  .unwrap-or (.get states key) ({})
+                  .rest cursor
+                  , new-state
+          :examples $ []
+          :schema $ quote $ Fn (Map respo.schema/CoordKey Dynamic) (List respo.schema/CoordKey) State
+            -> $ Map respo.schema/CoordKey Dynamic
+            :generics State
+            :features :js-ffi
+          :tests $ [] $ %{} 'TestEntry (:name |preserves-root-and-legacy-branches)
+            :code $ quote $ let
+                states $ decode-map-as
+                  {} (:extra |keep) (|panel nil)
+                  Map respo.schema/CoordKey Dynamic
+                cursor $ [] |panel 7
+              assert= (update-state-tree states cursor false) (update-state-map states cursor false)
+              assert=
+                update-state-tree states ([]) 0
+                update-state-map states ([]) 0
+            :tags $ #{} :unit
         'update-state-tree $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn update-state-tree (states cursor new-state)
             if (nil? states)
