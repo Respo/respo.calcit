@@ -8670,7 +8670,7 @@
               (tag? x) x
               true $ raise $ str "|[Respo] expected a style value as String, Number or Tag, got: " (type-of x) "| " (to-lispy-string x)
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> respo.schema/CssValue)
+          :schema $ quote $ Fn Input (-> respo.schema/CssValue) (:generics Input)
         'read-style-key $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-style-key (x)
             cond
@@ -8679,7 +8679,7 @@
               (string? x) x
               true $ raise $ str "|[Respo] expected a style key as Tag or String, got: " (type-of x) "| " (to-lispy-string x)
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> respo.schema/StyleKey)
+          :schema $ quote $ Fn Input (-> respo.schema/StyleKey) (:generics Input)
         'scalar-attribute-text $ %{} 'CodeEntry (:doc "|将 DOM/SSR 属性值边界内已识别的标量转换为文本；拒绝集合及任意宿主对象。")
           :code $ quote $ defn scalar-attribute-text (x)
             cond
@@ -8691,7 +8691,7 @@
               (bool? x) (to-string x)
               true $ raise "|Attribute value must be a scalar"
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> String)
+          :schema $ quote $ Fn Input (-> String) (:generics Input)
           :tests $ []
             %{} 'TestEntry (:name |accepts-supported-scalars)
               :code $ quote $ do
@@ -8724,7 +8724,7 @@
               (tag? x) (get-style-value x prop)
               true $ raise $ str "|[Respo] expected a style value as String, Number, Tag or nil, got: " (type-of x) "| " (to-lispy-string x)
           :examples $ []
-          :schema $ quote $ Fn Dynamic String (-> String)
+          :schema $ quote $ Fn Input String (-> String) (:generics Input)
           :tests $ [] $ %{} 'TestEntry (:name |reads-open-style-values)
             :code $ quote $ do
               assert= | $ style-value-text nil |width
@@ -8760,7 +8760,7 @@
                 , |> |&gt;
               , |< |&lt;
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> String)
+          :schema $ quote $ Fn Input (-> String) (:generics Input)
           :tests $ []
             %{} 'TestEntry (:name |preserves-literal-entities)
               :code $ quote $ assert= |&amp;&amp;amp;&lt;&gt; (text->html |&&amp;<>)
@@ -9012,7 +9012,7 @@
               (number? k) k
               true $ raise $ str "|[Respo] expected a child key as Tag, String or Number, got: " (type-of k) "| " (to-lispy-string k)
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> respo.schema/CoordKey)
+          :schema $ quote $ Fn Input (-> respo.schema/CoordKey) (:generics Input)
           :tests $ [] $ %{} 'TestEntry (:name |reads-supported-keys)
             :code $ quote $ do
               assert= :a $ read-coord-key :a
