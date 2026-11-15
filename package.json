@@ -10,7 +10,7 @@
     "test-event-config": "calcit js && node --test test/event-config.test.mjs",
     "test-demo-scheduler": "calcit js && node --test test/demo-scheduler.test.mjs",
     "test": "calcit calcit.cirru test --require-match --summary-only --format json",
-    "test-ssr": "calcit js && node --test test/ssr-css.test.mjs",
+    "test-ssr": "calcit --reload-fn respo.render.html/make-string js && node --test test/ssr-css.test.mjs test/nullish-props.test.mjs",
     "test-dom-patch-types": "bash scripts/check-dom-patch-types.sh",
     "test-dom-host": "calcit --init-fn respo.test.dom/main! --reload-fn respo.test.dom/verify-dom-regressions! calcit.cirru js && node test-dom.mjs && node --test test/canvas-context.test.mjs",
     "test-keyed-moves": "calcit js && node --test test/keyed-moves.test.mjs",

@@ -44,7 +44,7 @@ const checkHandler = body =>
 const takerSchema = `quote $ Fn (Option (Fn String (Fn *dispatch-op (-> Unit)) (-> Unit))) (-> Unit)`;
 const checkDispatchFn = body =>
   check([
-    ['probe-take', 'quote $ defn probe-take (f) (println f)', takerSchema],
+    ['probe-take', 'quote $ defn probe-take (_f) &unit', takerSchema],
     ['probe-use', `quote $ defn probe-use () (probe-take $ Option :some $ respo.core/dispatch-fn (value d!) (${body}))`],
   ]);
 

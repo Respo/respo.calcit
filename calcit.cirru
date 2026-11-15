@@ -7527,6 +7527,7 @@
           :schema $ quote $ Fn (-> Unit)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! (root-host html-host)
+            assert= true $ enum-def? respo.app.schema/Op
             assert |typed-DOM-host-traverses-nested-child $ = &unit $ compare-to-dom!
               div ({})
                 span $ {}
