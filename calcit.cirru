@@ -3302,7 +3302,7 @@
         'detect-nodejs? $ %{} 'CodeEntry
           :doc "|Detects Node.js behind an explicit JavaScript FFI function so nodejs? remains a Boolean value."
           :code $ quote $ defn detect-nodejs? ()
-            and (exists? js/process) (exists? js/process.release)
+            and (js-present? js/process) (js-present? js/process.release)
               let
                   release-name js/process.release.name
                 and (string? release-name) (= |node release-name)
@@ -3386,6 +3386,13 @@
               assert= "|@media (max-width: 600px) {\n.box {\nwidth:4px;\n}\n}" $ render-css-block |box $ {}
                 |& $ {} (:width 4) (:contained "|@media (max-width: 600px)")
             :tags $ #{} :unit
+        'resolve-element-constructor $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn resolve-element-constructor ()
+            if (js-present? js/globalThis.Element) js/globalThis.Element js/Error
+          :examples $ []
+          :schema $ quote $ Fn
+            -> $ JsNullish JsObject
+            :features :js-ffi
         'warn-style-literals $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn warn-style-literals (x)
             if (list? x)
