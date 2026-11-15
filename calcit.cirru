@@ -3301,11 +3301,7 @@
             :capabilities :log
         'detect-nodejs? $ %{} 'CodeEntry
           :doc "|Detects Node.js behind an explicit JavaScript FFI function so nodejs? remains a Boolean value."
-          :code $ quote $ defn detect-nodejs? ()
-            and (js-present? js/process) (js-present? js/process.release)
-              let
-                  release-name js/process.release.name
-                and (string? release-name) (= |node release-name)
+          :code $ quote $ defn detect-nodejs? () (js-present? js/process)
           :examples $ []
           :schema $ quote $ Fn (-> Bool) (:features :js-ffi)
         'map-entries $ %{} 'CodeEntry (:doc |)
