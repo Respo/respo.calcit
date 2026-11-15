@@ -1,6 +1,12 @@
 ## Respo: A virtual DOM library in Calcit-js
 
-### 0.19.9 候选 / 正式 Calcit 0.42.1
+### 0.19.10-alpha.1 候选 / Calcit 0.43.0-alpha.1
+
+CLI 与 `@calcit/procs` 同步固定到 `0.43.0-alpha.1`，JS-FFI 继续配对 `0.2.16`。
+应用通过 `render!`、`render-with!`、`realize-ssr!` 传入的 dispatch 回调应如实声明 `:io`、`:state` 等效果。
+SSR 和 DOM 测试的生成入口已显式引用所需模块，可以从干净目录运行。
+
+### 历史 0.19.9 / 正式 Calcit 0.42.1
 
 升级时同步 Calcit CLI 和 `@calcit/procs` 到 **0.42.1**，JS-FFI 仍配对正式 **0.2.16**，重新安装并生成 JS。
 0.42.1 修好了别名类型上的 `get`，内部状态读取从 `&map:get` 改回 `get`。
