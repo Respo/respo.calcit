@@ -7494,6 +7494,46 @@
                 ; args $ [] action parent at-place?
           :examples $ []
           :schema $ quote Map
+        'typed-listener $ %{} 'CodeEntry
+          :doc "|Build a RespoListener from a checked event decoder and a handler with the concrete event type. Unknown events are ignored; the framework AnyEnum boundary stays inside this factory."
+          :code $ quote $ defn typed-listener (name decode handler)
+            RespoListener :name name :handler $ fn (event dispatch!)
+              match (decode event)
+                (:ok value) (handler value dispatch!)
+                (:err _message) &unit
+          :examples $ []
+          :schema $ quote $ Fn Tag
+            Fn AnyEnum $ -> $ Result T String
+            Fn T
+              Fn *dispatch-op (-> Unit) (:features :io :state)
+              -> Unit
+            -> RespoListener
+            :generics T
+            :open :decode
+          :tests $ [] $ %{} 'TestEntry (:name |typed-event-and-unknown)
+            :code $ quote $ let
+                seen $ ref $ assert-type None (Option respo.app.schema/Op)
+                listener $ respo.schema/typed-listener :demo
+                  fn (raw) (try-decode-map-as raw 'respo.app.schema/Op)
+                  fn (value _dispatch!)
+                    hint-fn $ Fn respo.app.schema/Op
+                      Fn *dispatch-op (-> Unit) (:features :state :io)
+                      -> Unit
+                    reset! seen $ Some value
+                    , &unit
+                handler $ :handler listener
+                dispatch! $ fn (op)
+                  hint-fn $ Fn *dispatch-op (-> Unit) (:features :state :io)
+                  , &unit
+              handler (respo.app.schema/Op :clear) dispatch!
+              assert=
+                Some $ respo.app.schema/Op :clear
+                , @seen
+              handler (:: :unknown 2) dispatch!
+              assert=
+                Some $ respo.app.schema/Op :clear
+                , @seen
+            :tags $ #{} :unit
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.schema
     'respo.schema.listener $ %{} 'FileEntry
