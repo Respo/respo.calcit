@@ -4,7 +4,7 @@
   :package |respo
   :entries $ {} $ :default
     {} (:description |) (:init-fn 'respo.main/main!) (:mode :js) (:reload-fn 'respo.main/reload!) (:target :browser)
-      :feature-policy $ {}
+      :feature-policy $ {} (:io :warn) (:state :warn)
       :modules $ [] |js-ffi/
       :type-slots $ {} $ :dispatch-op 'respo.app.schema/Op
   :files $ {}
