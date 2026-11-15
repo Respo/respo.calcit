@@ -99,9 +99,6 @@ jobs:
       - name: "test typed DOM host"
         run: yarn test-dom-host
 
-      - name: Test nullish DOM props
-        run: node --test test/nullish-props.test.mjs
-
       - name: Test DOM prop removal
         run: node --test test/remove-props.test.mjs
 
@@ -114,7 +111,7 @@ jobs:
       - name: Test event configuration
         run: yarn test-event-config
 
-      - name: Test SSR escaping and Node styles
+      - name: Test SSR escaping, nullish DOM props, and Node styles
         run: yarn test-ssr
 
       - name: Test demo render scheduling
