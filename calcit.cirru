@@ -7505,7 +7505,7 @@
           :schema $ quote $ Fn Tag
             Fn AnyEnum $ -> $ Result T String
             Fn T
-              Fn *dispatch-op $ -> Unit
+              Fn *dispatch-op (-> Unit) (:features :io :state)
               -> Unit
             -> RespoListener
             :generics T
@@ -7517,13 +7517,13 @@
                   fn (raw) (try-decode-map-as raw 'respo.app.schema/Op)
                   fn (value _dispatch!)
                     hint-fn $ Fn respo.app.schema/Op
-                      Fn *dispatch-op $ -> Unit
+                      Fn *dispatch-op (-> Unit) (:features :state :io)
                       -> Unit
                     reset! seen $ Some value
                     , &unit
                 handler $ :handler listener
                 dispatch! $ fn (op)
-                  hint-fn $ Fn *dispatch-op $ -> Unit
+                  hint-fn $ Fn *dispatch-op (-> Unit) (:features :state :io)
                   , &unit
               handler (respo.app.schema/Op :clear) dispatch!
               assert=
