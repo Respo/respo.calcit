@@ -8414,6 +8414,19 @@
             respo.util.detect :refer $ as-element
     'respo.util.format $ %{} 'FileEntry
       :defs $ {}
+        'capitalize-ascii $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn capitalize-ascii (s)
+            if (empty? s) s $ let
+                head-char $ &str:slice s 0 1
+                code $ get-char-code head-char
+                upper $ char-from-code $ - code 32
+                tail $ &str:slice s 1
+              if
+                and (>= code 97) (<= code 122)
+                str upper tail
+                , s
+          :examples $ []
+          :schema $ quote $ Fn String (-> String)
         'coerce-component $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn coerce-component (markup) markup
           :examples $ []
@@ -8430,14 +8443,17 @@
         'dashed->camel $ %{} 'CodeEntry
           :doc "|convert dashed-case CSS property names to camelCase. e.g. \"background-color\" -> \"backgroundColor\". JavaScript only (uses `.!replace`); check its examples with `--js`."
           :code $ quote $ defn dashed->camel (x)
-            if (= x |spell-check) |spellcheck $ &let
-              result $ .!replace x dashed-letter-pattern uppercase-dashed-match
-              if (string? result) result $ raise "|dashed->camel expected a String result"
+            if (= x |spell-check) |spellcheck $ let
+                parts $ split x |-
+              calcit.core/join-string
+                map-indexed parts $ fn (idx part)
+                  if (= idx 0) part $ capitalize-ascii part
+                , |
           :examples $ []
             quote $ dashed->camel |background-color
             quote $ dashed->camel |font-size
             quote $ dashed->camel |margin-top
-          :schema $ quote $ Fn String (-> String) (:features :js-ffi)
+          :schema $ quote $ Fn String (-> String)
         'dashed-letter-pattern $ %{} 'CodeEntry
           :doc "|Regex pattern for finding dashed-case letters (e.g. -a) to convert to camelCase."
           :code $ quote $ def dashed-letter-pattern (create-dashed-letter-pattern)
