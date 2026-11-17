@@ -3301,7 +3301,7 @@
             :capabilities :log
         'detect-nodejs? $ %{} 'CodeEntry
           :doc "|Detects Node.js behind an explicit JavaScript FFI function so nodejs? remains a Boolean value."
-          :code $ quote $ defn detect-nodejs? () (js-present? js/process)
+          :code $ quote $ defn detect-nodejs? () (js-present? js/globalThis.process)
           :examples $ []
           :schema $ quote $ Fn (-> Bool) (:features :js-ffi)
         'map-entries $ %{} 'CodeEntry (:doc |)
