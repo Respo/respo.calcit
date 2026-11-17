@@ -7460,6 +7460,7 @@
             :handler $ Fn AnyEnum
               Fn *dispatch-op (-> Unit) (:features :io :state)
               -> Dynamic
+              :features :io :state
           :examples $ []
           :schema $ quote StructDef
         'States $ %{} 'CodeEntry
@@ -8297,8 +8298,9 @@
           :examples $ []
           :schema $ quote $ Fn schema/RespoListener
             -> $ Fn AnyEnum
-              Fn *dispatch-op $ -> Unit
+              Fn *dispatch-op (-> Unit) (:features :io :state)
               -> Dynamic
+              :features :io :state
             :open :reflect
         'listener? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn listener? (item)
