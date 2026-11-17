@@ -28,6 +28,16 @@ test('memo frames accept stateful builders and retain their result type', () => 
   assert.equal(result.status, 0, result.output);
 });
 
+test('event handlers may invoke the effectful application dispatch', () => {
+  const result = evaluate(`let
+    handler $ fn (event dispatch!)
+      hint-fn $ Fn respo.schema/RespoEvent (Fn *dispatch-op (-> Unit) (:features :io :state)) (-> Unit) (:features :io :state)
+      dispatch! $ respo.app.schema/Op :clear
+    checked $ assert-type handler respo.schema/EventHandler
+  , &unit`);
+  assert.equal(result.status, 0, result.output);
+});
+
 for (const [name, value, diagnostic] of [
   ['rejects a String in a Number collector', '|wrong', /E_FN_ARG_TYPE_MISMATCH/],
   ['rejects an unproved Dynamic in a Number collector', "(assert-type 7 'Dynamic)", /E_ERASED_GENERIC_RELATION/],

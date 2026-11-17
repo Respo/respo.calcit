@@ -7417,6 +7417,7 @@
           :schema $ quote $ Fn RespoEvent
             Fn *dispatch-op (-> Unit) (:features :io :state)
             -> Unit
+            :features :io :state
         'KeyboardInfo $ %{} 'CodeEntry
           :doc "|Keyboard fields of a :keydown, :keyup or :keypress event, read with respo.core/keyboard-info."
           :code $ quote $ defstruct KeyboardInfo (:key String) (:code String) (:ctrl? Bool) (:meta? Bool) (:alt? Bool) (:shift? Bool)
