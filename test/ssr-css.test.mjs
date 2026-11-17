@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { execFileSync } from 'node:child_process';
 import * as c from '../js-out/calcit.core.mjs';
 import { DomProps } from '../js-out/respo.schema.mjs';
 import { div } from '../js-out/respo.core.mjs';
@@ -7,6 +8,16 @@ import { element_content, make_string } from '../js-out/respo.render.html.mjs';
 import { text__GT_html } from '../js-out/respo.util.format.mjs';
 import { create_style_$x_, render_css_block, warn_style_literals, _$s_style_list_in_nodejs, _$s_style_indices_in_nodejs, nodejs_$q_, present_element } from '../js-out/respo.css.mjs';
 import { optionStruct } from './dom-props.mjs';
+
+test('CSS module loads when the browser has no process global', () => {
+  const moduleUrl = new URL('../js-out/respo.css.mjs', import.meta.url).href;
+  execFileSync(process.execPath, ['--input-type=module', '-e', `
+    delete globalThis.process;
+    globalThis.location = { search: '' };
+    const css = await import(${JSON.stringify(moduleUrl)});
+    if (css.nodejs_$q_ !== false) throw new Error('Expected browser mode');
+  `]);
+});
 
 test('stylesheet cast requires only id and innerHTML and preserves host identity', () => {
   const element = { id: 'style-fixture', innerHTML: '' };
