@@ -4603,7 +4603,7 @@
                   fn (error) (abort-memo-frame!) (raise error)
           :examples $ []
           :schema $ quote $ Fn
-            Fn (-> Value) (:features :js-ffi)
+            Fn (-> Value) (:features :js-ffi :state)
             -> Value
             :generics Value
             :features :js-ffi :state

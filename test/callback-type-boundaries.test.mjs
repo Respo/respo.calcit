@@ -17,6 +17,17 @@ function evaluate(source) {
   return { status: result.status, output: result.stdout + result.stderr };
 }
 
+test('memo frames accept stateful builders and retain their result type', () => {
+  const result = evaluate(`let
+    state $ ref $ {} (:a 1)
+    build $ fn ()
+      hint-fn $ Fn (-> (Map Tag Number)) (:features :state)
+      deref state
+    result $ respo.memo/with-memo-frame build
+  assert-type result $ Map Tag Number`);
+  assert.equal(result.status, 0, result.output);
+});
+
 for (const [name, value, diagnostic] of [
   ['rejects a String in a Number collector', '|wrong', /E_FN_ARG_TYPE_MISMATCH/],
   ['rejects an unproved Dynamic in a Number collector', "(assert-type 7 'Dynamic)", /E_ERASED_GENERIC_RELATION/],
