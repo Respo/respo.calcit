@@ -1432,8 +1432,15 @@
           :schema $ quote $ Fn
             Fn
               Fn schema/DomPatch $ -> Unit
-              -> Dynamic
+              -> T
             -> $ List schema/DomPatch
+            :generics T
+          :tests $ [] $ %{} 'TestEntry (:name |ignores-callback-result)
+            :code $ quote $ do
+              assert= ([])
+                collect-patches $ fn (collect!) 42
+              assert= ([])
+                collect-patches $ fn (collect!) |ignored
         'configure-events! $ %{} 'CodeEntry
           :doc "|Configure event installation before the first render! or realize-ssr!. EventConfig contains stop-propagation? (default true) and ListenerMode :property (default) or :add-event-listener. Configuration is immutable after mounting and is preserved during hot reload."
           :code $ quote $ defn configure-events! (config)
