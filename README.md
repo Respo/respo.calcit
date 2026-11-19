@@ -1,8 +1,10 @@
 ## Respo: A virtual DOM library in Calcit-js
 
-### 0.19.10 / Calcit 0.43.0
+### 0.19.11 / Calcit 0.44.0
 
-CLI 与 `@calcit/procs` 同步固定到 `0.43.0`，JS-FFI 配对正式 `0.2.18`，升级后重新生成 JS。
+CLI 与 `@calcit/procs` 同步固定到 `0.44.0`，JS-FFI 配对正式 `0.2.18`，升级后重新生成 JS。
+`collect-patches` 的回调返回值改用泛型表达；它仍会忽略该返回值并按原顺序收集补丁。
+既有 `States` 和 `EventHandler` 值式别名仍有退役提示，其兼容迁移依赖 [Calcit #2884](https://github.com/calcit-lang/calcit/issues/2884)，本次保留旧公开值。
 应用通过 `render!`、`render-with!`、`realize-ssr!` 传入的 dispatch 回调应如实声明 `:io`、`:state` 等效果。
 SSR 和 DOM 测试的生成入口已显式引用所需模块，可以从干净目录运行。
 
