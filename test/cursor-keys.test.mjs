@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { spawnSync } from 'node:child_process';
 import * as c from '../js-out/calcit.core.mjs';
-import { CursorTestState, coerce_cursor_test_state, get_state_at, update_state_tree, update_state_tree_kv, update_state_tree_merge } from '../js-out/respo.cursor.mjs';
+import { CursorTestState, coerce_cursor_test_state, get_state_at, update_state_map_path, update_state_tree, update_state_tree_kv, update_state_tree_merge } from '../js-out/respo.cursor.mjs';
 import { EventConfig, ListenerMode } from '../js-out/respo.schema.mjs';
 import { _GT__GT_ as child_states } from '../js-out/respo.core.mjs';
 
@@ -50,6 +50,17 @@ test('mixed Tag/String cursor keys keep their types through writes, reads and pa
   assert.equal(stateAt(original, path(tags.panel, 'task-1', tags.data, tags.draft)), 'old');
   assert.equal(stateAt(merged, path(tags.panel, 'task-1', tags.data, tags.draft)), 'new');
   assert.equal(stateAt(merged, path(tags.panel, 'task-1', tags.data, tags['locked?'])), true);
+});
+
+test('typed state root retains Boolean keys within EDN paths', () => {
+  const states = c._$n__$M_(tags.panel, c._$n__$M_(true, 'old'), tags.draft, 'keep');
+  const cursor = path(tags.panel, false);
+  const updated = update_state_map_path(states, cursor, true);
+  assert.ok(c._$n__$e_(updated, update_state_tree(states, cursor, true)));
+  assert.equal(stateAt(updated, path(tags.panel, false, tags.data)), true);
+  assert.equal(stateAt(updated, path(tags.panel, true)), 'old');
+  assert.equal(stateAt(updated, path(tags.draft)), 'keep');
+  assert.throws(() => update_state_map_path(states, path(false), true));
 });
 
 test('existing Number cursor keys remain Number keys', () => {

@@ -208,6 +208,12 @@ defn updater (store op op-id)
     _ store
 ```
 
+For paths whose later segments can also be other EDN keys (for example a
+Boolean key), `respo.cursor/update-state-map-path` accepts a generic path while
+keeping the root `Map<CoordKey, Dynamic>`. It checks that the first segment is
+a `CoordKey` and rejects other root keys; later segments retain the legacy
+`update-state-tree` behavior. An empty path updates the root `:data`.
+
 `update-state-tree` still accepts legacy roots, including nil.
 The older `update-states*` helpers accept Map stores for compatibility.
 
