@@ -1,5 +1,9 @@
 ## Respo: A virtual DOM library in Calcit-js
 
+### 0.19.15 候选 / Calcit 0.44.0
+
+对齐正式 JS-FFI 0.2.22，使用者需统一依赖图并重新生成 JS；公开 API、渲染行为和类型合同保持。正式标签发布前为候选。
+
 ### 0.19.14 候选 / Calcit 0.44.0
 
 依赖正式 JS-FFI 0.2.20，使用者需统一依赖图并重新生成 JS。Respo 公开 API、渲染行为和类型合同不变。
