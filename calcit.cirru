@@ -3534,6 +3534,40 @@
                 update-state-tree states ([]) 0
                 update-state-map states ([]) 0
             :tags $ #{} :unit
+        'update-state-map-path $ %{} 'CodeEntry
+          :doc "|Update a typed root state map with separately typed path segments; the first segment must be a CoordKey."
+          :code $ quote $ defn update-state-map-path (states cursor new-state)
+            match (.first cursor)
+              (:none) (.assoc states :data new-state)
+              (:some key)
+                match (try-decode-map-as key respo.schema/CoordKey)
+                  (:ok root-key)
+                    .assoc states root-key $ update-state-tree
+                      .unwrap-or (.get states root-key) ({})
+                      .rest cursor
+                      , new-state
+                  (:err message) (raise message)
+          :examples $ []
+          :schema $ quote $ Fn (Map respo.schema/CoordKey Dynamic) (List Key) State
+            -> $ Map respo.schema/CoordKey Dynamic
+            :generics Key State
+            :features :js-ffi
+          :tests $ [] $ %{} 'TestEntry (:name |preserves-nested-edn-keys)
+            :code $ quote $ let
+                states $ decode-map-as
+                  {} $ :extra |keep
+                  Map respo.schema/CoordKey Dynamic
+                cursor $ [] :root false
+              assert= (update-state-tree states cursor true) (update-state-map-path states cursor true)
+              assert=
+                update-state-tree states ([]) false
+                update-state-map-path states ([]) false
+              assert |rejects-bool-root $ try
+                do
+                  update-state-map-path states ([] false) true
+                  , false
+                fn (_error) true
+            :tags $ #{} :unit
         'update-state-tree $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn update-state-tree (states cursor new-state)
             if (nil? states)
