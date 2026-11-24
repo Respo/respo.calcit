@@ -1460,7 +1460,17 @@
               (:none) &unit
             , x
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> Dynamic)
+          :schema $ quote $ Fn Child (-> Child) (:generics Child)
+          :tests $ [] $ %{} 'TestEntry (:name |preserves-child-type)
+            :code $ quote $ let
+                node $ div $ {}
+                typed $ assert-type (confirm-child node) schema/Element
+              assert= node typed
+              assert= None $ confirm-child None
+              assert= (Some node)
+                confirm-child $ Some node
+              assert= nil $ confirm-child nil
+            :tags $ #{} :unit
         'confirm-child-pair $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn confirm-child-pair (pair)
             assert "|expected pair" $ and (list? pair)
