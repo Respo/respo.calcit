@@ -71,7 +71,7 @@ for (const [name, body, diagnostic] of [
 }
 
 test('dispatch-fn accepts a tuple naming an Op variant', () => {
-  const result = checkDispatchFn('d! $ :: :toggle value');
+  const result = checkDispatchFn('when (string? value) (d! $ :: :toggle value)');
   assert.equal(result.status, 0, result.output);
 });
 

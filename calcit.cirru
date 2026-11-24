@@ -1944,7 +1944,7 @@
                 , &unit
           :examples $ []
             quote $ dispatch-fn (value d!)
-              d! $ :: :update |task-id value
+              d! $ :: :update |task-id $ assert-type value String
             quote $ dispatch-fn (d!)
               d! $ :: :clear
           :schema $ quote $ Macro SyntaxList
@@ -1955,7 +1955,7 @@
             :code $ quote $ let
                 *sent $ ref $ assert-type ([]) (List Dynamic)
                 handler $ dispatch-fn (value d!)
-                  d! $ :: :toggle value
+                  d! $ :: :toggle $ assert-type value String
                   , |ignored-result
                 d! $ fn (op)
                   hint-fn $ Fn *dispatch-op $ -> Unit
@@ -4517,7 +4517,7 @@
               :code $ quote $ let
                   inner $ fn (value) value
                   outer $ fn (visible?)
-                    if visible? (memo-value-by :inner inner 1) 0
+                    if (assert-type visible? Bool) (memo-value-by :inner inner 1) 0
                 reset-component-caches!
                 begin-memo-frame!
                 memo-value-by :outer outer true
@@ -5749,7 +5749,7 @@
                     let
                         prop-str $ .to-string $ &list:nth entry 0
                         v $ &list:nth entry 1
-                      if (.!startsWith prop-str |data-)
+                      if (starts-with? prop-str |data-)
                         if (calcit.core/non-nil? v)
                           js-set
                             browser/element-dataset $ host-element element
@@ -6496,7 +6496,7 @@
           :code $ quote $ defn add-prop (target p prop-value)
             let
                 prop-str $ calcit.core/to-string p
-              if (.!startsWith prop-str |data-)
+              if (starts-with? prop-str |data-)
                 if (calcit.core/non-nil? prop-value)
                   -> target .-dataset $ js-set (.!slice prop-str 5) prop-value
                   -> target .-dataset $ js-delete $ .!slice prop-str 5
@@ -6839,8 +6839,8 @@
               if
                 and
                   fn? $ aget parent |moveBefore
-                  aget parent |isConnected
-                  aget node |isConnected
+                  identical? true $ aget parent |isConnected
+                  identical? true $ aget node |isConnected
                 match anchor
                   (:none)
                     do (.!moveBefore parent node js/null) &unit
@@ -6885,7 +6885,7 @@
           :code $ quote $ defn replace-prop (target p prop-value)
             let
                 prop-str $ calcit.core/to-string p
-              if (.!startsWith prop-str |data-)
+              if (starts-with? prop-str |data-)
                 let
                     name $ .!slice prop-str 5
                     dataset target.:dataset
@@ -6947,7 +6947,7 @@
                 :selected $ set! target.:selected false
                 _ $ let
                     prop-str $ calcit.core/to-string op
-                  if (.!startsWith prop-str |data-)
+                  if (starts-with? prop-str |data-)
                     js-delete (target.:dataset) (.!slice prop-str 5)
                     do
                       aset target (dashed->camel prop-str) nil
@@ -8421,8 +8421,7 @@
                 loop
                     acc 0
                     other-children $ respo.util.detect/element-children vdom
-                  when
-                    not $ empty? other-children
+                  if (empty? other-children) &unit $ do
                     compare-to-dom!
                       as-element $ respo.util.detect/child-pair-value $ &list:nth other-children 0
                       (browser/child-element-at real-children acc) .unwrap
