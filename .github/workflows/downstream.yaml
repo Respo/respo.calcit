@@ -58,12 +58,12 @@ jobs:
         with:
           node-version: 24
 
-      - uses: calcit-lang/setup-calcit@v1.5.0
+      - uses: calcit-lang/setup-calcit@v1.5.2
         with:
           tools: calcit,caps
           version: ${{ inputs.calcit-version }}
           deps-file: downstream/candidate-has-no-deps.cirru
-          caps-version: 0.1.1
+          caps-version: 0.1.2
 
       - name: Check Respo with the candidate toolchain
         env:
@@ -98,12 +98,12 @@ jobs:
         with:
           node-version: 24
 
-      - uses: calcit-lang/setup-calcit@v1.5.0
+      - uses: calcit-lang/setup-calcit@v1.5.2
         with:
           tools: calcit,caps
           version: ${{ inputs.calcit-version }}
           deps-file: ${{ inputs.calcit-version != '' && 'downstream/candidate-has-no-deps.cirru' || 'deps.cirru' }}
-          caps-version: 0.1.1
+          caps-version: 0.1.2
 
       # On a pull request, a failing step is retried against the base branch, so
       # "regression" means this change broke the project. Elsewhere the baseline
