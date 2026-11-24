@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "@calcit/procs": "0.45.0"
+    "@calcit/procs": "0.45.1"
   },
   "scripts": {
     "test-persisted-tasks": "calcit js && node --test test/persisted-tasks.test.mjs",
