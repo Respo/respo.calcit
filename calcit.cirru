@@ -163,16 +163,16 @@
                         let
                             task-id $ :id task
                           respo.core/keyed-component task-id $ memo-comp-by task-id comp-task (>> states task-id) task
-                  nil->option $ if
+                  if
                     > (count tasks) 0
-                    div
+                    Some $ div
                       {} (:spell-check true) (:class-name style-toolbar)
                       div
                         {} (:class-name widget/style-button)
-                          :on-click $ nil->option $ if (not locked?)
-                            fn (e d!)
+                          :on-click $ if (not locked?)
+                            Some $ fn (e d!)
                               d! $ Op :clear
-                            , nil
+                            , None
                         <> |Clear2
                       space-x 8
                       div
@@ -184,7 +184,7 @@
                           {} $ :font-size 13
                       space-x 8
                       comp-wrap $ comp-zero
-                    , nil
+                    , None
                   comp-inspect |Tasks tasks $ {} (:left 500) (:top 20)
                   div
                     {} $ :style $ {} (:padding |8px) (:font-size 12) (:color |#999) (:margin-top |16px)
@@ -5784,9 +5784,8 @@
                       when (js-present? event-handler)
                         install-listener! element (&list:nth entry 0) listener-builder coord
                   each child-elements $ fn (child-element)
-                    if (calcit.core/non-nil? child-element)
+                    when (calcit.core/non-nil? child-element)
                       browser/append-child! (host-element element) (host-element child-element)
-                      , nil
                   , element
           :examples $ []
           :schema $ quote $ Fn respo.schema/RenderNode
