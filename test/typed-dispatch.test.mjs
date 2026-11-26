@@ -61,6 +61,8 @@ for (const [name, body] of [
 for (const [name, body, diagnostic] of [
   ['a Number', 'd! 42', /calling `d!` arg 1 expects type `type-slot\(dispatch-op\)`, but got `:number`/],
   ['an unknown variant', 'd! $ :: :not-an-op', /Enum `Op` does not have variant `:not-an-op`/],
+  ['a wrong variant payload', 'd! $ :: :toggle 1', /Op::toggle.*payload 1 expects type.*string.*number/],
+  ['a missing variant payload', 'd! $ :: :toggle', /Op::toggle.*expects 1 payload.*got 0/],
   ['the removed cursor shorthand', 'd! ([] :field) :value', /Function `'d!` expects 1 args, got 2/],
 ]) {
   test(`d! rejects ${name}`, () => {
