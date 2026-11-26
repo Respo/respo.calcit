@@ -155,14 +155,14 @@
                       div
                         {} (:class-name widget/style-button) (:on-click on-test)
                         <> "|heavy tasks" style-bold!
-                  list->
+                  respo.core/keyed->
                     {} (:class-name |task-list) (:style style-list)
                     map (reverse tasks)
                       fn (task)
-                        hint-fn $ Fn respo.app.schema/Task $ -> (List Dynamic)
+                        hint-fn $ Fn respo.app.schema/Task $ -> respo.schema/ChildPair
                         let
                             task-id $ :id task
-                          [] task-id $ memo-comp-by task-id comp-task (>> states task-id) task
+                          respo.core/keyed-component task-id $ memo-comp-by task-id comp-task (>> states task-id) task
                   nil->option $ if
                     > (count tasks) 0
                     div
@@ -311,7 +311,7 @@
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns respo.app.comp.todolist
           :require
-            respo.core :refer $ defcomp div span input <> list-> defeffect >> a memo-comp-by pick-state state-cursor event-value
+            respo.core :refer $ defcomp div span input <> defeffect >> a memo-comp-by pick-state state-cursor event-value
             respo.util.format :refer $ hsl
             respo.app.comp.task :refer $ comp-task
             respo.comp.space :refer $ space-x
