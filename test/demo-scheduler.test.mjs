@@ -233,3 +233,23 @@ test('demo state boundaries preserve mixed keys and require nominal TodoState', 
     assert.throws(() => comp_todolist(c._$n__$M_(tags.data, invalid), c.arrayToList([])), /component state does not match its type/);
   }
 });
+
+test('demo task list keeps keyed components and reverse display order', () => {
+  const tags = c.init_tags(['id', 'text', 'done?']);
+  const task = id => c._$n__PCT__$M_(Task, tags.id, id, tags.text, id, tags['done?'], false);
+  const states = c.parse_cirru_edn('{} (:cursor $ [])');
+  function taskList(value) {
+    if (value && typeof value === 'object') {
+      if (value.attrs?.some(([key, val]) => key === 'class-name' && val === 'task-list')) return value;
+      for (const child of Object.values(value)) {
+        const found = taskList(child);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+  const children = taskList(c.to_js_data(comp_todolist(states, c.arrayToList([task('a'), task('b')])))).children;
+  assert.deepEqual(children.map(child => child.key), ['b', 'a']);
+  assert.deepEqual(children.map(child => child.node[1][1].name), ['comp-task', 'comp-task']);
+  assert.deepEqual(taskList(c.to_js_data(comp_todolist(states, c.arrayToList([])))).children, []);
+});
