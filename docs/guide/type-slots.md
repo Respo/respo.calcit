@@ -40,7 +40,7 @@ calcit config type-slots
 calcit config set-type-slot --entry test :dispatch-op app.test-schema/TestOp
 ```
 
-只有确实开放的边界才配置 `:dynamic`，它会关闭整个 entry 的 dispatch 检查。
+每个实际使用该类型槽的 entry 都应绑定具名类型；绑定 `:dynamic` 仍视为未绑定，会触发 `E_UNBOUND_TYPE_SLOT`，不能用于关闭 dispatch 检查。
 
 ## 发送 op
 
@@ -57,9 +57,11 @@ d! $ :: :states cursor new-state
 
 | 用途 | 元组 | 应用 Op 需要的变体 |
 | --- | --- | --- |
-| 组件局部状态 | `:: :states cursor state` | `:states (quote (List Dynamic)) 'Dynamic` |
-| reel 的 `comp-reel` 控制面板 | `:: :reel/toggle`、`:: :reel/recall idx` 等 | `:reel/toggle` `:reel/recall 'Number` `:reel/run` `:reel/step` `:reel/merge` `:reel/reset` `:reel/remove 'Number` |
-| respo-router 的路由 handler | `:: :router/route route-map` | `:router/route 'Dynamic` |
+| 组件局部状态 | `:: :states cursor state` | `:states (List respo.schema/CoordKey) State` |
+| reel 的 `comp-reel` 控制面板 | `:: :reel/toggle`、`:: :reel/recall idx` 等 | `:reel/toggle` `:reel/recall Number` `:reel/run` `:reel/step` `:reel/merge` `:reel/reset` `:reel/remove 'Number` |
+| respo-router 的路由 handler | `:: :router/route route-map` | `:router/route Router` |
+
+表中的 `State` 和 `Router` 表示应用实际选择的具名类型；库组件发送的载荷也必须符合该类型，不能仅通过标注把开放值当作已验证。
 
 alerts 的组件只发 `:states`，respo-ui 的组件转发调用方传入的 op。router 的 `listen!` 和 reel 的
 `listen-devtools!` 调用的是应用自己传入的 dispatch 函数，不经过 `d!`。
@@ -77,7 +79,7 @@ alerts 的组件只发 `:states`，respo-ui 的组件转发调用方传入的 op
 
 检查器需要知道回调的期望类型，才会给 `d!` 套上 Op 类型：
 
-- 有 schema 的 handler 定义、`hint-fn` 标注过的回调、`DomProps` 等 struct 字段里的回调：会检查，写错类型的值、未知变体和旧的 cursor 简写都会报错。元组变体的参数个数和参数类型目前不检查，`:: :toggle 1` 也能通过。
+- 有 schema 的 handler 定义、`hint-fn` 标注过的回调、`DomProps` 等 struct 字段里的回调：会检查 dispatch 参数、变体名、载荷个数和可证明的载荷类型。例如 `:toggle String` 的载荷写成数字或漏掉载荷时会报错。
 - 普通 `{}` props map 里内联的回调：Calcit 目前不给 map 字面量的值提供期望类型，所以不检查。需要检查时，把回调提成带 schema 的定义，或者用 `hint-fn` 标注。
 
 内联 `hint-fn $ Fn …` 与持久化 `quote $ Fn …` 中都使用类型槽名 `*dispatch-op`：
