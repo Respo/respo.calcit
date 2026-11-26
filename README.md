@@ -1,8 +1,12 @@
 ## Respo: A virtual DOM library in Calcit-js
 
-### 0.19.18 候选 / Calcit 0.45.1
+### 0.20.0 候选 / Calcit 0.46.0
 
-使用正式 Calcit 和 `@calcit/procs` 0.45.1 以及 JS-FFI 0.2.24，更新完整依赖图并重新生成 JS。公开 API、渲染行为和类型合同保持；下游应等待正式标签发布。
+当前候选使用正式 Calcit 和 `@calcit/procs` 0.46.0 及 JS-FFI 0.2.26；下游应等待 Respo 正式 tag 后统一依赖图并重新生成 JS。公开泛型辅助函数 `keyed-boundaries` 和 `keyed-rotation` 的键类型现在要求 `Eq`；直接以不满足此约束的类型调用者需要调整。混合属性键排序和现有渲染行为保持。
+
+### 已发布：0.19.18 / Calcit 0.45.1
+
+正式 0.19.18 配对 Calcit 和 `@calcit/procs` 0.45.1 以及 JS-FFI 0.2.24。
 
 ### 历史：0.19.17 / Calcit 0.45.0
 

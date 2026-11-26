@@ -172,6 +172,7 @@
                           :on-click $ nil->option $ if (not locked?)
                             fn (e d!)
                               d! $ Op :clear
+                            , nil
                         <> |Clear2
                       space-x 8
                       div
@@ -183,6 +184,7 @@
                           {} $ :font-size 13
                       space-x 8
                       comp-wrap $ comp-zero
+                    , nil
                   comp-inspect |Tasks tasks $ {} (:left 500) (:top 20)
                   div
                     {} $ :style $ {} (:padding |8px) (:font-size 12) (:color |#999) (:margin-top |16px)
@@ -2948,10 +2950,10 @@
             cond
                 nil? value
                 , None
-              (= value js/undefined) None
+              (&= value js/undefined) None
               (and (enum? value) (= (&enum:definition value) (Some Option)))
                 if
-                  = :some $ &enum:nth value 0
+                  &= :some $ &enum:nth value 0
                   Some $ &enum:nth value 1
                   , None
               true $ Some value
@@ -5261,7 +5263,8 @@
                                   let
                                       old-ref-option $ :ref old-tree
                                       new-ref-option $ :ref new-tree
-                                    when (not= old-ref-option new-ref-option)
+                                    when
+                                      not $ &= old-ref-option new-ref-option
                                       when (js-present? old-ref-option)
                                         let
                                             checked-old-ref old-ref-option
@@ -5530,6 +5533,7 @@
           :schema $ quote $ Fn (List K) (List K)
             -> $ List Number
             :generics K
+            :where $ K Eq
         'keyed-index $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn keyed-index (input-keys)
             loop
@@ -5564,6 +5568,7 @@
           :schema $ quote $ Fn (List K) (List K)
             -> $ Option Number
             :generics K
+            :where $ K Eq
         'lis-lower-bound $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn lis-lower-bound (tails value)
             loop
@@ -5781,6 +5786,7 @@
                   each child-elements $ fn (child-element)
                     if (calcit.core/non-nil? child-element)
                       browser/append-child! (host-element element) (host-element child-element)
+                      , nil
                   , element
           :examples $ []
           :schema $ quote $ Fn respo.schema/RenderNode
@@ -6422,9 +6428,8 @@
                       not $ starts-with? attr |on-
                       not $ and (bool? v) (not v)
                         includes? boolean-attrs $ prop->attr attr
-                sorted $ &list:sort-by visible $ fn (pair)
-                  hint-fn $ Fn (Tuple AttrKey AttrValue) (-> AttrKey)
-                  &list:nth pair 0
+                sorted $ &list:sort visible $ fn (a b)
+                  &compare (&list:nth a 0) (&list:nth b 0)
               calcit.core/join-string (map sorted entry->html) "| "
           :examples $ []
           :schema $ quote $ Fn (Map AttrKey AttrValue) (-> String) (:generics AttrKey AttrValue) (:features :io)
