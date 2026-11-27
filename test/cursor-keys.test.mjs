@@ -129,15 +129,15 @@ test('cursor Struct regression validates nominal identity after consecutive upda
 test('state writes preserve assoc-in behavior for nil, mixed Map keys and List fallback', () => {
   const value = c.parse_cirru_edn('{} (:payload |unchanged)');
   const cases = [
-    [null, path()],
-    [c._$n__$M_(), path(tags.panel, 'task-1', 7)],
-    [c._$n__$M_(tags.panel, null), path(tags.panel, 'task-1')],
-    [c.arrayToList([c._$n__$M_()]), path(0)],
-    [c._$n__$M_(tags.panel, c.arrayToList([c._$n__$M_()])), path(tags.panel, 0)],
+    [null, path(), c._$n__$M_()],
+    [c._$n__$M_(), path(tags.panel, 'task-1', 7), c._$n__$M_()],
+    [c._$n__$M_(tags.panel, null), path(tags.panel, 'task-1'), c._$n__$M_(tags.panel, c._$n__$M_())],
+    [c.arrayToList([c._$n__$M_()]), path(0), c.arrayToList([c._$n__$M_()])],
+    [c._$n__$M_(tags.panel, c.arrayToList([c._$n__$M_()])), path(tags.panel, 0), c._$n__$M_(tags.panel, c.arrayToList([c._$n__$M_()]))],
   ];
-  for (const [states, cursor] of cases) {
+  for (const [states, cursor, assocBase] of cases) {
     const fullPath = c.concat(cursor, path(tags.data));
-    const expected = c.assoc_in(states, fullPath, value);
+    const expected = c.assoc_in(assocBase, fullPath, value);
     const actual = update_state_tree(states, cursor, value);
     assert.equal(c.format_cirru_edn(actual), c.format_cirru_edn(expected));
     assert.equal(stateAt(actual, fullPath), value, 'written value retains identity');

@@ -88,11 +88,10 @@
             match action
               :mount $ let
                   x0 $ js/Math.random
-                ; println |Stored x0
-                , nil
-              :update (; println |read) nil
-              :unmount (; println |read) nil
-              _ nil
+                , &unit
+              :update &unit
+              :unmount &unit
+              _ &unit
             , &unit
           :examples $ []
           :schema $ quote $ Fn respo.app.schema/Task (-> respo.schema/Effect) (:features :js-ffi)
@@ -145,7 +144,7 @@
                         :on-click $ fn (e d!)
                           d! $ Op :add draft
                           d! $ Op :states cursor $ .assoc state :draft |
-                      span $ {} (:on-click nil) (:inner-text |Add)
+                      span $ {} (:on-click None) (:inner-text |Add)
                     space-x 8
                     span $ {} (:inner-text |Clear) (:class-name widget/style-button)
                       :on-click $ fn (e d!)
@@ -159,7 +158,6 @@
                     {} (:class-name |task-list) (:style style-list)
                     map (reverse tasks)
                       fn (task)
-                        hint-fn $ Fn respo.app.schema/Task $ -> respo.schema/ChildPair
                         let
                             task-id $ :id task
                           respo.core/keyed-component task-id $ memo-comp-by task-id comp-task (>> states task-id) task
@@ -193,8 +191,7 @@
           :schema $ quote $ Fn respo.schema/States (List respo.app.schema/Task) (-> respo.schema/Component) (:features :io :state)
         'effect-focus $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defeffect effect-focus (pattern) (action parent at-place?)
-            when
-              and (= action :mount) (string? pattern)
+            when (= action :mount)
               match (query-selector pattern)
                 (:none) &unit
                 (:some target) (.select! target)
@@ -648,14 +645,12 @@
               (:remove task-id)
                 .assoc store :tasks $ filter (:tasks store)
                   fn (task)
-                    hint-fn $ Fn respo.app.schema/Task $ -> Bool
                     not $ = (:id task) task-id
               (:clear)
                 .assoc store :tasks $ []
               (:update task-id text)
                 .assoc store :tasks $ map (:tasks store)
                   fn (task)
-                    hint-fn $ Fn respo.app.schema/Task $ -> respo.app.schema/Task
                     if
                       = (:id task) task-id
                       .assoc task :text text
@@ -671,7 +666,6 @@
               (:toggle task-id)
                 .assoc store :tasks $ map (:tasks store)
                   fn (task)
-                    hint-fn $ Fn respo.app.schema/Task $ -> respo.app.schema/Task
                     if
                       = (:id task) task-id
                       .assoc task :done? $ not $ :done? task
@@ -735,7 +729,7 @@
                   browser/add-event-listener! (str event-name) handler
               (= action :unmount)
                 remove-stored-listener! el $ str event-name
-              true nil
+              true &unit
           :examples $ []
           :schema $ quote $ Fn
             Map Tag $ Set String
@@ -872,10 +866,7 @@
           :doc "|Create and mount the initial DOM tree into a mount point.\n\nThis function clears previous content, builds event listeners from `deliver-event`, and appends the rendered root element. It is an internal mounting step used by `mount-app!`."
           :code $ quote $ defn activate-instance! (entire-dom mount-point deliver-event)
             let
-                listener-builder $ fn (event-name)
-                  hint-fn $ Fn Tag $ ->
-                    Fn respo.dom/DomEvent (List respo.schema/CoordKey) (-> Unit)
-                  build-listener event-name deliver-event
+                listener-builder $ fn (event-name) (build-listener event-name deliver-event)
               set! mount-point.:inner-html |
               mount-point .append-child! $ make-element entire-dom listener-builder $ []
             , &unit
@@ -888,7 +879,6 @@
           :doc "|Creates a DOM event listener that converts events and dispatches them to Respo."
           :code $ quote $ defn build-listener (event-name deliver-event)
             fn (event coord)
-              hint-fn $ Fn respo.dom/DomEvent (List respo.schema/CoordKey) (-> Unit)
               let
                   simple-event $ event->edn event
                 deliver-event coord event-name simple-event
@@ -901,10 +891,7 @@
           :doc "|Apply collected patch operations to the mounted DOM root.\n\nIt builds event listeners from `deliver-event` and delegates concrete DOM mutations to `apply-dom-changes`."
           :code $ quote $ defn patch-instance! (changes mount-point deliver-event)
             let
-                listener-builder $ fn (event-name)
-                  hint-fn $ Fn Tag $ ->
-                    Fn respo.dom/DomEvent (List respo.schema/CoordKey) (-> Unit)
-                  build-listener event-name deliver-event
+                listener-builder $ fn (event-name) (build-listener event-name deliver-event)
               apply-dom-changes changes mount-point listener-builder
             , &unit
           :examples $ []
@@ -921,43 +908,41 @@
                 (:none) &unit
                 (:some component) (traverse-and-call component event-tuple dispatch!)
           :examples $ []
-          :schema $ quote $ Fn AnyEnum (-> Unit) (:features :state) (:open :reflect)
+          :schema $ quote $ Fn AnyEnum (-> Unit) (:features :io :state) (:open :reflect)
         'traverse-and-call $ %{} 'CodeEntry
           :doc "|Traverses the rendered tree and invokes component listeners. Listeners receive the app dispatch function unchanged."
           :code $ quote $ defn traverse-and-call (element event-tuple dispatch!)
-            when
-              or (component? element) (element? element)
-              loop
-                  xs $ [] $ respo.util.detect/as-render-node element
-                hint-fn $ Fn (List respo.schema/RenderNode) (-> Unit)
-                if (empty? xs) &unit $ let
-                    node $ &list:nth xs 0
-                    pending $ &list:rest xs
-                  match node
-                    (:component component)
-                      do
-                        each (:listeners component)
-                          fn (listener)
-                            hint-fn $ Fn respo.schema/RespoListener $ -> Unit
-                            (:handler listener) event-tuple dispatch!
-                            , &unit
-                        match (:tree component)
-                          (:none) (recur pending)
-                          (:some tree)
-                            recur $ prepend pending tree
-                    (:element markup)
-                      recur $ foldl
-                        reverse $ :children markup
-                        , pending $ fn (acc pair)
-                          hint-fn $ Fn (List respo.schema/RenderNode) respo.schema/ChildPair $ -> (List respo.schema/RenderNode)
-                          match (:node pair)
-                            (:none) acc
-                            (:some child) (prepend acc child)
+            loop
+                xs $ [] $ respo.util.detect/as-render-node element
+              hint-fn $ Fn (List respo.schema/RenderNode) (-> Unit)
+              if (empty? xs) &unit $ let
+                  node $ &list:nth xs 0
+                  pending $ &list:rest xs
+                match node
+                  (:component component)
+                    do
+                      each (:listeners component)
+                        fn (listener)
+                          hint-fn $ Fn respo.schema/RespoListener $ -> Unit
+                          (:handler listener) event-tuple dispatch!
+                          , &unit
+                      match (:tree component)
+                        (:none) (recur pending)
+                        (:some tree)
+                          recur $ prepend pending tree
+                  (:element markup)
+                    recur $ foldl
+                      reverse $ :children markup
+                      , pending $ fn (acc pair)
+                        match (:node pair)
+                          (:none) acc
+                          (:some child) (prepend acc child)
             , &unit
           :examples $ []
           :schema $ quote $ Fn respo.schema/NodeValue AnyEnum
             Fn *dispatch-op (-> Unit) (:features :io :state)
             -> Unit
+            :features :io :state
             :open :reflect
           :tests $ []
             %{} 'TestEntry
@@ -1021,7 +1006,6 @@
           :doc "|Creates a function to dispatch events from the DOM to Respo's event handling system."
           :code $ quote $ defn build-deliver-event (*global-element *dispatch-fn)
             fn (coord event-name simple-event)
-              hint-fn $ Fn (List respo.schema/CoordKey) Tag respo.schema/RespoEvent $ -> Unit
               let
                   target-element-option $ find-event-target
                       deref *global-element
@@ -1047,7 +1031,7 @@
             Ref $ Option respo.schema/Component
             Ref $ Fn *dispatch-op (-> Unit) (:features :io :state)
             -> $ Fn (List respo.schema/CoordKey) Tag respo.schema/RespoEvent $ -> Unit
-            :features :js-ffi :state
+            :features :io :js-ffi :state
         'extract-listeners $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn extract-listeners (component-result)
             if (list? component-result)
@@ -1088,8 +1072,6 @@
         'find-event-target $ %{} 'CodeEntry
           :doc "|Traverses the virtual DOM to find the element that should handle a specific event."
           :code $ quote $ defn find-event-target (element coord event-name)
-            assert |element-cannot-be-nil $ calcit.core/non-nil? element
-            assert |coord-cannot-be-nil $ calcit.core/non-nil? coord
             let
                 target-element-option $ loop
                     m-option $ get-render-node-at (respo.util.detect/as-render-node element) coord
@@ -1103,11 +1085,8 @@
                           recur $ :tree component
                         (:element target) (Some target)
                 event-present? $ target-element-option .fold
-                  fn ()
-                    hint-fn $ Fn $ -> Bool
-                    , false
+                  fn () false
                   fn (target-element)
-                    hint-fn $ Fn respo.schema/Element $ -> Bool
                     contains? (element-event target-element) event-name
               if event-present? target-element-option $ if (empty? coord) None $ recur element
                 slice coord 0 $ Some $ - (count coord) 1
@@ -1150,9 +1129,7 @@
                         (:some child) (get-render-node-at child cs)
                         (:none)
                           raise $ str |child-not-found: coord $ map children
-                            fn (pair)
-                              hint-fn $ Fn respo.schema/ChildPair $ -> respo.schema/CoordKey
-                              :key pair
+                            fn (pair) (:key pair)
           :examples $ []
           :schema $ quote $ Fn respo.schema/RenderNode (List K)
             -> $ Option respo.schema/RenderNode
@@ -1387,15 +1364,7 @@
           :schema $ quote $ Fn PropsInput (& Dynamic) (-> schema/Element) (:generics PropsInput)
         'build-effect $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn build-effect (name deps method)
-            when
-              not $ tag? name
-              raise "|[Respo/build-effect] expected a tag name"
-            when
-              not $ list? deps
-              raise "|[Respo/build-effect] expected dependencies as a list"
-            let
-                method-fn $ expect-function method "|[Respo/build-effect] expected a lifecycle method function"
-              schema/Effect :name name :coord ([]) :args deps :method method-fn
+            schema/Effect :name name :coord ([]) :args deps :method method
           :examples $ []
           :schema $ quote $ Fn Tag (List Dynamic)
             Fn (List Dynamic) schema/EffectParams $ -> Unit
@@ -1426,7 +1395,6 @@
             let
                 *changes $ ref $ assert-type ([]) (List schema/DomPatch)
               f $ fn (op)
-                hint-fn $ Fn schema/DomPatch $ -> Unit
                 reset! *changes $ append (deref *changes) op
                 , &unit
               deref *changes
@@ -1475,8 +1443,7 @@
             :tags $ #{} :unit
         'confirm-child-pair $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn confirm-child-pair (pair)
-            assert "|expected pair" $ and (list? pair)
-              &= 2 $ count pair
+            assert "|expected pair" $ &= 2 $ count pair
             assert "|[Respo] keyed child requires a non-nil key" $ calcit.core/non-nil? $ .unwrap (calcit.core/first pair)
             match
               resolve-prop-value $ &list:nth pair 1
@@ -1533,8 +1500,6 @@
           :doc "|Typed counterpart of create-list-element. Takes ChildPair values, usually built with keyed-element or keyed-component, instead of [key child] lists. Keys must be non-nil; pairs whose :node is Option :none are omitted, like nil children in create-list-element. Keys, order and diffing behave the same as list->."
           :code $ quote $ defn create-keyed-element (tag-name props pairs)
             make-keyed-element |create-keyed-element tag-name props $ filter pairs $ fn (pair)
-              hint-fn $ Fn schema/ChildPair $ -> Bool
-              assert "|[Respo] keyed child requires a non-nil key" $ calcit.core/non-nil? $ :key pair
               match (:node pair)
                 (:some _node) true
                 (:none) false
@@ -1555,13 +1520,8 @@
         'create-list-element $ %{} 'CodeEntry
           :doc "|Creates an element for ordered keyed children. Validates each [key child] pair and non-nil key before omitting absent children. Child values can be Option: some keeps the original key and child; none is omitted directly without erasing it to nil. Bare nil children remain omitted."
           :code $ quote $ defn create-list-element (tag-name props child-pairs)
-            when
-              not $ list? child-pairs
-              raise "|[Respo/create-list-element] expected keyed child pairs as a list or map"
             make-keyed-element |create-list-element tag-name props $ foldl (map child-pairs confirm-child-pair) ([])
               fn (acc pair)
-                hint-fn $ Fn (List schema/ChildPair) (List Dynamic)
-                  -> $ List schema/ChildPair
                 &let
                   k $ respo.util.list/read-coord-key $ respo.util.list/pair-key pair
                   match
@@ -1864,7 +1824,7 @@
             assert "|params like [action el at-place?]" $ and (list? params) (every? params symbol?)
             assert "|defeffect binds at most 3 lifecycle params: (action el at-place?)" $ &<= (count params) 3
             let
-                args-var $ gensym |args
+                args-var $ gensym |_args
                 params-var $ gensym |params
                 param-fields $ [] :action :target :at-place?
                 param-bindings $ map-indexed params $ fn (idx param)
@@ -1876,10 +1836,9 @@
                 , :coord ([]) :args ([] ~@args) :method
                   fn (~args-var ~params-var)
                     hint-fn $ Fn (List Dynamic) respo.schema/EffectParams $ -> Unit
-                    let[] ~args ~args-var $ let ~param-bindings $ ~
-                      if (empty? body)
-                        quasiquote $ do $ println (str-spaced |WARNING: ~effect-name "|lack code for handling effects!")
-                        quasiquote $ do ~@body
+                    let ~param-bindings $ ~ $ if (empty? body)
+                      quasiquote $ do $ println (str-spaced |WARNING: ~effect-name "|lack code for handling effects!")
+                      quasiquote $ do ~@body
                     , &unit
           :examples $ []
             quote $ defeffect log-message (message) (action el at-place?)
@@ -2022,18 +1981,13 @@
         'effect-on-update $ %{} 'CodeEntry
           :doc "|Creates a component effect that calls update! when the immutable dependency list changes."
           :code $ quote $ defn effect-on-update (deps update!)
-            when
-              not $ list? deps
-              raise "|[Respo/effect-on-update] expected dependencies as a list"
-            let
-                update-fn $ expect-function update! "|[Respo/effect-on-update] expected a callback function"
-              build-effect :effect-on-update deps $ fn (_args params)
-                let
-                    action $ :action params
-                    target $ :target params
-                  if (&= action :update)
-                    do (update-fn target) &unit
-                    , &unit
+            build-effect :effect-on-update deps $ fn (_args params)
+              let
+                  action $ :action params
+                  target $ :target params
+                if (&= action :update)
+                  do (update! target) &unit
+                  , &unit
           :examples $ [] $ quote
             effect-on-update ([] 1)
               fn (_target) &unit
@@ -2070,12 +2024,6 @@
         'effect-watch $ %{} 'CodeEntry
           :doc "|Creates a dependency-aware effect. setup! runs on mount and after dependency changes; cleanup! runs before a changed setup and on unmount. Cleanup uses the old render closure."
           :code $ quote $ defn effect-watch (deps setup! cleanup-option)
-            if (list? deps) &unit $ raise |[Respo/effect-watch]-expected-dependencies-as-a-list
-            if (fn? setup!) &unit $ raise |[Respo/effect-watch]-expected-setup-callback
-            match cleanup-option
-              (:none) &unit
-              (:some cleanup!)
-                if (fn? cleanup!) &unit $ raise |[Respo/effect-watch]-expected-cleanup-callback
             build-effect :effect-watch deps $ fn (_args params)
               let
                   action $ :action params
@@ -2124,7 +2072,7 @@
                   new-tree $ schema/Component :name :watch :effects ([] new-effect) :listeners ([]) :tree $ Some (respo.util.detect/as-render-node element)
                 respo.render.effect/collect-updating collect! :before-update ([]) ([]) old-tree new-tree
                 respo.render.effect/collect-updating collect! :update ([]) ([]) old-tree new-tree
-                run-effect-ops! @ops :target
+                run-effect-ops! @ops $ stub-dom-target :target
                 assert |two-lifecycle-actions-run $ &= 2 $ count @log
               :tags $ #{} :unit
             %{} 'TestEntry (:name |keeps-unchanged-effects-idle)
@@ -2164,11 +2112,11 @@
                   with-effect $ schema/Component :name :optional :effects ([] watch) :listeners ([]) :tree $ Some (respo.util.detect/as-render-node element)
                 respo.render.effect/collect-updating collect! :before-update ([]) ([]) without-effect with-effect
                 respo.render.effect/collect-updating collect! :update ([]) ([]) without-effect with-effect
-                run-effect-ops! @ops :target
+                run-effect-ops! @ops $ stub-dom-target :target
                 reset! ops $ []
                 respo.render.effect/collect-updating collect! :before-update ([]) ([]) with-effect without-effect
                 respo.render.effect/collect-updating collect! :update ([]) ([]) with-effect without-effect
-                run-effect-ops! @ops :target
+                run-effect-ops! @ops $ stub-dom-target :target
                 assert |mount-and-unmount-both-run $ &= 2 $ count @log
               :tags $ #{} :unit
             %{} 'TestEntry (:name |replaces-effect-kinds-with-unmount-and-mount)
@@ -2190,7 +2138,7 @@
                   new-tree $ schema/Component :name :replace :effects ([] new-effect) :listeners ([]) :tree $ Some (respo.util.detect/as-render-node element)
                 respo.render.effect/collect-updating collect! :before-update ([]) ([]) old-tree new-tree
                 respo.render.effect/collect-updating collect! :update ([]) ([]) old-tree new-tree
-                run-effect-ops! @ops :target
+                run-effect-ops! @ops $ stub-dom-target :target
                 assert |replacement-runs-two-actions $ &= 2 $ count @log
               :tags $ #{} :unit
         'element-type $ %{} 'CodeEntry (:doc |)
@@ -2323,8 +2271,7 @@
                           (:some item)
                             let
                                 next-node $ if
-                                  and (struct? item)
-                                    or (component? item) (element? item)
+                                  or (component? item) (element? item)
                                   Some $ respo.util.detect/as-render-node item
                                   , node-option
                                 next-effects $ if (effect? item)
@@ -2342,9 +2289,6 @@
         'for-keyed $ %{} 'CodeEntry
           :doc "|Maps an ordered immutable list to keyed [key child] pairs for list->. key-fn receives the item; render-item receives item and index. Nil keys raise an indexed error."
           :code $ quote $ defn for-keyed (items key-fn render-item)
-            when
-              not $ list? items
-              raise "|[Respo/for-keyed] expected items as a list"
             let
                 get-key $ expect-function key-fn "|[Respo/for-keyed] expected key-fn as a function"
                 render-child $ expect-function render-item "|[Respo/for-keyed] expected render-item as a function"
@@ -2489,14 +2433,12 @@
         'keyed-component $ %{} 'CodeEntry
           :doc "|Build a ChildPair for keyed-> from a key and a Component."
           :code $ quote $ defn keyed-component (key component)
-            assert "|[Respo] keyed child requires a non-nil key" $ calcit.core/non-nil? key
             respo.schema/ChildPair :key key :node $ Some $ respo.schema/RenderNode :component component
           :examples $ []
           :schema $ quote $ Fn schema/CoordKey schema/Component (-> schema/ChildPair)
         'keyed-element $ %{} 'CodeEntry
           :doc "|Build a ChildPair for keyed-> from a key and an Element."
           :code $ quote $ defn keyed-element (key element)
-            assert "|[Respo] keyed child requires a non-nil key" $ calcit.core/non-nil? key
             respo.schema/ChildPair :key key :node $ Some $ respo.schema/RenderNode :element element
           :examples $ []
           :schema $ quote $ Fn schema/CoordKey schema/Element (-> schema/ChildPair)
@@ -2636,7 +2578,7 @@
                   foldl (&struct:to-map props) ({}) keep-present
                 (map? props)
                   foldl props ({}) keep-present
-                true $ raise $ str |Expected_DOM_props_map_or_record,_got: (type-of props)
+                true $ raise $ str |Expected_DOM_props_map_or_record,_got: (to-lispy-string props)
           :examples $ []
           :schema $ quote $ Fn PropsInput
             -> $ Map Tag Dynamic
@@ -2808,7 +2750,7 @@
                             (:some style-value)
                               &map:assoc acc style-key $ respo.util.format/read-css-value style-value
                             (:none) acc
-                    raise $ str "|[Respo] expected :style to be a map, got: " $ type-of value
+                    raise $ str "|[Respo] expected :style to be a map, got: " $ to-lispy-string value
           :examples $ []
           :schema $ quote $ Fn (Option Dynamic)
             -> $ Map schema/StyleKey schema/CssValue
@@ -2950,10 +2892,10 @@
             cond
                 nil? value
                 , None
-              (&= value js/undefined) None
+              (identical? value js/undefined) None
               (and (enum? value) (= (&enum:definition value) (Some Option)))
                 if
-                  &= :some $ &enum:nth value 0
+                  identical? :some $ &enum:nth value 0
                   Some $ &enum:nth value 1
                   , None
               true $ Some value
@@ -2964,27 +2906,24 @@
         'run-effect-ops! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn run-effect-ops! (items target)
             &doseq (op items)
-              match op
-                (:effect-mount _coord _n-coord run!)
-                  do
-                    if (fn? run!) (run! target) (raise "|[Respo/test] expected effect callback")
+              let
+                  run-checked! $ fn (run!)
+                    hint-fn $ Fn
+                      Fn respo.dom/DomElement $ -> Unit
+                      -> Unit
+                    &let
+                      cb $ respo.util.detect/expect-function run! "|[Respo/test] expected effect callback"
+                      cb target
                     , &unit
-                (:effect-unmount _coord _n-coord run!)
-                  do
-                    if (fn? run!) (run! target) (raise "|[Respo/test] expected effect callback")
-                    , &unit
-                (:effect-before-update _coord _n-coord run!)
-                  do
-                    if (fn? run!) (run! target) (raise "|[Respo/test] expected effect callback")
-                    , &unit
-                (:effect-update _coord _n-coord run!)
-                  do
-                    if (fn? run!) (run! target) (raise "|[Respo/test] expected effect callback")
-                    , &unit
-                _ &unit
+                match op
+                  (:effect-mount _coord _n-coord run!) (run-checked! run!)
+                  (:effect-unmount _coord _n-coord run!) (run-checked! run!)
+                  (:effect-before-update _coord _n-coord run!) (run-checked! run!)
+                  (:effect-update _coord _n-coord run!) (run-checked! run!)
+                  _ &unit
             , &unit
           :examples $ []
-          :schema $ quote $ Fn (List Dynamic) Dynamic (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (List schema/DomPatch) respo.dom/DomElement (-> Unit) (:features :js-ffi)
         'run-first-task! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn run-first-task! (tasks)
             let
@@ -3343,7 +3282,7 @@
           :code $ quote $ defn render-css-block (style-name rules)
             let
                 entries $ if (map? rules) (&map:to-list rules)
-                  raise $ str "|render-css-block expected a map of rules, got: " $ type-of rules
+                  raise $ str "|render-css-block expected a map of rules, got: " $ to-lispy-string rules
               loop
                   acc |
                   xs entries
@@ -3352,7 +3291,7 @@
                     k $ respo.util.list/pair-key-text pair
                     raw-styles $ respo.util.list/pair-value pair
                     styles-map $ if (map? raw-styles) raw-styles $ raise
-                      str "|render-css-block expected a style map, got: " $ type-of raw-styles
+                      str "|render-css-block expected a style map, got: " $ to-lispy-string raw-styles
                     class-rule $ str |. style-name
                     rule-name $ &str:replace (&str:replace k |$0 class-rule) |& class-rule
                     contained $ calcit.core/get styles-map :contained
@@ -3367,13 +3306,9 @@
                           map? $ &list:nth entry 1
                         , respo.util.list/pair-key-text
                       fn (entry)
-                        &let
-                          inner $ &list:nth entry 1
-                          if (map? inner)
-                            str (respo.util.list/pair-key-text entry) (char-from-code 32) |{ &newline
-                              style->string $ &map:to-list inner
-                              , &newline |}
-                            , |
+                        str (respo.util.list/pair-key-text entry) (char-from-code 32) |{ &newline
+                          style->string $ respo.css/map-entries $ &list:nth entry 1
+                          , &newline |}
                     css-line $ cond
                         empty? nested-blocks
                         style->string declarations
@@ -4095,13 +4030,13 @@
               (:some raw)
                 let
                     decoded $ parse-cirru-edn raw
-                  when
-                    not $ list? decoded
-                    raise |[Respo/main!]-expected-saved-tasks-as-a-list
-                  let
-                      tasks $ decode-map-as decoded $ List Dynamic
-                      restored $ respo.app.task/normalize-tasks tasks
-                    reset! *store $ respo.app.task/restore-tasks @*store restored
+                  match
+                    try-decode-map-as decoded $ List Dynamic
+                    (:ok tasks)
+                      let
+                          restored $ respo.app.task/normalize-tasks tasks
+                        reset! *store $ respo.app.task/restore-tasks @*store restored
+                    (:err _msg) (raise |[Respo/main!]-expected-saved-tasks-as-a-list)
             render-app! mount-target
             browser/add-event-listener! |keydown $ fn (raw-event)
               let
@@ -4740,7 +4675,7 @@
               (:element tree)
                 do
                   &doseq
-                    event-name $ keys-non-nil $ :event tree
+                    event-name $ present-event-keys $ :event tree
                     collect! $ DomPatch :set-event coord n-coord event-name
                   loop
                       children $ :children tree
@@ -4797,19 +4732,13 @@
           :code $ quote $ defn find-children-diffs (collect! coord n-coord index old-pairs-input new-pairs-input)
             let
                 old-children $ filter old-pairs-input $ fn (pair)
-                  hint-fn $ Fn respo.schema/ChildPair $ -> Bool
                   (:node pair) .some?
                 new-children $ filter new-pairs-input $ fn (pair)
-                  hint-fn $ Fn respo.schema/ChildPair $ -> Bool
                   (:node pair) .some?
               if
                 =
-                  map old-children $ fn (pair)
-                    hint-fn $ Fn respo.schema/ChildPair $ -> respo.schema/CoordKey
-                    :key pair
-                  map new-children $ fn (pair)
-                    hint-fn $ Fn respo.schema/ChildPair $ -> respo.schema/CoordKey
-                    :key pair
+                  map old-children $ fn (pair) (:key pair)
+                  map new-children $ fn (pair) (:key pair)
                 loop
                     old-pairs old-children
                     new-pairs new-children
@@ -4825,20 +4754,12 @@
                         recur rest-old (&list:rest new-pairs) (inc position)
                 match
                   keyed-rotation
-                    map old-children $ fn (pair)
-                      hint-fn $ Fn respo.schema/ChildPair $ -> respo.schema/CoordKey
-                      :key pair
-                    map new-children $ fn (pair)
-                      hint-fn $ Fn respo.schema/ChildPair $ -> respo.schema/CoordKey
-                      :key pair
+                    map old-children $ fn (pair) (:key pair)
+                    map new-children $ fn (pair) (:key pair)
                   (:none)
                     let
-                        full-old-keys $ map old-children $ fn (pair)
-                          hint-fn $ Fn respo.schema/ChildPair $ -> respo.schema/CoordKey
-                          :key pair
-                        full-new-keys $ map new-children $ fn (pair)
-                          hint-fn $ Fn respo.schema/ChildPair $ -> respo.schema/CoordKey
-                          :key pair
+                        full-old-keys $ map old-children $ fn (pair) (:key pair)
+                        full-new-keys $ map new-children $ fn (pair) (:key pair)
                         boundaries $ keyed-boundaries full-old-keys full-new-keys
                         prefix $ &list:nth boundaries 0
                         suffix $ &list:nth boundaries 1
@@ -4870,12 +4791,8 @@
                             :node $ &list:nth old-children old-position
                             :node $ &list:nth new-children new-position
                       let
-                          old-keys $ map middle-old-children $ fn (pair)
-                            hint-fn $ Fn respo.schema/ChildPair $ -> respo.schema/CoordKey
-                            :key pair
-                          new-keys $ map middle-new-children $ fn (pair)
-                            hint-fn $ Fn respo.schema/ChildPair $ -> respo.schema/CoordKey
-                            :key pair
+                          old-keys $ map middle-old-children $ fn (pair) (:key pair)
+                          new-keys $ map middle-new-children $ fn (pair) (:key pair)
                           old-index $ keyed-index old-keys
                           new-index $ keyed-index new-keys
                           retained-keys $ filter old-keys $ fn (key) (contains? new-index key)
@@ -5024,14 +4941,27 @@
         'find-element-diffs $ %{} 'CodeEntry
           :doc "|Internal diff algorithm for comparing old and new virtual DOM trees.\n\nIt collects patch operations via `collect!`, handling components, plain elements, styles, events, keyed children, and effect lifecycle transitions."
           :code $ quote $ defn find-element-diffs (collect! coord n-coord old-tree new-tree)
-            cond
-                identical? old-tree new-tree
-                , &unit
-              (and (or (nil? old-tree) (component? old-tree) (element? old-tree)) (or (nil? new-tree) (component? new-tree) (element? new-tree)))
-                find-render-node-diffs collect! coord n-coord
-                  if (nil? old-tree) None $ Some $ respo.util.detect/as-render-node old-tree
-                  if (nil? new-tree) None $ Some $ respo.util.detect/as-render-node new-tree
-              true $ js/console.warn "|Diffing unknown params" old-tree new-tree
+            let
+                to-node-option $ fn (tree)
+                  hint-fn $ Fn Dynamic $ ->
+                    Result (Option respo.schema/RenderNode) Unit
+                  cond
+                      nil? tree
+                      assert-type
+                        Result :ok $ assert-type None $ Option respo.schema/RenderNode
+                        Result (Option respo.schema/RenderNode) Unit
+                    (or (component? tree) (element? tree))
+                      assert-type
+                        Result :ok $ Some $ respo.util.detect/as-render-node tree
+                        Result (Option respo.schema/RenderNode) Unit
+                    true $ assert-type (Result :err &unit)
+                      Result (Option respo.schema/RenderNode) Unit
+              if (identical? old-tree new-tree) &unit $ match (to-node-option old-tree)
+                (:ok old-opt)
+                  match (to-node-option new-tree)
+                    (:ok new-opt) (find-render-node-diffs collect! coord n-coord old-opt new-opt)
+                    (:err _) (js/console.warn "|Diffing unknown params" old-tree new-tree)
+                (:err _) (js/console.warn "|Diffing unknown params" old-tree new-tree)
             , &unit
           :examples $ []
           :schema $ quote $ Fn
@@ -5057,7 +4987,7 @@
                     hint-fn $ Fn DomPatch $ -> Unit
                     respo.core/append-dynamic! ops op
                 find-element-diffs collect! ([]) ([]) old-element new-element
-                respo.core/run-effect-ops! @ops :dom-node
+                respo.core/run-effect-ops! @ops $ respo.core/stub-dom-target :dom-node
                 assert |both-ref-actions-run $ &= 2 $ count @log
                 assert |old-ref-runs-first $ &= ([] :old nil) (&list:nth @log 0)
               :tags $ #{} :unit
@@ -5083,12 +5013,12 @@
                           , &unit
                   wrapped $ respo.schema/Component :name :boundary :effects ([] watch) :listeners ([]) :tree $ Some (respo.util.detect/as-render-node inner)
                 find-element-diffs collect! ([]) ([]) plain wrapped
-                respo.core/run-effect-ops! @ops :target
+                respo.core/run-effect-ops! @ops $ respo.core/stub-dom-target :target
                 assert |entering-wrapper-runs-two-actions $ &= 2 $ count @log
                 reset! log $ []
                 reset! ops $ []
                 find-element-diffs collect! ([]) ([]) wrapped plain
-                respo.core/run-effect-ops! @ops :target
+                respo.core/run-effect-ops! @ops $ respo.core/stub-dom-target :target
                 assert |leaving-wrapper-runs-two-actions $ &= 2 $ count @log
               :tags $ #{} :unit
             %{} 'TestEntry (:name |handles-none-component-tree-transitions)
@@ -5254,9 +5184,7 @@
                                     children-first? $ and (empty? new-children) (owns-inner-content? new-tree)
                                   if
                                     and dev? $ detect-keys-dup $ map new-children
-                                      fn (entry)
-                                        hint-fn $ Fn respo.schema/ChildPair $ -> respo.schema/CoordKey
-                                        :key entry
+                                      fn (entry) (:key entry)
                                     js/console.error "|Parent that has dups" new-tree
                                   when children-first? $ find-children-diffs collect! coord n-coord 0 old-children new-children
                                   find-props-diffs collect! coord n-coord (:attrs old-tree) (:attrs new-tree)
@@ -5264,28 +5192,24 @@
                                       old-ref-option $ :ref old-tree
                                       new-ref-option $ :ref new-tree
                                     when
-                                      not $ &= old-ref-option new-ref-option
+                                      and
+                                        not $ and (js-nullish? old-ref-option) (js-nullish? new-ref-option)
+                                        not $ identical? old-ref-option new-ref-option
                                       when (js-present? old-ref-option)
                                         let
                                             checked-old-ref old-ref-option
-                                          collect! $ DomPatch :effect-before-update coord n-coord $ fn (_target)
-                                            hint-fn $ Fn respo.dom/DomElement $ -> Unit
-                                            checked-old-ref legacy-nil
-                                            , &unit
+                                          collect! $ DomPatch :effect-before-update coord n-coord $ fn (_target) (checked-old-ref legacy-nil) &unit
                                       when (js-present? new-ref-option)
                                         let
                                             checked-new-ref new-ref-option
-                                          collect! $ DomPatch :effect-update coord n-coord $ fn (target)
-                                            hint-fn $ Fn respo.dom/DomElement $ -> Unit
-                                            checked-new-ref target
-                                            , &unit
+                                          collect! $ DomPatch :effect-update coord n-coord $ fn (target) (checked-new-ref target) &unit
                                   let
                                       old-style $ :style old-tree
                                       new-style $ :style new-tree
                                     if (not= old-style new-style) (find-style-diffs collect! coord n-coord old-style new-style)
                                   let
-                                      old-events $ keys-non-nil $ :event old-tree
-                                      new-events $ keys-non-nil $ :event new-tree
+                                      old-events $ present-event-keys $ :event old-tree
+                                      new-events $ present-event-keys $ :event new-tree
                                     when (not= old-events new-events)
                                       let
                                           added-events $ difference new-events old-events
@@ -5652,7 +5576,6 @@
           :code $ quote $ defn owns-inner-content? (element)
             any? (:attrs element)
               fn (pair)
-                hint-fn $ Fn (Tuple Tag Dynamic) (-> Bool)
                 and
                   contains? (#{} :innerHTML :inner-text) (&list:nth pair 0)
                   non-nil? $ &list:nth pair 1
@@ -5669,6 +5592,17 @@
               assert= false $ owns-inner-content? $ respo.core/div
                 {} $ :title |t
             :tags $ #{} :unit
+        'present-event-keys $ %{} 'CodeEntry
+          :doc "|Returns the set of event tags whose handlers are currently present."
+          :code $ quote $ defn present-event-keys (events)
+            &map:fold-kv events (#{})
+              fn (acc k v)
+                if (js-present? v) (include acc k) acc
+          :examples $ []
+          :schema $ quote $ Fn
+            Map Tag $ JsNullish respo.schema/EventHandler
+            -> $ Set Tag
+            :features :js-ffi
         'props-as-list $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn props-as-list (props)
             if (list? props)
@@ -5707,7 +5641,6 @@
         'make-element $ %{} 'CodeEntry
           :doc "|internal function to create a DOM element from a virtual element. handles properties, styles, events, and recursively creates child elements."
           :code $ quote $ defn make-element (virtual-element listener-builder coord & svg-context)
-            assert |coord-is-required $ calcit.core/non-nil? coord
             make-render-node-element (respo.util.detect/as-render-node virtual-element) listener-builder coord $ if (empty? svg-context) false $ &list:nth svg-context 0
           :examples $ []
           :schema $ quote $ Fn respo.schema/NodeValue
@@ -5739,7 +5672,6 @@
                     element $ narrow-element $ if svg? (browser/create-element-ns |http://www.w3.org/2000/svg tag-name) (browser/create-element tag-name)
                     child-elements $ map
                       filter children $ fn (pair)
-                        hint-fn $ Fn respo.schema/ChildPair $ -> Bool
                         (:node pair) .some?
                       fn (pair)
                         hint-fn $ Fn respo.schema/ChildPair $ -> respo.dom/DomElement
@@ -5750,7 +5682,6 @@
                               , .unwrap
                           make-render-node-element child listener-builder (append coord k) child-svg?
                   each attrs $ fn (entry)
-                    hint-fn $ Fn (Tuple Tag Dynamic) (-> Dynamic)
                     let
                         prop-str $ .to-string $ &list:nth entry 0
                         v $ &list:nth entry 1
@@ -5769,8 +5700,8 @@
                           let
                               k $ dashed->camel prop-str
                             if (calcit.core/non-nil? v) (aset element k v)
+                      , &unit
                   each style $ fn (entry)
-                    hint-fn $ Fn (Tuple respo.schema/StyleKey respo.schema/CssValue) (-> Dynamic)
                     let
                         style-name $ respo.util.format/style-key-text $ nth entry 0
                         k $ dashed->camel style-name
@@ -5784,8 +5715,7 @@
                       when (js-present? event-handler)
                         install-listener! element (&list:nth entry 0) listener-builder coord
                   each child-elements $ fn (child-element)
-                    when (calcit.core/non-nil? child-element)
-                      browser/append-child! (host-element element) (host-element child-element)
+                    browser/append-child! (host-element element) (host-element child-element)
                   , element
           :examples $ []
           :schema $ quote $ Fn respo.schema/RenderNode
@@ -5864,7 +5794,7 @@
                     respo.core/append-dynamic! ops op
                 collect-mounting collect! ([]) ([]) element false
                 collect-unmounting collect! ([]) ([]) element false
-                respo.core/run-effect-ops! @ops :dom-node
+                respo.core/run-effect-ops! @ops $ respo.core/stub-dom-target :dom-node
                 assert |ref-receives-two-lifecycle-calls $ = 2 $ count @log
                 assert |ref-receives-target-first $ &= :dom-node $ &list:nth @log 0
               :tags $ #{} :unit
@@ -5880,7 +5810,7 @@
                     respo.core/append-dynamic! ops op
                 collect-mounting collect! ([]) ([]) component true
                 collect-unmounting collect! ([]) ([]) component true
-                respo.core/run-effect-ops! @ops :dom-node
+                respo.core/run-effect-ops! @ops $ respo.core/stub-dom-target :dom-node
                 assert |own-effects-survive-none-tree $ &= ([] :mount :unmount) @actions
               :tags $ #{} :unit
             %{} 'TestEntry (:name |keeps-dom-indices-dense-through-empty-children)
@@ -5925,7 +5855,7 @@
                     hint-fn $ Fn DomPatch $ -> Unit
                     respo.core/append-dynamic! ops op
                 collect-mounting collect! ([]) ([]) component true
-                respo.core/run-effect-ops! @ops :dom-node
+                respo.core/run-effect-ops! @ops $ respo.core/stub-dom-target :dom-node
                 assert= ([] true) @flags
         'collect-mounting-node $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn collect-mounting-node (collect! coord n-coord node at-place?)
@@ -5941,7 +5871,6 @@
                           typed-effect effect
                           method $ :method typed-effect
                         collect! $ DomPatch :effect-mount next-coord n-coord $ fn (target)
-                          hint-fn $ Fn respo.dom/DomElement $ -> Unit
                           method (:args typed-effect) (respo.schema/EffectParams :action :mount :target target :at-place? at-place?)
                   match (:tree component-value)
                     (:none) &unit
@@ -5952,10 +5881,7 @@
                     js-nullish->option $ :ref tree
                     (:none) &unit
                     (:some ref!)
-                      collect! $ DomPatch :effect-mount coord n-coord $ fn (target)
-                        hint-fn $ Fn respo.dom/DomElement $ -> Unit
-                        ref! target
-                        , &unit
+                      collect! $ DomPatch :effect-mount coord n-coord $ fn (target) (ref! target) &unit
                   loop
                       children $ :children tree
                       idx 0
@@ -5987,7 +5913,6 @@
                 let
                     method $ :method effect
                   collect! $ DomPatch :effect-mount next-coord n-coord $ fn (target)
-                    hint-fn $ Fn respo.dom/DomElement $ -> Unit
                     method (effect-args effect) (respo.schema/EffectParams :action :mount :target target :at-place? at-place?)
           :examples $ []
           :schema $ quote $ Fn
@@ -6008,7 +5933,6 @@
                 let
                     method $ :method effect
                   collect! $ DomPatch :effect-unmount next-coord n-coord $ fn (target)
-                    hint-fn $ Fn respo.dom/DomElement $ -> Unit
                     method (effect-args effect) (respo.schema/EffectParams :action :unmount :target target :at-place? at-place?)
           :examples $ []
           :schema $ quote $ Fn
@@ -6048,7 +5972,6 @@
                           typed-effect effect
                           method $ :method typed-effect
                         collect! $ DomPatch :effect-unmount new-coord n-coord $ fn (target)
-                          hint-fn $ Fn respo.dom/DomElement $ -> Unit
                           method (:args typed-effect) (respo.schema/EffectParams :action :unmount :target target :at-place? at-place?)
               (:element tree)
                 do
@@ -6068,10 +5991,7 @@
                     js-nullish->option $ :ref tree
                     (:none) &unit
                     (:some ref!)
-                      collect! $ DomPatch :effect-unmount coord n-coord $ fn (_target)
-                        hint-fn $ Fn respo.dom/DomElement $ -> Unit
-                        ref! nil
-                        , &unit
+                      collect! $ DomPatch :effect-unmount coord n-coord $ fn (_target) (ref! nil) &unit
             , &unit
           :examples $ []
           :schema $ quote $ Fn
@@ -6110,10 +6030,8 @@
                                   method $ :method effect
                                 collect! $ if (= :update action)
                                   DomPatch :effect-update next-coord n-coord $ fn (target)
-                                    hint-fn $ Fn respo.dom/DomElement $ -> Unit
                                     method (effect-args effect) (respo.schema/EffectParams :action action :target target :at-place? false)
                                   DomPatch :effect-before-update next-coord n-coord $ fn (target)
-                                    hint-fn $ Fn respo.dom/DomElement $ -> Unit
                                     method (effect-args effect) (respo.schema/EffectParams :action action :target target :at-place? false)
                             let
                                 effect $ if (= action :before-update) old-effect new-effect
@@ -6121,10 +6039,8 @@
                                 lifecycle-action $ if (= action :before-update) :unmount :mount
                               collect! $ if (= :update action)
                                 DomPatch :effect-update next-coord n-coord $ fn (target)
-                                  hint-fn $ Fn respo.dom/DomElement $ -> Unit
                                   method (effect-args effect) (respo.schema/EffectParams :action lifecycle-action :target target :at-place? false)
                                 DomPatch :effect-before-update next-coord n-coord $ fn (target)
-                                  hint-fn $ Fn respo.dom/DomElement $ -> Unit
                                   method (effect-args effect) (respo.schema/EffectParams :action lifecycle-action :target target :at-place? false)
                           , &unit
                         do
@@ -6132,7 +6048,6 @@
                             let
                                 method $ :method old-effect
                               collect! $ DomPatch :effect-before-update next-coord n-coord $ fn (target)
-                                hint-fn $ Fn respo.dom/DomElement $ -> Unit
                                 method (effect-args old-effect) (respo.schema/EffectParams :action :unmount :target target :at-place? false)
                           , &unit
                       , &unit
@@ -6142,7 +6057,6 @@
                           let
                               method $ :method new-effect
                             collect! $ DomPatch :effect-update next-coord n-coord $ fn (target)
-                              hint-fn $ Fn respo.dom/DomElement $ -> Unit
                               method (effect-args new-effect) (respo.schema/EffectParams :action :mount :target target :at-place? false)
                       , &unit
           :examples $ []
@@ -6251,7 +6165,6 @@
                 styles $ element :style
                 children $ map (element :children)
                   fn (entry)
-                    hint-fn $ Fn respo.schema/ChildPair $ -> String
                     match (:node entry)
                       (:none) |
                       (:some node)
@@ -6294,28 +6207,16 @@
         'element-content $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn element-content (tag-name attrs children) (decode-map-as attrs 'Map)
             if (= tag-name :textarea)
-              match
-                calcit.core/get-in attrs $ [] :value
-                (:ok value)
-                  if (calcit.core/non-nil? value)
-                    escape-html $ respo.util.format/scalar-attribute-text value
-                    calcit.core/join-string children |
-                (:err _) (calcit.core/join-string children |)
-              match
-                calcit.core/get-in attrs $ [] :innerHTML
-                (:ok html)
-                  if (calcit.core/non-nil? html) (respo.util.format/scalar-attribute-text html)
-                    match
-                      calcit.core/get-in attrs $ [] :inner-text
-                      (:ok text)
-                        if (calcit.core/non-nil? text) (text->html text) (calcit.core/join-string children |)
-                      (:err _) (calcit.core/join-string children |)
-                (:err _)
-                  match
-                    calcit.core/get-in attrs $ [] :inner-text
-                    (:ok text)
-                      if (calcit.core/non-nil? text) (text->html text) (calcit.core/join-string children |)
-                    (:err _) (calcit.core/join-string children |)
+              match (present-attr-option attrs :value)
+                (:some value)
+                  escape-html $ respo.util.format/scalar-attribute-text value
+                (:none) (calcit.core/join-string children |)
+              match (present-attr-option attrs :innerHTML)
+                (:some html) (respo.util.format/scalar-attribute-text html)
+                (:none)
+                  match (present-attr-option attrs :inner-text)
+                    (:some text) (text->html text)
+                    (:none) (calcit.core/join-string children |)
           :examples $ []
           :schema $ quote $ Fn Tag (Map AttrKey AttrValue) (List String) (-> String) (:generics AttrKey AttrValue)
           :tests $ []
@@ -6413,6 +6314,18 @@
                     respo.core/div $ {}
                     , :children $ [] (respo.util.detect/make-child-pair :before nil) (respo.util.detect/make-child-pair :leaf leaf) (respo.util.detect/make-child-pair :after nil)
                 assert= |<div><span>leaf</span></div> $ make-string parent
+        'present-attr-option $ %{} 'CodeEntry
+          :doc "|Reads an HTML attribute from a map as an Option, treating nil as absent."
+          :code $ quote $ defn present-attr-option (attrs key)
+            match
+              calcit.core/get-in attrs $ [] key
+              (:ok value)
+                if (calcit.core/non-nil? value) (Some value) None
+              (:err _) None
+          :examples $ []
+          :schema $ quote $ Fn (Map AttrKey AttrValue) Tag
+            -> $ Option AttrValue
+            :generics AttrKey AttrValue
         'props->html $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn props->html (props)
             let
@@ -6425,7 +6338,7 @@
                     ; "A present boolean attribute reads as true, so false leaves it out; other attributes keep the text false"
                     and (calcit.core/non-nil? v)
                       not $ starts-with? attr |on-
-                      not $ and (bool? v) (not v)
+                      not $ and (identical? false v)
                         includes? boolean-attrs $ prop->attr attr
                 sorted $ &list:sort visible $ fn (a b)
                   &compare (&list:nth a 0) (&list:nth b 0)
@@ -6453,7 +6366,6 @@
           :code $ quote $ defn style->html (styles)
             calcit.core/join-string
               map styles $ fn (entry)
-                hint-fn $ Fn (List Dynamic) (-> String)
                 let
                     style-name $ respo.util.list/pair-key-text entry
                     v $ style-value-text (respo.util.list/pair-value entry) (dashed->camel style-name)
@@ -7124,11 +7036,7 @@
             :tags $ #{} :regression :unit
         'resource-failed $ %{} 'CodeEntry
           :doc "|Creates a :failed ResourceAction carrying the failure value."
-          :code $ quote $ defn resource-failed (request-id error)
-            when
-              not $ number? request-id
-              raise "|[Respo/resource-failed] expected a numeric request id"
-            ResourceAction :failed request-id error
+          :code $ quote $ defn resource-failed (request-id error) (ResourceAction :failed request-id error)
           :examples $ []
           :schema $ quote $ Fn Number E
             -> $ ResourceAction T E
@@ -7163,9 +7071,6 @@
         'resource-loading? $ %{} 'CodeEntry
           :doc "|Returns true for :pending and :refreshing ResourceState values."
           :code $ quote $ defn resource-loading? (state)
-            when
-              not $ resource-state? state
-              raise "|[Respo/resource-loading?] expected ResourceState"
             let
                 status $ :status state
               or (= status :pending) (= status :refreshing)
@@ -7174,11 +7079,7 @@
           :schema $ quote $ Fn (ResourceState T E) (-> Bool) (:generics T E)
         'resource-ready $ %{} 'CodeEntry
           :doc "|Creates a :ready ResourceAction carrying resolved immutable data."
-          :code $ quote $ defn resource-ready (request-id data)
-            when
-              not $ number? request-id
-              raise "|[Respo/resource-ready] expected a numeric request id"
-            ResourceAction :ready request-id data
+          :code $ quote $ defn resource-ready (request-id data) (ResourceAction :ready request-id data)
           :examples $ []
           :schema $ quote $ Fn Number T
             -> $ ResourceAction T E
@@ -7186,12 +7087,6 @@
         'resource-reducer $ %{} 'CodeEntry
           :doc "|Purely applies a ResourceAction to ResourceState. Ready and failed actions with stale request ids return the identical current state; refreshes retain previous data."
           :code $ quote $ defn resource-reducer (state action)
-            when
-              not $ resource-state? state
-              raise "|[Respo/resource-reducer] expected ResourceState as the first argument"
-            when
-              not $ resource-action? action
-              raise "|[Respo/resource-reducer] expected ResourceAction as the second argument"
             match action
               (:started request-id)
                 ResourceState :status
@@ -7276,11 +7171,7 @@
               :tags $ #{} :unit
         'resource-started $ %{} 'CodeEntry
           :doc "|Creates a :started ResourceAction for a numeric request id."
-          :code $ quote $ defn resource-started (request-id)
-            when
-              not $ number? request-id
-              raise "|[Respo/resource-started] expected a numeric request id"
-            ResourceAction :started request-id
+          :code $ quote $ defn resource-started (request-id) (ResourceAction :started request-id)
           :examples $ []
           :schema $ quote $ Fn Number
             -> $ ResourceAction T E
@@ -7627,7 +7518,6 @@
           :schema $ quote $ Fn (-> Unit)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! (root-host html-host)
-            assert= true $ enum-def? respo.app.schema/Op
             assert |typed-DOM-host-traverses-nested-child $ = &unit $ compare-to-dom!
               div ({})
                 span $ {}
@@ -7660,18 +7550,14 @@
               let
                   host $ make-element root
                     fn (_name)
-                      fn (_event _coord)
-                        hint-fn $ Fn respo.dom/DomEvent (List respo.schema/CoordKey) (-> Unit)
-                        , &unit
+                      fn (_event _coord) &unit
                     []
                 append-element host
                   with-attrs
                     create-element :circle $ {}
                     {} $ :r $ to-string 5
                   fn (_name)
-                    fn (_event _coord)
-                      hint-fn $ Fn respo.dom/DomEvent (List respo.schema/CoordKey) (-> Unit)
-                      , &unit
+                    fn (_event _coord) &unit
                   []
                 , host
           :examples $ []
@@ -7752,9 +7638,7 @@
                 ref! $ fn (target)
                   hint-fn $ Fn respo.dom/DomElement $ -> Unit
                   respo.core/append-dynamic! refs target
-                mount-effect $ respo.core/effect-on-mount $ fn (target)
-                  hint-fn $ Fn respo.dom/DomElement $ -> Unit
-                  respo.core/append-dynamic! mounts target
+                mount-effect $ respo.core/effect-on-mount $ fn (target) (respo.core/append-dynamic! mounts target)
                 make-component $ fn (op)
                   hint-fn $ Fn Tag $ -> respo.schema/Component
                   let
@@ -7890,7 +7774,7 @@
               assert |JS-HTML-keeps-escaped-attributes-and-styles $ = "|<div data-name=\"y\" style=\"content:d&quot;e&quot;f;\" value=\"a&quot;b&quot;c\"></div>" $ make-string tree
             assert |JS-SSR-omits-ref-callbacks $ = |<div></div> $ make-string
               div $ {} $ :ref
-                fn (_target) nil
+                fn (_target) &unit
             assert |Node-without-Canvas-uses-zero-width $ = 0 $ text-width |demo 16 |sans-serif
             let
                 render-count $ ref 0
@@ -8015,9 +7899,7 @@
                 fn (_target) &unit
               respo.core/show visible? $ respo.core/list-> ({})
                 respo.core/for-keyed ([] :a :b)
-                  fn (item)
-                    hint-fn $ Fn Tag $ -> Tag
-                    , item
+                  fn (item) item
                   fn (item _idx)
                     respo.core/show (= item :a)
                       div $ {}
@@ -8067,29 +7949,29 @@
         'as-component $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn as-component (value)
             if (struct? value)
-              if (&struct:matches? value respo.schema/Component) value $ raise $ str "|as-component expected a Component, but received: " (type-of value)
-              raise $ str "|as-component expected a Component, but received: " $ type-of value
+              if (&struct:matches? value respo.schema/Component) value $ raise $ str "|as-component expected a Component, but received: " (to-lispy-string value)
+              raise $ str "|as-component expected a Component, but received: " $ to-lispy-string value
           :examples $ []
           :schema $ quote $ Fn Input (-> schema/Component) (:generics Input)
         'as-effect $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn as-effect (value)
             if (struct? value)
-              if (&struct:matches? value respo.schema/Effect) value $ raise $ str "|as-effect expected a Effect, but received: " (type-of value)
-              raise $ str "|as-effect expected a Effect, but received: " $ type-of value
+              if (&struct:matches? value respo.schema/Effect) value $ raise $ str "|as-effect expected a Effect, but received: " (to-lispy-string value)
+              raise $ str "|as-effect expected a Effect, but received: " $ to-lispy-string value
           :examples $ []
           :schema $ quote $ Fn Input (-> schema/Effect) (:generics Input)
         'as-element $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn as-element (value)
             if (struct? value)
-              if (&struct:matches? value respo.schema/Element) value $ raise $ str "|as-element expected an Element, but received: " (type-of value)
-              raise $ str "|as-element expected an Element, but received: " $ type-of value
+              if (&struct:matches? value respo.schema/Element) value $ raise $ str "|as-element expected an Element, but received: " (to-lispy-string value)
+              raise $ str "|as-element expected an Element, but received: " $ to-lispy-string value
           :examples $ []
           :schema $ quote $ Fn Input (-> schema/Element) (:generics Input)
         'as-listener $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn as-listener (value)
             if (struct? value)
-              if (&struct:matches? value respo.schema/RespoListener) value $ raise $ str "|as-listener expected a RespoListener, but received: " (type-of value)
-              raise $ str "|as-listener expected a RespoListener, but received: " $ type-of value
+              if (&struct:matches? value respo.schema/RespoListener) value $ raise $ str "|as-listener expected a RespoListener, but received: " (to-lispy-string value)
+              raise $ str "|as-listener expected a RespoListener, but received: " $ to-lispy-string value
           :examples $ []
           :schema $ quote $ Fn Input (-> schema/RespoListener) (:generics Input)
         'as-render-node $ %{} 'CodeEntry
@@ -8254,10 +8136,9 @@
           :schema $ quote $ Fn schema/Element
             -> $ List $ Tuple Tag Dynamic
         'element-children $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn element-children (value)
-            :children $ as-element value
+          :code $ quote $ defn element-children (value) (:children value)
           :examples $ []
-          :schema $ quote $ Fn Dynamic
+          :schema $ quote $ Fn schema/Element
             -> $ List schema/ChildPair
         'element-event $ %{} 'CodeEntry
           :doc "|返回元素事件表，保留已有 nil/undefined handler 的语义；消费者在调用前排除 nullish 值。"
@@ -8684,7 +8565,6 @@
                   .assoc :event $ {}
                   .assoc :children $ map (:children element)
                     fn (pair)
-                      hint-fn $ Fn respo.schema/ChildPair $ -> respo.schema/ChildPair
                       &struct:assoc pair :node $
                         :node pair
                         , .map mute-render-node
@@ -8774,7 +8654,6 @@
                   .assoc :event $ {}
                   .assoc :children $ map (:children element)
                     fn (pair)
-                      hint-fn $ Fn respo.schema/ChildPair $ -> respo.schema/ChildPair
                       &struct:assoc pair :node $
                         :node pair
                         , .map $ fn (child)
@@ -8811,7 +8690,7 @@
                 , x
               (number? x) x
               (tag? x) x
-              true $ raise $ str "|[Respo] expected a style value as String, Number or Tag, got: " (type-of x) "| " (to-lispy-string x)
+              true $ raise $ str "|[Respo] expected a style value as String, Number or Tag, got: " (to-lispy-string x) "| " (to-lispy-string x)
           :examples $ []
           :schema $ quote $ Fn Input (-> respo.schema/CssValue) (:generics Input)
         'read-style-key $ %{} 'CodeEntry (:doc |)
@@ -8820,7 +8699,7 @@
                 tag? x
                 , x
               (string? x) x
-              true $ raise $ str "|[Respo] expected a style key as Tag or String, got: " (type-of x) "| " (to-lispy-string x)
+              true $ raise $ str "|[Respo] expected a style key as Tag or String, got: " (to-lispy-string x) "| " (to-lispy-string x)
           :examples $ []
           :schema $ quote $ Fn Input (-> respo.schema/StyleKey) (:generics Input)
         'scalar-attribute-text $ %{} 'CodeEntry (:doc "|将 DOM/SSR 属性值边界内已识别的标量转换为文本；拒绝集合及任意宿主对象。")
@@ -8865,7 +8744,7 @@
               (string? x) (get-style-value x prop)
               (number? x) (get-style-value x prop)
               (tag? x) (get-style-value x prop)
-              true $ raise $ str "|[Respo] expected a style value as String, Number, Tag or nil, got: " (type-of x) "| " (to-lispy-string x)
+              true $ raise $ str "|[Respo] expected a style value as String, Number, Tag or nil, got: " (to-lispy-string x) "| " (to-lispy-string x)
           :examples $ []
           :schema $ quote $ Fn Input String (-> String) (:generics Input)
           :tests $ [] $ %{} 'TestEntry (:name |reads-open-style-values)
@@ -8965,16 +8844,15 @@
                     , Dynamic $ ->
                       List $ List Dynamic
                   if (list? item) (append acc item)
-                    raise $ str "|[Respo] expected a key/value pair, got: " $ type-of item
-              raise $ str "|[Respo] expected a list of pairs, got: " $ type-of value
+                    raise $ str "|[Respo] expected a key/value pair, got: " $ to-lispy-string item
+              raise $ str "|[Respo] expected a list of pairs, got: " $ to-lispy-string value
           :examples $ []
           :schema $ quote $ Fn Dynamic
             -> $ List $ List Dynamic
         'first-pair $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn first-pair (entries)
             match (calcit.core/first entries)
-              (:some pair)
-                if (nil? pair) (raise "|first-pair expected a non-empty list of pairs") pair
+              (:some pair) pair
               (:none) (raise "|first-pair expected a non-empty list of pairs")
           :examples $ []
           :schema $ quote $ Fn (List T) (-> T) (:generics T)
@@ -9021,8 +8899,6 @@
         'map-with-idx $ %{} 'CodeEntry
           :doc "|按顺序对每个元素调用 f，返回 [idx (f x)] 对的列表。Maps xs with f and pairs each result with its index: ([] idx (f x))."
           :code $ quote $ defn map-with-idx (xs f)
-            assert (fn? f) "|expects function"
-            assert (list? xs) "|expects list"
             map-indexed xs $ fn (idx x)
               hint-fn $ Fn Number A $ -> (Tuple Number B)
               [] idx $ f x
@@ -9060,14 +8936,13 @@
         'pick-attrs $ %{} 'CodeEntry
           :doc "|Extracts HTML attributes from a properties map, filtering out internal keys like :on, :event, :style."
           :code $ quote $ defn pick-attrs (props)
-            if (nil? props) ([])
-              -> props (&map:dissoc :on) (&map:dissoc :style) (&map:dissoc :ref)
-                &map:filter-kv $ fn (k v)
-                  and (calcit.core/non-nil? v)
-                    not $ starts-with? (to-string k) |on-
-                &map:to-list
-                sort $ fn (x y)
-                  &compare (&list:nth x 0) (&list:nth y 0)
+            -> props (&map:dissoc :on) (&map:dissoc :style) (&map:dissoc :ref)
+              &map:filter-kv $ fn (k v)
+                and (calcit.core/non-nil? v)
+                  not $ starts-with? (to-string k) |on-
+              &map:to-list
+              sort $ fn (x y)
+                &compare (&list:nth x 0) (&list:nth y 0)
           :examples $ []
           :schema $ quote $ Fn (Map Tag AttrValue)
             -> $ List $ Tuple Tag AttrValue
@@ -9100,7 +8975,6 @@
                   (:some raw-on) (pick-on-events raw-on)
                   (:none) ({})
               &map:fold-kv props base-events $ fn (events k v)
-                hint-fn $ Fn (Map Tag respo.schema/EventHandler) Tag Dynamic $ -> (Map Tag respo.schema/EventHandler)
                 if
                   starts-with? (to-string k) |on-
                   if (fn? v)
@@ -9131,7 +9005,6 @@
             if (map? raw-on)
               &map:fold-kv raw-on ({})
                 fn (events k v)
-                  hint-fn $ Fn (Map Tag respo.schema/EventHandler) Dynamic Dynamic $ -> (Map Tag respo.schema/EventHandler)
                   if (tag? k)
                     if (fn? v)
                       assoc events k $ unsafe-coerce v $ Fn respo.schema/RespoEvent
@@ -9140,7 +9013,7 @@
                       if (nil? v) events $ raise $ str "|[Respo] expected event listener to be a function: " k
                     raise $ str "|[Respo] expected event names in :on to be tags: " k
               if (nil? raw-on) ({})
-                raise $ str "|[Respo] expected :on to be a map, got: " $ type-of raw-on
+                raise $ str "|[Respo] expected :on to be a map, got: " $ to-lispy-string raw-on
           :examples $ []
           :schema $ quote $ Fn Dynamic
             -> $ Map Tag respo.schema/EventHandler
@@ -9153,7 +9026,7 @@
                 , k
               (string? k) k
               (number? k) k
-              true $ raise $ str "|[Respo] expected a child key as Tag, String or Number, got: " (type-of k) "| " (to-lispy-string k)
+              true $ raise $ str "|[Respo] expected a child key as Tag, String or Number, got: " (to-lispy-string k) "| " (to-lispy-string k)
           :examples $ []
           :schema $ quote $ Fn Input (-> respo.schema/CoordKey) (:generics Input)
           :tests $ [] $ %{} 'TestEntry (:name |reads-supported-keys)
