@@ -231,7 +231,7 @@ for (const variant of ['effect-mount', 'effect-unmount', 'effect-update', 'effec
 
 for (const [name, source] of [
   ['guard preserves callback identity and result', guarded(`do
-    assert |identity $ = callback checked
+    assert |identity $ identical? callback checked
     assert |result $ = 3 $ checked 2
     , &unit`)],
   ['effect accepts its actual args-and-params Unit callback', effect('args params', lists, 'Unit', '&unit')],
