@@ -145,6 +145,6 @@ test('DOM creation preserves an explicit inherited SVG context through component
   assert.deepEqual(creation, ['create-ns:span']);
 });
 
-test('DOM creation keeps the explicit coordinate guard before node validation', () => {
-  assert.throws(() => make_element(null, () => () => {}, null), /coord-is-required/);
+test('DOM creation rejects invalid virtual node input', () => {
+  assert.throws(() => make_element(null, () => () => {}, c.arrayToList([])), /invalid-component-tree/);
 });

@@ -24,7 +24,7 @@ expect_failure() {
   'respo.schema/DomPatch :rm-element ([]) ([])' >/dev/null
 
 "$calcit_bin" eval --dep ./calcit.cirru \
-  'respo.schema/DomPatch :move-element ([]) 0 (%:: Option :some 1)' >/dev/null
+  'respo.schema/DomPatch :move-element ([]) 0 (Option :some 1)' >/dev/null
 
 expect_failure \
   'a Number used as a RenderNode element payload' \
@@ -32,17 +32,17 @@ expect_failure \
   'respo.schema/RenderNode :element 1'
 
 "$calcit_bin" eval --dep ./calcit.cirru \
-  'respo.render.diff/find-render-node-diffs (fn (op) &unit) ([]) ([]) (%:: Option :none) (%:: Option :none)' >/dev/null
+  'respo.render.diff/find-render-node-diffs (fn (op) &unit) ([]) ([]) (Option :none) (Option :none)' >/dev/null
 
 expect_failure \
   'an optional Number used as a diff node' \
   'Function `respo.render.diff/find-render-node-diffs` arg 4 expects type' \
-  'respo.render.diff/find-render-node-diffs (fn (op) &unit) ([]) ([]) (%:: Option :some 1) (%:: Option :none)'
+  'respo.render.diff/find-render-node-diffs (fn (op) &unit) ([]) ([]) (Option :some 1) (Option :none)'
 
 expect_failure \
   'a String in a move source index' \
   'but got `:string`' \
-  'respo.schema/DomPatch :move-element ([]) |first (%:: Option :none)'
+  'respo.schema/DomPatch :move-element ([]) |first (Option :none)'
 
 expect_failure \
   'a Number in a Tag payload slot' \
@@ -60,7 +60,7 @@ expect_failure \
   'match (respo.schema/DomPatch :rm-element ([]) ([])) ((:rm-element _coord _n-coord) &unit)'
 
 legacy_match=$(cat <<'CIRRU'
-match (respo.schema/DomPatch :move-element ([]) 0 (%:: Option :none))
+match (respo.schema/DomPatch :move-element ([]) 0 (Option :none))
   (:replace-prop _p0 _p1 _p2 _p3) &unit
   (:add-prop _p0 _p1 _p2 _p3) &unit
   (:rm-prop _p0 _p1 _p2) &unit
